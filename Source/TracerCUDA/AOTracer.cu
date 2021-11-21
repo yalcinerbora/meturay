@@ -26,7 +26,6 @@ TracerError AOTracer::Initialize()
 
     // We will add special work key for AO misses
     // Check if max work bits support that if not increment
-    const Vector2i& workMaxIds = scene.MaxMatIds();
     Vector2i newMaxIds = scene.MaxMatIds();
     // Increment batch work id by one
     newMaxIds[0] += 1;

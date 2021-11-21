@@ -28,14 +28,14 @@ VisorGUI::~VisorGUI()
     ImGui::DestroyContext();
 }
 
-void VisorGUI::Render(GLuint sdrTex, const Vector2i& resolution)
+void VisorGUI::Render(GLuint, const Vector2i&)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    bool showDemo = true;
-    bool open     = true;
+    //bool showDemo = true;
+    //bool open     = true;
     // ImGui::ShowDemoWindow(&showDemo);
 
     // ImGui::Begin("TestWindow", &open);

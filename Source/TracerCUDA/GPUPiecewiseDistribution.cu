@@ -139,6 +139,8 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
                                                            const CudaSystem& system)
     : dimensions(dimensions)
 {
+    CUDA_CHECK(cudaSetDevice(system.BestGPU().DeviceId()));
+
     std::vector<std::array<size_t, 5>> alignedSizes(dimensions.size());
     std::transform(dimensions.cbegin(), dimensions.cend(),
                    alignedSizes.begin(),

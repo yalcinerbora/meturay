@@ -73,8 +73,7 @@ class RayCasterOptiX : public RayCasterI
         TracerError                 CreatePipelines(const OptixPipelineCompileOptions& pOpts,
                                                     const OptixPipelineLinkOptions& lOpts);
         TracerError                 CreateSBTs(const std::vector<Record<void,void>>& recordPointers,
-                                               const std::vector<uint32_t>& programGroupIds,
-                                               const TransformId* dAllAccelTransformIds);
+                                               const std::vector<uint32_t>& programGroupIds);
         TracerError                 AllocateParams();
 
     protected:

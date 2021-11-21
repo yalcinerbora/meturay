@@ -310,8 +310,8 @@ void GLFWCallbackDelegator::WindowMinimizedGLFW(GLFWwindow* w, int b)
         loc->second->InputInterface()->WindowMinimized(b);
 }
 
-void GLFWCallbackDelegator::KeyboardUsedGLFW(GLFWwindow* w, int key, int scanCode,
-                               int action, int modifiers)
+void GLFWCallbackDelegator::KeyboardUsedGLFW(GLFWwindow* w, int key, int,
+                               int action, int)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);
@@ -328,7 +328,7 @@ void GLFWCallbackDelegator::MouseMovedGLFW(GLFWwindow* w, double x, double y)
         loc->second->InputInterface()->MouseMoved(x, y);
 }
 
-void GLFWCallbackDelegator::MousePressedGLFW(GLFWwindow* w, int button, int action, int modifier)
+void GLFWCallbackDelegator::MousePressedGLFW(GLFWwindow* w, int button, int action, int)
 {
     const auto& inputMap = Instance().windowMappings;
     auto loc = inputMap.find(w);

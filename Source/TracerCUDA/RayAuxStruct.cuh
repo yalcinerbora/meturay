@@ -98,11 +98,11 @@ class RayAuxInitBasic
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxBasic& gOutBasic,
                         // Input
-                        const RayReg& ray,
+                        const RayReg&,
                         // Index
-                        uint16_t medumIndex,
+                        uint16_t,
                         const uint32_t localPixelId,
-                        const uint32_t pixelSampleId) const
+                        const uint32_t) const
         {
             RayAuxBasic init = defaultValue;
             init.pixelIndex = localPixelId;
@@ -123,11 +123,11 @@ class RayAuxInitPath
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxPath& gOutPath,
                         // Input
-                        const RayReg& ray,
+                        const RayReg&,
                         // Index
                         uint16_t mediumIndex,
                         const uint32_t localPixelId,
-                        const uint32_t pixelSampleId) const
+                        const uint32_t) const
         {
             RayAuxPath init = defaultValue;
             init.pixelIndex = localPixelId;
@@ -151,11 +151,11 @@ class RayAuxInitRefPG
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxPath& gOutPath,
                         // Input
-                        const RayReg& ray,
+                        const RayReg&,
                         // Index
                         uint16_t mediumIndex,
-                        const uint32_t localPixelId,
-                        const uint32_t pixelSampleId) const
+                        const uint32_t,
+                        const uint32_t) const
         {
             RayAuxPath init = defaultValue;
             init.pixelIndex = UINT32_MAX;
@@ -179,11 +179,11 @@ class RayAuxInitAO
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxAO& gOutAO,
                         // Input
-                        const RayReg& ray,
+                        const RayReg&,
                         // Index
-                        uint16_t medumIndex,
+                        uint16_t,
                         const uint32_t localPixelId,
-                        const uint32_t pixelSampleId) const
+                        const uint32_t) const
         {
             RayAuxAO init = defaultValue;
             init.pixelIndex = localPixelId;
@@ -207,7 +207,7 @@ class RayAuxInitPPG
         __device__ __host__ HYBRID_INLINE
         void operator()(RayAuxPPG& gOutPPG,
                         // Input
-                        const RayReg& ray,
+                        const RayReg&,
                         // Index
                         uint16_t medumIndex,
                         const uint32_t localPixelId,

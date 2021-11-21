@@ -242,7 +242,7 @@ void DeviceMemoryCPUBacked::CopyToDevice(size_t offset, size_t copySize, cudaStr
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
     CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<char*>(d_ptr) + offset,
                                reinterpret_cast<char*>(h_ptr) + offset,
-                               copySize, cudaMemcpyHostToDevice));
+                               copySize, cudaMemcpyHostToDevice, stream));
 }
 
 void DeviceMemoryCPUBacked::CopyToHost(size_t offset, size_t copySize, cudaStream_t stream)
@@ -254,7 +254,7 @@ void DeviceMemoryCPUBacked::CopyToHost(size_t offset, size_t copySize, cudaStrea
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
     CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<char*>(h_ptr) + offset,
                                reinterpret_cast<char*>(d_ptr) + offset,
-                               copySize, cudaMemcpyDeviceToHost));
+                               copySize, cudaMemcpyDeviceToHost, stream));
 }
 
 size_t DeviceMemoryCPUBacked::Size() const

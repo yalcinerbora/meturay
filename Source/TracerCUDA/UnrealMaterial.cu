@@ -65,7 +65,7 @@ SceneError UnrealMat::Load1CTexture(const TextureI<2>*& tex,
 
 SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
                                       const TextureNodeMap& textureNodes,
-                                      const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                      const std::map<uint32_t, uint32_t>&,
                                       double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
@@ -92,11 +92,11 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
     for(const auto& sceneNode : materialNodes)
     {
         // Load Textured Data
-        TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO);
-        OptionalNodeList<NodeTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
-        TexturedDataNodeList<float> matMetallicNodes = sceneNode->AccessTexturedDataFloat(METALLIC);
-        TexturedDataNodeList<float> matRoughnessNodes = sceneNode->AccessTexturedDataFloat(ROUGHNESS);
-        TexturedDataNodeList<float> matSpecularNodes = sceneNode->AccessTexturedDataFloat(SPECULAR);
+        TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO, time);
+        OptionalNodeList<NodeTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL, time);
+        TexturedDataNodeList<float> matMetallicNodes = sceneNode->AccessTexturedDataFloat(METALLIC, time);
+        TexturedDataNodeList<float> matRoughnessNodes = sceneNode->AccessTexturedDataFloat(ROUGHNESS, time);
+        TexturedDataNodeList<float> matSpecularNodes = sceneNode->AccessTexturedDataFloat(SPECULAR, time);
         assert(matAlbedoNodes.size() == matNormalNodes.size());
         assert(matNormalNodes.size() == matMetallicNodes.size());
         assert(matMetallicNodes.size() == matRoughnessNodes.size());
@@ -153,7 +153,7 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
                                     metallicTexCount, metallicConstCount,
                                     metallicNode, textureNodes, scenePath)) != SceneError::OK)
                 return err;
-            
+
             constructionInfo.metallicMap = metT ? static_cast<cudaTextureObject_t>(*metT) : 0;
             texIdList[TexType::METALLIC] = (metallicNode.isTexture) ? metallicNode.texNode.texId : std::numeric_limits<uint32_t>::max();
             // SPECULAR TEXTURE
@@ -224,14 +224,14 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
     roughnessPtrSize = Memory::AlignSize(roughnessPtrSize);
 
     size_t totalSize = (albedoConstSize + albedoTexRefSize +
-                        normalTexRefSize + 
-                        metallicConstSize + metallicTexRefSize + 
+                        normalTexRefSize +
+                        metallicConstSize + metallicTexRefSize +
                         specularConstSize + specularTexRefSize +
                         roughnessConstSize + roughnessTexRefSize +
-                        albedoPtrSize + 
-                        normalPtrSize + 
-                        metallicPtrSize + 
-                        specularPtrSize + 
+                        albedoPtrSize +
+                        normalPtrSize +
+                        metallicPtrSize +
+                        specularPtrSize +
                         roughnessPtrSize);
 
     memory = std::move(DeviceMemory(totalSize));
@@ -284,8 +284,8 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
     return SceneError::OK;
 }
 
-SceneError UnrealMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                 const std::string& scenePath)
+SceneError UnrealMat::ChangeTime(const NodeListing&, double,
+                                 const std::string&)
 {
     // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
@@ -312,7 +312,7 @@ TracerError UnrealMat::ConstructTextureReferences()
         // Albedo
         hAlbedoData[i].isConstData = !mInfo.hasAlbedoMap;
         if(mInfo.hasAlbedoMap)
-            hAlbedoData[i].tex = mInfo.albedoMap;            
+            hAlbedoData[i].tex = mInfo.albedoMap;
         else
             hAlbedoData[i].data = mInfo.albedoConst;
         // Metallic
@@ -350,12 +350,12 @@ TracerError UnrealMat::ConstructTextureReferences()
     specularConstructionSize = Memory::AlignSize(specularConstructionSize);
     size_t roughnessConstructionSize = sizeof(TextureOrConstReferenceData<float>) * materialCount;
     roughnessConstructionSize = Memory::AlignSize(roughnessConstructionSize);
-    
+
     size_t totalSize = (counterSize +
                         albedoConstructionSize +
-                        metallicConstructionSize + 
+                        metallicConstructionSize +
                         specularConstructionSize +
-                        roughnessConstructionSize + 
+                        roughnessConstructionSize +
                         normalConstructionSize);
     DeviceMemory tempMemory(totalSize);
 
@@ -529,7 +529,7 @@ size_t UnrealMat::UsedGPUMemory(uint32_t materialId) const
     return totalSize;
 }
 
-size_t UnrealMat::UsedCPUMemory(uint32_t materialId) const
+size_t UnrealMat::UsedCPUMemory(uint32_t) const
 {
     return sizeof(TextureIdList);
 }

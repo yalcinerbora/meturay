@@ -80,9 +80,9 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const EndpointGroupDataList& 
     return SceneError::OK;
 }
 
-SceneError CPULightGroupSkySphere::ChangeTime(const NodeListing& lightNodes,
-                                              double time,
-                                              const std::string& scenePath)
+SceneError CPULightGroupSkySphere::ChangeTime(const NodeListing&,
+                                              double,
+                                              const std::string&)
 {
     // TODO: Implement
     return SceneError(SceneError::LIGHT_TYPE_INTERNAL_ERRROR,
@@ -161,7 +161,6 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
                                    {lightCount, lightCount, lightCount});
 
     // Set a GPU
-    const CudaGPU& gpu = system.BestGPU();
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
     CUDA_CHECK(cudaMemcpy(const_cast<uint16_t*>(dMediumIndices),
                hMediumIds.data(),

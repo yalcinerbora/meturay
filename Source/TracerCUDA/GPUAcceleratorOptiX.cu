@@ -33,6 +33,10 @@ static void KCCopyPrimPositions(Vector3f* gPositions,
         {
             gPositionsLocal[i] = positions[i];
         }
+        printf("Writing (%f, %f, %f), (%f, %f, %f), (%f, %f, %f)\n",
+               gPositionsLocal[0][0], gPositionsLocal[0][1], gPositionsLocal[0][2],
+               gPositionsLocal[1][0], gPositionsLocal[1][1], gPositionsLocal[1][2],
+               gPositionsLocal[2][0], gPositionsLocal[2][1], gPositionsLocal[2][2]);
     }
 }
 
@@ -83,19 +87,18 @@ const char* GPUBaseAcceleratorOptiX::Type() const
     return TypeName();
 }
 
-void GPUBaseAcceleratorOptiX::GetReady(const CudaSystem& system,
-                                       uint32_t rayCount)
+void GPUBaseAcceleratorOptiX::GetReady(const CudaSystem&, uint32_t)
 {
 
 }
 
-void GPUBaseAcceleratorOptiX::Hit(const CudaSystem& system,
+void GPUBaseAcceleratorOptiX::Hit(const CudaSystem&,
                                   // Output
-                                  HitKey* dAcceleratorKeys,
+                                  HitKey*,
                                   // Inputs
-                                  const RayGMem* dRays,
-                                  const RayId* dRayIds,
-                                  const uint32_t rayCount) const
+                                  const RayGMem*,
+                                  const RayId*,
+                                  const uint32_t) const
 {
     // This call is not used for OptiX
     // throw an execption if it is called
@@ -103,7 +106,7 @@ void GPUBaseAcceleratorOptiX::Hit(const CudaSystem& system,
 }
 
 SceneError GPUBaseAcceleratorOptiX::Initialize(// Accelerator Option Node
-                                               const SceneNodePtr& node,
+                                               const SceneNodePtr&,
                                                // List of surface to leaf accelerator ids
                                                const std::map<uint32_t, HitKey>& keyMap)
 {
@@ -122,7 +125,7 @@ SceneError GPUBaseAcceleratorOptiX::Initialize(// Accelerator Option Node
 
 TracerError GPUBaseAcceleratorOptiX::Construct(const CudaSystem&,
                                                // List of surface AABBs
-                                               const SurfaceAABBList& aabbMap)
+                                               const SurfaceAABBList&)
 {
     // This function is not used when OptiX is enabled
     return TracerError::TRACER_INTERNAL_ERROR;
@@ -347,14 +350,15 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             if(range[0] == std::numeric_limits<uint64_t>::max())
                 break;
 
-            gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePrimCount,
+            size_t subRangePrimCount = range[1] - range[0];
+            gpu.GridStrideKC_X(0, (cudaStream_t)0, subRangePrimCount,
                                //
                                KCCopyPrimPositions<GPUPrimitiveTriangle>,
                                //
                                dPositions + offset,
                                primData,
                                range);
-            offset += range[1] - range[0];
+            offset += subRangePrimCount;
         }
         assert(offset == surfacePrimCount);
 

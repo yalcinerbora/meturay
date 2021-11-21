@@ -267,9 +267,9 @@ namespace DeviceMemDetail
 {
     template<size_t I = 0, class... Tp>
     inline typename std::enable_if<I == sizeof...(Tp), size_t>::type
-    AcquireTotalSize(std::array<size_t, sizeof...(Tp)>& alignedSizeList,
-                     const std::array<size_t, sizeof...(Tp)>& countList,
-                     size_t alignment)
+    AcquireTotalSize(std::array<size_t, sizeof...(Tp)>&,
+                     const std::array<size_t, sizeof...(Tp)>&,
+                     size_t)
     {
         return 0;
     }
@@ -292,8 +292,8 @@ namespace DeviceMemDetail
 
     template<std::size_t I = 0, class... Tp>
     inline typename std::enable_if<I == sizeof...(Tp), void>::type
-    CalculatePointers(std::tuple<Tp*&...>& t, size_t& offset, Byte* memory,
-                      const std::array<size_t, sizeof...(Tp)>& alignedSizeList)
+    CalculatePointers(std::tuple<Tp*&...>&, size_t&, Byte*,
+                      const std::array<size_t, sizeof...(Tp)>&)
     {}
 
     template<std::size_t I = 0, class... Tp>

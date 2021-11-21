@@ -13,7 +13,7 @@
 
 #include <regex>
 
-void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
+void GDebugRendererRef::LoadPaths(const Vector2i& res,
                                   const std::string& pathRegex)
 {
     static constexpr std::string_view RES_TOKEN = "[%]";
@@ -65,10 +65,10 @@ void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
     {
         Vector2i pixel = ParsePixelId(file);
         // Skip out of range data
-        if((pixel[0] < resolution[0]) &&
-           (pixel[1] < resolution[1]))
+        if((pixel[0] < res[0]) &&
+           (pixel[1] < res[1]))
         {
-            int key = pixel[1] * resolution[0] + pixel[0];
+            int key = pixel[1] * res[0] + pixel[0];
             orderedPaths.emplace(key, file);
         }
     }
@@ -79,7 +79,7 @@ void GDebugRendererRef::LoadPaths(const Vector2i& resolution,
         referencePaths.push_back(i.second);
     }
 
-    assert(static_cast<uint32_t>(resolution[0] * resolution[1]) == referencePaths.size());
+    assert(static_cast<uint32_t>(res[0] * res[1]) == referencePaths.size());
 }
 
 GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,

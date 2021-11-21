@@ -42,10 +42,10 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
     Vector2ui dim;
     PixelFormat pf;
     std::vector<Byte> textureData;
-    ImageIOError e = ImageIOInstance().ReadImage(textureData,
-                                                 pf, dim,
-                                                 filePath,
-                                                 flags);
+    ImageIOError e = ImageIOInstance()->ReadImage(textureData,
+                                                  pf, dim,
+                                                  filePath,
+                                                  flags);
     // Check ImageIOError and convert it to scene error
     if(e != ImageIOError::OK)
         return ConvertImageIOErrorToSceneError(e);
@@ -182,9 +182,9 @@ SceneError TextureFunctions::LoadBitMap(// Returned Bitmap Data
     };
 
     ImageIOError e = ImageIOError::OK;
-    if((e = ImageIOInstance().ReadImageChannelAsBitMap(bits, dimension,
-                                                       TexCTypeToImgageCType(channel),
-                                                       combinedPath)) != ImageIOError::OK)
+    if((e = ImageIOInstance()->ReadImageChannelAsBitMap(bits, dimension,
+                                                        TexCTypeToImgageCType(channel),
+                                                        combinedPath)) != ImageIOError::OK)
         return ConvertImageIOErrorToSceneError(e);
     // All done
     return SceneError::OK;

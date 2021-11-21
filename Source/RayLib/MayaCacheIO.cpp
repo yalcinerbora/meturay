@@ -102,7 +102,7 @@ namespace MayaCache
         {
             return be32toh(out);
         }
-        return out;
+        else return out;
     }
 
     float ReadFloat(std::ifstream& file)

@@ -74,7 +74,7 @@ void SelfNode::PauseContTrace(const bool paused)
     tracerThread.PauseContTrace(paused);
 }
 
-void SelfNode::WindowMinimizeAction(bool minimized)
+void SelfNode::WindowMinimizeAction(bool)
 {
     // TODO:
 }

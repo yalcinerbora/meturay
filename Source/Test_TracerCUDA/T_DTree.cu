@@ -405,7 +405,7 @@ TEST(PPG_DTree, AddThenSwap)
     for(size_t i = 0; i < nodes.size(); i++)
     {
         const DTreeNode& node = nodes[i];
-        float total = node.irradianceEstimates.Sum();
+        //float total = node.irradianceEstimates.Sum();
         if(node.parentIndex == std::numeric_limits<uint32_t>::max())
         {
             // This is root

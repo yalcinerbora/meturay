@@ -76,7 +76,7 @@ class MockNode
         void        StartStopTrace(const bool) override {}
         void        PauseContTrace(const bool) override {}
 
-        void        WindowMinimizeAction(bool minimized) override {}
+        void        WindowMinimizeAction(bool) override {}
         void        WindowCloseAction() override {}
 
         // From Tracer Callbacks

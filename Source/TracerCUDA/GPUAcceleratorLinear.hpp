@@ -13,19 +13,19 @@ const char* GPUAccLinearGroup<PGroup>::Type() const
 
 template <class PGroup>
 SceneError GPUAccLinearGroup<PGroup>::InitializeGroup(// Accelerator Option Node
-                                                      const SceneNodePtr& node,
+                                                      const SceneNodePtr&,
                                                       // List of surface/material
                                                       // pairings that uses this accelerator type
                                                       // and primitive type
                                                       const std::map<uint32_t, SurfaceDefinition>& surfaceList,
-                                                      double time)
+                                                      double)
 {
     accRanges.clear();
     primitiveRanges.clear();
     primitiveMaterialKeys.clear();
     idLookup.clear();
 
-    const char* primGroupTypeName = this->primitiveGroup.Type();
+    //const char* primGroupTypeName = this->primitiveGroup.Type();
 
     std::vector<uint32_t> hTransformIndices;
     hTransformIndices.reserve(surfaceList.size());
@@ -302,7 +302,7 @@ TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerators(const CudaSystem&)
 }
 
 template <class PGroup>
-TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface,
+TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t,
                                                           const CudaSystem&)
 {
     //...
@@ -312,7 +312,7 @@ TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t surface,
 }
 
 template <class PGroup>
-TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>&,
                                                            const CudaSystem&)
 {
     //...

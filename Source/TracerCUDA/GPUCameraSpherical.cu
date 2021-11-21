@@ -70,8 +70,8 @@ SceneError CPUCameraGroupSpherical::InitializeGroup(const EndpointGroupDataList&
     return SceneError::OK;
 }
 
-SceneError CPUCameraGroupSpherical::ChangeTime(const NodeListing& lightNodes, double time,
-                                               const std::string& scenePath)
+SceneError CPUCameraGroupSpherical::ChangeTime(const NodeListing&, double,
+                                               const std::string&)
 {
     return SceneError::CAMERA_TYPE_INTERNAL_ERROR;
 }

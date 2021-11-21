@@ -326,14 +326,12 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 T Matrix<N, T>::Determinant() const
 {
-    //#pragma warning(suppress:4984)
     if constexpr(N == 2)
         return Determinant2<T>(static_cast<const T*>(*this));
     else if constexpr(N == 3)
         return Determinant3<T>(static_cast<const T*>(*this));
     else
         return Determinant4<T>(static_cast<const T*>(*this));
-    return 1;
 }
 
 template <int N, class T>
@@ -341,14 +339,12 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 {
-    //#pragma warning(suppress:4984)
     if constexpr(N == 2)
         return Inverse2<T>(static_cast<const T*>(*this));
     else if constexpr(N == 3)
         return Inverse3<T>(static_cast<const T*>(*this));
     else
         return Inverse4<T>(static_cast<const T*>(*this));
-    return *this;
 }
 
 template <int N, class T>
@@ -356,7 +352,6 @@ template <class Q>
 __device__ __host__
 inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 {
-    //#pragma warning(suppress:4984)
     if constexpr(N == 2)
         (*this) = Inverse2<T>(static_cast<const T*>(*this));
     else if constexpr(N == 3)

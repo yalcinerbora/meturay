@@ -186,7 +186,7 @@ SceneError CPULightGroupP<GPULight, PGroup, SGen>::InitializeCommon(const Endpoi
                                                                     const TextureNodeMap& textures,
                                                                     const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                                    uint32_t batchId, double time,
+                                                                    uint32_t batchId, double,
                                                                     const std::string& scenePath)
 {
     using namespace TextureFunctions;

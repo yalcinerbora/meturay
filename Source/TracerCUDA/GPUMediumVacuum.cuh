@@ -85,8 +85,8 @@ inline const char* CPUMediumVacuum::Type() const
 }
 
 inline SceneError CPUMediumVacuum::InitializeGroup(const NodeListing& medNodes,
-                                                   double time,
-                                                   const std::string& scenePath)
+                                                   double,
+                                                   const std::string&)
 {
     if(medNodes.size() != 1 &&
        (*medNodes.begin())->IdCount() != 1)
@@ -97,8 +97,8 @@ inline SceneError CPUMediumVacuum::InitializeGroup(const NodeListing& medNodes,
     return SceneError::OK;
 }
 
-inline SceneError CPUMediumVacuum::ChangeTime(const NodeListing& transformNodes, double time,
-                                              const std::string& scenePath)
+inline SceneError CPUMediumVacuum::ChangeTime(const NodeListing&, double,
+                                              const std::string&)
 {
     return SceneError::OK;
 }

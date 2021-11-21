@@ -202,7 +202,7 @@ uint32_t CudaGPU::RecommendedBlockCountPerSM(void* kernelFunc,
     return static_cast<uint32_t>(numBlocks);
 }
 
-cudaStream_t CudaGPU::DetermineStream(uint32_t requiredSMCount) const
+cudaStream_t CudaGPU::DetermineStream(uint32_t) const
 {
     //if(requiredSMCount >= (SMCount() / 2))
     //    return largeWorkList.UseGroup();
@@ -294,5 +294,5 @@ const std::vector<size_t> CudaSystem::GridStrideMultiGPUSplit(size_t workCount,
         i++;
     }
     // Block per gpu holds
-    return std::move(workPerGPU);
+    return workPerGPU;
 }

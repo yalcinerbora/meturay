@@ -102,7 +102,7 @@ template<class GPUCamera, class PGroup,
                               typename PGroup::PrimitiveData> SGen>
 inline CPUCameraGroupP<GPUCamera, PGroup, SGen>::CPUCameraGroupP(const GPUPrimitiveGroupI& eg)
 
-    : pg(static_cast<const PGroup&>(pg))
+    : pg(static_cast<const PGroup&>(eg))
     , cameraCount(0)
     , dGPUCameras(nullptr)
 {}
@@ -112,11 +112,11 @@ template<class GPUCamera, class PGroup,
                               typename PGroup::HitData,
                               typename PGroup::PrimitiveData> SGen>
 SceneError CPUCameraGroupP<GPUCamera, PGroup, SGen>::InitializeCommon(const EndpointGroupDataList& cameraNodes,
-                                                                      const TextureNodeMap& textures,
+                                                                      const TextureNodeMap&,
                                                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                                       const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                                      uint32_t batchId, double time,
-                                                                      const std::string& scenePath)
+                                                                      uint32_t batchId, double,
+                                                                      const std::string&)
 {
     SceneError err = SceneError::OK;
 

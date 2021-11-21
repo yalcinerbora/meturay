@@ -101,4 +101,4 @@ inline void GuideDebugGL::AccumulatePortion(const std::vector<Byte>,
 inline void GuideDebugGL::SetTransform(const VisorTransform&) {}
 inline void GuideDebugGL::SetSceneCameraCount(uint32_t) {}
 
-inline void GuideDebugGL::SaveImage(bool saveAsHDR) {}
+inline void GuideDebugGL::SaveImage(bool) {}

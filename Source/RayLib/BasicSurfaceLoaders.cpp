@@ -440,7 +440,7 @@ SceneError InNodeSphrLoader::HasPrimitiveData(bool& r, PrimitiveDataType primiti
     return SceneError::OK;
 }
 
-SceneError InNodeSphrLoader::PrimitiveDataCount(size_t& result, PrimitiveDataType primitiveDataType) const
+SceneError InNodeSphrLoader::PrimitiveDataCount(size_t& result, PrimitiveDataType) const
 {
     SceneError e = SceneError::OK;
     std::vector<size_t> primCounts;

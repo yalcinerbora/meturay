@@ -6,7 +6,7 @@
 #include "DebugMaterialsKC.cuh"
 
 class BarycentricMat final
-    : public GPUMaterialGroup<NullData, BarySurface, BaryMatFuncs>                              
+    : public GPUMaterialGroup<NullData, BarySurface, BaryMatFuncs>
 {
    public:
         static const char*      TypeName() { return "Barycentric"; }
@@ -16,7 +16,7 @@ class BarycentricMat final
     public:
         // Constructors & Destructor
                                 BarycentricMat(const CudaGPU& gpu)
-                                    : GPUMaterialGroup<NullData, BarySurface, 
+                                    : GPUMaterialGroup<NullData, BarySurface,
                                                        BaryMatFuncs>(gpu) {}
                                 ~BarycentricMat() = default;
 
@@ -28,14 +28,14 @@ class BarycentricMat final
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
-        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
-                                           const std::string& scenePath) override {return SceneError::OK;}
+        SceneError              ChangeTime(const NodeListing&, double,
+                                           const std::string&) override {return SceneError::OK;}
 
         // Material Queries
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory(uint32_t) const override { return 0; }
+        size_t                  UsedCPUMemory(uint32_t) const override { return 0; }
 
         // NEE Related
         bool                    CanBeSampled() const override { return false; }
@@ -69,14 +69,14 @@ class SphericalMat final
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
-        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
-                                           const std::string& scenePath) override {return SceneError::OK;}
+        SceneError              ChangeTime(const NodeListing&, double,
+                                           const std::string&) override {return SceneError::OK;}
 
         // Material Queries
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory(uint32_t) const override { return 0; }
+        size_t                  UsedCPUMemory(uint32_t) const override { return 0; }
 
         // NEE Related
         bool                    CanBeSampled() const override { return false; }
@@ -111,14 +111,14 @@ class NormalRenderMat final
                                                 const TextureNodeMap& textures,
                                                 const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                 double time, const std::string& scenePath) override;
-        SceneError              ChangeTime(const NodeListing& materialNodes, double time,
-                                           const std::string& scenePath) override {return SceneError::OK;}
+        SceneError              ChangeTime(const NodeListing&, double,
+                                           const std::string&) override {return SceneError::OK;}
 
         // Material Queries
         size_t                  UsedGPUMemory() const override { return 0; }
         size_t                  UsedCPUMemory() const override { return 0; }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return 0; }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory(uint32_t) const override { return 0; }
+        size_t                  UsedCPUMemory(uint32_t) const override { return 0; }
 
         // NEE Related
         bool                    CanBeSampled() const override { return false; }

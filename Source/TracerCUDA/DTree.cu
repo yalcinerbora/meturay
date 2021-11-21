@@ -654,8 +654,8 @@ void DTreeGroup::DTreeBuffer::GetTreeToCPU(DTreeGPU& tree, std::vector<DTreeNode
     CUDA_CHECK(cudaMemcpy(&tree, dDTrees + treeIndex, sizeof(DTreeGPU),
                           cudaMemcpyDeviceToHost));
     nodes.resize(tree.nodeCount);
-    const DTreeNode* dDTreeNodes = tree.gRoot;
-    CUDA_CHECK(cudaMemcpy(nodes.data(), dDTreeNodes,
+    const DTreeNode* dDTNodes = tree.gRoot;
+    CUDA_CHECK(cudaMemcpy(nodes.data(), dDTNodes,
                           tree.nodeCount * sizeof(DTreeNode),
                           cudaMemcpyDeviceToHost));
 }

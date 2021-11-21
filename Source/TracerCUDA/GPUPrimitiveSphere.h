@@ -110,9 +110,9 @@ struct SphrFunctions
 
     __device__ __forceinline__
     static float PositionPdfFromHit(// Inputs
-                                    const Vector3f& hitPosition,
-                                    const Vector3f& hitDirection,
-                                    const QuatF& tbnRotation,
+                                    const Vector3f&,
+                                    const Vector3f&,
+                                    const QuatF&,
                                     //
                                     const PrimitiveId primitiveId,
                                     const SphereData& primData)
@@ -172,7 +172,7 @@ struct SphrFunctions
         Vector3f center = data;
         float radius = data[3];
 
-        return Sphere::BoundingBox(center, radius);
+        return transform.LocalToWorld(Sphere::BoundingBox(center, radius));
     }
 
     __device__ __forceinline__
@@ -193,7 +193,7 @@ struct SphrFunctions
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
 
-        return center;
+        return transform.LocalToWorld(center);
     }
 
     __device__ __forceinline__
@@ -220,7 +220,7 @@ struct SphereSurfaceGenerator
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
-        float radius = data[3];
+        //float radius = data[3];
 
         // Convert spherical hit to cartesian
         Vector3 normal = Vector3(sin(sphrCoords[0]) * cos(sphrCoords[1]),
@@ -236,10 +236,10 @@ struct SphereSurfaceGenerator
 
     __device__ __forceinline__
     static SphrSurface GenSphrSurface(const SphereHit& sphrCoords,
-                                      const GPUTransformI& transform,
+                                      const GPUTransformI&,
                                       //
-                                      PrimitiveId primitiveId,
-                                      const SphereData& primData)
+                                      PrimitiveId,
+                                      const SphereData&)
     {
         return SphrSurface{sphrCoords};
     }

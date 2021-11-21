@@ -144,7 +144,7 @@ void ImageMemory::Resize(Vector2i res)
     resolution = res;
 }
 
-void ImageMemory::Reset(const CudaSystem& system)
+void ImageMemory::Reset(const CudaSystem&)
 {
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     if(pixelCount != 0)

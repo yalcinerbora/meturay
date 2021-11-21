@@ -187,8 +187,7 @@ TracerError RayCasterOptiX::CreatePipelines(const OptixPipelineCompileOptions& p
 }
 
 TracerError RayCasterOptiX::CreateSBTs(const std::vector<Record<void,void>>& records,
-                                       const std::vector<uint32_t>& programGroupIds,
-                                       const TransformId* dAllAccelTransformIds)
+                                       const std::vector<uint32_t>& programGroupIds)
 {
     uint32_t i = 0;
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
@@ -427,7 +426,7 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     // =============================== //
     //         SBT GENERATION          //
     // =============================== //
-    if((e = CreateSBTs(hRecords, hProgramGroupIndices, dAllTransformIds)) != TracerError::OK)
+    if((e = CreateSBTs(hRecords, hProgramGroupIndices)) != TracerError::OK)
         return e;
 
     // =============================== //

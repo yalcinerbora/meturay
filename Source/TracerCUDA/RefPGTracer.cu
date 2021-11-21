@@ -91,10 +91,8 @@ void RefPGTracer::SendPixel() const
             *reinterpret_cast<Vector4f*>(convertedPixel.data()) = Vector4f(Vector3f(accumPixel), 1.0f); break;
             break;
         default:
-            throw TracerException(TracerError::UNABLE_TO_CONVERT_TO_VISOR_PIXEL_FORMAT);
-
             if(callbacks) callbacks->SendCrashSignal();
-            return;
+            throw TracerException(TracerError::UNABLE_TO_CONVERT_TO_VISOR_PIXEL_FORMAT);
     }
 
     // Copy data to the vector
@@ -143,11 +141,11 @@ ImageIOError RefPGTracer::SaveAndResetAccumImage(const Vector2i& pixelId)
     std::vector<Byte> pixels = accumulationBuffer.GetImageToCPU(cudaSystem);
 
     ImageIOError e = ImageIOError::OK;
-    e = ImageIOInstance().WriteImage(pixels.data(),
-                                     Vector2ui(accumulationBuffer.SegmentSize()[0],
-                                               accumulationBuffer.SegmentSize()[1]),
-                                     accumulationBuffer.Format(), ImageType::EXR,
-                                     path);
+    e = ImageIOInstance()->WriteImage(pixels.data(),
+                                      Vector2ui(accumulationBuffer.SegmentSize()[0],
+                                                accumulationBuffer.SegmentSize()[1]),
+                                      accumulationBuffer.Format(), ImageType::EXR,
+                                      path);
 
     if(callbacks && e == ImageIOError::OK)
     {
@@ -359,7 +357,7 @@ void RefPGTracer::GenerateWork(uint32_t cameraIndex)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
     // Check if the camera is changed
-    if(currentCamera != cameraIndex)
+    if(currentCamera != static_cast<int>(cameraIndex))
     {
         // Reset currents
         currentCamera = cameraIndex;
@@ -452,13 +450,13 @@ void RefPGTracer::Finalize()
     }
 }
 
-void RefPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
+void RefPGTracer::GenerateWork(const VisorTransform&, uint32_t)
 {
     throw TracerException(TracerError(TracerError::TRACER_INTERNAL_ERROR),
                           "Cannot use visor transformed camera for this Tracer.");
 }
 
-void RefPGTracer::GenerateWork(const GPUCameraI& dCam)
+void RefPGTracer::GenerateWork(const GPUCameraI&)
 {
     throw TracerException(TracerError(TracerError::TRACER_INTERNAL_ERROR),
                           "Cannot use custom camera for this Tracer.");

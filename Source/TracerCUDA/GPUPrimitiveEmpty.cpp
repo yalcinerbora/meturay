@@ -8,33 +8,33 @@ const char* GPUPrimitiveEmpty::Type() const
     return TypeName();
 }
 
-SceneError GPUPrimitiveEmpty::InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
+SceneError GPUPrimitiveEmpty::InitializeGroup(const NodeListing&, double,
                                               const SurfaceLoaderGeneratorI&,
-                                              const TextureNodeMap& textureNodes,
+                                              const TextureNodeMap&,
                                               const std::string&)
 {
     return SceneError::OK;
 }
 
-SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing& surfaceDatalNodes, double time,
+SceneError GPUPrimitiveEmpty::ChangeTime(const NodeListing&, double,
                                          const SurfaceLoaderGeneratorI&,
                                          const std::string&)
 {
     return SceneError::OK;
 }
 
-Vector2ul GPUPrimitiveEmpty::PrimitiveBatchRange(uint32_t surfaceDataId) const
+Vector2ul GPUPrimitiveEmpty::PrimitiveBatchRange(uint32_t) const
 {
     return Zero2ul;
 }
 
-AABB3 GPUPrimitiveEmpty::PrimitiveBatchAABB(uint32_t surfaceDataId) const
+AABB3 GPUPrimitiveEmpty::PrimitiveBatchAABB(uint32_t) const
 {
     Vector3f minInf(-INFINITY);
     return AABB3f(minInf, minInf);
 }
 
-bool GPUPrimitiveEmpty::PrimitiveHasAlphaMap(uint32_t surfaceDataId) const
+bool GPUPrimitiveEmpty::PrimitiveHasAlphaMap(uint32_t) const
 {
     return false;
 }
@@ -49,7 +49,7 @@ uint64_t GPUPrimitiveEmpty::TotalDataCount() const
     return 0;
 }
 
-bool GPUPrimitiveEmpty::CanGenerateData(const std::string& s) const
+bool GPUPrimitiveEmpty::CanGenerateData(const std::string&) const
 {
     return false;
 }

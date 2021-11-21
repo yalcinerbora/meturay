@@ -64,8 +64,8 @@ SceneError CPULightGroupSpot::InitializeGroup(const EndpointGroupDataList& light
     return SceneError::OK;
 }
 
-SceneError CPULightGroupSpot::ChangeTime(const NodeListing& lightNodes, double time,
-                                         const std::string& scenePath)
+SceneError CPULightGroupSpot::ChangeTime(const NodeListing&, double,
+                                         const std::string&)
 {
     // TODO: Implement
     return SceneError::LIGHT_TYPE_INTERNAL_ERRROR;

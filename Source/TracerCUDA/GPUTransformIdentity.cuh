@@ -130,8 +130,8 @@ inline const char* CPUTransformIdentity::Type() const
 }
 
 inline SceneError CPUTransformIdentity::InitializeGroup(const NodeListing& transformNodes,
-														double time,
-														const std::string& scenePath)
+														double,
+														const std::string&)
 {
 	if(transformNodes.size() != 1 &&
 	   (*transformNodes.begin())->IdCount() != 1)
@@ -142,8 +142,8 @@ inline SceneError CPUTransformIdentity::InitializeGroup(const NodeListing& trans
 	return SceneError::OK;
 }
 
-inline SceneError CPUTransformIdentity::ChangeTime(const NodeListing& transformNodes, double time,
-												   const std::string& scenePath)
+inline SceneError CPUTransformIdentity::ChangeTime(const NodeListing&, double,
+												   const std::string&)
 {
 	return SceneError::OK;
 }

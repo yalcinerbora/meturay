@@ -206,7 +206,7 @@ bool MovementSchemeMaya::MouseMovementAction(VisorTransform& transform,
 }
 
 bool MovementSchemeMaya::MouseScrollAction(VisorTransform& transform,
-                                           double x, double y)
+                                           double, double y)
 {
     // Zoom to the focus until some threshold
     Vector3f lookDir = transform.position - transform.gazePoint;

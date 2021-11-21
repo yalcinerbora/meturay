@@ -185,9 +185,9 @@ struct TriFunctions
 
     __device__ __forceinline__
     static float PositionPdfFromHit(// Inputs
-                                    const Vector3f& hitPosition,
-                                    const Vector3f& hitDirection,
-                                    const QuatF& tbnRotation,
+                                    const Vector3f&,
+                                    const Vector3f&,
+                                    const QuatF&,
                                     //
                                     const PrimitiveId primitiveId,
                                     const TriData& primData)
@@ -389,10 +389,10 @@ struct TriangleSurfaceGenerator
 
     __device__ __forceinline__
     static BarySurface GenBarySurface(const TriangleHit& baryCoords,
-                                      const GPUTransformI& transform,
+                                      const GPUTransformI&,
                                       //
-                                      PrimitiveId primitiveId,
-                                      const TriData& primData)
+                                      PrimitiveId,
+                                      const TriData&)
     {
         float c = 1.0f - baryCoords[0] - baryCoords[1];
         return BarySurface{Vector3(baryCoords[0], baryCoords[1], c)};

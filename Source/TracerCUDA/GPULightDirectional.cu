@@ -54,8 +54,8 @@ SceneError CPULightGroupDirectional::InitializeGroup(const EndpointGroupDataList
     return SceneError::OK;
 }
 
-SceneError CPULightGroupDirectional::ChangeTime(const NodeListing& lightNodes, double time,
-                                                const std::string& scenePath)
+SceneError CPULightGroupDirectional::ChangeTime(const NodeListing&, double,
+                                                const std::string&)
 {
     // TODO: Implement
     return SceneError::LIGHT_TYPE_INTERNAL_ERRROR;

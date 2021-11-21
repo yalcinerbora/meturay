@@ -64,15 +64,15 @@ SceneError CPULightGroupDisk::InitializeGroup(const EndpointGroupDataList& light
     return SceneError::OK;
 }
 
-SceneError CPULightGroupDisk::ChangeTime(const NodeListing& lightNodes, double time,
-                                         const std::string& scenePath)
+SceneError CPULightGroupDisk::ChangeTime(const NodeListing&, double,
+                                         const std::string&)
 {
     // TODO: Implement
     return SceneError::LIGHT_TYPE_INTERNAL_ERRROR;
 }
 
 TracerError CPULightGroupDisk::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
-                                                  const CudaSystem& system)
+                                                  const CudaSystem&)
 {
     TracerError e = TracerError::OK;
     // Construct Texture References

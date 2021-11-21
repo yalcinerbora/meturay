@@ -6,7 +6,7 @@
 
 SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
                                        const TextureNodeMap& textureNodes,
-                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                       const std::map<uint32_t, uint32_t>&,
                                        double time, const std::string& scenePath)
 {
     constexpr const char* ALBEDO = "albedo";
@@ -21,8 +21,8 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
     for(const auto& sceneNode : materialNodes)
     {
         // Load Textured Albedo Data
-        TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO);
-        OptionalNodeList<NodeTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL);
+        TexturedDataNodeList<Vector3> matAlbedoNodes = sceneNode->AccessTexturedDataVector3(ALBEDO, time);
+        OptionalNodeList<NodeTextureStruct> matNormalNodes = sceneNode->AccessOptionalTextureNode(NORMAL, time);
         assert(matAlbedoNodes.size() == matNormalNodes.size());
 
         // Iterate over these nodes one by one to find textures
@@ -132,8 +132,8 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
     return SceneError::OK;
 }
 
-SceneError LambertMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                  const std::string& scenePath)
+SceneError LambertMat::ChangeTime(const NodeListing&, double,
+                                  const std::string&)
 {
     // TODO: Implement
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
@@ -258,7 +258,7 @@ size_t LambertMat::UsedGPUMemory(uint32_t materialId) const
     auto i = innerIds.cend();
     if((i = innerIds.find(materialId)) == innerIds.cend())
         return 0;
-    
+
     uint32_t index = i->second;
     uint32_t albedoTexId = matTextureIds[index][0];
     uint32_t normalTexId = matTextureIds[index][1];
@@ -280,9 +280,9 @@ size_t LambertMat::UsedGPUMemory(uint32_t materialId) const
     return totalSize;
 }
 
-size_t LambertMat::UsedCPUMemory(uint32_t materialId) const
+size_t LambertMat::UsedCPUMemory(uint32_t) const
 {
-    return sizeof(Vector2ui); 
+    return sizeof(Vector2ui);
 }
 
 uint8_t LambertMat::UsedTextureCount() const

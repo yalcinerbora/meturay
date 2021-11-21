@@ -167,7 +167,7 @@ inline float GPUCameraPixel::Pdf(float distance,
 
 __device__
 inline uint32_t GPUCameraPixel::FindPixelId(const RayReg& r,
-                                            const Vector2i& resolution) const
+                                            const Vector2i& res) const
 {
    Vector3f normal = Cross(up, right);
    Vector3 planePoint = r.ray.AdvancedPos(r.tMax);
@@ -180,7 +180,7 @@ inline uint32_t GPUCameraPixel::FindPixelId(const RayReg& r,
     // Convert to Pixelated System
     Vector2i coords = Vector2i((Vector2(localP) / planeSize).Floor());
 
-    uint32_t pixelId = coords[1] * resolution[0] + coords[0];
+    uint32_t pixelId = coords[1] * res[0] + coords[0];
     return pixelId;
 }
 
@@ -246,15 +246,15 @@ inline void GPUCameraPixel::SwapTransform(const VisorTransform& t)
 }
 
 __device__
-inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pixelId,
-                                                          const Vector2i& resolution) const
+inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pId,
+                                                          const Vector2i& res) const
 {
     // DX DY from stratfied sample
-    Vector2 delta = Vector2(planeSize[0] / static_cast<float>(resolution[0]),
-                            planeSize[1] / static_cast<float>(resolution[1]));
+    Vector2 delta = Vector2(planeSize[0] / static_cast<float>(res[0]),
+                            planeSize[1] / static_cast<float>(res[1]));
 
-    Vector2 pixelDistance = Vector2(static_cast<float>(pixelId[0]),
-                                    static_cast<float>(pixelId[1])) * delta;
+    Vector2 pixelDistance = Vector2(static_cast<float>(pId[0]),
+                                    static_cast<float>(pId[1])) * delta;
     Vector3 pixelBottomLeft = bottomLeft + ((pixelDistance[0] * right) +
                                             (pixelDistance[1] * up));
 
@@ -264,8 +264,8 @@ inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pixelI
                           pixelBottomLeft,
                           delta,
                           nearFar,
-                          pixelId,
-                          resolution,
+                          pId,
+                          res,
                           mediumIndex,
                           workKey,
                           gTransform);

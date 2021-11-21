@@ -64,19 +64,19 @@ TracerError GPUAccOptiXGroup<PGroup>::FillLeaves(const CudaSystem& system,
 
 template <class PGroup>
 SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
-                                                     const SceneNodePtr& node,
+                                                     const SceneNodePtr&,
                                                      // List of surface/material
                                                      // pairings that uses this accelerator type
                                                      // and primitive type
                                                      const std::map<uint32_t, SurfaceDefinition>& surfaceList,
-                                                     double time)
+                                                     double)
 {
     accRanges.clear();
     primitiveRanges.clear();
     primitiveMaterialKeys.clear();
     idLookup.clear();
     // PG Type
-    const char* primGroupTypeName = this->primitiveGroup.Type();
+    //const char* primGroupTypeName = this->primitiveGroup.Type();
     // Transform Indices
     std::vector<uint32_t> hTransformIndices;
     hTransformIndices.reserve(surfaceList.size());
@@ -252,9 +252,9 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     //  ACTUAL TRAVERSAL GENERATION  //
     //===============================//
     uint32_t deviceIndex = 0;
-    for(const auto& [gpu, optixContext] : optixSystem->OptixCapableDevices())
+    for(const auto& [optixGPU, optixContext] : optixSystem->OptixCapableDevices())
     {
-        CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+        CUDA_CHECK(cudaSetDevice(optixGPU.DeviceId()));
         DeviceTraversables& gpuTraverseData = optixDataPerGPU[deviceIndex];
 
         // IMPORTANT
@@ -288,16 +288,16 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
             uint32_t primCount = static_cast<uint32_t>(range[1] - range[0]);
              // Generate AABBs
-            gpu.GridStrideKC_X(0, 0, primCount,
-                               //
-                               KCGenAABBs<PGroup>,
-                               //
-                               dPrimAABBs + offset,
-                               //
-                               range,
-                               //
-                               AABBGen<PGroup>(primData, *transform),
-                               static_cast<uint32_t>(primCount));
+            optixGPU.GridStrideKC_X(0, 0, primCount,
+                                    //
+                                    KCGenAABBs<PGroup>,
+                                    //
+                                    dPrimAABBs + offset,
+                                    //
+                                    range,
+                                    //
+                                    AABBGen<PGroup>(primData, *transform),
+                                    static_cast<uint32_t>(primCount));
 
             offset += surfacePrimCount;
         }
@@ -353,11 +353,11 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         ));
 
         // Allocate Temp Buffer for Build
-        DeviceLocalMemory buildBuffer(&gpu, accelMemorySizes.outputSizeInBytes);
+        DeviceLocalMemory buildBuffer(&optixGPU, accelMemorySizes.outputSizeInBytes);
         Byte* dTempBuild = static_cast<Byte*>(buildBuffer);
         Byte* dTemp;
         uint64_t* dCompactedSize;
-        DeviceLocalMemory tempMemory(&gpu);
+        DeviceLocalMemory tempMemory(&optixGPU);
         GPUMemFuncs::AllocateMultiData(std::tie(dTemp, dCompactedSize), tempMemory,
                                        {accelMemorySizes.tempSizeInBytes, 1}, 128);
 
@@ -385,7 +385,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
         if(hCompactAccelSize < buildBuffer.Size())
         {
-            DeviceLocalMemory compactedMemory(&gpu, hCompactAccelSize);
+            DeviceLocalMemory compactedMemory(&optixGPU, hCompactAccelSize);
 
             // use handle as input and output
             OPTIX_CHECK(optixAccelCompact(optixContext, (cudaStream_t)0,
@@ -437,15 +437,14 @@ TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerators(const CudaSystem& syst
 }
 
 template <class PGroup>
-TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerator(uint32_t surface,
-                                                         const CudaSystem&)
+TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerator(uint32_t, const CudaSystem&)
 {
     // TODO: Implement
     return TracerError::OK;
 }
 
 template <class PGroup>
-TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>&,
                                                           const CudaSystem&)
 {
     // TODO: Implement
@@ -469,18 +468,18 @@ size_t GPUAccOptiXGroup<PGroup>::UsedCPUMemory() const
 }
 
 template <class PGroup>
-void GPUAccOptiXGroup<PGroup>::Hit(const CudaGPU& gpu,
-                                 // O
-                                   HitKey* dMaterialKeys,
-                                   TransformId* dTransformIds,
-                                   PrimitiveId* dPrimitiveIds,
-                                   HitStructPtr dHitStructs,
+void GPUAccOptiXGroup<PGroup>::Hit(const CudaGPU&,
+                                   // O
+                                   HitKey*,
+                                   TransformId*,
+                                   PrimitiveId*,
+                                   HitStructPtr,
                                    // I-O
-                                   RayGMem* dRays,
+                                   RayGMem*,
                                    // Input
-                                   const RayId* dRayIds,
-                                   const HitKey* dAcceleratorKeys,
-                                   const uint32_t rayCount) const
+                                   const RayId*,
+                                   const HitKey*,
+                                   const uint32_t) const
 {
     // We do nothing on hit this function should not be called
     // Since base accelerator will handle entire hit operation

@@ -159,7 +159,7 @@ bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
     return true;
 }
 
-void GDebugRendererPPG::RenderSpatial(TextureGL&, uint32_t depth)
+void GDebugRendererPPG::RenderSpatial(TextureGL&, uint32_t)
 {
     // TODO:
 }

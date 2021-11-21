@@ -39,8 +39,8 @@ class LambertCMat final
         // Material Queries
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(AlbedoMatData); }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f); }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory(uint32_t) const override { return sizeof(Vector3f); }
+        size_t                  UsedCPUMemory(uint32_t) const override { return 0; }
 
         uint8_t                 SampleStrategyCount() const override { return 1; };
         // No Texture
@@ -81,8 +81,8 @@ class ReflectMat final
         // Material Queries
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(ReflectMatData); }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector4); }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory(uint32_t) const override { return sizeof(Vector4); }
+        size_t                  UsedCPUMemory(uint32_t) const override { return 0; }
 
         // NEE Related
         bool                    CanBeSampled() const override { return false; }
@@ -126,8 +126,8 @@ class RefractMat final
         // Material Queries
         size_t                  UsedGPUMemory() const override { return memory.Size(); }
         size_t                  UsedCPUMemory() const override { return sizeof(RefractMatData); }
-        size_t                  UsedGPUMemory(uint32_t materialId) const override { return sizeof(Vector3f) + sizeof(uint32_t); }
-        size_t                  UsedCPUMemory(uint32_t materialId) const override { return 0; }
+        size_t                  UsedGPUMemory(uint32_t) const override { return sizeof(Vector3f) + sizeof(uint32_t); }
+        size_t                  UsedCPUMemory(uint32_t) const override { return 0; }
 
         // NEE Related
         bool                    CanBeSampled() const override { return false; }

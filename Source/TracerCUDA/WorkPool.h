@@ -186,7 +186,7 @@ class BoundaryWorkPool
 template <class... Args>
 template<size_t I, class... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), void>::type
-WorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
+WorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>&)
 {}
 
 template <class... Args>
@@ -265,7 +265,7 @@ TracerError WorkPool<Args...>::GenerateWorkBatch(GPUWorkBatchI*& work,
 template <class... Args>
 template<size_t I, class... Tp>
 inline typename std::enable_if<I == sizeof...(Tp), void>::type
-BoundaryWorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>& t)
+BoundaryWorkPool<Args...>::LoopAndAppend(std::tuple<Tp...>&)
 {}
 
 template <class... Args>

@@ -178,6 +178,4 @@ SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D>>& t,
                              asSigned, gpu, filePath);
     // TODO: add more texture loading functions
     else return SceneError::UNABLE_TO_LOAD_TEXTURE;
-
-    return SceneError::OK;
 }

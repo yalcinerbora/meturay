@@ -690,8 +690,7 @@ SceneError GPUSceneJson::GenerateWorkBatches(MaterialKeyListing& allMatKeys,
                                              // I-O
                                              uint32_t& currentBatchCount,
                                              // Input
-                                             const MultiGPUWorkBatches& materialBatches,
-                                             double time)
+                                             const MultiGPUWorkBatches& materialBatches)
 {
     SceneError e = SceneError::OK;
     // First do materials
@@ -893,8 +892,7 @@ SceneError GPUSceneJson::GenerateAccelerators(std::map<uint32_t, HitKey>& accHit
     return e;
 }
 
-SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, HitKey>& accHitKeyList,
-                                                 double time)
+SceneError GPUSceneJson::GenerateBaseAccelerator(const std::map<uint32_t, HitKey>& accHitKeyList)
 {
     SceneError e = SceneError::OK;
 
@@ -946,7 +944,7 @@ SceneError GPUSceneJson::GenerateTransforms(std::map<uint32_t, uint32_t>& transf
 
             // Set Identity Transform Index
             if(transTypeName == std::string(NodeNames::TRANSFORM_IDENTITY))
-                identityTransformIndex = linearIndex;
+                identityTIndex = linearIndex;
             // Set Boundary Transform Index
             if(sceneTransId == boundaryTransformId)
                 boundaryTIndex = linearIndex;
@@ -1083,7 +1081,7 @@ SceneError GPUSceneJson::GenerateLights(BoundaryMaterialKeyListing& boundaryWork
 
         const std::string& lightTypeName = lightGroup.first;
         const std::string& primTypeName = lightGroup.second.primTypeName;
-        bool isPrimLight = lightGroup.second.IsPrimitiveLight();
+        //bool isPrimLight = lightGroup.second.IsPrimitiveLight();
         const auto& lightNodes = lightGroup.second.constructionInfo;
 
         // Find Primitive
@@ -1129,8 +1127,7 @@ SceneError GPUSceneJson::GenerateLights(BoundaryMaterialKeyListing& boundaryWork
 
 SceneError GPUSceneJson::FindBoundaryLight(const BoundaryMaterialKeyListing& bMatKeys,
                                            const std::string& bLightGroupTypeName,
-                                           uint32_t bLightId, uint32_t bTransformId,
-                                           double time)
+                                           uint32_t bLightId, uint32_t bTransformId)
 {
     SceneError e = SceneError::OK;
     // From that node find equavilent material,
@@ -1220,8 +1217,7 @@ SceneError GPUSceneJson::LoadAll(double time)
     MaterialKeyListing allMaterialKeys;
     if((e = GenerateWorkBatches(allMaterialKeys,
                                 batchId,
-                                multiGPUWorkBatches,
-                                time)) != SceneError::OK)
+                                multiGPUWorkBatches)) != SceneError::OK)
         return e;
 
     // Generate Endpoints
@@ -1255,13 +1251,12 @@ SceneError GPUSceneJson::LoadAll(double time)
                                  time)) != SceneError::OK)
         return e;
     // Base Accelerator
-    if((e = GenerateBaseAccelerator(accHitKeyList, time)) != SceneError::OK)
+    if((e = GenerateBaseAccelerator(accHitKeyList)) != SceneError::OK)
         return e;
     // Boundary Light
     if((e = FindBoundaryLight(allBoundaryMaterialKeys,
                               bLightGroupTypeName,
-                              bLightId, boundaryTransformId,
-                              time)) != SceneError::OK)
+                              bLightId, boundaryTransformId)) != SceneError::OK)
        return e;
 
     // MaxIds are generated but those are inclusive
@@ -1273,7 +1268,7 @@ SceneError GPUSceneJson::LoadAll(double time)
     return SceneError::OK;
 }
 
-SceneError GPUSceneJson::ChangeAll(double time)
+SceneError GPUSceneJson::ChangeAll(double)
 {
     // TODO:
     return SceneError(SceneError::TYPE_MISMATCH,

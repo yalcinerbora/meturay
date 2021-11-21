@@ -101,7 +101,7 @@ inline void GPULightDirectional::Sample(// Output
                                         Vector3& dir,
                                         float& pdf,
                                         // Input
-                                        const Vector3& worldLoc,
+                                        const Vector3&,
                                         // I-O
                                         RandomGPU&) const
 {
@@ -114,28 +114,28 @@ __device__
 inline void GPULightDirectional::GenerateRay(// Output
                                              RayReg&,
                                              // Input
-                                             const Vector2i& sampleId,
-                                             const Vector2i& sampleMax,
+                                             const Vector2i&,
+                                             const Vector2i&,
                                              // I-O
-                                             RandomGPU& rng,
+                                             RandomGPU&,
                                              // Options
-                                             bool antiAliasOn) const
+                                             bool) const
 {
     // TODO: implement
 }
 
 __device__
-inline float GPULightDirectional::Pdf(const Vector3& worldDir,
-                                      const Vector3& worldPos) const
+inline float GPULightDirectional::Pdf(const Vector3&,
+                                      const Vector3&) const
 {
     return 0.0f;
 }
 
 __device__
-inline float GPULightDirectional::Pdf(float distance,
-                                      const Vector3& hitPosition,
-                                      const Vector3& direction,
-                                      const QuatF& tbnRotation) const
+inline float GPULightDirectional::Pdf(float,
+                                      const Vector3&,
+                                      const Vector3&,
+                                      const QuatF&) const
 {
     return 0.0f;
 }

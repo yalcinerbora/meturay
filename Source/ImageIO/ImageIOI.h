@@ -105,7 +105,7 @@ using ImageIOFlags = ImageIOI::ImageIOFlags;
 
 inline int8_t ImageIOI::ChannelTypeToChannelIndex(ImageChannelType channel)
 {
-    return static_cast<uint32_t>(channel);
+    return static_cast<int8_t>(channel);
 }
 
 inline int8_t ImageIOI::FormatToChannelCount(PixelFormat pf)

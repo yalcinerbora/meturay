@@ -47,5 +47,4 @@ TracerError LightSamplerCommon::ConstructLightSampler(DeviceMemory& memory,
         default:
             return TracerError::UNABLE_TO_INITIALIZE_TRACER;
     }
-    return TracerError::UNABLE_TO_INITIALIZE_TRACER;
 }

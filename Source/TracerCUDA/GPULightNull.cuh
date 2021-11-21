@@ -105,24 +105,24 @@ inline const char* CPULightGroupNull::Type() const
     return TypeName();
 }
 
-inline SceneError CPULightGroupNull::InitializeGroup(const EndpointGroupDataList& lightNodes,
-                                                     const TextureNodeMap& textures,
-                                                     const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                                     const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                     uint32_t batchId, double time,
-                                                     const std::string& scenePath)
+inline SceneError CPULightGroupNull::InitializeGroup(const EndpointGroupDataList&,
+                                                     const TextureNodeMap&,
+                                                     const std::map<uint32_t, uint32_t>&,
+                                                     const std::map<uint32_t, uint32_t>&,
+                                                     uint32_t batchId, double,
+                                                     const std::string&)
 {
     hkList.push_back(HitKey::CombinedKey(batchId, 0));
     return SceneError::OK;
 }
 
-inline SceneError CPULightGroupNull::ChangeTime(const NodeListing& lightNodes, double time,
-                                                const std::string& scenePath)
+inline SceneError CPULightGroupNull::ChangeTime(const NodeListing&, double,
+                                                const std::string&)
 {
     return SceneError::OK;
 }
 
-inline TracerError CPULightGroupNull::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+inline TracerError CPULightGroupNull::ConstructEndpoints(const GPUTransformI**,
                                                          const CudaSystem&)
 {
     return TracerError::OK;

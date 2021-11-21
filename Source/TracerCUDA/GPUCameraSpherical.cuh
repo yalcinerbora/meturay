@@ -224,24 +224,24 @@ inline void GPUCameraSpherical::GenerateRay(// Output
 }
 
 __device__
-inline float GPUCameraSpherical::Pdf(const Vector3& worldDir,
-                                     const Vector3& worldPos) const
+inline float GPUCameraSpherical::Pdf(const Vector3&,
+                                     const Vector3&) const
 {
     return 0.0f;
 }
 
 __device__
-inline float GPUCameraSpherical::Pdf(float distance,
-                                     const Vector3& hitPosition,
-                                     const Vector3& direction,
-                                     const QuatF& tbnRotation) const
+inline float GPUCameraSpherical::Pdf(float,
+                                     const Vector3&,
+                                     const Vector3&,
+                                     const QuatF&) const
 {
     return 0.0f;
 }
 
 __device__
-inline uint32_t GPUCameraSpherical::FindPixelId(const RayReg& r,
-                                                const Vector2i& resolution) const
+inline uint32_t GPUCameraSpherical::FindPixelId(const RayReg&,
+                                                const Vector2i&) const
 {
     // TODO:
     return 0;

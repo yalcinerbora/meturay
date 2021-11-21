@@ -70,8 +70,8 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const EndpointGroupDataList& c
     return SceneError::OK;
 }
 
-SceneError CPUCameraGroupPinhole::ChangeTime(const NodeListing& lightNodes, double time,
-                                             const std::string& scenePath)
+SceneError CPUCameraGroupPinhole::ChangeTime(const NodeListing&, double,
+                                             const std::string&)
 {
     return SceneError::CAMERA_TYPE_INTERNAL_ERROR;
 }

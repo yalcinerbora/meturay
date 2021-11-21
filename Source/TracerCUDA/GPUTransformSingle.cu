@@ -35,7 +35,7 @@ __global__ void KCConstructGPUTransform(GPUTransformSingle* gTransformLocations,
 
 SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes,
 											   double time,
-											   const std::string& scenePath)
+											   const std::string&)
 {
     std::vector<Matrix4x4> transforms;
     for(const auto& node : transformNodes)
@@ -113,8 +113,8 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
     return SceneError::OK;
 }
 
-SceneError CPUTransformSingle::ChangeTime(const NodeListing& transformNodes, double time,
-										  const std::string& scenePath)
+SceneError CPUTransformSingle::ChangeTime(const NodeListing&, double,
+										  const std::string&)
 {
     // Change time system have not implemented yet
     return SceneError::UNKNOWN_TRANSFORM_TYPE;

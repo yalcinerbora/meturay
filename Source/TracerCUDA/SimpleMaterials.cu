@@ -2,16 +2,16 @@
 #include "RayLib/MemoryAlignment.h"
 
 SceneError LambertCMat::InitializeGroup(const NodeListing& materialNodes,
-                                        const TextureNodeMap& textures,
-                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                        double time, const std::string& scenePath)
+                                        const TextureNodeMap&,
+                                        const std::map<uint32_t, uint32_t>&,
+                                        double time, const std::string&)
 {
     constexpr const char* ALBEDO = "albedo";
 
     std::vector<Vector3> albedoCPU;
     for(const auto& sceneNode : materialNodes)
     {
-        std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO);
+        std::vector<Vector3> albedos = sceneNode->AccessVector3(ALBEDO, time);
         albedoCPU.insert(albedoCPU.end(), albedos.begin(), albedos.end());
     }
 
@@ -31,17 +31,17 @@ SceneError LambertCMat::InitializeGroup(const NodeListing& materialNodes,
     return SceneError::OK;
 }
 
-SceneError LambertCMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                   const std::string& scenePath)
+SceneError LambertCMat::ChangeTime(const NodeListing&, double,
+                                   const std::string&)
 {
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
 // -------------
 SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes,
-                                       const TextureNodeMap& textures,
-                                       const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                       double time, const std::string& scenePath)
+                                       const TextureNodeMap&,
+                                       const std::map<uint32_t, uint32_t>&,
+                                       double, const std::string&)
 {
     constexpr const char* ALBEDO = "albedo";
     constexpr const char* ROUGHNESS = "roughness";
@@ -77,17 +77,17 @@ SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes,
     return SceneError::OK;
 }
 
-SceneError ReflectMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                  const std::string& scenePath)
+SceneError ReflectMat::ChangeTime(const NodeListing&, double,
+                                  const std::string&)
 {
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }
 
 // -------------
 SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes,
-                                       const TextureNodeMap& textures,
+                                       const TextureNodeMap&,
                                        const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
-                                       double time, const std::string& scenePath)
+                                       double, const std::string&)
 {
     constexpr const char* ALBEDO = "albedo";
     constexpr const char* MEDIUM = "medium";
@@ -137,8 +137,8 @@ SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes,
     return SceneError::OK;
 }
 
-SceneError RefractMat::ChangeTime(const NodeListing& materialNodes, double time,
-                                  const std::string& scenePath)
+SceneError RefractMat::ChangeTime(const NodeListing&, double,
+                                  const std::string&)
 {
     return SceneError::MATERIAL_TYPE_INTERNAL_ERROR;
 }

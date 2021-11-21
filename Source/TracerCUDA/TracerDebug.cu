@@ -30,7 +30,7 @@ void Debug::DumpImage(const std::string& fName,
                       const ImageMemory& iMem)
 {
     CUDA_CHECK(cudaDeviceSynchronize());
-    const ImageIOI& io = ImageIOInstance();
+    const ImageIOI& io = *ImageIOInstance();
     Vector2ui size(iMem.SegmentSize()[0],
                    iMem.SegmentSize()[1]);
     auto image = iMem.GMem<Vector4f>();
@@ -47,7 +47,7 @@ void Debug::DumpImage(const std::string& fName,
                       const Vector4* iMem,
                       const Vector2ui& resolution)
 {
-    const ImageIOI& io = ImageIOInstance();
+    const ImageIOI& io = *ImageIOInstance();
     ImageIOError e = ImageIOError::OK;
     if((e = io.WriteImage(reinterpret_cast<const Byte*>(iMem),
                           resolution,
@@ -60,7 +60,7 @@ void Debug::DumpBitmap(const std::string& fName,
                        const Byte* bits,
                        const Vector2ui& resolution)
 {
-    const ImageIOI& io = ImageIOInstance();
+    const ImageIOI& io = *ImageIOInstance();
     ImageIOError e = ImageIOError::OK;
     if((e = io.WriteBitmap(bits, resolution, ImageType::PNG, fName)) != ImageIOError::OK)
         METU_ERROR_LOG(static_cast<std::string>(e));

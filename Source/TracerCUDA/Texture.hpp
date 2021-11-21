@@ -329,7 +329,7 @@ size_t Texture<D, T>::Size() const
 }
 
 template<int D, class T>
-void Texture<D, T>::MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream)
+void Texture<D, T>::MigrateToOtherDevice(const CudaGPU*, cudaStream_t)
 {
      // TODO: Implement texture migration
     assert(false);
@@ -501,7 +501,7 @@ size_t TextureArray<D, T>::Size() const
 }
 
 template<int D, class T>
-void TextureArray<D, T>::MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream)
+void TextureArray<D, T>::MigrateToOtherDevice(const CudaGPU*, cudaStream_t)
 {
      // TODO: Implement texture migration
     assert(false);
@@ -602,7 +602,7 @@ template <class T>
 void TextureCube<T>::Copy(const Byte* sourceData,
                           const Vector2ui& size,
                           CubeTexSide side,
-                          const Vector2ui& offset,
+                          const Vector2ui&,
                           int mipLevel)
 {
     cudaArray_t levelArray;
@@ -630,7 +630,7 @@ template <class T>
 GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
                                    const Vector2ui& size,
                                    CubeTexSide side,
-                                   const Vector2ui& offset,
+                                   const Vector2ui&,
                                    int mipLevel,
                                    cudaStream_t stream)
 {
@@ -675,7 +675,7 @@ size_t TextureCube<T>::Size() const
 }
 
 template <class T>
-void TextureCube<T>::MigrateToOtherDevice(const CudaGPU* deviceTo, cudaStream_t stream)
+void TextureCube<T>::MigrateToOtherDevice(const CudaGPU*, cudaStream_t)
 {
     // TODO: Implement texture migration
     assert(false);

@@ -119,8 +119,7 @@ class GPUSceneJson : public GPUSceneI
                                             // I-O
                                             uint32_t& currentBatchCount,
                                             // Input
-                                            const MultiGPUWorkBatches&,
-                                            double time = 0.0);
+                                            const MultiGPUWorkBatches&);
         SceneError      GenerateAccelerators(std::map<uint32_t, HitKey>& accHitKeyList,
                                              //
                                              const AcceleratorBatchList& acceleratorBatchList,
@@ -130,8 +129,7 @@ class GPUSceneJson : public GPUSceneI
                                              // Transform Id to Global Transform Index
                                              const std::map<uint32_t, uint32_t>& transformIdMappings,
                                              double time = 0.0);
-        SceneError      GenerateBaseAccelerator(const std::map<uint32_t, HitKey>& accHitKeyList,
-                                                double time = 0.0);
+        SceneError      GenerateBaseAccelerator(const std::map<uint32_t, HitKey>& accHitKeyList);
         SceneError      GenerateTransforms(std::map<uint32_t, uint32_t>& transformIdMappings,
                                            uint32_t& identityTransformIndex,
                                            uint32_t& boundaryTransformIndex,
@@ -162,8 +160,7 @@ class GPUSceneJson : public GPUSceneI
 
         SceneError      FindBoundaryLight(const BoundaryMaterialKeyListing& matHitKeyList,
                                           const std::string& bLightGroupTypeName,
-                                          uint32_t bLightId, uint32_t bTransformId,
-                                          double time = 0.0);
+                                          uint32_t bLightId, uint32_t bTransformId);
 
         SceneError      LoadAll(double time);
         SceneError      ChangeAll(double time);

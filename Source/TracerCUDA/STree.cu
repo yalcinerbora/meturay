@@ -93,7 +93,7 @@ void STree::LoadSDTree(const std::string& path, const CudaSystem& system)
     for(uint64_t i = 0; i < dTreeCount; i++)
     {
         size_t fileOffset = offsetCountPairs[i][0];
-        size_t nodeCount = offsetCountPairs[i][1];
+        size_t nCount = offsetCountPairs[i][1];
 
         file.seekg(fileOffset);
         // Read Base
@@ -101,8 +101,8 @@ void STree::LoadSDTree(const std::string& path, const CudaSystem& system)
         file.read(reinterpret_cast<char*>(&dTreeBase.first), sizeof(uint32_t));
         file.read(reinterpret_cast<char*>(&dTreeBase.second), sizeof(float));
         // Read Nodes
-        std::vector<DTreeNode> dTreeNodes(nodeCount);
-        file.read(reinterpret_cast<char*>(dTreeNodes.data()), nodeCount * sizeof(DTreeNode));
+        std::vector<DTreeNode> dTreeNodes(nCount);
+        file.read(reinterpret_cast<char*>(dTreeNodes.data()), nCount * sizeof(DTreeNode));
         // Move to the struct
         hDTreeBases.emplace_back(std::move(dTreeBase));
         hDTreeNodes.emplace_back(std::move(dTreeNodes));

@@ -458,9 +458,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     return e;
 }
 
-SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing& surfaceDataNodes, double time,
-                                            const SurfaceLoaderGeneratorI& loaderGen,
-                                            const std::string& scenePath)
+SceneError GPUPrimitiveTriangle::ChangeTime(const NodeListing&, double,
+                                            const SurfaceLoaderGeneratorI&,
+                                            const std::string&)
 {
     // TODO: Implement
     return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;

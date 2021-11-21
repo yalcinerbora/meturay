@@ -210,8 +210,8 @@ GPUTracer::GPUTracer(const CudaSystem& system,
         {
             // TODO: primitive type maybe have a name OptiX
             // probably not thow i will leave that case
-            std::string s = acc.second->Type();
-            bool accelIsOptiX = (s.find("OptiX") != std::string::npos);
+            std::string accType = acc.second->Type();
+            bool accelIsOptiX = (accType.find("OptiX") != std::string::npos);
 
             if(!foundAnOtherAccel) foundAnOtherAccel = (!accelIsOptiX);
             if(!foundAnOptiXAccel) foundAnOptiXAccel = (accelIsOptiX);
@@ -460,7 +460,7 @@ void GPUTracer::Finalize()
     // Flush Devices and Get the Image
     cudaSystem.SyncAllGPUs();
     std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
-    size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
+    //size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 
     //Debug::DumpMemToFile("OutPixels",
     //                     reinterpret_cast<Vector4*>(imageData.data()),

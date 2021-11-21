@@ -20,17 +20,17 @@ __global__ void KCConstructGPUMediumHomogenous(GPUMediumHomogenous* gMediumLocat
 
 SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
 												double time,
-												const std::string& scenePath)
+												const std::string&)
 {
     //std::vector<GPUMediumHomogenous>
     std::vector<GPUMediumHomogenous::Data> mediumData;
 
     for(const auto& node : mediumNodes)
     {
-        std::vector<Vector3> nodeAbsList = node->AccessVector3(ABSORBTION);
-        std::vector<Vector3> nodeScatList = node->AccessVector3(SCATTERING);
-        std::vector<float> nodeIORList = node->AccessFloat(IOR);
-        std::vector<float> nodePhaseList = node->AccessFloat(PHASE);
+        std::vector<Vector3> nodeAbsList = node->AccessVector3(ABSORBTION, time);
+        std::vector<Vector3> nodeScatList = node->AccessVector3(SCATTERING, time);
+        std::vector<float> nodeIORList = node->AccessFloat(IOR, time);
+        std::vector<float> nodePhaseList = node->AccessFloat(PHASE, time);
 
         assert(node->IdCount() == nodeAbsList.size());
         assert(nodeAbsList.size() == nodeScatList.size());
@@ -78,8 +78,8 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
 	return SceneError::OK;
 }
 
-SceneError CPUMediumHomogenous::ChangeTime(const NodeListing& transformNodes, double time,
-										   const std::string& scenePath)
+SceneError CPUMediumHomogenous::ChangeTime(const NodeListing&, double,
+										   const std::string&)
 {
     // TODO: Implement
 	return SceneError::MEDIUM_TYPE_INTERNAL_ERROR;

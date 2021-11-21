@@ -288,9 +288,9 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
                                                    // pairings that uses this accelerator type
                                                    // and primitive type
                                                    const std::map<uint32_t, SurfaceDefinition>& surfaceList,
-                                                   double time)
+                                                   double)
 {
-    const char* primGroupTypeName = this->primitiveGroup.Type();
+    //const char* primGroupTypeName = this->primitiveGroup.Type();
 
     std::vector<uint32_t> hTransformIndices;
     hTransformIndices.reserve(surfaceList.size());
@@ -622,7 +622,10 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         {
             partitionQueue.emplace(SplitWork{true, current.start, splitLoc, nextSplit, nextParentId, current.depth + 1});
             partitionQueue.emplace(SplitWork{false, splitLoc, current.end, nextSplit, nextParentId, current.depth + 1});
-            maxDepth = current.depth + 1;
+            maxDepth = static_cast<uint8_t>(current.depth + 1);
+
+            if((current.depth + 1) > MAX_BASE_DEPTH)
+                return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
         }
     }
      // BVH cannot hold this surface return error
@@ -701,7 +704,7 @@ TracerError GPUAccBVHGroup<PGroup>::DestroyAccelerators(const CudaSystem&)
 }
 
 template <class PGroup>
-TracerError GPUAccBVHGroup<PGroup>::DestroyAccelerator(uint32_t surface,
+TracerError GPUAccBVHGroup<PGroup>::DestroyAccelerator(uint32_t,
                                                        const CudaSystem&)
 {
     // TODO: Implement
@@ -709,7 +712,7 @@ TracerError GPUAccBVHGroup<PGroup>::DestroyAccelerator(uint32_t surface,
 }
 
 template <class PGroup>
-TracerError GPUAccBVHGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>& surfaces,
+TracerError GPUAccBVHGroup<PGroup>::DestroyAccelerators(const std::vector<uint32_t>&,
                                                         const CudaSystem&)
 {
     // TODO: Implement

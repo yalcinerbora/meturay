@@ -19,7 +19,7 @@ const char* GPUPrimitiveSphere::Type() const
 SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNodes,
                                                double time,
                                                const SurfaceLoaderGeneratorI& loaderGen,
-                                               const TextureNodeMap& textureNodes,
+                                               const TextureNodeMap&,
                                                const std::string& scenePath)
 {
     SceneError e = SceneError::OK;
@@ -115,7 +115,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
     size_t i = 0;
     for(const auto& loader : loaders)
     {
-        const SceneNodeI& node = loader->SceneNode();
+        //const SceneNodeI& node = loader->SceneNode();
         const size_t offset = loaderOffsets[i];
 
         // Load Data in Batch
@@ -148,9 +148,9 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
     return e;
 }
 
-SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing& surfaceDataNodes, double time,
-                                          const SurfaceLoaderGeneratorI& loaderGen,
-                                          const std::string& scenePath)
+SceneError GPUPrimitiveSphere::ChangeTime(const NodeListing&, double,
+                                          const SurfaceLoaderGeneratorI&,
+                                          const std::string&)
 {
     // TODO: Implement
     return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
@@ -166,7 +166,7 @@ AABB3 GPUPrimitiveSphere::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
-bool GPUPrimitiveSphere::PrimitiveHasAlphaMap(uint32_t surfaceDataId) const
+bool GPUPrimitiveSphere::PrimitiveHasAlphaMap(uint32_t) const
 {
     // TODO: add alpha map support for sphere aswell
     return false;

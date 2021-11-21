@@ -31,7 +31,7 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
                                                   const TextureNodeMap& textures,
                                                   const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
                                                   const std::map<uint32_t, uint32_t>& transformIdIndexPairs,
-                                                  uint32_t batchId, double time,
+                                                  uint32_t batchId, double,
                                                   const std::string& scenePath)
 {
     using namespace TextureFunctions;
@@ -129,8 +129,8 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
 }
 
 template <class PGroup>
-SceneError CPULightGroup<PGroup>::ChangeTime(const NodeListing& lightNodes, double time,
-                                             const std::string& scenePath)
+SceneError CPULightGroup<PGroup>::ChangeTime(const NodeListing&, double,
+                                             const std::string&)
 {
     // TODO: Implement
     return SceneError::LIGHT_TYPE_INTERNAL_ERRROR;

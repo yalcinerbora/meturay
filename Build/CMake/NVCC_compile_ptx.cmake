@@ -51,7 +51,6 @@ FUNCTION(NVCC_COMPILE_PTX)
         "-I${MRAY_LIB_INCLUDE_DIRECTORY}"
         # OptiX Documentation says that -G'ed kernels may fail
         # So -lineinfo is used on both configurations
-        --compiler-bindir=${CMAKE_C_COMPILER}
         $<$<CONFIG:Debug>:-G>
         $<$<CONFIG:Release>:-lineinfo>
         #-lineinfo
@@ -61,6 +60,9 @@ FUNCTION(NVCC_COMPILE_PTX)
         $<$<CONFIG:Release>:-DNDEBUG>
         #${ALL_COMPILE_DEFS}
      )
+    if(UNIX)
+        list(APPEND NVCC_COMPILE_OPTIONS --compiler-bindir=${CMAKE_C_COMPILER})
+    endif()
 
     # Custom Target Name
     set(PTX_TARGET "${NVCC_COMPILE_PTX_MAIN_TARGET}_Optix")

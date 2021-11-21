@@ -28,14 +28,14 @@ bool IsEmissiveTrue(const Data&,
 template <class Data, class Surface>
 __device__ __forceinline__
 Vector3 EmitEmpty(// Input
-                  const Vector3& wo,
-                  const Vector3& pos,
-                  const GPUMediumI& m,
+                  const Vector3&,
+                  const Vector3&,
+                  const GPUMediumI&,
                   //
-                  const Surface& surface,
+                  const Surface&,
                   // Constants
                   const Data&,
-                  const HitKey::Type& matId)
+                  const HitKey::Type&)
 {
     return Zero3;
 }
@@ -47,17 +47,17 @@ Vector3 SampleEmpty(// Sampled Output
                     float& pdf,
                     const GPUMediumI*& outMedium,
                     // Input
-                    const Vector3& wi,
-                    const Vector3& pos,
+                    const Vector3&,
+                    const Vector3&,
                     const GPUMediumI& m,
                     //
-                    const Surface& surface,
+                    const Surface&,
                     // I-O
-                    RandomGPU& rng,
+                    RandomGPU&,
                     // Constants
-                    const Data& matData,
-                    const HitKey::Type& matId,
-                    uint32_t sampleIndex)
+                    const Data&,
+                    const HitKey::Type&,
+                    uint32_t)
 {
     outMedium = &m;
     wo = InvalidRayF;
@@ -74,8 +74,8 @@ float PdfZero(const Vector3&,
               //
               const Surface&,
               // Constants
-              const Data& matData,
-              const HitKey::Type& matId)
+              const Data&,
+              const HitKey::Type&)
 {
     return 0.0f;
 }
@@ -89,8 +89,8 @@ float PdfOne(const Vector3&,
              //
              const Surface&,
              // Constants
-             const Data& matData,
-             const HitKey::Type& matId)
+             const Data&,
+             const HitKey::Type&)
 {
     return 1.0f;
 }
@@ -98,24 +98,23 @@ float PdfOne(const Vector3&,
 template <class Data, class Surface>
 __device__ __forceinline__
 Vector3 EvaluateEmpty(// Input
-                      const Vector3& wo,
-                      const Vector3& wi,
-                      const Vector3& pos,
-                      const GPUMediumI& m,
+                      const Vector3&,
+                      const Vector3&,
+                      const Vector3&,
+                      const GPUMediumI&,
                       //
-                      const Surface& surface,
+                      const Surface&,
                       // Constants
-                      const Data& matData,
-                      const HitKey::Type& matId)
+                      const Data&,
+                      const HitKey::Type&)
 {
     return Zero3;
 }
 
 template <class Data, class Surface>
 __device__ __forceinline__
-float SpecularityPerfect(const Surface&, 
-                         const Data& matData,
-                         const HitKey::Type& matId)
+float SpecularityPerfect(const Surface&, const Data&,
+                         const HitKey::Type&)
 {
     return 1.0f;
 }
@@ -123,8 +122,8 @@ float SpecularityPerfect(const Surface&,
 template <class Data, class Surface>
 __device__ __forceinline__
 float SpecularityDiffuse(const Surface&,
-                         const Data& matData,
-                         const HitKey::Type& matId)
+                         const Data&,
+                         const HitKey::Type&)
 {
     return 0.0f;
 }

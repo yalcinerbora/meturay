@@ -34,7 +34,7 @@ struct VisorTransform
 //    Vector2     fov;            // degree
 //};
 
-static std::string VisorTransformToString(const VisorTransform& c)
+inline std::string VisorTransformToString(const VisorTransform& c)
 {
     std::stringstream s;
     //s << "M Index  : " << c.mediumIndex << std::endl;

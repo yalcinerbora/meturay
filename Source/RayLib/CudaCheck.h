@@ -59,6 +59,10 @@ Utility header for header only cuda vector and cpu vector implementations
     {
         printf(string, args...);
     }
+
+#else
+    template<class... Args>
+    __device__ static inline void KERNEL_DEBUG_LOG(const char* const, Args...){}
 #endif
 
 #ifdef METU_DEBUG

@@ -220,7 +220,7 @@ void GPUBaseAcceleratorBVH::Hit(const CudaSystem& system,
 }
 
 SceneError GPUBaseAcceleratorBVH::Initialize(// Accelerator Option Node
-                                             const SceneNodePtr& node,
+                                             const SceneNodePtr&,
                                              // List of surface to leaf accelerator ids
                                              const std::map<uint32_t, HitKey>& keyMap)
 {
@@ -337,7 +337,10 @@ TracerError GPUBaseAcceleratorBVH::Construct(const CudaSystem&,
         {
             partitionQueue.emplace(SplitWork{true, current.start, splitLoc, nextSplit, nextParentId, current.depth + 1});
             partitionQueue.emplace(SplitWork{false, splitLoc, current.end, nextSplit, nextParentId, current.depth + 1});
-            maxDepth = current.depth + 1;
+            maxDepth = static_cast<uint8_t>(current.depth + 1);
+
+            if((current.depth + 1) > MAX_BASE_DEPTH)
+                return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
         }
     }
 

@@ -200,7 +200,7 @@ Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
                          PrimitiveId,
                          const PrimitiveData&,
                          // I-O
-                         RandomGPU& rng)
+                         RandomGPU&)
 {
     normal = Vector3f(INFINITY);
     pdf = 0.0f;
@@ -227,12 +227,12 @@ void DefaultPDFPosRef(// Outputs
 template <class PrimitiveData>
 __device__ __forceinline__
 float DefaultPDFPosHit(// Inputs
-                       const Vector3f& hitPosition,
-                       const Vector3f& hitDirection,
-                       const QuatF& tbnRotation,
+                       const Vector3f&,
+                       const Vector3f&,
+                       const QuatF&,
                        //
-                       const PrimitiveId primitiveId,
-                       const PrimitiveData& primData)
+                       const PrimitiveId,
+                       const PrimitiveData&)
 {
     return 0.0f;
 }
@@ -242,17 +242,17 @@ __device__ __forceinline__
 void DefaultAcqPosition(// Output
                          Vector3f positions[PosCount],
                          // Inputs
-                         PrimitiveId primitiveId,
-                         const PrimitiveData& primData)
+                         PrimitiveId,
+                         const PrimitiveData&)
 {
     positions[0] = Zero3f;
 }
 
 template <class HitData, class PrimitiveData, class LeafData>
 __device__ __forceinline__
-bool DefaultAlphaTest(const HitData& potentialHit,
-                           const LeafData& leaf,
-                           const PrimitiveData& primData)
+bool DefaultAlphaTest(const HitData&,
+                           const LeafData&,
+                           const PrimitiveData&)
 {
     return true;
 }
@@ -260,14 +260,14 @@ bool DefaultAlphaTest(const HitData& potentialHit,
 template <class HitData, class PrimitiveData, class LeafData>
 __device__ __forceinline__
 bool DefaultIntersects(// Output
-                       float& newT,
-                       HitData& newHit,
+                       float&,
+                       HitData&,
                        // I-O
-                       const RayReg& rayData,
+                       const RayReg&,
                        // Input
-                       const GPUTransformI& transform,
-                       const LeafData& leaf,
-                       const PrimitiveData& primData)
+                       const GPUTransformI&,
+                       const LeafData&,
+                       const PrimitiveData&)
 {
     // Always no Intersection
     return false;

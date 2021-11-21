@@ -19,7 +19,7 @@ const char* GPUBaseAcceleratorLinear::Type() const
     return TypeName();
 }
 
-void GPUBaseAcceleratorLinear::GetReady(const CudaSystem& system,
+void GPUBaseAcceleratorLinear::GetReady(const CudaSystem&,
                                         uint32_t rayCount)
 {
     size_t requiredSize = rayCount * sizeof(uint32_t);
@@ -72,7 +72,7 @@ void GPUBaseAcceleratorLinear::Hit(const CudaSystem& system,
 }
 
 SceneError GPUBaseAcceleratorLinear::Initialize(// Accelerator Option Node
-                                                const SceneNodePtr& node,
+                                                const SceneNodePtr&,
                                                 // List of surface to leaf accelerator ids
                                                 const std::map<uint32_t, HitKey>& keyMap)
 {

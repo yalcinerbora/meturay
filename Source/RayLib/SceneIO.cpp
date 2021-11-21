@@ -204,14 +204,14 @@ LightSurfaceStruct SceneIO::LoadLightSurface(uint32_t baseMediumId,
         const NodeIndex nIndex = loc->second.first;
         //const InnerIndex iIndex = loc->second.second;
 
-        const auto& jsnNode = jsnLights[nIndex];
-        std::string lightTypeName = jsnNode[NodeNames::TYPE];
+        const auto& lightJSNNode = jsnLights[nIndex];
+        std::string lightTypeName = lightJSNNode[NodeNames::TYPE];
 
         s.isPrimitive = (lightTypeName == NodeNames::LIGHT_TYPE_PRIMITIVE);
         if(s.isPrimitive)
         {
-            s.acceleratorId = jsnNode[NodeNames::ACCELERATOR];
-            s.primId = jsnNode[NodeNames::PRIMITIVE];
+            s.acceleratorId = lightJSNNode[NodeNames::ACCELERATOR];
+            s.primId = lightJSNNode[NodeNames::PRIMITIVE];
         }
         else
         {
