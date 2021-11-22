@@ -336,23 +336,9 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
     bvhMemories.resize(bvhCount);
 
     // Finally Allocate and load to GPU memory
-    size_t sizeOfTransformIndices = sizeof(uint32_t) * bvhCount;
-    sizeOfTransformIndices = Memory::AlignSize(sizeOfTransformIndices);
-    size_t sizeOfBVHRootPtrs = sizeof(BVHNode<LeafData>*) * bvhCount;
-    sizeOfBVHRootPtrs = Memory::AlignSize(sizeOfBVHRootPtrs);
-
-    size_t requiredSize = (sizeOfTransformIndices + sizeOfBVHRootPtrs);
-
-    // Reallocate if memory is not enough
-    GPUMemFuncs::EnlargeBuffer(memory, requiredSize);
-
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
-    dAccTransformIds = reinterpret_cast<uint32_t*>(dBasePtr + offset);
-    offset += sizeOfTransformIndices;
-    dBVHLists = reinterpret_cast<const BVHNode<LeafData>**>(dBasePtr + offset);
-    offset += sizeOfBVHRootPtrs;
-    assert(requiredSize == offset);
+    GPUMemFuncs::AllocateMultiData(std::tie(dAccTransformIds, dBVHLists),
+                                   memory,
+                                   {bvhCount, bvhCount});
 
     // Copy Transforms
     CUDA_CHECK(cudaMemcpy(dAccTransformIds,
@@ -451,47 +437,21 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     size_t tempMemSize = std::max(cubIfMemSize,
                                   std::max(centerReduceMemSize,
                                            aabbReduceMemSize));
-    // GPU Memory
-    size_t primIdsSize = totalPrimCount * sizeof(uint64_t);
-    primIdsSize = Memory::AlignSize(primIdsSize);
-    size_t idsSize = totalPrimCount * sizeof(uint32_t);
-    idsSize = Memory::AlignSize(idsSize);
-    size_t aabbsSize = totalPrimCount * sizeof(AABB3f);
-    aabbsSize = Memory::AlignSize(aabbsSize);
-    size_t primCentersSize = totalPrimCount * sizeof(Vector3f);
-    primCentersSize = Memory::AlignSize(primCentersSize);
-    size_t partitionOutSize = sizeof(uint32_t);
-    partitionOutSize = Memory::AlignSize(partitionOutSize);
-    //
-    tempMemSize = Memory::AlignSize(tempMemSize);
-
-    size_t totalSize = (primIdsSize +
-                        idsSize * 2 +
-                        aabbsSize +
-                        primCentersSize +
-                        partitionOutSize +
-                        tempMemSize);
-
-    DeviceMemory tempMemory = DeviceMemory(totalSize);
-    Byte* memPtr = static_cast<Byte*>(tempMemory);
-
-    // Memory Set
-    size_t offset = 0;
-    uint64_t* dPrimIds = reinterpret_cast<uint64_t*>(memPtr + offset);
-    offset += primIdsSize;
-    uint32_t* dIdsIn = reinterpret_cast<uint32_t*>(memPtr + offset);
-    offset += idsSize;
-    uint32_t* dIdsTemp = reinterpret_cast<uint32_t*>(memPtr + offset);
-    offset += idsSize;
-    AABB3f* dPrimAABBs = reinterpret_cast<AABB3f*>(memPtr + offset);
-    offset += aabbsSize;
-    Vector3f* dPrimCenters = reinterpret_cast<Vector3f*>(memPtr + offset);
-    offset += primCentersSize;
-    uint32_t* dPartitionSplitOut = reinterpret_cast<uint32_t*>(memPtr + offset);
-    offset += partitionOutSize;
-    void* dTemp = reinterpret_cast<void*>(memPtr + offset);
-    offset += tempMemSize;
-    assert(offset == totalSize);
+    // GPU Memory    
+    uint64_t*   dPrimIds;
+    uint32_t*   dIdsIn;
+    uint32_t*   dIdsTemp;
+    AABB3f*     dPrimAABBs;
+    Vector3f*   dPrimCenters;
+    uint32_t*   dPartitionSplitOut;
+    Byte*       dTemp;
+    DeviceMemory tempMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dPrimIds, dIdsIn, dIdsTemp,
+                                            dPrimAABBs, dPrimCenters,
+                                            dPartitionSplitOut, dTemp),
+                                   tempMemory,
+                                   {totalPrimCount, totalPrimCount, totalPrimCount,
+                                   totalPrimCount, totalPrimCount, 1, tempMemSize});
     // Populate Memory
     // Populate Indices
     size_t indexOffset = 0;

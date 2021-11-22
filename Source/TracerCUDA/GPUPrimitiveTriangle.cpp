@@ -83,7 +83,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         {
             NodeId id = pair.first;
             batchAlphaMapFlag.emplace(id, alphaMaps[i].first);
-            batchBackFaceCullFlag.emplace(id, static_cast<bool>(cullFaceFlags[i]));
+            batchBackFaceCullFlag.emplace(id, static_cast<bool>(cullData[i]));
             i++;
         }
     }
@@ -382,42 +382,21 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     }
 
     // All loaded to CPU, copy to GPU
-    size_t posSize = sizeof(Vector3f) * totalDataCount;
-    posSize = Memory::AlignSize(posSize);
-    size_t uvSize = sizeof(Vector2f) * totalDataCount;
-    uvSize = Memory::AlignSize(uvSize);
-    size_t quatSize = sizeof(QuatF) * totalDataCount;
-    quatSize = Memory::AlignSize(quatSize);
-    size_t indexSize = sizeof(uint64_t) * totalIndexCount;
-    indexSize = Memory::AlignSize(indexSize);
-    size_t cullSize = sizeof(bool) * batchRanges.size();
-    cullSize = Memory::AlignSize(cullSize);
-    size_t alphaMapPtrSize = sizeof(GPUBitmap*) * batchRanges.size();
-    alphaMapPtrSize = Memory::AlignSize(alphaMapPtrSize);
-    size_t offsetSize = sizeof(uint64_t) * batchOffsets.size();
-    size_t totalSize = (posSize + uvSize +
-                        quatSize + indexSize +
-                        cullSize + alphaMapPtrSize +
-                        offsetSize);
-
-    memory = std::move(DeviceMemory(totalSize));
-    size_t offset = 0;
-    Byte* dPositions = static_cast<Byte*>(memory) + offset;
-    offset += posSize;
-    Byte* dUVs = static_cast<Byte*>(memory) + offset;
-    offset += uvSize;
-    Byte* dQuats = static_cast<Byte*>(memory) + offset;
-    offset += quatSize;
-    Byte* dIndices = static_cast<Byte*>(memory) + offset;
-    offset += indexSize;
-    Byte* dCulls = static_cast<Byte*>(memory) + offset;
-    offset += cullSize;
-    Byte* dAlphaMapPtrs = static_cast<Byte*>(memory) + offset;
-    offset += alphaMapPtrSize;
-    Byte* dOffsets = static_cast<Byte*>(memory) + offset;
-    offset += offsetSize;
-    assert(offset == totalSize);
-
+    // Alloc Memory
+    Vector3f*         dPositions;
+    Vector2f*         dUVs;
+    QuatF*            dQuats;
+    uint64_t*         dIndices;
+    bool*             dCulls;
+    const GPUBitmap** dAlphaMapPtrs;
+    uint64_t*         dOffsets;
+    GPUMemFuncs::AllocateMultiData(std::tie(dPositions, dUVs, dQuats,
+                                            dIndices, dCulls, dAlphaMapPtrs,
+                                            dOffsets),
+                                   memory,
+                                   {totalDataCount, totalDataCount, totalDataCount,
+                                   totalIndexCount, batchRanges.size(), batchRanges.size(),
+                                   batchOffsets.size()});
     // Copy Vertex Data
     CUDA_CHECK(cudaMemcpy(dPositions, postitionsCPU.data(),
                           sizeof(Vector3f) * totalDataCount,
@@ -432,7 +411,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     CUDA_CHECK(cudaMemcpy(dIndices, indexCPU.data(),
                           totalIndexCount * sizeof(uint64_t),
                           cudaMemcpyHostToDevice));
-
     // Cull Face Flags, AlphaMaps & Prim Offsets
     static_assert(sizeof(bool) == sizeof(Byte));
     CUDA_CHECK(cudaMemcpy(dCulls, cullFaceFlags.data(),
@@ -446,15 +424,14 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           cudaMemcpyHostToDevice));
 
     // Set Main Pointers of batch
-    dData.positions = reinterpret_cast<Vector3f*>(dPositions);
-    dData.uvs = reinterpret_cast<Vector2f*>(dUVs);
-    dData.tbnRotations = reinterpret_cast<QuatF*>(dQuats);
-    dData.indexList = reinterpret_cast<uint64_t*>(dIndices);
-    dData.cullFace = reinterpret_cast<bool*>(dCulls);
-    dData.alphaMaps = reinterpret_cast<const GPUBitmap**>(dAlphaMapPtrs);
-    dData.primOffsets = reinterpret_cast<uint64_t*>(dOffsets);
+    dData.positions = dPositions;
+    dData.uvs = dUVs;
+    dData.tbnRotations = dQuats;
+    dData.indexList = dIndices;
+    dData.cullFace = dCulls;
+    dData.alphaMaps = dAlphaMapPtrs;
+    dData.primOffsets = dOffsets;
     dData.primBatchCount = static_cast<uint32_t>(batchOffsets.size());
-
     return e;
 }
 

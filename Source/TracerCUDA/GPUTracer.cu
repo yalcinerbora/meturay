@@ -85,7 +85,7 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras,
         dGPUCameras.insert(dGPUCameras.end(), dCList.begin(), dCList.end());
         dGPUEndpoints.insert(dGPUEndpoints.end(), dEList.begin(), dEList.end());
 
-        cameraGroupNames.push_back(camera.first);
+        cameraGroupNames.insert(cameraGroupNames.end(), c.EndpointCount(), camera.first);
     }
     cameraCount = static_cast<uint32_t>(dGPUCameras.size());
 

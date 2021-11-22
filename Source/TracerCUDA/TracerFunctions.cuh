@@ -32,7 +32,7 @@ namespace TracerFunctions
     float FrenelConductor(float cosIn, float iorIn, float kIn)
     {
         // https://pbr-book.org/3ed-2018/Reflection_Models/Specular_Reflection_and_Transmission#FrConductor
-        // 
+        //
         // https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
         // Find sin from trigonometry
         float cosInSqr = cosIn * cosIn;
@@ -47,7 +47,7 @@ namespace TracerFunctions
         a2b2 *= a2b2;
         a2b2 += 4.0f * nSqr * kSqr;
         a2b2 = sqrt(max(a2b2, 0.0f)); // Complex Skip
-        // 
+        //
         float a = 0.5f * (a2b2 + (nSqr - kSqr - sinInSqr));
         a = sqrt(max(a, 0.0f));
 
@@ -71,8 +71,8 @@ namespace TracerFunctions
         denom = denom * denom;
         denom *= MathConstants::Pi;
 
-        //if(abs(denom) < MathConstants::SmallEpsilon)
-        //    return 0.0f;
+        if(abs(denom) < MathConstants::SmallEpsilon)
+            return 0.0f;
         float result = (alphaSqr / denom);
         return isnan(result) ? 0.0f : result;
     }
@@ -122,7 +122,7 @@ namespace TracerFunctions
         // Unreal Version
         // This is much more verbose than 0.125f
         // and it shoud have same perf
-        //static constexpr float denom = 1.0f / 8.0f;     
+        //static constexpr float denom = 1.0f / 8.0f;
         //float k = (roughness + 1);
         //k = k * k;
         //k *= denom;

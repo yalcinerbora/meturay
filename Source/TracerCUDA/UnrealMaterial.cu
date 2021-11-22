@@ -193,86 +193,21 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
     // Allocation of pointers etc.
     size_t totalMatCount = matConstructionInfo.size();
     // Allocation
-    size_t albedoConstSize = albedoConstCount * sizeof(Constant3CRef);
-    albedoConstSize = Memory::AlignSize(albedoConstSize);
-    size_t albedoTexRefSize = albedoTexCount * sizeof(Texture2D3CRef);
-    albedoTexRefSize = Memory::AlignSize(albedoTexRefSize);
-    size_t normalTexRefSize = normalTexCount * sizeof(Texture2D3CRef);
-    normalTexRefSize = Memory::AlignSize(normalTexRefSize);
-    size_t metallicConstSize = metallicConstCount * sizeof(Constant1CRef);
-    metallicConstSize = Memory::AlignSize(metallicConstSize);
-    size_t metallicTexRefSize = metallicTexCount * sizeof(Texture2D1CRef);
-    metallicTexRefSize = Memory::AlignSize(metallicTexRefSize);
-    size_t specularConstSize = specularConstCount * sizeof(Constant1CRef);
-    specularConstSize = Memory::AlignSize(specularConstSize);
-    size_t specularTexRefSize = specularTexCount * sizeof(Texture2D1CRef);
-    specularTexRefSize = Memory::AlignSize(specularTexRefSize);
-    size_t roughnessConstSize = roughnessConstCount * sizeof(Constant1CRef);
-    roughnessConstSize = Memory::AlignSize(roughnessConstSize);
-    size_t roughnessTexRefSize = roughnessTexCount * sizeof(Texture2D1CRef);
-    roughnessTexRefSize = Memory::AlignSize(roughnessTexRefSize);
-    // Main Ptrs
-    size_t albedoPtrSize = totalMatCount * sizeof(Texture2D3CRefI*);
-    albedoPtrSize = Memory::AlignSize(albedoPtrSize);
-    size_t normalPtrSize = totalMatCount * sizeof(Texture2D3CRefI*);
-    normalPtrSize = Memory::AlignSize(normalPtrSize);
-    size_t metallicPtrSize = totalMatCount * sizeof(Texture2D1CRefI*);
-    metallicPtrSize = Memory::AlignSize(metallicPtrSize);
-    size_t specularPtrSize = totalMatCount * sizeof(Texture2D1CRefI*);
-    specularPtrSize = Memory::AlignSize(specularPtrSize);
-    size_t roughnessPtrSize = totalMatCount * sizeof(Texture2D1CRefI*);
-    roughnessPtrSize = Memory::AlignSize(roughnessPtrSize);
-
-    size_t totalSize = (albedoConstSize + albedoTexRefSize +
-                        normalTexRefSize +
-                        metallicConstSize + metallicTexRefSize +
-                        specularConstSize + specularTexRefSize +
-                        roughnessConstSize + roughnessTexRefSize +
-                        albedoPtrSize +
-                        normalPtrSize +
-                        metallicPtrSize +
-                        specularPtrSize +
-                        roughnessPtrSize);
-
-    memory = std::move(DeviceMemory(totalSize));
-
-    Byte* memPtr = static_cast<Byte*>(memory);
-    size_t offset = 0;
-    // Albedo
-    dConstAlbedo = reinterpret_cast<Constant3CRef*>(memPtr + offset);
-    offset += albedoConstSize;
-    dTextureAlbedoRef = reinterpret_cast<Texture2D3CRef*>(memPtr + offset);
-    offset += albedoTexRefSize;
-    // Normal
-    dTextureNormalRef = reinterpret_cast<Texture2D3CRef*>(memPtr + offset);
-    offset += normalTexRefSize;
-    // Metallic
-    dConstMetallic = reinterpret_cast<Constant1CRef*>(memPtr + offset);
-    offset += metallicConstSize;
-    dTextureMetallicRef = reinterpret_cast<Texture2D1CRef*>(memPtr + offset);
-    offset += metallicTexRefSize;
-    // Speuclar
-    dConstSpecular = reinterpret_cast<Constant1CRef*>(memPtr + offset);
-    offset += specularConstSize;
-    dTextureSpecularRef = reinterpret_cast<Texture2D1CRef*>(memPtr + offset);
-    offset += specularTexRefSize;
-    // Roughness
-    dConstRoughness = reinterpret_cast<Constant1CRef*>(memPtr + offset);
-    offset += roughnessConstSize;
-    dTextureRoughnessRef = reinterpret_cast<Texture2D1CRef*>(memPtr + offset);
-    offset += roughnessTexRefSize;
-    // Ptrs
-    dAlbedo = reinterpret_cast<const Texture2D3CRefI**>(memPtr + offset);
-    offset += albedoPtrSize;
-    dNormal = reinterpret_cast<const Texture2D3CRefI**>(memPtr + offset);
-    offset += normalPtrSize;
-    dMetallic = reinterpret_cast<const Texture2D1CRefI**>(memPtr + offset);
-    offset += metallicPtrSize;
-    dSpecular = reinterpret_cast<const Texture2D1CRefI**>(memPtr + offset);
-    offset += specularPtrSize;
-    dRoughness = reinterpret_cast<const Texture2D1CRefI**>(memPtr + offset);
-    offset += roughnessPtrSize;
-    assert(totalSize == offset);
+    GPUMemFuncs::AllocateMultiData(std::tie(dConstAlbedo, dTextureAlbedoRef,
+                                            dTextureNormalRef,
+                                            dConstMetallic, dTextureMetallicRef,
+                                            dConstSpecular, dTextureSpecularRef,
+                                            dConstRoughness, dTextureRoughnessRef,
+                                            dAlbedo, dNormal, dMetallic, dSpecular,
+                                            dRoughness),
+                                   memory,
+                                   {albedoConstCount, albedoTexCount,
+                                   normalTexCount,
+                                   metallicConstCount, metallicTexCount,
+                                   specularConstCount, specularTexCount,
+                                   roughnessConstCount, roughnessTexCount,
+                                   totalMatCount, totalMatCount, totalMatCount,
+                                   totalMatCount, totalMatCount});
 
     // Finally Initialize Struct
     dData = UnrealMatData
@@ -337,44 +272,19 @@ TracerError UnrealMat::ConstructTextureReferences()
         i++;
     }
     // Allocate Temp GPU Memory
-    // Size Determination
-    size_t counterSize = sizeof(uint32_t) * 9;
-    counterSize = Memory::AlignSize(counterSize);
-    size_t albedoConstructionSize = sizeof(TextureOrConstReferenceData<Vector3>) * materialCount;
-    albedoConstructionSize = Memory::AlignSize(albedoConstructionSize);
-    size_t normalConstructionSize = sizeof(cudaTextureObject_t) * materialCount;
-    normalConstructionSize = Memory::AlignSize(normalConstructionSize);
-    size_t metallicConstructionSize = sizeof(TextureOrConstReferenceData<float>) * materialCount;
-    metallicConstructionSize = Memory::AlignSize(metallicConstructionSize);
-    size_t specularConstructionSize = sizeof(TextureOrConstReferenceData<float>) * materialCount;
-    specularConstructionSize = Memory::AlignSize(specularConstructionSize);
-    size_t roughnessConstructionSize = sizeof(TextureOrConstReferenceData<float>) * materialCount;
-    roughnessConstructionSize = Memory::AlignSize(roughnessConstructionSize);
-
-    size_t totalSize = (counterSize +
-                        albedoConstructionSize +
-                        metallicConstructionSize +
-                        specularConstructionSize +
-                        roughnessConstructionSize +
-                        normalConstructionSize);
-    DeviceMemory tempMemory(totalSize);
-
-    size_t offset = 0;
-    Byte* tempMemPtr = static_cast<Byte*>(tempMemory);
-    TextureOrConstReferenceData<Vector3>* dAlbedoConstructionData = reinterpret_cast<TextureOrConstReferenceData<Vector3>*>(tempMemPtr + offset);
-    offset += albedoConstructionSize;
-    cudaTextureObject_t* dNormalTextures = reinterpret_cast<cudaTextureObject_t*>(tempMemPtr + offset);
-    offset += normalConstructionSize;
-    TextureOrConstReferenceData<float>* dMetallicConstructionData = reinterpret_cast<TextureOrConstReferenceData<float>*>(tempMemPtr + offset);
-    offset += metallicConstructionSize;
-    TextureOrConstReferenceData<float>* dSpecularConstructionData = reinterpret_cast<TextureOrConstReferenceData<float>*>(tempMemPtr + offset);
-    offset += specularConstructionSize;
-    TextureOrConstReferenceData<float>* dRoughnessConstructionData = reinterpret_cast<TextureOrConstReferenceData<float>*>(tempMemPtr + offset);
-    offset += roughnessConstructionSize;
-    uint32_t* dCounters = reinterpret_cast<uint32_t*>(tempMemPtr + offset);
-    offset += counterSize;
-    assert(offset == totalSize);
-
+    uint32_t* dCounters;
+    cudaTextureObject_t* dNormalTextures;
+    TextureOrConstReferenceData<float>* dMetallicConstructionData;
+    TextureOrConstReferenceData<float>* dSpecularConstructionData;
+    TextureOrConstReferenceData<float>* dRoughnessConstructionData;
+    TextureOrConstReferenceData<Vector3>* dAlbedoConstructionData;
+    DeviceMemory tempMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dAlbedoConstructionData, dNormalTextures,
+                                            dMetallicConstructionData, dSpecularConstructionData,
+                                            dRoughnessConstructionData, dCounters),
+                                   tempMemory,
+                                   {materialCount, materialCount, materialCount,
+                                   materialCount, materialCount, 9});
     // Load temp memory with data
     CUDA_CHECK(cudaMemset(dCounters, 0x00, sizeof(uint32_t) * 9));
     CUDA_CHECK(cudaMemcpy(dAlbedoConstructionData,

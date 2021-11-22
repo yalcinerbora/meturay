@@ -146,16 +146,17 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
                    alignedSizes.begin(),
                    [](const Vector2ui& vec) -> std::array<size_t, 5>
                    {
-                       return {// Row PDF Align Size
-                                        Memory::AlignSize(vec[0] * sizeof(float)),
-                                        // Row CDF Align Size
-                                        Memory::AlignSize((vec[0] + 1) * sizeof(float)),
-                                        // Column PDF Align Size
-                                        Memory::AlignSize(vec[1] * sizeof(float)),
-                                        // Column CDF Align Size
-                                        Memory::AlignSize((vec[1] + 1) * sizeof(float)),
-                                        // X Dist1D Align Size
-                                        Memory::AlignSize(vec[1] * sizeof(GPUDistPiecewiseConst1D))
+                       return
+                       {    // Row PDF Align Size
+                            Memory::AlignSize(vec[0] * sizeof(float)),
+                            // Row CDF Align Size
+                            Memory::AlignSize((vec[0] + 1) * sizeof(float)),
+                            // Column PDF Align Size
+                            Memory::AlignSize(vec[1] * sizeof(float)),
+                            // Column CDF Align Size
+                            Memory::AlignSize((vec[1] + 1) * sizeof(float)),
+                            // X Dist1D Align Size
+                            Memory::AlignSize(vec[1] * sizeof(GPUDistPiecewiseConst1D))
                        };
                    });
     size_t totalSize = 0;

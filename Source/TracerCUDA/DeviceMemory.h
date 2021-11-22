@@ -283,7 +283,7 @@ namespace DeviceMemDetail
         using CurrentType = typename std::tuple_element_t<I, std::tuple<Tp...>>;
 
         size_t alignedSize = Memory::AlignSize(sizeof(CurrentType) * countList[I],
-                                        alignment);
+                                               alignment);
 
         alignedSizeList[I] = alignedSize;
 
