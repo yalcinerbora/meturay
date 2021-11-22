@@ -15,8 +15,8 @@ struct OpitXBaseAccelParams
     TransformId*            gTransformIds;
     PrimitiveId*            gPrimitiveIds;
     HitStructPtr            gHitStructs;
-    // Inputs
-    const RayGMem*          gRays;
+    // I-O
+    RayGMem*                gRays;
     // Constants
     uint32_t                maxAttributeCount;
     const GPUTransformI**   gGlobalTransformArray;

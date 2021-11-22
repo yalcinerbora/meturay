@@ -166,9 +166,15 @@ AABB3 GPUPrimitiveSphere::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
-bool GPUPrimitiveSphere::PrimitiveHasAlphaMap(uint32_t) const
+bool GPUPrimitiveSphere::PrimitiveBatchHasAlphaMap(uint32_t) const
 {
     // TODO: add alpha map support for sphere aswell
+    return false;
+}
+
+bool GPUPrimitiveSphere::PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const
+{
+    // De don't do back face culling on sphere
     return false;
 }
 

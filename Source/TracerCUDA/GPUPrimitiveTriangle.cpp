@@ -65,19 +65,9 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             if(e.what()[0] != '\0') METU_ERROR_LOG(e.what());
             return e;
         }
-
         // Check alpha maps
         auto alphaMaps = s.AccessOptionalTextureNode(ALPHA_MAP_NAME, time);
         alphaMapInfo.insert(alphaMapInfo.end(), alphaMaps.cbegin(), alphaMaps.cend());
-        // Add alpha map info for each surface
-        int i = 0;
-        for(const auto& pair : s.Ids())
-        {
-            NodeId id = pair.first;
-            batchAlphaMapFlag.emplace(id, alphaMaps[i].first);
-            i++;
-        }
-
         // Check optional cull flag
         std::vector<bool> cullData;
         if(s.CheckNode(CULL_FLAG_NAME))
@@ -86,6 +76,16 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         }
         else cullData.resize(s.IdCount(), true);
         cullFaceFlags.insert(cullFaceFlags.end(), cullData.cbegin(), cullData.cend());
+
+        // Populate HasAlphaMap & Cull Face flags for each prim batch
+        int i = 0;
+        for(const auto& pair : s.Ids())
+        {
+            NodeId id = pair.first;
+            batchAlphaMapFlag.emplace(id, alphaMaps[i].first);
+            batchBackFaceCullFlag.emplace(id, static_cast<bool>(cullFaceFlags[i]));
+            i++;
+        }
     }
 
     // Do sanity check for data type matching
@@ -280,7 +280,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
 
             // Utilize position and uv for quat generation
-            std::for_each(//std::execution::par_unseq,
+            std::for_each(std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {
@@ -476,9 +476,14 @@ AABB3 GPUPrimitiveTriangle::PrimitiveBatchAABB(uint32_t surfaceDataId) const
     return batchAABBs.at(surfaceDataId);
 }
 
-bool GPUPrimitiveTriangle::PrimitiveHasAlphaMap(uint32_t surfaceDataId) const
+bool GPUPrimitiveTriangle::PrimitiveBatchHasAlphaMap(uint32_t surfaceDataId) const
 {
     return batchAlphaMapFlag.at(surfaceDataId);
+}
+
+bool GPUPrimitiveTriangle::PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const
+{
+    return batchBackFaceCullFlag.at(surfaceDataId);
 }
 
 uint64_t GPUPrimitiveTriangle::TotalPrimitiveCount() const

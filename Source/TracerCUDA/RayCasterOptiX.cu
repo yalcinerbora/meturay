@@ -6,6 +6,8 @@
 #include "TracerDebug.h"
 
 #include <optix_stack_size.h>
+#include <numeric>
+#include <execution>
 
 RayCasterOptiX::RayCasterOptiX(const GPUSceneI& gpuScene,
                                const CudaSystem& system)
@@ -26,10 +28,15 @@ RayCasterOptiX::RayCasterOptiX(const GPUSceneI& gpuScene,
     {
         optixGPUData.push_back(
         {
-            0,
-            nullptr, nullptr, {},
-            nullptr, DeviceLocalMemory(&gpu),
-            {}, DeviceLocalMemory(&gpu)
+            0,                          // Traversable Handle
+            nullptr,                    // Pipeline
+            nullptr,                    // Module
+            {},                         // Program Groups
+            OpitXBaseAccelParams{},     // Host Params
+            nullptr,                    // Device Params
+            DeviceLocalMemory(&gpu),    // Device Params Memory
+            OptixShaderBindingTable{},  // SBT
+            DeviceLocalMemory(&gpu)     // SBT Memory
         });
     }
 }
@@ -296,11 +303,15 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     std::vector<Record<void, void>> hRecords;
     // Hit Function Names (for each accelerator group)
     std::vector<HitFunctionNames> hfNames;
+    // CullFace flags (for each accelerator in the scene)
+    std::vector<bool> hCullFlags;
+    // SBT Offsets (for each accelerator in the scene)
+    std::vector<uint32_t> hGlobalSBTOffsets;
     // Reserve Memory
-    traversables.reserve(optixSystem.OptixCapableDevices().size());
+    traversables.resize(optixSystem.OptixCapableDevices().size());
     hPrimTransformTypes.reserve(accelBatches.size());
-    hProgramGroupIndices.reserve(totalAcceleratorCount);
     hfNames.reserve(accelBatches.size());
+    hCullFlags.reserve(totalAcceleratorCount);
     // Attach Transform gpu pointer to the Accelerator Batches
     // Set the OptixSystem
     // Get optix required data from the accelerator groups
@@ -323,25 +334,38 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
         // Copy required data
         // (for base accelerator module creation sbt etc..)
         auto accTraversables = accOptiX->GetOptixTraversables();
-        traversables.emplace_back();
+        assert(traversables.size() == accTraversables.size());
         uint32_t i = 0;
         for(auto& t : traversables)
         {
             t.insert(t.end(), accTraversables[i].cbegin(),
                      accTraversables[i].cend());
-            accTraversables.clear();
             i++;
         }
+        accTraversables.clear();
 
         // Copy Primitive Transform Type
-        hPrimTransformTypes.push_back(accOptiX->GetPrimitiveTransformType());
+        hPrimTransformTypes.insert(hPrimTransformTypes.end(), acceleratorCount,
+                                   accOptiX->GetPrimitiveTransformType());
+
+
+        const auto hAccGroupCullFlags = accOptiX->GetCullFlagPerAccel();
+        hCullFlags.insert(hCullFlags.end(),
+                          hAccGroupCullFlags.cbegin(),
+                          hAccGroupCullFlags.cend());
 
         // Copy Transform Ids to global linear memory
         CUDA_CHECK(cudaMemcpy(dAllTransformIds + offset,
-                              accOptiX->GetDeviceTransformIdPtr(),
+                              accOptiX->GetDeviceTransformIdsPtr(),
                               acceleratorCount * sizeof(TransformId),
                               cudaMemcpyDeviceToDevice));
         offset += acceleratorCount;
+
+        // Push back the counts currently we will do a prefix sum after
+        const auto& localSBTCounts = accOptiX->GetSBTCounts();
+        hGlobalSBTOffsets.insert(hGlobalSBTOffsets.end(),
+                                 localSBTCounts.cbegin(),
+                                 localSBTCounts.cend());
 
         const auto& accRecords = accOptiX->GetRecords();
         hRecords.insert(hRecords.end(),
@@ -367,8 +391,17 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     auto& baseAccOptiX = dynamic_cast<GPUBaseAcceleratorOptiX&>(baseAccelerator);
     baseAccOptiX.SetOptiXSystem(&optixSystem);
 
+    //Generate global SBT offsets from local SBT offsets
+    // cpp reference says this can run in-place
+    // (d_first can be equal to first)
+    std::exclusive_scan(std::execution::par_unseq,
+                        hGlobalSBTOffsets.cbegin(),
+                        hGlobalSBTOffsets.cend(),
+                        hGlobalSBTOffsets.begin(), 0u);
+
     // Construct Base accelerator using the fetched data
     if((e = baseAccOptiX.Construct(traversables, hPrimTransformTypes,
+                                   hGlobalSBTOffsets, hCullFlags,
                                    dAllTransformIds, dTransforms)) != TracerError::OK)
         return e;
 
@@ -492,9 +525,10 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
             const auto& launchData = optixGPUData[optixDeviceIndex];
             const auto paramsPtr = AsOptixPtr(launchData.dOptixLaunchParams);
             auto optixTraverseHandle = optixGPUData[optixDeviceIndex].baseAccelerator;
+            auto& hParams = optixGPUData[optixDeviceIndex].hOptixLaunchParams;
             size_t offset = portion.offset;
 
-            OpitXBaseAccelParams hParams = {};
+            hParams = {};
             hParams.gHitStructs = dHitStructs.AdvancedPtr(static_cast<uint32_t>(offset));
             hParams.gPrimitiveIds = dPrimitiveIds + offset;
             hParams.gRays = dRays + offset;
@@ -504,10 +538,11 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
             hParams.gGlobalTransformArray = dGlobalTransformArray;
 
             // Copy portioned pointer to Constant Memory
-            CUDA_CHECK(cudaMemcpy(launchData.dOptixLaunchParams,
-                                  &hParams,
-                                  sizeof(OpitXBaseAccelParams),
-                                  cudaMemcpyHostToDevice));
+            CUDA_CHECK(cudaMemcpyAsync(launchData.dOptixLaunchParams,
+                                       &hParams,
+                                       sizeof(OpitXBaseAccelParams),
+                                       cudaMemcpyHostToDevice,
+                                       (cudaStream_t)0));
 
             OPTIX_CHECK(optixLaunch(launchData.pipeline, (cudaStream_t)0,
                                     paramsPtr, sizeof(OpitXBaseAccelParams),
@@ -551,7 +586,7 @@ void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
                               uint32_t totalRayOut,
                               HitKey baseBoundMatKey)
 {
-        // Sort and Partition happens on leader device
+    // Sort and Partition happens on leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
     // Ray Memory Pointers

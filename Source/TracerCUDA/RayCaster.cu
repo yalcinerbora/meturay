@@ -49,8 +49,6 @@ TracerError RayCaster::ConstructAccelerators(const GPUTransformI** dTransforms,
 
 RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
 {
-    //if(crashed) return;
-
     // Sort and Partition happens on the leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
 
@@ -82,9 +80,6 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
     uint32_t validRayOffset = 0;
     while(rayCount > 0)
     {
-        //Debug::DumpMemToFile("dAccKeys", dCurrentKeys, currentRayCount);
-        //Debug::DumpMemToFile("dRayIds", dCurrentRayIds, currentRayCount);
-
         // Traverse accelerator
         // Base accelerator provides potential hits
         // Cannot provide an absolute hit (its not its job)
@@ -95,11 +90,6 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
                             rayCount);
         // Wait all GPUs to finish...
         cudaSystem.SyncAllGPUsMainStreamOnly();
-
-        //METU_LOG("------------------------------------");
-
-        //Debug::DumpMemToFile("dAccKeys", dCurrentKeys, currentRayCount);
-        //Debug::DumpMemToFile("dRayIds", dCurrentRayIds, currentRayCount);
 
         // Base accelerator traverses the data partially
         // Updates current key (which represents inner accelerator batch and id)
@@ -128,17 +118,11 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
         // of the total internal reflection phenomena.
         auto portions = rayMemory.Partition(rayCount);
 
-        //Debug::DumpMemToFile("dAccKeys", dCurrentKeys, currentRayCount);
-        //Debug::DumpMemToFile("dRayIds", dCurrentRayIds, currentRayCount);
-
-        // Reorder partitions for efficient calls
+        // TODO: Reorder partitions for efficient calls
         // (group partitions into gpus and order for better async access)
-        // ....
-        // TODO:
         const int totalGPU = static_cast<int>(cudaSystem.SystemGPUs().size());
         const auto& gpus = cudaSystem.SystemGPUs();
         auto currentGPU = gpus.begin();
-
         // For each partition
         for(const auto& p : portions)
         {
@@ -192,10 +176,9 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
         // Tracer logic mostly utilizies mutiple GPUs so we need to
         // wait all GPUs to finish
         cudaSystem.SyncAllGPUs();
-        //METU_LOG("=====================================================");
     }
-    // At the end of iteration all rays found a material, primitive
-    // and interpolation weights (which should be on hitStruct)
+    // At the end of iteration, all rays found a material, a primitive
+    // and an interpolation weights (which should be on hitStruct)
 
     // Partition rays for work kernel calls
     // Copy materialKeys to currentKeys
@@ -203,19 +186,12 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
     rayMemory.FillMatIdsForSort(currentRayCount);
     // Sort with respect to the materials keys
     rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
-
-    //Debug::DumpMemToFile("MatKeysIn", dCurrentKeys, currentRayCount);
-    //Debug::DumpMemToFile("workKeyIn", rayMemory.WorkKeys(), currentRayCount);
-
     // Parition w.r.t. material batch
     RayPartitions<uint32_t> workPartition;
     workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
 
-    //Debug::DumpMemToFile("dTransforms", dTransfomIds, currentRayCount);
-    //METU_LOG("HIT PORTION END");
-
-    return std::move(workPartition);
+    return workPartition;
 }
 
 void RayCaster::WorkRays(const WorkBatchMap& workMap,
@@ -241,22 +217,12 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
     rayMemory.ResizeRayOut(totalRayOut, baseBoundMatKey);
     RayGMem* dRaysOut = rayMemory.RaysOut();
     HitKey* dBoundKeyOut = rayMemory.WorkKeys();
-
-    // Reorder partitions for efficient calls
-    // (sort by gpu and order for better async access)
-    // ....
-    // TODO:
-
     // Wait that "ResizeRayOut" is completed on the leader device
     rayMemory.LeaderDevice().WaitMainStream();
 
     // For each partition
-    //for(auto pIt = workPartition.crbegin();
-    //    pIt != workPartition.crend(); pIt++)
     for(const auto& p : inPartitions)
     {
-        //const auto& p = (*pIt);
-
         // Skip if null batch or unfound material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
@@ -297,23 +263,13 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
 
             i++;
         }
-        //cudaSystem.SyncGPUAll();
-        //METU_LOG("--------------------------");
     }
     currentRayCount = totalRayOut;
-
-    //METU_LOG("Before Sync");
     // Again wait all of the GPU's since
     // CUDA functions will be on multiple-gpus
     cudaSystem.SyncAllGPUs();
-
-    //METU_LOG("After Sync");
-
-    //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
-    //Debug::DumpMemToFile("dPrimIdsUNsorted", dPrimitiveIds, totalRayOut);
-
     // Shading complete
-    // Now make "RayOut" to "RayIn"
+    // Now make "RayOut" -> "RayIn"
     // and continue
     rayMemory.SwapRays();
 }

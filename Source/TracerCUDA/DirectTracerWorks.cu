@@ -3,6 +3,8 @@
 // Direct Tracer Boundary Work Batches
 template class DirectTracerBoundaryWork<CPULightGroupNull>;
 template class DirectTracerBoundaryWork<CPULightGroupConstant>;
+template class DirectTracerBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+template class DirectTracerBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
 template class DirectTracerBoundaryWork<CPULightGroupSkySphere>;
 // ===================================================
 // Direct Tracer Work Batches

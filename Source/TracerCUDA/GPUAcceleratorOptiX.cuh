@@ -21,7 +21,7 @@ class GPUAccGroupOptiXI
     public:
         using OptixTraversableList = std::vector<std::vector<OptixTraversableHandle>>;
         using RecordList = std::vector<Record<void, void>>;
-
+        using SBTCountList = std::vector<uint32_t>;
     public:
         virtual                         ~GPUAccGroupOptiXI() = default;
         //
@@ -29,10 +29,13 @@ class GPUAccGroupOptiXI
         // Return the hit record list for each accelerator
         virtual DeviceMemory            GetHitRecords() const = 0;
         virtual OptixTraversableList    GetOptixTraversables() const = 0;
-        virtual TransformId*            GetDeviceTransformIdPtr() const = 0;
         virtual PrimTransformType       GetPrimitiveTransformType() const = 0;
+        virtual const std::vector<bool> GetCullFlagPerAccel() const = 0;
         // This is not type safe unfortunely
         virtual const RecordList&       GetRecords() const = 0;
+        virtual const SBTCountList&     GetSBTCounts() const = 0;
+        //
+        virtual TransformId*            GetDeviceTransformIdsPtr() const = 0;
 };
 
 template <class PGroup>
@@ -65,6 +68,7 @@ class GPUAccOptiXGroup final
         std::vector<bool>                   keyExpandOption;
         // OptiX SBT Related
         std::vector<Record<void, void>>     sbtRecords;
+        std::vector<uint32_t>               sbtCounts;
         //
         std::map<uint32_t, uint32_t>        idLookup;
         SurfaceAABBList                     surfaceAABBs;
@@ -140,9 +144,12 @@ class GPUAccOptiXGroup final
         //
         void                        SetOptiXSystem(const OptiXSystem*) override;
         OptixTraversableList        GetOptixTraversables() const override;
-        TransformId*                GetDeviceTransformIdPtr() const override;
         PrimTransformType           GetPrimitiveTransformType() const override;
+        const std::vector<bool>     GetCullFlagPerAccel() const override;
         const RecordList&           GetRecords() const override;
+        const SBTCountList&         GetSBTCounts() const override;
+        //
+        TransformId*                GetDeviceTransformIdsPtr() const override;
 };
 
 class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
@@ -209,6 +216,8 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
         OptixTraversableHandle      GetBaseTraversable(int optixGPUIndex) const;
         TracerError                 Construct(const std::vector<std::vector<OptixTraversableHandle>>&,
                                               const std::vector<PrimTransformType>& hTransformTypes,
+                                              const std::vector<uint32_t>& hGlobalSBTOffsets,
+                                              const std::vector<bool>& hDoCullOnAccel,
                                               const TransformId* dAllTransformIds,
                                               const GPUTransformI** dTransforms);
 };

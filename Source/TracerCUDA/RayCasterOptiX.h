@@ -33,10 +33,12 @@ class RayCasterOptiX : public RayCasterI
             OptixPipeline               pipeline;
             OptixModule                 mdl;
             ProgramGroups               programGroups;
-
+            // Host copy of the Params
+            OpitXBaseAccelParams        hOptixLaunchParams;
+            // Device copy of the params
             OpitXBaseAccelParams*       dOptixLaunchParams;
             DeviceLocalMemory           paramsMemory;
-
+            // SBT
             OptixShaderBindingTable     sbt;
             DeviceLocalMemory           sbtMemory;
         };

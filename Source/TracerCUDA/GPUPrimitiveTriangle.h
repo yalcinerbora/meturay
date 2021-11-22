@@ -350,9 +350,6 @@ struct TriFunctions
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
         uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
-
-        printf("pid %llu, %llu, %llu, %llu\n",
-               primitiveId, index0, index1, index2);
         positions[0] = primData.positions[index0];
         positions[1] = primData.positions[index1];
         positions[2] = primData.positions[index2];
@@ -482,6 +479,7 @@ class GPUPrimitiveTriangle final
         std::map<uint32_t, Vector2ul>           batchDataRanges;
         std::map<uint32_t, AABB3>               batchAABBs;
         std::map<uint32_t, bool>                batchAlphaMapFlag;
+        std::map<uint32_t, bool>                batchBackFaceCullFlag;
 
     protected:
     public:
@@ -503,7 +501,8 @@ class GPUPrimitiveTriangle final
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
-        bool                                    PrimitiveHasAlphaMap(uint32_t surfaceDataId) const override;
+        bool                                    PrimitiveBatchHasAlphaMap(uint32_t surfaceDataId) const override;
+        bool                                    PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const override;
         // Query
         // How many primitives are available on this class
         // This includes the indexed primitive count

@@ -33,12 +33,6 @@ static void KCCopyPrimPositions(Vector3f* gPositions,
         {
             gPositionsLocal[i] = positions[i];
         }
-        printf("%u=>Writing (%f, %f, %f)\n"
-               "%u=>Writing (%f, %f, %f)\n"
-               "%u=>Writing (%f, %f, %f)\n",
-               POS_PER_PRIM * writeIndex, gPositionsLocal[0][0], gPositionsLocal[0][1], gPositionsLocal[0][2],
-               POS_PER_PRIM * writeIndex + 1, gPositionsLocal[1][0], gPositionsLocal[1][1], gPositionsLocal[1][2],
-               POS_PER_PRIM * writeIndex + 2, gPositionsLocal[2][0], gPositionsLocal[2][1], gPositionsLocal[2][2]);
     }
 }
 
@@ -136,9 +130,14 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const CudaSystem&,
 
 TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<OptixTraversableHandle>>& gpuTraversables,
                                                const std::vector<PrimTransformType>& hTransformTypes,
+                                               const std::vector<uint32_t>& hGlobalSBTOffsets,
+                                               const std::vector<bool>& hDoCullOnAccel,
                                                const TransformId* dAllTransformIds,
                                                const GPUTransformI** dGlobalTransformArray)
 {
+    Utility::CPUTimer t;
+    t.Start();
+
     assert(hTransformTypes.size() == idLookup.size());
     assert(idLookup.size() == gpuTraversables.front().size());
 
@@ -167,12 +166,15 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<Opt
         {
             OptixInstance instance = {};
             instance.traversableHandle = traversables[i];
-            instance.flags = OPTIX_INSTANCE_FLAG_NONE;
+            if(hDoCullOnAccel[i])
+                instance.flags = OPTIX_INSTANCE_FLAG_NONE;
+            else
+                instance.flags = OPTIX_INSTANCE_FLAG_DISABLE_TRIANGLE_FACE_CULLING;
+
             instance.instanceId = i;
-            instance.sbtOffset = i;
+            instance.sbtOffset = hGlobalSBTOffsets[i];
             instance.visibilityMask = 0xFF;
             // Leave Transform for now
-
             hInstances.push_back(instance);
         }
         DeviceLocalMemory tempInstanceMemory(&gpu, hInstances.size() * sizeof(OptixInstance));
@@ -263,7 +265,11 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<Opt
         optixData.traversable = traversable;
         deviceIndex++;
     }
+    t.Stop();
+    METU_LOG("OptiX IAS generated in {:f} seconds.",
+             t.Elapsed<CPUTimeSeconds>());
 
+    // All Done!
     return TracerError::OK;
 }
 
@@ -282,6 +288,9 @@ template<>
 TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_t surface,
                                                                          const CudaSystem& system)
 {
+    Utility::CPUTimer t;
+    t.Start();
+
     TracerError err = TracerError::OK;
     if((err = FillLeaves(system, surface)) != TracerError::OK)
         return err;
@@ -357,11 +366,9 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                //
                                KCCopyPrimPositions<GPUPrimitiveTriangle>,
                                //
-                               dPositions + offset,
+                               dPositions + offset * GPUPrimitiveTriangle::PositionPerPrim,
                                primData,
                                range);
-
-            METU_LOG("======={}={}==========", subRangePrimCount, offset);
             offset += subRangePrimCount;
 
         }
@@ -384,13 +391,12 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             vertexPtrs[i] = AsOptixPtr(dPositions + offset);
             size_t localPrimCount = range[1] - range[0];
             size_t vertexCount = GPUPrimitiveTriangle::PositionPerPrim * localPrimCount;
-            METU_LOG("VC: {}, Offset {}", vertexCount, offset);
             offset += vertexCount;
             //offset += localPrimCount;
 
             // Enable/Disable Any hit if batch has alpha map
             geometryFlags[i] = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
-            if(primitiveGroup.PrimitiveHasAlphaMap(primIdList[i]))
+            if(primitiveGroup.PrimitiveBatchHasAlphaMap(primIdList[i]))
                 geometryFlags[i] = OPTIX_GEOMETRY_FLAG_NONE;
 
             OptixBuildInput& buildInput = buildInputs[i];
@@ -416,7 +422,6 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             buildInput.triangleArray.sbtIndexOffsetStrideInBytes = sizeof(uint32_t);
         }
         assert(offset == (surfacePrimCount * GPUPrimitiveTriangle::PositionPerPrim));
-        METU_LOG("Offset {}", offset);
 
         OptixAccelBuildOptions accelOptions = {};
         accelOptions.buildFlags = OPTIX_BUILD_FLAG_ALLOW_COMPACTION;
@@ -481,7 +486,16 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
 
         gpuTraverseData.traversables[innerIndex] = traversable;
         deviceIndex++;
+
+        // Before ending the scope, wait for the build and compact operations
+        // Because we will de-alloc the unused memories
+        // (temp vertex buffer & buildBuffer(if traversal is compacted))
+        gpu.WaitMainStream();
     }
+
+    t.Stop();
+    METU_LOG("Surface{:d} OptiX GAS generated in {:f} seconds.",
+             surface, t.Elapsed<CPUTimeSeconds>());
 
     // All Done!
     return TracerError::OK;

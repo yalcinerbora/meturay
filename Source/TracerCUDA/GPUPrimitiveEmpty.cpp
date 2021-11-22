@@ -34,9 +34,14 @@ AABB3 GPUPrimitiveEmpty::PrimitiveBatchAABB(uint32_t) const
     return AABB3f(minInf, minInf);
 }
 
-bool GPUPrimitiveEmpty::PrimitiveHasAlphaMap(uint32_t) const
+bool GPUPrimitiveEmpty::PrimitiveBatchHasAlphaMap(uint32_t) const
 {
     return false;
+}
+
+bool GPUPrimitiveEmpty::PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const
+{
+    return true;
 }
 
 uint64_t GPUPrimitiveEmpty::TotalPrimitiveCount() const

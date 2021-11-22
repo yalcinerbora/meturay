@@ -43,7 +43,7 @@ inline void AOMissWork(// Output
 {
     // We did not hit anything just accumulate
     Vector4f result = Vector4f(aux.aoFactor, 1.0f);
-    ImageAccumulatePixel(renderState.gImage, 
+    ImageAccumulatePixel(renderState.gImage,
                          aux.pixelIndex, result);
 }
 

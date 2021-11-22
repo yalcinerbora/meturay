@@ -324,7 +324,8 @@ class GPUPrimitiveSphere final
         // Access primitive range from Id
         Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
         AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
-        bool                                    PrimitiveHasAlphaMap(uint32_t surfaceDataId) const override;
+        bool                                    PrimitiveBatchHasAlphaMap(uint32_t surfaceDataId) const override;
+        bool                                    PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const override;
         // Query
         // How many primitives are available on this class
         // This includes the indexed primitive count

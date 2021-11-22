@@ -46,11 +46,11 @@
 
             "layout": "trs",
             "translate": [0, 0, 0],
-            "rotate": [0, -95, -10],
+            "rotate": [0, -95, 0],
             "scale": [1, 1, 1]
         }],
 
-    "Textures": [{"id": 0, "file": "../Textures/Torus/flower_road_4k.hdr"}],
+    "Textures": [{"id": 0, "file": "../Textures/Torus/derelict_highway_noon_2k.hdr"}],
 
     "Materials":[
     {

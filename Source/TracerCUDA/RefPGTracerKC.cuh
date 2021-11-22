@@ -370,7 +370,7 @@ void RPGTracerPathWork(// Output
         RayReg rayOut;
         rayOut.ray = rayPath;
         rayOut.tMin = 0.0f;
-        rayOut.tMax = INFINITY;
+        rayOut.tMax = FLT_MAX;
         // Aux
         RayAuxPath auxOut = aux;
         auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());

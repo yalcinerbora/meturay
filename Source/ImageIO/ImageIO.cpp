@@ -629,10 +629,10 @@ void ImageIO::ConvertPixelsInternal(Byte* toData, PixelFormat toFormat,
     else
     {
         if(fromFormat == toFormat)
-            std::for_each_n(//std::execution::par_unseq,
+            std::for_each_n(std::execution::par_unseq,
                             indices.cbegin(), iterationCount,
                             PackFunc);
-        else std::for_each_n(//std::execution::par_unseq,
+        else std::for_each_n(std::execution::par_unseq,
                              indices.cbegin(), iterationCount,
                              ConvertFunc);
     }

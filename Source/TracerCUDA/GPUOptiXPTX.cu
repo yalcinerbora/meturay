@@ -14,7 +14,7 @@ struct RayPayload
 
 extern "C" __constant__ OpitXBaseAccelParams params;
 
-template <class HitStruct>
+template <class HitStruct, class PGroup>
 __device__ __forceinline__
 HitStruct ReadHitStructFromAttribs()
 {
@@ -41,6 +41,15 @@ HitStruct ReadHitStructFromAttribs()
     // Non UB version
     HitStruct s = {};
     memcpy(&s, reinterpret_cast<const Byte*>(hitStructAsInts), sizeof(HitStruct));
+
+    // TODO: Our original barycentrics was wrong?
+    // Change that or this
+    if constexpr(std::is_same_v<PGroup, GPUPrimitiveTriangle>)
+    {
+        // MRay barycentric order is different
+        float c = 1 - s[0] - s[1];
+        s = Vector2f(c, s[0]);
+    }
     return s;
 }
 
@@ -142,27 +151,14 @@ __device__ void KCClosestHit()
     // Fetch the workKey, transformId, primitiveId from table
     PrimitiveId pId = r->gLeafs[leafId].primitiveId;
     TransformId tId = r->transformId;
-    //HitKey key = r->gLeafs[leafId].matId;
-    HitKey key = HitKey::CombinedKey(1, 1);
-
+    HitKey key = r->gLeafs[leafId].matId;
+    // Read Attributes as HitStruct
+    HitStruct hitStruct = ReadHitStructFromAttribs<HitStruct, PGroup>();
     // Write to the global memory
     params.gPrimitiveIds[rayId] = pId;
     params.gTransformIds[rayId] = tId;
     params.gWorkKeys[rayId] = key;
-
-    // Read Attributes
-    HitStruct hitStruct = ReadHitStructFromAttribs<HitStruct>();
-
-    // TODO: Our original barycentrics was wrong?
-    // Change that or this
-    if constexpr(std::is_same_v<PGroup, GPUPrimitiveTriangle>)
-    {
-        // MRay barycentric order is different
-        float c = 1 - hitStruct[0] - hitStruct[1];
-        hitStruct = Vector2f(c, hitStruct[0]);
-    }
-
-    // Finally write the hit struct as well
+    params.gRays[rayId].tMax = optixGetRayTmax();
     params.gHitStructs.Ref<HitStruct>(rayId) = hitStruct;
 }
 
@@ -178,7 +174,7 @@ __device__ void KCAnyHit()
     const HitRecord* r = (const HitRecord*)optixGetSbtDataPointer();
     const int leafId = optixGetPrimitiveIndex();
     // Fetch Leaf and Hit
-    HitStruct potentialHit = ReadHitStructFromAttribs<HitStruct>();
+    HitStruct potentialHit = ReadHitStructFromAttribs<HitStruct, PGroup>();
     const LeafStruct& gLeaf = r->gLeafs[leafId];
 
     bool passed = PGroup::AlphaTest(potentialHit, gLeaf, (*r->gPrimData));
@@ -263,10 +259,22 @@ __device__
 void KCRayGenOptix()
 {
     // We Launch linearly
-    const uint32_t theLaunchDim = optixGetLaunchDimensions().x;
-    const uint32_t theLaunchIndex = optixGetLaunchIndex().x;
+    const uint32_t launchDim = optixGetLaunchDimensions().x;
+    const uint32_t launchIndex = optixGetLaunchIndex().x;
+    // Should we check this ??
+    if(launchIndex >= launchDim) return;
+
     // Load Ray
-    RayReg ray(params.gRays, theLaunchIndex);
+    RayReg ray(params.gRays, launchIndex);
+
+    if(ray.ray.getDirection().HasNaN() ||
+       ray.ray.getPosition().HasNaN() ||
+       isnan(ray.tMax) || isinf(ray.tMax) ||
+       isnan(ray.tMin) || isinf(ray.tMin))
+        printf("Ray: P:(%f, %f, %f) D(%f, %f, %f) t: (%f, %f)\n",
+               ray.ray.getDirection()[0], ray.ray.getDirection()[1], ray.ray.getDirection()[2],
+               ray.ray.getPosition()[1], ray.ray.getPosition()[1], ray.ray.getPosition()[2],
+               ray.tMin, ray.tMax);
 
     optixTrace(// Accelrator
                params.baseAcceleratorOptix,
@@ -283,7 +291,7 @@ void KCRayGenOptix()
                //
                OptixVisibilityMask(255),
                // Flags
-               OPTIX_RAY_FLAG_NONE,
+               OPTIX_RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
                // SBT
                0, 1, 0);
 }

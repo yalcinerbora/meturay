@@ -11,6 +11,7 @@
 #include "GPUPrimitiveSphere.h"
 #include "GPUPrimitiveEmpty.h"
 // Lights
+#include "GPULightPrimitive.cuh"
 #include "GPULightSkySphere.cuh"
 #include "GPULightNull.cuh"
 #include "GPULightConstant.cuh"
@@ -171,6 +172,8 @@ DirectTracerNormalWork<P>::DirectTracerNormalWork(const GPUMaterialGroupI& mg,
 // ===================================================
 // Direct Tracer Boundary Work Batches
 extern template class DirectTracerBoundaryWork<CPULightGroupNull>;
+extern template class DirectTracerBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>;
+extern template class DirectTracerBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>;
 extern template class DirectTracerBoundaryWork<CPULightGroupConstant>;
 extern template class DirectTracerBoundaryWork<CPULightGroupSkySphere>;
 // ===================================================
@@ -195,6 +198,8 @@ extern template class DirectTracerNormalWork<GPUPrimitiveTriangle>;
 extern template class DirectTracerNormalWork<GPUPrimitiveSphere>;
 // ===================================================
 using DirectTracerBoundaryWorkerList = TypeList<DirectTracerBoundaryWork<CPULightGroupNull>,
+                                                DirectTracerBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
+                                                DirectTracerBoundaryWork<CPULightGroup<GPUPrimitiveSphere>>,
                                                 DirectTracerBoundaryWork<CPULightGroupConstant>,
                                                 DirectTracerBoundaryWork<CPULightGroupSkySphere>>;
 using DirectTracerFurnaceWorkerList = TypeList<DirectTracerFurnaceWork<BarycentricMat, GPUPrimitiveTriangle>,

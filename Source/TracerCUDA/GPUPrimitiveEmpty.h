@@ -72,40 +72,41 @@ class GPUPrimitiveEmpty final
                                PrimTransformType::CONSTANT_LOCAL_TRANSFORM>
 {
     public:
-        static constexpr const char*            TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }
+        static constexpr const char*    TypeName() { return BaseConstants::EMPTY_PRIMITIVE_NAME; }
 
     private:
     protected:
     public:
         // Constructors & Destructor
-                                                GPUPrimitiveEmpty();
-                                                ~GPUPrimitiveEmpty() = default;
+                                        GPUPrimitiveEmpty();
+                                        ~GPUPrimitiveEmpty() = default;
 
         // Interface
         // Pirmitive type is used for delegating scene info to this class
-        const char*                             Type() const override;
+        const char*                     Type() const override;
         // Allocates and Generates Data
-        SceneError                              InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
-                                                                const SurfaceLoaderGeneratorI&,
-                                                                const TextureNodeMap&,
-                                                                const std::string&) override;
-        SceneError                              ChangeTime(const NodeListing& surfaceDatalNodes, double time,
-                                                           const SurfaceLoaderGeneratorI&,
-                                                           const std::string&) override;
+        SceneError                      InitializeGroup(const NodeListing& surfaceDatalNodes, double time,
+                                                        const SurfaceLoaderGeneratorI&,
+                                                        const TextureNodeMap&,
+                                                        const std::string&) override;
+        SceneError                      ChangeTime(const NodeListing& surfaceDatalNodes, double time,
+                                                   const SurfaceLoaderGeneratorI&,
+                                                   const std::string&) override;
         // Access primitive range from Id
-        Vector2ul                               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
-        AABB3                                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
-        bool                                    PrimitiveHasAlphaMap(uint32_t surfaceDataId) const override;
+        Vector2ul               PrimitiveBatchRange(uint32_t surfaceDataId) const override;
+        AABB3                   PrimitiveBatchAABB(uint32_t surfaceDataId) const override;
+        bool                    PrimitiveBatchHasAlphaMap(uint32_t surfaceDataId) const override;
+        bool                    PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const override;
         // Query
         // How many primitives are available on this class
         // This includes the indexed primitive count
-        uint64_t                                TotalPrimitiveCount() const override;
+        uint64_t                TotalPrimitiveCount() const override;
         // Total primitive count but not indexed
-        uint64_t                                TotalDataCount() const override;
+        uint64_t                TotalDataCount() const override;
         // Error check
         // Queries in order to check if this primitive group supports certain primitive data
         // Material may need that data
-        bool                                    CanGenerateData(const std::string& s) const override;
+        bool                    CanGenerateData(const std::string& s) const override;
 };
 
 static_assert(IsTracerClass<GPUPrimitiveEmpty>::value,
