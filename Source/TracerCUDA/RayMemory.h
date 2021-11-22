@@ -130,11 +130,6 @@ class RayMemory
         void                        FillMatIdsForSort(uint32_t rayCount);
 };
 
-//inline void RayMemory::SetLeaderDevice(const CudaGPU& d)
-//{
-//    leaderDevice = &d;
-//}
-
 inline const CudaGPU& RayMemory::LeaderDevice() const
 {
     return leaderDevice;

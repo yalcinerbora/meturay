@@ -25,11 +25,11 @@ class OutputWriter
 
         // Methods
         __device__ void     Write(uint32_t index,
-                                  const RayReg&, 
+                                  const RayReg&,
                                   const AuxType&);
         __device__ void     Write(uint32_t index,
-                                  const RayReg&, 
-                                  const AuxType&, 
+                                  const RayReg&,
+                                  const AuxType&,
                                   const HitKey&);
 };
 
@@ -63,8 +63,8 @@ OutputWriter<AuxType>::~OutputWriter()
 
 template<class AuxType>
 __device__ __forceinline__
-void OutputWriter<AuxType>::Write(uint32_t index, 
-                                  const RayReg& r, 
+void OutputWriter<AuxType>::Write(uint32_t index,
+                                  const RayReg& r,
                                   const AuxType& aux)
 {
     assert(index < maxOut);
@@ -76,9 +76,9 @@ void OutputWriter<AuxType>::Write(uint32_t index,
 
 template<class AuxType>
 __device__ __forceinline__
-void OutputWriter<AuxType>::Write(uint32_t index, 
-                                  const RayReg& r, 
-                                  const AuxType& aux, 
+void OutputWriter<AuxType>::Write(uint32_t index,
+                                  const RayReg& r,
+                                  const AuxType& aux,
                                   const HitKey& hk)
 {
     assert(index < maxOut);

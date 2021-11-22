@@ -19,7 +19,7 @@ class GPUBitmap
         Vector2ui           dimensions;
 
     protected:
-        
+
     public:
         // Constructors & Destructor
                             GPUBitmap();
@@ -38,7 +38,7 @@ class CPUBitmapGroup
         const GPUBitmap*        dGPUBitmaps;
         std::vector<Vector2ui>  dimensions;
 
-    protected:        
+    protected:
     public:
         // Constructors & Destructor
                                 CPUBitmapGroup() = default;
@@ -66,7 +66,7 @@ inline GPUBitmap::GPUBitmap(const Byte* dVals,
     , dimensions(dim)
 {}
 
-__device__ 
+__device__
 inline bool GPUBitmap::operator()(const Vector2f& uv) const
 {
     // Wrap Texture
@@ -85,7 +85,7 @@ inline CPUBitmapGroup::CPUBitmapGroup(const std::vector<std::vector<Byte>>& bits
                                       const std::vector<Vector2ui>& dimensions)
     : dimensions(dimensions)
     , dGPUBitmaps(nullptr)
-{    
+{
     if(dimensions.size() == 0) return;
 
     size_t totalSize = 0;
@@ -106,8 +106,8 @@ inline CPUBitmapGroup::CPUBitmapGroup(const std::vector<std::vector<Byte>>& bits
 
     // Allocation
     memory = DeviceMemory(totalSize);
-    
-    std::vector<GPUBitmap> hGPUBitmaps;    
+
+    std::vector<GPUBitmap> hGPUBitmaps;
     hGPUBitmaps.reserve(bits.size());
     for(uint32_t i = 0; i < allocationOffsets.size() - 1; i++)
     {

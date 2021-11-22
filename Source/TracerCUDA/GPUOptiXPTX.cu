@@ -264,18 +264,12 @@ void KCRayGenOptix()
     // Should we check this ??
     if(launchIndex >= launchDim) return;
 
+    // Skip Casting Rays for Invalid Keys
+    if(params.gWorkKeys[launchIndex] == HitKey::InvalidKey)
+        return;
+
     // Load Ray
     RayReg ray(params.gRays, launchIndex);
-
-    if(ray.ray.getDirection().HasNaN() ||
-       ray.ray.getPosition().HasNaN() ||
-       isnan(ray.tMax) || isinf(ray.tMax) ||
-       isnan(ray.tMin) || isinf(ray.tMin))
-        printf("Ray: P:(%f, %f, %f) D(%f, %f, %f) t: (%f, %f)\n",
-               ray.ray.getDirection()[0], ray.ray.getDirection()[1], ray.ray.getDirection()[2],
-               ray.ray.getPosition()[1], ray.ray.getPosition()[1], ray.ray.getPosition()[2],
-               ray.tMin, ray.tMax);
-
     optixTrace(// Accelrator
                params.baseAcceleratorOptix,
                // Ray Input

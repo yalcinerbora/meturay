@@ -114,8 +114,6 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey)
     sizeOfWorkKeys = Memory::AlignSize(sizeOfWorkKeys);
     size_t sizeOfRays = rayCount * sizeof(RayGMem);
     sizeOfRays =  Memory::AlignSize(sizeOfRays);
-    //size_t sizeOfAuxiliary = rayCount * perRayAuxSize;
-    //sizeOfAuxiliary = Memory::AlignSize(sizeOfAuxiliary);
 
     size_t requiredSize = sizeOfRays + sizeOfWorkKeys;
     GPUMemFuncs::EnlargeBuffer(memOut, requiredSize);
@@ -124,8 +122,6 @@ void RayMemory::ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey)
     std::uint8_t* dRay = static_cast<uint8_t*>(memOut);
     dRayOut = reinterpret_cast<RayGMem*>(dRay + offset);
     offset += sizeOfRays;
-    //dRayAuxOut = reinterpret_cast<void*>(dRay + offset);
-    //offset += sizeOfAuxiliary;
     dWorkKeys = reinterpret_cast<HitKey*>(dRay + offset);
     offset += sizeOfWorkKeys;
     assert(requiredSize == offset);
