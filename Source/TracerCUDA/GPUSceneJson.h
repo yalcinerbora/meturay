@@ -70,7 +70,9 @@ class GPUSceneJson : public GPUSceneI
         std::unique_ptr<nlohmann::json>         sceneJson;
         std::u8string                           fileName;
         std::string                             parentPath;
-        double                                  currentTime;
+        // TODO: update scene based on time not yet implemented dont remove this
+        // instead mark it
+        [[maybe_unused]] double                 currentTime;
 
         // CPU Data
         NamedList<CPUTransformGPtr>             transforms;

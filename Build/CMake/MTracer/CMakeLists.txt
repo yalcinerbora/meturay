@@ -6,5 +6,7 @@ add_executable(MTracer ${CURRENT_SOURCE_DIR}/main.cpp)
 source_group("" FILES ${CURRENT_SOURCE_DIR}/main.cpp)
 
 target_include_directories(MTracer PRIVATE
-                            ${MRAY_LIB_INCLUDE_DIRECTORY}
-                            ${MRAY_SOURCE_DIRECTORY})
+                           ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(MTracer SYSTEM PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})

@@ -54,27 +54,6 @@ struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) EmptyRecord
     void* data;
 };
 
-//// Meta Functions
-//template<class T>
-//__forceinline__ __device__
-//T* UInt2ToPointer(const uint2& ptrUInt2)
-//{
-//    static_assert(sizeof(T*) == sizeof(uint64_t));
-//    uint64_t ptr = static_cast<uint64_t>(ptrUInt2.x) << 32;
-//    ptr |= static_cast<uint64_t>(ptrUInt2.y);
-//    return reinterpret_cast<T*>(ptr);
-//}
-//
-//template<class T>
-//__forceinline__ __device__
-//uint2 PointerToUInt2(T* ptr)
-//{
-//    static_assert(sizeof(T*) == sizeof(uint64_t), "");
-//    const uint64_t uptr = reinterpret_cast<uint64_t>(ptr);
-//    return make_uint2(uptr >> 32,
-//                      uptr & 0x00000000ffffffff);
-//}
-
 // ExternCWrapper Macro
 #define WRAP_FUCTION(NAME, FUNCTION) \
     extern "C" __global__ void NAME(){FUNCTION();}

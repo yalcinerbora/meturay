@@ -55,9 +55,9 @@ class STree
                             STree(const std::string& sdTreePath,
                                   const CudaSystem& system);
                             STree(const STree&) = delete;
-                            STree(STree&&) = default;
+                            STree(STree&&) = delete;
         STree&              operator=(const STree&) = delete;
-        STree&              operator=(STree&&) = default;
+        STree&              operator=(STree&&) = delete;
                             ~STree() = default;
 
         // Members

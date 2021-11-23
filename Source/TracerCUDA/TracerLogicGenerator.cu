@@ -9,7 +9,7 @@
 #include "GPUAcceleratorLinear.cuh"
 #include "GPUAcceleratorBVH.cuh"
 #ifdef MRAY_OPTIX
-    #include "GPUAcceleratorOptix.cuh"
+    #include "GPUAcceleratorOptiX.cuh"
 #endif
 // Mediums
 #include "GPUMediumHomogenous.cuh"

@@ -87,9 +87,9 @@ GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
                                      const TextureGL& gradTex)
     : compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
     , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
-    , gradientTex(gradTex)
     , linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
+    , gradientTex(gradTex)
 {
     resolution = SceneIO::LoadVector<2, int32_t>(config[RESOLUTION_NAME]);
     std::string pathRegex = config[IMAGES_NAME];

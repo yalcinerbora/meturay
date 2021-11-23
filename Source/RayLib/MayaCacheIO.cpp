@@ -228,8 +228,8 @@ namespace MayaCache
 
         // Size part
         std::string tagSIZE = ReadTag<WordSize>(file);
-        //T blockSize = ReadInt<T>(file);
-        T channelDataCount = ReadInt<int32_t>(file);
+        ReadInt<T>(file);
+        [[maybe_unused]] T channelDataCount = ReadInt<int32_t>(file);
         // Dummy Read (Entire Data format is super inconsistent...)
         if constexpr(WordSize == 8) ReadInt<uint32_t>(file);
         // Format Tag

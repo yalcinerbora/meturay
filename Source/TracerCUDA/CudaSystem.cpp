@@ -1,19 +1,19 @@
 #include "CudaSystem.h"
 
 CudaGPU::WorkGroup::WorkGroup()
-    : currentIndex(0)
-    , totalStreams(0)
-    , events{}
+    : events{}
     , works{}
     , mainEvent(nullptr)
+    , currentIndex(0)
+    , totalStreams(0)
 {}
 
 CudaGPU::WorkGroup::WorkGroup(int deviceId, int streamCount)
-    : currentIndex(0)
-    , totalStreams(streamCount)
-    , events{}
+    : events{}
     , works{}
     , mainEvent(nullptr)
+    , currentIndex(0)
+    , totalStreams(streamCount)
 {
     assert(totalStreams <= 64);
     CUDA_CHECK(cudaSetDevice(deviceId));
@@ -29,11 +29,11 @@ CudaGPU::WorkGroup::WorkGroup(int deviceId, int streamCount)
 }
 
 CudaGPU::WorkGroup::WorkGroup(WorkGroup&& other)
-    : currentIndex(other.currentIndex)
-    , totalStreams(other.totalStreams)
-    , events{}
+    : events{}
     , works{}
     , mainEvent(other.mainEvent)
+    , currentIndex(other.currentIndex)
+    , totalStreams(other.totalStreams)
 {
     other.mainEvent = nullptr;
     for(int i = 0; i < totalStreams; i++)
@@ -125,7 +125,7 @@ CudaGPU::CudaGPU(int deviceId)
     : deviceId(deviceId)
 {
     CUDA_CHECK(cudaGetDeviceProperties(&props, deviceId));
-    workList = std::move(WorkGroup(deviceId, props.multiProcessorCount));
+    workList = WorkGroup(deviceId, props.multiProcessorCount);
     tier = DetermineGPUTier(props);
 }
 
@@ -281,8 +281,7 @@ const std::vector<size_t> CudaSystem::GridStrideMultiGPUSplit(size_t workCount,
 
     size_t workDispatched = 0;
     //const uint32_t totalWorkPerSM = (workCount + totalSMs - 1) / totalSMs;
-    int i = 0;
-    for(const CudaGPU& g : systemGPUs)
+    for(size_t i = 0; i < systemGPUs.size(); i++)
     {
         // Send Data
         size_t workPerBlock = threadCount * iterationPerThread;
@@ -290,8 +289,6 @@ const std::vector<size_t> CudaSystem::GridStrideMultiGPUSplit(size_t workCount,
         gpuWorkCount = std::min(gpuWorkCount, workCount - workDispatched);
         workDispatched += gpuWorkCount;
         workPerGPU[i] = gpuWorkCount;
-
-        i++;
     }
     // Block per gpu holds
     return workPerGPU;

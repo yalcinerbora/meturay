@@ -15,8 +15,6 @@ static Matrix4x4 testMatrix(1.0f, 5.0f, 9.0f, 13.0f,
                             4.0f, 8.0f, 12.0f, 16.0f);
 static Matrix4x4 testMatrix2 = Indentity4x4;
 
-static float vector4[] = {99.0f, 88.0f, 77.0f, 66.0f};
-
 // Get Set Operations
 TEST(MatrixCPU, AccessorsMutators)
 {
@@ -184,7 +182,7 @@ TEST(MatrixCPU, Operators)
                         8.0f, 16.0f, 24.0f, 32.0f), leftCopy);
 
     leftCopy = testMatrix;
-    leftCopy -= leftCopy;
+    leftCopy -= testMatrix;
     EXPECT_EQ(Matrix4x4(0.0f, 0.0f, 0.0f, 0.0f,
                         0.0f, 0.0f, 0.0f, 0.0f,
                         0.0f, 0.0f, 0.0f, 0.0f,

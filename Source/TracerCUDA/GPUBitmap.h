@@ -83,8 +83,8 @@ inline bool GPUBitmap::operator()(const Vector2f& uv) const
 
 inline CPUBitmapGroup::CPUBitmapGroup(const std::vector<std::vector<Byte>>& bits,
                                       const std::vector<Vector2ui>& dimensions)
-    : dimensions(dimensions)
-    , dGPUBitmaps(nullptr)
+    : dGPUBitmaps(nullptr)
+    , dimensions(dimensions)
 {
     if(dimensions.size() == 0) return;
 

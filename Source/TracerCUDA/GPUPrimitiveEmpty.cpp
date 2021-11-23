@@ -39,7 +39,7 @@ bool GPUPrimitiveEmpty::PrimitiveBatchHasAlphaMap(uint32_t) const
     return false;
 }
 
-bool GPUPrimitiveEmpty::PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const
+bool GPUPrimitiveEmpty::PrimitiveBatchBackFaceCulled(uint32_t) const
 {
     return true;
 }

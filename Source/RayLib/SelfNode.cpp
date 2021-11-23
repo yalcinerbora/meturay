@@ -102,7 +102,7 @@ void SelfNode::SendError(TracerError err)
     METU_ERROR_LOG("Tracer: {:s}", static_cast<std::string>(err));
 }
 
-void SelfNode::SendAnalyticData(AnalyticData data)
+void SelfNode::SendAnalyticData(AnalyticData)
 {
     //TODO:
 }
@@ -178,7 +178,6 @@ void SelfNode::Work()
         // to be called on main thread
         visor.ProcessInputs();
     }
-
     // Visor is closed terminate tracer thread
     tracerThread.Stop();
 }

@@ -170,8 +170,8 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     // Now allocate to CPU then GPU
     constexpr size_t VertPosSize = PrimitiveDataLayoutToSize(POS_LAYOUT);
     constexpr size_t VertUVSize = PrimitiveDataLayoutToSize(UV_LAYOUT);
-    constexpr size_t VertTangentSize = PrimitiveDataLayoutToSize(TANGENT_LAYOUT);
-    constexpr size_t VertNormSize = PrimitiveDataLayoutToSize(NORMAL_LAYOUT);
+    //constexpr size_t VertTangentSize = PrimitiveDataLayoutToSize(TANGENT_LAYOUT);
+    //constexpr size_t VertNormSize = PrimitiveDataLayoutToSize(NORMAL_LAYOUT);
     constexpr size_t IndexSize = PrimitiveDataLayoutToSize(INDEX_LAYOUT);
     constexpr size_t RotationSize = sizeof(QuatF);
 
@@ -369,7 +369,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     assert(bitmapData.size() == bitmapDims.size());
 
     // Generate Bitmap Group
-    bitmaps = std::move(CPUBitmapGroup(bitmapData, bitmapDims));
+    bitmaps = CPUBitmapGroup(bitmapData, bitmapDims);
     // Acquire GPUBitmap ptrs from CPU Bitmap
     std::vector<const GPUBitmap*> hGPUBitmapPtrs;
     hGPUBitmapPtrs.reserve(bitMapIndex.size());

@@ -46,13 +46,13 @@ VisorInputI* GuideDebugGL::InputInterface()
 
 GuideDebugGL::GuideDebugGL(const Vector2i& ws,
                            const std::u8string& guideDebugFile)
-    : windowSize(ws)
-    , viewportSize(ws)
-    , glfwWindow(nullptr)
-    , dummyVOpts{}
-    , configPath(std::filesystem::path(guideDebugFile).parent_path().string())
+    : dummyVOpts{}
     , configFile(guideDebugFile)
+    , configPath(std::filesystem::path(guideDebugFile).parent_path().string())
     , input(nullptr)
+    , glfwWindow(nullptr)
+    , viewportSize(ws)
+    , windowSize(ws)
     , gradientTexture(nullptr)
 {
 

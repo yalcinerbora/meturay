@@ -77,22 +77,24 @@ set(PREPROCESSOR_GENERIC
     METU_SHARED_VISORGL)
 
 # Platform Specific Libraries
+# TBB for std::exectuion (clang & GCC)
 if(MSVC)
     set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3dll)
 elseif(UNIX)
-    set(PLATFORM_SPEC_LIBRARIES GLEW glfw)
+    set(PLATFORM_SPEC_LIBRARIES GL GLU GLEW glfw tbb)
 endif()
 
 # DLL
 add_library(VisorGL SHARED ${SRC_ALL})
 
 target_include_directories(VisorGL PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+target_include_directories(VisorGL SYSTEM PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
 
-target_link_libraries(VisorGL PRIVATE
+target_link_libraries(VisorGL
                       RayLib
                       ImageIO
                       Imgui

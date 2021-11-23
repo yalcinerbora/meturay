@@ -122,6 +122,8 @@ TracerError DirectTracer::Initialize()
                     return err;
                 break;
             }
+            default: return TracerError(TracerError::TRACER_INTERNAL_ERROR,
+                                        "Direct Tracer Unknown Render Type");
         }
 
         workMap.emplace(batchId, WorkBatchArray{batch});

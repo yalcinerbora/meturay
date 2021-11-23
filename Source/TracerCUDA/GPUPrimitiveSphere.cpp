@@ -130,7 +130,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
 
     // All loaded to CPU, copy to GPU
     // Alloc
-    memory = std::move(DeviceMemory(sizeof(Vector4f) * totalPrimitiveCount));
+    memory = DeviceMemory(sizeof(Vector4f) * totalPrimitiveCount);
     float* dCentersRadius = static_cast<float*>(memory);
     // Copy
     CUDA_CHECK(cudaMemcpy2D(dCentersRadius, sizeof(Vector4f),
@@ -172,7 +172,7 @@ bool GPUPrimitiveSphere::PrimitiveBatchHasAlphaMap(uint32_t) const
     return false;
 }
 
-bool GPUPrimitiveSphere::PrimitiveBatchBackFaceCulled(uint32_t surfaceDataId) const
+bool GPUPrimitiveSphere::PrimitiveBatchBackFaceCulled(uint32_t) const
 {
     // De don't do back face culling on sphere
     return false;

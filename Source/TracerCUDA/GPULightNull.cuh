@@ -83,14 +83,14 @@ class CPULightGroupNull final : public CPULightGroupI
         TracerError				    ConstructEndpoints(const GPUTransformI**,
                                                        const CudaSystem&) override;
         const GPULightList&         GPULights() const override { return lList; }
-        const GPUEndpointList&      GPUEndpoints() const {return epList;}
+        const GPUEndpointList&      GPUEndpoints() const override {return epList;}
         const CudaGPU&              GPU() const override { return gpu; }
-        uint32_t						EndpointCount() const { return 0; }
-        const std::vector<HitKey>&  PackedHitKeys() const { return hkList; }
-        uint32_t                    MaxInnerId() const { return 1; }
+        uint32_t				    EndpointCount() const override { return 0; }
+        const std::vector<HitKey>&  PackedHitKeys() const override { return hkList; }
+        uint32_t                    MaxInnerId() const override { return 1; }
 
-        size_t						UsedGPUMemory() const { return 0; }
-        size_t						UsedCPUMemory() const { return 0; }
+        size_t						UsedGPUMemory() const override { return 0; }
+        size_t						UsedCPUMemory() const override { return 0; }
 
         const GPUType*              GPULightsDerived() const {return nullptr;}
 };

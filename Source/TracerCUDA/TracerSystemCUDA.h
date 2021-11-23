@@ -15,7 +15,6 @@ class TracerSystemCUDA final : public TracerSystemI
 
         std::unique_ptr<ScenePartitionerI>          scenePartitioner;
         std::unique_ptr<SurfaceLoaderGenerator>     surfaceLoaders;
-        ScenePartitionerType                        partitionType;
         std::unique_ptr<GPUSceneI>                  gpuScene;
 
     protected:

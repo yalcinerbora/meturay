@@ -2,9 +2,9 @@
 
 TextureCubeI::TextureCubeI(TextureCubeI&& other)
     : DeviceLocalMemoryI(other.currentDevice)
+    , channelCount(other.channelCount)
     , texture(other.texture)
     , dimensions(other.dimensions)
-    , channelCount(other.channelCount)
 {
     other.texture = 0;
     other.dimensions = Zero2ui;

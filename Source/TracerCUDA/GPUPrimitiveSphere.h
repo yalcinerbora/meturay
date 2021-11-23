@@ -215,13 +215,9 @@ struct SphereSurfaceGenerator
     static BasicSurface GenBasicSurface(const SphereHit& sphrCoords,
                                         const GPUTransformI& transform,
                                         //
-                                        PrimitiveId primitiveId,
-                                        const SphereData& primData)
+                                        PrimitiveId,
+                                        const SphereData&)
     {
-        Vector4f data = primData.centerRadius[primitiveId];
-        Vector3f center = data;
-        //float radius = data[3];
-
         // Convert spherical hit to cartesian
         Vector3 normal = Vector3(sin(sphrCoords[0]) * cos(sphrCoords[1]),
                                  sin(sphrCoords[0]) * sin(sphrCoords[1]),

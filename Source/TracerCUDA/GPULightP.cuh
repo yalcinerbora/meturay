@@ -88,7 +88,7 @@ class CPULightGroupP : public CPULightGroupI
         std::vector<ConstructionInfo>       hRadianceConstructionInfo;
 
         GPUEndpointList				        gpuEndpointList;
-        GPULightList				            gpuLightList;
+        GPULightList				        gpuLightList;
         uint32_t                            lightCount;
 
         // Partially Implemented Interface

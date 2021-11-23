@@ -89,6 +89,8 @@ std::string Utility::CurrentExecPath()
         int error = readlink("/proc/self/exe", result, MAX_PATH_LENGTH);
         assert(error != -1);
         result[error + 1] = '\0';
-        return result;
+
+        std::string resultStr(result);
+        return Utility::PathFolder(resultStr);
     #endif
 }

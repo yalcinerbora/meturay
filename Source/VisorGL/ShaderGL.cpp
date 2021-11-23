@@ -47,14 +47,14 @@ ShaderGL::ShaderGL()
 {}
 
 ShaderGL::ShaderGL(ShaderType t, const std::u8string& path)
-    : valid(false)
-    , shaderID(0)
+    : shaderID(0)
     , shaderType(t)
+    , valid(false)
 {
     const std::u8string onlyFileName = std::filesystem::path(path).filename().u8string();
 
-    std::streamoff size = std::ifstream(std::filesystem::path(path), 
-                                        std::ifstream::ate | 
+    std::streamoff size = std::ifstream(std::filesystem::path(path),
+                                        std::ifstream::ate |
                                         std::ifstream::binary).tellg();
     std::vector<char> source(size + 1, 0);
     std::ifstream shaderFile = std::ifstream(std::filesystem::path(path));
@@ -118,7 +118,7 @@ ShaderGL& ShaderGL::operator=(ShaderGL&& other) noexcept
             glDeleteProgramPipelines(1, &shaderPipelineID);
             shaderPipelineID = 0;
         }
-    }        
+    }
     shaderID = other.shaderID;
     shaderType = other.shaderType;
     valid = other.valid;

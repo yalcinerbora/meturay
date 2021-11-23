@@ -385,8 +385,8 @@ inline TextureI<D>::TextureI(const TexDimType_t<D>& dim,
                              uint32_t channelCount,
                              const CudaGPU* currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , dimensions(dim)
     , channelCount(channelCount)
+    , dimensions(dim)
 {}
 
 template<int D>
@@ -413,9 +413,9 @@ inline TextureArrayI<D>::TextureArrayI(const TexDimType_t<D>& dim,
                                        uint32_t length,
                                        const CudaGPU* currentDevice)
     : DeviceLocalMemoryI(currentDevice)
+    , channelCount(channelCount)
     , dimensions(dim)
     , length(length)
-    , channelCount(channelCount)
 {}
 
 template<int D>
@@ -446,8 +446,8 @@ inline TextureCubeI::TextureCubeI(const Vector2ui& dim,
                                   uint32_t channelCount,
                                   const CudaGPU* currentDevice)
     : DeviceLocalMemoryI(currentDevice)
-    , dimensions(dim)
     , channelCount(channelCount)
+    , dimensions(dim)
 {}
 
 constexpr TextureCubeI::operator cudaTextureObject_t() const

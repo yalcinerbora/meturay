@@ -44,23 +44,23 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
         uint32_t primitiveId = node.primitiveId;
         Vector2ul primitiveRange = primGroup.PrimitiveBatchRange(primitiveId);
 
-        lightCount += static_cast<uint32_t>(primitiveRange[1] - primitiveRange[0]);
+        this->lightCount += static_cast<uint32_t>(primitiveRange[1] - primitiveRange[0]);
     }
 
-    hPrimitiveIds.reserve(lightCount);
-    hMediumIds.reserve(lightCount);
-    hTransformIds.reserve(lightCount);
-    hWorkKeys.reserve(lightCount);
-    hRadianceConstructionInfo.reserve(lightCount);
-    textureIdList.reserve(lightCount);
+    hPrimitiveIds.reserve(this->lightCount);
+    this->hMediumIds.reserve(this->lightCount);
+    this->hTransformIds.reserve(this->lightCount);
+    this->hWorkKeys.reserve(this->lightCount);
+    this->hRadianceConstructionInfo.reserve(this->lightCount);
+    this->textureIdList.reserve(this->lightCount);
     hPackedWorkKeys.reserve(lightNodes.size());
-    texDataCount = 0;
-    constDataCount = 0;
+    this->texDataCount = 0;
+    this->constDataCount = 0;
 
     uint32_t innerIndex = 0;
     for(const auto& node : lightNodes)
     {
-        TexturedDataNode<Vector3> radianceNode = node.node->CommonTexturedDataVector3(RADIANCE_NAME);
+        TexturedDataNode<Vector3> radianceNode = node.node->CommonTexturedDataVector3(this->RADIANCE_NAME);
 
         typename Base::ConstructionInfo constructionInfo;
         constructionInfo.isConstData = !radianceNode.isTexture;
@@ -68,13 +68,13 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
         {
             const TextureI<2>* tex;
             if((err = AllocateTexture(tex,
-                                      dTextureMemory,
+                                      this->dTextureMemory,
                                       radianceNode.texNode,
                                       textures,
                                       EdgeResolveType::WRAP,
                                       InterpolationType::LINEAR,
                                       true, true,
-                                      gpu, scenePath)) != SceneError::OK)
+                                      this->gpu, scenePath)) != SceneError::OK)
                 return err;
             constructionInfo.tex = static_cast<cudaTextureObject_t>(*tex);
         }
@@ -100,30 +100,30 @@ SceneError CPULightGroup<PGroup>::InitializeGroup(const EndpointGroupDataList& l
             HitKey materialKey = HitKey::CombinedKey(batchId, innerIndex);
 
             // Load to host memory
-            hMediumIds.push_back(mediumIndex);
+            this->hMediumIds.push_back(mediumIndex);
             hPrimitiveIds.push_back(primId);
-            hTransformIds.push_back(transformIndex);
-            hWorkKeys.push_back(HitKey::CombinedKey(batchId, innerIndex));
-            hRadianceConstructionInfo.push_back(constructionInfo);
-            textureIdList.push_back(texId);
+            this->hTransformIds.push_back(transformIndex);
+            this->hWorkKeys.push_back(HitKey::CombinedKey(batchId, innerIndex));
+            this->hRadianceConstructionInfo.push_back(constructionInfo);
+            this->textureIdList.push_back(texId);
 
             innerIndex++;
             if(radianceNode.isTexture)
-                texDataCount++;
+                this->texDataCount++;
             else
-                constDataCount++;
+                this->constDataCount++;
 
             if(innerIndex >= (1 << HitKey::IdBits))
                 return SceneError::TOO_MANY_MATERIAL_IN_GROUP;
         }
     }
     // Allocate data for texture references etc...
-    GPUMemFuncs::AllocateMultiData(std::tie(dGPULights, dConstantRadiance,
-                                            dTextureRadiance, dRadiances,
+    GPUMemFuncs::AllocateMultiData(std::tie(this->dGPULights, this->dConstantRadiance,
+                                            this->dTextureRadiance, this->dRadiances,
                                             dPData),
-                                   gpuLightMemory,
-                                   {lightCount, constDataCount,
-                                    texDataCount, lightCount, 1});
+                                   this->gpuLightMemory,
+                                   {this->lightCount, this->constDataCount,
+                                    this->texDataCount, this->lightCount, 1});
 
     return SceneError::OK;
 }
@@ -142,7 +142,7 @@ TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlo
 {
     TracerError e = TracerError::OK;
     // Construct Texture References
-    if((e = ConstructTextureReferences()) != TracerError::OK)
+    if((e = this->ConstructTextureReferences()) != TracerError::OK)
         return e;
 
     // Generate Temp Memory for Light list GPU Construction
@@ -157,25 +157,26 @@ TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlo
                                             dMediumIndices,
                                             dWorkKeys),
                                    tempMemory,
-                                   {lightCount, lightCount, lightCount, lightCount});
+                                   {this->lightCount, this->lightCount,
+                                    this->lightCount, this->lightCount});
     // Set a GPU
-    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+    CUDA_CHECK(cudaSetDevice(this->gpu.DeviceId()));
     // Load Data to Temp Memory
     CUDA_CHECK(cudaMemcpy(const_cast<uint16_t*>(dMediumIndices),
-                          hMediumIds.data(),
-                          sizeof(uint16_t) * lightCount,
+                          this->hMediumIds.data(),
+                          sizeof(uint16_t) * this->lightCount,
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(const_cast<PrimitiveId*>(dPrimitiveIds),
                           hPrimitiveIds.data(),
-                          sizeof(PrimitiveId) * lightCount,
+                          sizeof(PrimitiveId) * this->lightCount,
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(const_cast<TransformId*>(dTransformIds),
-                          hTransformIds.data(),
-                          sizeof(TransformId) * lightCount,
+                          this->hTransformIds.data(),
+                          sizeof(TransformId) * this->lightCount,
                           cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(const_cast<HitKey*>(dWorkKeys),
-                          hWorkKeys.data(),
-                          sizeof(HitKey) * lightCount,
+                          this->hWorkKeys.data(),
+                          sizeof(HitKey) * this->lightCount,
                           cudaMemcpyHostToDevice));
 
     // Get the prim data struct to GPU
@@ -186,26 +187,26 @@ TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlo
                           cudaMemcpyHostToDevice));
 
     // Call allocation kernel
-    gpu.GridStrideKC_X(0, 0,
-                       lightCount,
-                       //
-                       KCConstructGPULight<PGroup>,
-                       //
-                       const_cast<GPULight<PGroup>*>(dGPULights),
-                       dPrimitiveIds,
-                       //
-                       dRadiances,
-                       dMediumIndices,
-                       dWorkKeys,
-                       dTransformIds,
-                       //
-                       *dPData,
-                       dGlobalTransformArray,
-                       lightCount);
+    this->gpu.GridStrideKC_X(0, 0,
+                             this->lightCount,
+                             //
+                             KCConstructGPULight<PGroup>,
+                             //
+                             const_cast<GPULight<PGroup>*>(this->dGPULights),
+                             dPrimitiveIds,
+                             //
+                             this->dRadiances,
+                             dMediumIndices,
+                             dWorkKeys,
+                             dTransformIds,
+                             //
+                             *dPData,
+                             dGlobalTransformArray,
+                             this->lightCount);
 
-    gpu.WaitMainStream();
+    this->gpu.WaitMainStream();
 
-    SetLightLists();
+    this->SetLightLists();
 
     return TracerError::OK;
 }

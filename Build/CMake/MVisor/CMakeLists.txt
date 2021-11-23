@@ -7,8 +7,10 @@ source_group("" FILES ${CURRENT_SOURCE_DIR}/main.cpp)
 add_executable(MVisor ${CURRENT_SOURCE_DIR}/main.cpp)
 
 target_include_directories(MVisor PRIVATE
-                            ${MRAY_LIB_INCLUDE_DIRECTORY}
-                            ${MRAY_SOURCE_DIRECTORY})
+                           ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(MVisor SYSTEM PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(MVisor PRIVATE ${MRAY_PREPROCESSOR_DEFS_GENERIC})
 

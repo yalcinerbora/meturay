@@ -258,8 +258,8 @@ inline void GPUMemFuncs::EnlargeBuffer(DeviceMemory& mem, size_t s)
 {
     if(s > mem.Size())
     {
-        mem = std::move(DeviceMemory());
-        mem = std::move(DeviceMemory(s));
+        mem = DeviceMemory();
+        mem = DeviceMemory(s);
     }
 }
 

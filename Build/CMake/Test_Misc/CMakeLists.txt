@@ -38,8 +38,10 @@ source_group("" FILES ${SRC_COMMON})
 add_executable(Test_Misc ${SRC_ALL})
 
 target_include_directories(Test_Misc PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(Test_Misc SYSTEM PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(Test_Misc PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
 

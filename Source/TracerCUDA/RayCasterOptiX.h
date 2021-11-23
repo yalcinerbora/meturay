@@ -3,7 +3,7 @@
 
 #include "RayCasterI.h"
 #include "OptixSystem.h"
-#include "GPUOptixPTX.cuh"
+#include "GPUOptiXPTX.cuh"
 #include "RayMemory.h"
 
 class GPUSceneI;

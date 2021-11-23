@@ -432,7 +432,7 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     {
         moduleCompileOpts.optLevel = OPTIX_COMPILE_OPTIMIZATION_DEFAULT;
 
-        #if OPTIX_VERSION > 70200
+        #if OPTIX_VERSION > 70300
             moduleCompileOpts.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_MINIMAL;
         #else
             moduleCompileOpts.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_NONE;

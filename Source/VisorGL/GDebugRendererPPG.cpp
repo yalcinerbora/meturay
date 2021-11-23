@@ -27,26 +27,23 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
                                      const TextureGL& gradientTexture,
                                      const std::string& configPath,
                                      uint32_t depthCount)
-    : gradientTexture(gradientTexture)
-    , configPath(configPath)
-    //, depthCount(depthCount)
+    : linearSampler(SamplerGLEdgeResolveType::CLAMP,
+                    SamplerGLInterpType::LINEAR)
+    , gradientTexture(gradientTexture)
+    , perimeterColor(1.0f, 1.0f, 1.0f)
+    , currentTexture(GuideDebugGUIFuncs::PG_TEXTURE_SIZE, PixelFormat::RGB8_UNORM)
+    , currentValues(GuideDebugGUIFuncs::PG_TEXTURE_SIZE[0] * GuideDebugGUIFuncs::PG_TEXTURE_SIZE[1], 0.0f)
+    , maxValueDisplay(0.0f)
+    , renderPerimeter(false)
+    , renderSamples(false)
     , fbo(0)
     , vao(0)
-    //, vPos(0)
     , indexBuffer(0)
     , vPosBuffer(0)
     , treeBuffer(0)
     , treeBufferSize(0)
-    , perimeterColor(1.0f, 1.0f, 1.0f)
     , vertDTreeRender(ShaderType::VERTEX, u8"Shaders/DTreeRender.vert")
     , fragDTreeRender(ShaderType::FRAGMENT, u8"Shaders/DTreeRender.frag")
-    , linearSampler(SamplerGLEdgeResolveType::CLAMP,
-                    SamplerGLInterpType::LINEAR)
-    , currentTexture(GuideDebugGUIFuncs::PG_TEXTURE_SIZE, PixelFormat::RGB8_UNORM)
-    , currentValues(GuideDebugGUIFuncs::PG_TEXTURE_SIZE[0] * GuideDebugGUIFuncs::PG_TEXTURE_SIZE[1], 0.0f)
-    , renderPerimeter(false)
-    , renderSamples(false)
-    , maxValueDisplay(0.0f)
 {
     glGenFramebuffers(1, &fbo);
 
@@ -64,7 +61,6 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     // Vertex Position
-    constexpr GLenum VPOS_ATTRIB = 0;
     glEnableVertexAttribArray(IN_POS);
     glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
     glVertexAttribBinding(IN_POS, IN_POS);
@@ -406,7 +402,7 @@ bool GDebugRendererPPG::RenderGUI(const ImVec2& windowSize)
 
     ImGui::BeginChild(("##" + name).c_str(), windowSize, false);
     ImGui::SameLine(0.0f, CenteredTextLocation(name.c_str(), windowSize.x));
-    ImGui::Text(name.c_str());
+    ImGui::Text("%s", name.c_str());
     ImVec2 remainingSize = FindRemainingSize(windowSize);
     remainingSize.x = remainingSize.y;
     ImGui::NewLine();

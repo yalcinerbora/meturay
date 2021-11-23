@@ -82,7 +82,6 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         {
             // Just clear the sample count to zero
             const GLuint clearDataInt = 0;
-            const Vector4f clearDataFloat = Vector4f(0.0f);
             glClearTexSubImage(sampleCountTexture, 0,
                                c.start[0], c.start[1], 0,
                                inSize[0], inSize[1], 1,
@@ -244,20 +243,20 @@ VisorGL::VisorGL(const VisorOptions& opts,
     : input(nullptr)
     , window(nullptr)
     , open(false)
+    , vOpts(opts)
+    , imageSize(imgRes)
+    , imagePixFormat(imagePixelFormat)
     , commandList(opts.eventBufferSize)
     , outputTextures{0, 0}
     , sampleCountTexture(0)
     , bufferTexture(0)
     , sampleTexture(0)
-    , sdrTexture(0)
-    , currentIndex(0)
     , linearSampler(0)
     , nearestSampler(0)
-    , vBuffer(0)
+    , sdrTexture(0)
+    , currentIndex(0)
     , vao(0)
-    , vOpts(opts)
-    , imageSize(imgRes)
-    , imagePixFormat(imagePixelFormat)
+    , vBuffer(0)
     , visorGUI(nullptr)
 {}
 

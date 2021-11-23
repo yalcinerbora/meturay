@@ -112,8 +112,8 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     {
         uint32_t texId = textureIdList[lightIndex];
         Vector2ui dim = (texId == std::numeric_limits<uint32_t>::max())
-                            ? dim = Vector2ui(1u)
-                            : dim = dTextureMemory.at(texId)->Dimensions();
+                            ? Vector2ui(1u)
+                            : dTextureMemory.at(texId)->Dimensions();
         uint32_t totalCount = dim[0] * dim[1];
 
         GPUMemFuncs::EnlargeBuffer(luminanceBuffer, totalCount * sizeof(float));

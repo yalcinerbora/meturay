@@ -62,7 +62,7 @@ class GDebugRendererRef
                                 GDebugRendererRef(const GDebugRendererRef&) = delete;
                                 GDebugRendererRef(GDebugRendererRef&&) = default;
         GDebugRendererRef&      operator=(const GDebugRendererRef&) = delete;
-        GDebugRendererRef&      operator=(GDebugRendererRef&&) = default;
+        GDebugRendererRef&      operator=(GDebugRendererRef&&) = delete;
                                 ~GDebugRendererRef() = default;
 
         //

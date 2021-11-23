@@ -226,7 +226,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     if(totalPrimitiveCount >= std::numeric_limits<uint32_t>::max())
         return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
 
-    using LeafData = typename GPUPrimitiveTriangle::LeafData;
+    using LeafData = typename PGroup::LeafData;
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
 
@@ -330,7 +330,7 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
             // Enable/Disable Any hit if batch has alpha map
             geometryFlags[i] = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
-            if(primitiveGroup.PrimitiveBatchHasAlphaMap(primIdList[i]))
+            if(this->primitiveGroup.PrimitiveBatchHasAlphaMap(primIdList[i]))
                 geometryFlags[i] = OPTIX_GEOMETRY_FLAG_NONE;
 
             OptixBuildInput& buildInput = buildInputs[i];
@@ -567,7 +567,7 @@ const GPUAccGroupOptiXI::SBTCountList& GPUAccOptiXGroup<PGroup>::GetSBTCounts() 
 template <class PGroup>
 PrimTransformType GPUAccOptiXGroup<PGroup>::GetPrimitiveTransformType() const
 {
-    return primitiveGroup.TransformType();
+    return this->primitiveGroup.TransformType();
 }
 
 template <class PGroup>
@@ -597,7 +597,7 @@ const std::vector<bool> GPUAccOptiXGroup<PGroup>::GetCullFlagPerAccel() const
             const auto& primId = primBatchIdList[i];
             if(primId == std::numeric_limits<uint32_t>::max())
                 break;
-            doCullFace &= primitiveGroup.PrimitiveBatchBackFaceCulled(primId);
+            doCullFace &= this->primitiveGroup.PrimitiveBatchBackFaceCulled(primId);
         }
         result.push_back(doCullFace);
     }

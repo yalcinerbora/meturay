@@ -23,8 +23,10 @@ set(PREPROCESSOR_GENERIC
 add_library(AssimpSurfaceLoaders SHARED ${SRC_ALL})
 
 target_include_directories(AssimpSurfaceLoaders PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(AssimpSurfaceLoaders SYSTEM PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(AssimpSurfaceLoaders PRIVATE ${PREPROCESSOR_GENERIC})
 
@@ -37,6 +39,6 @@ if(MSVC)
     add_custom_command(TARGET AssimpSurfaceLoaders POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
                        "${MRAY_CONFIG_LIB_DIRECTORY}/assimp.dll"
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/assimp.pdb">                  
+                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/assimp.pdb">
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()

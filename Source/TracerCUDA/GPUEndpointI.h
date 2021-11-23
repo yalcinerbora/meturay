@@ -125,8 +125,8 @@ inline GPUEndpointI::GPUEndpointI(uint16_t mediumIndex,
                                   const GPUTransformI& gTransform)
     : mediumIndex(mediumIndex)
     , gTransform(gTransform)
-    , workKey(hk)
     , endpointId(UINT32_MAX)
+    , workKey(hk)
 {}
 
 __device__

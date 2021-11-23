@@ -128,8 +128,6 @@ class GDebugRendererPPG : public GDebugRendererI
 
         const SamplerGL         linearSampler;
         const TextureGL&        gradientTexture;
-        const std::string&      configPath;
-        uint32_t                depthCount;
         uint32_t                curDTreeIndex;
         // All SD Trees that are loaded
         std::vector<SDTree>     sdTrees;
@@ -150,7 +148,6 @@ class GDebugRendererPPG : public GDebugRendererI
         // VAO etc..
         GLuint                  fbo;
         GLuint                  vao;
-        GLuint                  vPos;
         GLuint                  indexBuffer;
         GLuint                  vPosBuffer;
         GLuint                  treeBuffer;

@@ -422,9 +422,11 @@ if(USE_OPTIX)
 endif()
 
 target_include_directories(TracerCUDA PRIVATE
-                           ${OPTIX_INCLUDE_DIR}
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(TracerCUDA SYSTEM PRIVATE
+                           ${OPTIX_INCLUDE_DIR}
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(TracerCUDA PRIVATE ${PREPROCESSOR_GENERIC})
 
@@ -449,9 +451,11 @@ if(USE_OPTIX)
 endif()
 
 target_include_directories(TracerCUDA_Static PRIVATE
-                           ${OPTIX_INCLUDE_DIR}
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(TracerCUDA_Static SYSTEM PRIVATE
+                           ${OPTIX_INCLUDE_DIR}
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(TracerCUDA_Static PRIVATE ${PREPROCESSOR_GENERIC})
 

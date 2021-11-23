@@ -276,8 +276,8 @@ void DeviceMemoryCPUBacked::MigrateToOtherDevice(const CudaGPU* deviceTo, cudaSt
 }
 
 DeviceMemory::DeviceMemory()
-    : size(0)
-    , m_ptr(nullptr)
+    : m_ptr(nullptr)
+    , size(0)
 {}
 
 DeviceMemory::DeviceMemory(size_t sizeInBytes)

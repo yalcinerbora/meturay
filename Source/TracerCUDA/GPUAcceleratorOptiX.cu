@@ -1,4 +1,4 @@
-#include "GPUAcceleratorOptix.cuh"
+#include "GPUAcceleratorOptiX.cuh"
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
 #include "CudaSystem.hpp"

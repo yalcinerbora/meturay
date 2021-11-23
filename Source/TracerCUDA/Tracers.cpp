@@ -17,7 +17,7 @@ TracerError LightSamplerCommon::StringToLightSamplerType(LightSamplerType& ls,
                                                          const std::string& lsName)
 {
     uint32_t i = 0;
-    for(const std::string s : SamplerNames)
+    for(const std::string& s : SamplerNames)
     {
         if(lsName == s)
         {

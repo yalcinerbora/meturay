@@ -188,7 +188,7 @@ template<class GPUCamera, class PGroup,
                               typename PGroup::PrimitiveData> SGen>
 const GPUCamera* CPUCameraGroupP<GPUCamera, PGroup, SGen>::GPUCamerasDerived() const
 {
-    return dGPULights;
+    return dGPUCameras;
 }
 
 template<class GPUCamera, class PGroup,

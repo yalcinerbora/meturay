@@ -433,9 +433,7 @@ inline void GPUTracer::SendLog(const char* format, Args... args)
 {
     if(!params.verbose) return;
 
-    size_t size = snprintf(nullptr, 0, format, args...);
-    std::string s(size, '\0');
-    snprintf(&s[0], size, format, args...);
+    std::string s = fmt::format(format, args...);
     if(callbacks) callbacks->SendLog(s);
 }
 
@@ -468,7 +466,7 @@ void GPUTracer::Finalize()
     //Debug::DumpMemToFile("OutSamples",
     //                     reinterpret_cast<uint32_t*>(imageData.data() + offset),
     //                     pixelCount1D);
-    //Debug::DumpImage("SentImage.png",
+    // Debug::DumpImage("SentImage.png",
     //                 reinterpret_cast<Vector4*>(imageData.data()),
     //                 Vector2ui(pixelCount[0], pixelCount[1]));
 

@@ -20,7 +20,7 @@
 #else
     static constexpr bool IS_DEBUG_MODE = false;
     template<class... Args>
-    inline constexpr void METU_DEBUG_LOG(Args&&... args) {}
+    inline constexpr void METU_DEBUG_LOG(Args&&...) {}
 #endif
 
 template<class... Args>

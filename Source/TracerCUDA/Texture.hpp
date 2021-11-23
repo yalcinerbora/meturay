@@ -118,9 +118,9 @@ static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType i)
 template<int D>
 TextureI<D>::TextureI(TextureI&& other)
     : DeviceLocalMemoryI(other.currentDevice)
+    , channelCount(other.channelCount)
     , texture(other.texture)
     , dimensions(other.dimensions)
-    , channelCount(other.channelCount)
 {
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
@@ -144,9 +144,9 @@ template<int D>
 TextureArrayI<D>::TextureArrayI(TextureArrayI&& other)
     : DeviceLocalMemoryI(other.currentDevice)
     , texture(other.texture)
+    , channelCount(other.channelCount)
     , dimensions(other.dimensions)
     , length(other.length)
-    , channelCount(other.channelCount)
 {
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
@@ -269,7 +269,7 @@ void Texture<D, T>::Copy(const Byte* sourceData,
     CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
     CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
 
-    cudaMemcpy3DParms p = {0};
+    cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
     p.extent = MakeCudaCopySize<D>(size);
 
@@ -441,7 +441,7 @@ void TextureArray<D, T>::Copy(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    cudaExtent extent = MakeCudaExtent<D>(size);
+    p.extent = MakeCudaExtent<D>(size);
 
     p.dstArray = levelArray;
     p.dstPos = MakeCudaOffset<D>(offset, layer);
@@ -468,7 +468,7 @@ GPUFence TextureArray<D, T>::CopyAsync(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    cudaExtent extent = MakeCudaExtent<D>(size);
+    p.extent = MakeCudaExtent<D>(size);
 
     p.dstArray = levelArray;
     p.dstPos = MakeCudaOffset<D>(offset, layer);
@@ -613,7 +613,7 @@ void TextureCube<T>::Copy(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    cudaExtent extent = make_cudaExtent(size[0], size[1], 0);
+    p.extent = make_cudaExtent(size[0], size[1], 0);
 
     p.dstArray = levelArray;
     p.dstPos = make_cudaPos(size[0], size[1], sideIndex);
@@ -642,7 +642,7 @@ GPUFence TextureCube<T>::CopyAsync(const Byte* sourceData,
 
     cudaMemcpy3DParms p = {};
     p.kind = cudaMemcpyHostToDevice;
-    cudaExtent extent = make_cudaExtent(size[0], size[1], 0);
+    p.extent = make_cudaExtent(size[0], size[1], 0);
 
     p.dstArray = levelArray;
     p.dstPos = make_cudaPos(size[0], size[1], sideIndex);

@@ -72,16 +72,16 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
                              const std::string& sceneName,
                              GDebugRendererRef& dRef,
                              const std::vector<DebugRendererPtr>& dRenderers)
-    : fullscreenShow(true)
-    , window(w)
+    : window(w)
+    , sceneName(sceneName)
+    , fullscreenShow(true)
     , refTexture(refFileName)
     , debugRenderers(dRenderers)
-    , pixelSelected(false)
-    , sceneName(sceneName)
+    , debugReference(dRef)
     , MaxDepth(maxDepth)
     , currentDepth(0)
-    , debugReference(dRef)
     , doLogScale(false)
+    , pixelSelected(false)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -209,14 +209,13 @@ void GuideDebugGUI::Render()
     ImGui::SameLine(0.0f, paddingX.x);
     ImGui::BeginChild("refTexture", refImgSize, false);
     ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(sceneName.c_str(), refImgSize.x));
-    ImGui::Text(sceneName.c_str());
+    ImGui::Text("%s", sceneName.c_str());
     remainingSize = GuideDebugGUIFuncs::FindRemainingSize(refImgSize);
     remainingSize.x = remainingSize.y * (1.0f / 9.0f) * 16.0f;
     ImGui::NewLine();
     ImGui::SameLine(0.0f, (refImgSize.x - remainingSize.x) * 0.5f - ImGui::GetStyle().WindowPadding.x);
 
-    ImVec2 refImgPos = ImGui::GetCursorScreenPos();
-
+    //ImVec2 refImgPos = ImGui::GetCursorScreenPos();
     {
         // Scope is here to use namespace since with structured bindings etc.
         // Statement become too long

@@ -39,16 +39,21 @@ FUNCTION(NVCC_COMPILE_PTX)
 
     message(STATUS ${ALL_COMPILE_DEFS})
 
+    # Linux wants this i dunno why
+    if(UNIX)
+        list(APPEND NVCC_COMPILE_OPTIONS --compiler-bindir=${CMAKE_C_COMPILER})
+    endif()
+    # Generic Options
     list(APPEND NVCC_COMPILE_OPTIONS ${NVCC_COMPILE_PTX_EXTRA_OPTIONS}
-        --ptx
-        --machine=64
-
-        "-std=c++${CMAKE_CUDA_STANDARD}"
-        "--relocatable-device-code=true"
+        # Include Directories
         "-I${OPTIX_INCLUDE_DIR}"
         "-I${MRAY_SOURCE_DIRECTORY}"
         #"-I${MRAY_SOURCE_DIRECTORY}/${NVCC_COMPILE_PTX_MAIN_TARGET}"
         "-I${MRAY_LIB_INCLUDE_DIRECTORY}"
+        --ptx
+        --machine=64
+        "-std=c++${CMAKE_CUDA_STANDARD}"
+        "--relocatable-device-code=true"
         # OptiX Documentation says that -G'ed kernels may fail
         # So -lineinfo is used on both configurations
         $<$<CONFIG:Debug>:-G>
@@ -60,9 +65,6 @@ FUNCTION(NVCC_COMPILE_PTX)
         $<$<CONFIG:Release>:-DNDEBUG>
         #${ALL_COMPILE_DEFS}
      )
-    if(UNIX)
-        list(APPEND NVCC_COMPILE_OPTIONS --compiler-bindir=${CMAKE_C_COMPILER})
-    endif()
 
     # Custom Target Name
     set(PTX_TARGET "${NVCC_COMPILE_PTX_MAIN_TARGET}_Optix")

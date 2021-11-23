@@ -848,7 +848,7 @@ ImageIOError ImageIO::ConvertPixels(Byte* toData, PixelFormat toFormat,
         }
     }
     // TODO: Implement more
-    else ImageIOError::UNABLE_TO_CONVERT_BETWEEN_FORMATS;
+    else return ImageIOError::UNABLE_TO_CONVERT_BETWEEN_FORMATS;
 
     return ImageIOError::OK;
 }

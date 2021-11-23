@@ -140,7 +140,7 @@ int main(int argc, const char* argv[])
                                              PixelFormat::RGBA_FLOAT);
     ERROR_CHECK_INT(DLLError, dError);
     vError = visor->Initialize(*visorInput);
-    ERROR_CHECK_INT(VisorError, dError);
+    ERROR_CHECK_INT(VisorError, vError);
 
     // Generate Tracer
     SharedLib tracerDLL(tracerDLLName);

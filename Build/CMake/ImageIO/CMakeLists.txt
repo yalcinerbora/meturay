@@ -25,9 +25,11 @@ set(MRAY_OPENEXR_INCLUDE_DIRECTORY ${MRAY_LIB_INCLUDE_DIRECTORY}/Imath)
 add_library(ImageIO SHARED ${SRC_ALL})
 
 target_include_directories(ImageIO PRIVATE
-                           ${MRAY_OPENEXR_INCLUDE_DIRECTORY}
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(ImageIO SYSTEM PRIVATE
+                           ${MRAY_OPENEXR_INCLUDE_DIRECTORY}
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(ImageIO PRIVATE ${PREPROCESSOR_GENERIC})
 

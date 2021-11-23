@@ -76,50 +76,50 @@ class CPUTransformIdentity : public CPUTransformGroupI
 };
 
 __device__ __forceinline__
-inline RayF GPUTransformIdentity::WorldToLocal(const RayF& r,
-											   const uint32_t*, const float*,
-											   uint32_t) const
+RayF GPUTransformIdentity::WorldToLocal(const RayF& r,
+										const uint32_t*, const float*,
+										uint32_t) const
 {
 	return r;
 }
 
 __device__ __forceinline__
-inline Vector3f GPUTransformIdentity::WorldToLocal(const Vector3f& vec, bool,
-												   const uint32_t*, const float*,
-												   uint32_t) const
+Vector3f GPUTransformIdentity::WorldToLocal(const Vector3f& vec, bool,
+											const uint32_t*, const float*,
+											uint32_t) const
 {
 	return vec;
 }
 
 __device__ __forceinline__
-inline AABB3f GPUTransformIdentity::WorldToLocal(const AABB3f& aabb) const
+AABB3f GPUTransformIdentity::WorldToLocal(const AABB3f& aabb) const
 {
 	return aabb;
 }
 
 __device__ __forceinline__
-inline Vector3 GPUTransformIdentity::LocalToWorld(const Vector3& vector, bool,
-												  const uint32_t*, const float*,
-												  uint32_t) const
+Vector3 GPUTransformIdentity::LocalToWorld(const Vector3& vector, bool,
+										   const uint32_t*, const float*,
+										   uint32_t) const
 {
 	return vector;
 }
 
 __device__ __forceinline__
-inline AABB3f GPUTransformIdentity::LocalToWorld(const AABB3f& aabb) const
+AABB3f GPUTransformIdentity::LocalToWorld(const AABB3f& aabb) const
 {
 	return aabb;
 }
 
 __device__ __forceinline__
-inline QuatF GPUTransformIdentity::ToLocalRotation(const uint32_t*, const float*,
-												   uint32_t) const
+QuatF GPUTransformIdentity::ToLocalRotation(const uint32_t*, const float*,
+											uint32_t) const
 {
 	return IdentityQuatF;
 }
 
 __device__ __forceinline__
-inline Matrix4x4 GPUTransformIdentity::GetLocalToWorldAsMatrix() const
+Matrix4x4 GPUTransformIdentity::GetLocalToWorldAsMatrix() const
 {
 	return Indentity4x4;
 }
@@ -131,7 +131,7 @@ inline const char* CPUTransformIdentity::Type() const
 
 inline SceneError CPUTransformIdentity::InitializeGroup(const NodeListing& transformNodes,
 														double,
-														const std::string&)
+												 		const std::string&)
 {
 	if(transformNodes.size() != 1 &&
 	   (*transformNodes.begin())->IdCount() != 1)

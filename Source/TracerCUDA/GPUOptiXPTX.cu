@@ -141,8 +141,8 @@ template<class PGroup>
 __device__ void KCClosestHit()
 {
     using HitStruct = typename PGroup::HitData;
-    using HitRecord = typename Record<typename PGroup::PrimitiveData,
-                                      typename PGroup::LeafData>;
+    using HitRecord = Record<typename PGroup::PrimitiveData,
+                             typename PGroup::LeafData>;
     const HitRecord* r = (const HitRecord*) optixGetSbtDataPointer();
 
     const int leafId = optixGetPrimitiveIndex();
@@ -168,8 +168,8 @@ __device__ void KCAnyHit()
 {
     using LeafStruct = typename PGroup::LeafData;
     using HitStruct  = typename PGroup::HitData;
-    using HitRecord  = typename Record<typename PGroup::PrimitiveData,
-                                      typename PGroup::LeafData>;
+    using HitRecord  = Record<typename PGroup::PrimitiveData,
+                              typename PGroup::LeafData>;
     // Record Fetch
     const HitRecord* r = (const HitRecord*)optixGetSbtDataPointer();
     const int leafId = optixGetPrimitiveIndex();
@@ -189,8 +189,8 @@ __device__ void KCIntersect()
 
     using LeafStruct = typename PGroup::LeafData;
     using HitStruct  = typename PGroup::HitData;
-    using HitRecord  = typename Record<typename PGroup::PrimitiveData,
-                                       typename PGroup::LeafData>;
+    using HitRecord  = Record<typename PGroup::PrimitiveData,
+                              typename PGroup::LeafData>;
     // Construct a ray
     float3 rP = optixGetWorldRayOrigin();
     float3 rD = optixGetWorldRayDirection();
@@ -223,11 +223,17 @@ __device__ void KCIntersect()
     }
     else if constexpr(PGroup::TransType == PrimTransformType::PER_PRIMITIVE_TRANSFORM)
     {
-        static_assert(false, "Per primitive transform is not supported on OptiX yet");
+        // nvcc with clang compiles this when assert is false, so putting an impossible
+        // statement
+        static_assert(PGroup::TransType != PrimTransformType::PER_PRIMITIVE_TRANSFORM,
+                     "Per primitive transform is not supported on OptiX yet");
         // Optix does not support virtual function calls
         // Just leave it as is for now
     }
-    else static_assert(false, "Primitive does not have proper transform type");
+    // nvcc with clang compiles this when assert is false, so putting an impossible
+    // statement
+    else static_assert(PGroup::TransType == PrimTransformType::PER_PRIMITIVE_TRANSFORM,
+                       "Primitive does not have proper transform type");
 
     // Construct the Register (after transformation)
     RayReg rayRegister = RayReg(RayF(Vector3f(rD.x, rD.y, rD.z),
@@ -236,15 +242,16 @@ __device__ void KCIntersect()
 
     // Since OptiX does not support virtual(indirect) function calls
     // Call with an empty transform (this is not virutal and does nothing)
-    intersects = PGroup::IntersectsT<GPUTransformEmpty>(// Output
-                                                        newT,
-                                                        hitData,
-                                                        // I-O
-                                                        rayRegister,
-                                                        // Input
-                                                        GPUTransformEmpty(),
-                                                        gLeaf,
-                                                        (*r->gPrimData));
+    // <GPUTransformEmpty>
+    intersects = PGroup::IntersectsT(// Output
+                                     newT,
+                                     hitData,
+                                     // I-O
+                                     rayRegister,
+                                     // Input
+                                     GPUTransformEmpty(),
+                                     gLeaf,
+                                     (*r->gPrimData));
     // Report the intersection
     if(intersects) ReportIntersection<HitStruct>(newT, 0, hitData);
 }

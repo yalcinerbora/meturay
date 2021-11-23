@@ -389,7 +389,7 @@ std::vector<size_t> SceneNodeJson::AccessListCount(const std::string& name) cons
 
         result.push_back(innerNode.size());
     }
-    return std::move(result);
+    return result;
 }
 
 std::vector<uint32_t> SceneNodeJson::AccessUIntRanged(const std::string& name) const

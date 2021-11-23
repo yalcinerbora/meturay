@@ -6,10 +6,10 @@
 MovementSchemeFPS::MovementSchemeFPS(double sensitivity,
                                      double moveRatio,
                                      double moveRatioModifier)
-    : Sensitivity(sensitivity)
-    , prevMouseX(0.0)
+    : prevMouseX(0.0)
     , prevMouseY(0.0)
     , mouseToggle(false)
+    , Sensitivity(sensitivity)
     , MoveRatio(moveRatio)
     , MoveRatioModifier(moveRatioModifier)
     , currentMovementRatio(MoveRatio)

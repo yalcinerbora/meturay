@@ -177,12 +177,16 @@ source_group("" FILES ${SRC_COMMON})
 add_library(RayLib STATIC ${SRC_ALL})
 
 target_include_directories(RayLib PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(RayLib SYSTEM PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
+
 
 target_link_libraries(RayLib
                       fmt
-                      spdlog)
+                      spdlog
+                      cuda)
 
 target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
 

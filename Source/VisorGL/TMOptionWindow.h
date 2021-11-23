@@ -24,14 +24,14 @@ class TMOptionWindow : public VisorGUIWindowI
 };
 
 inline TMOptionWindow::TMOptionWindow()
-    : windowClosed(true)
-    , opts{DefaultTMOptions}
+    : opts{DefaultTMOptions}
+    , windowClosed(true)
 {}
 
 inline TMOptionWindow::TMOptionWindow(bool windowClosed,
                                       const ToneMapOptions& defaultOptions)
-    : windowClosed(windowClosed)
-    , opts(defaultOptions)
+    : opts(defaultOptions)
+    , windowClosed(windowClosed)
 {}
 
 inline const ToneMapOptions& TMOptionWindow::TMOptions() const

@@ -53,11 +53,11 @@ class MockNode
         //static constexpr Vector2i       IMAGE_RESOLUTION = Vector2i(3840, 2160);
 
     private:
-        const double                    Duration;
+        //const double                    Duration;
 
         VisorI&                         visor;
         GPUTracerI&                     tracer;
-        GPUSceneI&                      scene;
+        //GPUSceneI&                      scene;
 
     protected:
     public:
@@ -100,11 +100,9 @@ class MockNode
 };
 
 inline MockNode::MockNode(VisorI& v, GPUTracerI& t,
-                          GPUSceneI& s, double duration)
+                          GPUSceneI&, double)
     : visor(v)
     , tracer(t)
-    , scene(s)
-    , Duration(duration)
 {}
 
 inline void MockNode::SendLog(const std::string s)
@@ -259,16 +257,16 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
                                             double sceneTime,
                                             bool enableTMO,
                                             bool forceOptiX)
-    : sceneName(sceneName)
-    , sceneTime(sceneTime)
-    , tracerType(tracerType)
-    , visorView(nullptr)
+    : tracerDLL(TRACER_DLL)
     , tracerSystem(nullptr, nullptr)
     , gpuScene(nullptr)
+    , tracer(nullptr, nullptr)
+    , visorView(nullptr)
     , visorInput(nullptr)
     , node(nullptr)
-    , tracerDLL(TRACER_DLL)
-    , tracer(nullptr, nullptr)
+    , tracerType(tracerType)
+    , sceneName(sceneName)
+    , sceneTime(sceneTime)
     , enableTMO(enableTMO)
     , forceOptiX(forceOptiX)
 {}

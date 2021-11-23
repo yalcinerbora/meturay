@@ -68,7 +68,7 @@ int main(int argc, const char* argv[])
         SharedLib visorDLL("VisorGL");
         // Initialize a Visor
         SharedLibPtr<VisorI> debugVisor = {nullptr, nullptr};
-        dError = visorDLL.GenerateObjectWithArgs(debugVisor, 
+        dError = visorDLL.GenerateObjectWithArgs(debugVisor,
                                                  SharedLibArgs{
                                                     "CreateGuideDebugGL",
                                                     "DeleteVisorGL"},
@@ -76,13 +76,13 @@ int main(int argc, const char* argv[])
                                                  Vector2i(1600, 900),
                                                  guideDebugConfig);
         ERROR_CHECK_INT(DLLError, dError);
-        
+
         // Set an input scheme
         EmptyVisorCallback emptyCallback;
         KeyboardKeyBindings kb = VisorConstants::DefaultKeyBinds;
         MouseKeyBindings bb = VisorConstants::DefaultButtonBinds;
         auto visorInput = std::make_unique<VisorWindowInput>(std::move(kb), std::move(bb),
-                                                             std::move(MovementSchemeList()));        
+                                                             MovementSchemeList());
         // Init Visor with input scheme
         VisorError vError = debugVisor->Initialize(*visorInput);
         ERROR_CHECK_INT(VisorError, vError);

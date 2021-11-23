@@ -23,8 +23,10 @@ endif()
 add_executable(Test_TracerCUDA ${SRC_COMMON})
 
 target_include_directories(Test_TracerCUDA PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
                            ${MRAY_SOURCE_DIRECTORY})
+
+target_include_directories(Test_TracerCUDA SYSTEM PRIVATE
+                           ${MRAY_LIB_INCLUDE_DIRECTORY})
 
 target_compile_definitions(Test_TracerCUDA PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
 

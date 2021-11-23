@@ -35,12 +35,12 @@ TEST(SceneIO, String)
 TEST(SceneIO, Number)
 {
     EXPECT_EQ(SceneIO::LoadNumber<int>(LoadJson(jsonDouble)), 0);
-    EXPECT_EQ(SceneIO::LoadNumber<unsigned int>(LoadJson(jsonDouble)), 0);
+    EXPECT_EQ(SceneIO::LoadNumber<unsigned int>(LoadJson(jsonDouble)), 0u);
     EXPECT_FLOAT_EQ(SceneIO::LoadNumber<float>(LoadJson(jsonDouble)), 0.0f);
     EXPECT_DOUBLE_EQ(SceneIO::LoadNumber<double>(LoadJson(jsonDouble)), 0.0);
 
     EXPECT_EQ(SceneIO::LoadNumber<int>(LoadJson(jsonInt)), 1);
-    EXPECT_EQ(SceneIO::LoadNumber<unsigned int>(LoadJson(jsonInt)), 1);
+    EXPECT_EQ(SceneIO::LoadNumber<unsigned int>(LoadJson(jsonInt)), 1u);
     EXPECT_FLOAT_EQ(SceneIO::LoadNumber<float>(LoadJson(jsonInt)), 1.0f);
     EXPECT_DOUBLE_EQ(SceneIO::LoadNumber<double>(LoadJson(jsonInt)), 1.0);
 
