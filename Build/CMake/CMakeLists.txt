@@ -101,16 +101,19 @@ if(MSVC)
     # Warnings
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3>
                         $<$<COMPILE_LANGUAGE:CXX>:/Zi>
-                        $<$<COMPILE_LANGUAGE:CXX>:/experimental:external>
                         $<$<COMPILE_LANGUAGE:CXX>:/external:W0>
-                        # Disable "Padding Added" warning
-                        $<$<COMPILE_LANGUAGE:CXX>:/wd4324>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4324>
-                        # '__cudaUnregisterBinaryUtil': unreferenced function with internal linkage has been removed
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4505>
                         # Ignore inline functions are not defined warning
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4984>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4506>)
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4506>
+                        )
+                        # These Flags for W4 however /external does not work properly i think
+                        # it still returns warnings and clutters the code extensively
+                        # Thus these are commented out
+                        # Disable "Padding Added" warning
+                        # $<$<COMPILE_LANGUAGE:CXX>:/wd4324>
+                        # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4324>
+                        # # '__cudaUnregisterBinaryUtil': unreferenced function with internal linkage has been removed
+                        # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4505>)
     add_link_options($<$<COMPILE_LANGUAGE:CXX>:/DEBUG>)
 else()
     # Clang / GCC both use same syntax

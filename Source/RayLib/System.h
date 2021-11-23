@@ -45,6 +45,8 @@ if(e != ErrType::OK) \
         }
         return true;
     }
+
+
 #endif
 
 #ifdef __linux__

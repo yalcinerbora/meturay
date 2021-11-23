@@ -100,6 +100,7 @@ set(SRC_SYSTEM
     ${CURRENT_SOURCE_DIR}/SharedLib.cpp
     ${CURRENT_SOURCE_DIR}/SharedLib.h
     ${CURRENT_SOURCE_DIR}/System.h
+    ${CURRENT_SOURCE_DIR}/Unreachable.h
     ${CURRENT_SOURCE_DIR}/Types.h)
 
 set(SRC_THREADS

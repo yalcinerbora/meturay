@@ -13,6 +13,7 @@ N should be 2, 3, 4 at most.
 #include "CudaCheck.h"
 #include "Vector.h"
 #include "Quaternion.h"
+#include "Unreachable.h"
 
 template<int N, class T, class... Args>
 using AllVectorEnable = typename std::enable_if<std::conjunction<std::is_same<Vector<N, T>, Args>...>::value>::type;
@@ -26,97 +27,97 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
     static_assert(N == 2 || N == 3 || N == 4, "Matrix size should be 2x2, 3x3 or 4x4");
 
     private:
-    T                                   matrix[N * N];
+        T                                   matrix[N * N];
 
     protected:
     public:
         // Constructors & Destructor
-    constexpr                           Matrix() = default;
-    template <class C, typename = ArithmeticEnable<C>>
-    __device__ __host__                 Matrix(C);
-    template <class C, typename = ArithmeticEnable<C>>
-    __device__ __host__                 Matrix(const C* data);
-    template <class... Args, typename = AllArithmeticEnable<Args...>>
-    constexpr __device__ __host__       Matrix(const Args... dataList);
-    __device__ __host__                 Matrix(const Vector<N, T> columns[]);
-    template <int M, typename = std::enable_if_t<(M >= N)>>
-    __device__ __host__                 Matrix(const Matrix<M, T>&);
-                                        ~Matrix() = default;
+        constexpr                           Matrix() = default;
+        template <class C, typename = ArithmeticEnable<C>>
+        __device__ __host__                 Matrix(C);
+        template <class C, typename = ArithmeticEnable<C>>
+        __device__ __host__                 Matrix(const C* data);
+        template <class... Args, typename = AllArithmeticEnable<Args...>>
+        constexpr __device__ __host__       Matrix(const Args... dataList);
+        __device__ __host__                 Matrix(const Vector<N, T> columns[]);
+        template <int M, typename = std::enable_if_t<(M >= N)>>
+        __device__ __host__                 Matrix(const Matrix<M, T>&);
+                                            ~Matrix() = default;
 
-    // MVC bug? these trigger std::trivially_copyable static assert
-    //                                  Matrix(const Matrix&) = default;
-    //Matrix&                           operator=(const Matrix&) = default;
+        // MVC bug? these trigger std::trivially_copyable static assert
+        //                                  Matrix(const Matrix&) = default;
+        //Matrix&                           operator=(const Matrix&) = default;
 
-    // Accessors
-    __device__ __host__ explicit                    operator T* ();
-    __device__ __host__ explicit                    operator const T* () const;
-    __device__ __host__ T&                          operator[](int);
-    __device__ __host__ const T&                    operator[](int) const;
-    __device__ __host__ T&                          operator()(int row, int column);
-    __device__ __host__ const T&                    operator()(int row, int column) const;
+        // Accessors
+        __device__ __host__ explicit        operator T* ();
+        __device__ __host__ explicit        operator const T* () const;
+        __device__ __host__ T&              operator[](int);
+        __device__ __host__ const T&        operator[](int) const;
+        __device__ __host__ T&              operator()(int row, int column);
+        __device__ __host__ const T&        operator()(int row, int column) const;
 
-    // Modify
-    __device__ __host__ void                        operator+=(const Matrix&);
-    __device__ __host__ void                        operator-=(const Matrix&);
-    __device__ __host__ void                        operator*=(const Matrix&);
-    __device__ __host__ void                        operator*=(T);
-    __device__ __host__ void                        operator/=(const Matrix&);
-    __device__ __host__ void                        operator/=(T);
+        // Modify
+        __device__ __host__ void            operator+=(const Matrix&);
+        __device__ __host__ void            operator-=(const Matrix&);
+        __device__ __host__ void            operator*=(const Matrix&);
+        __device__ __host__ void            operator*=(T);
+        __device__ __host__ void            operator/=(const Matrix&);
+        __device__ __host__ void            operator/=(T);
 
-    __device__ __host__ Matrix                      operator+(const Matrix&) const;
-    __device__ __host__ Matrix                      operator-(const Matrix&) const;
-    template<class Q = T>
-    __device__ __host__ SignedEnable<Q, Matrix>     operator-() const;
-    __device__ __host__ Matrix                      operator/(const Matrix&) const;
-    __device__ __host__ Matrix                      operator/(T) const;
+        __device__ __host__ Matrix                      operator+(const Matrix&) const;
+        __device__ __host__ Matrix                      operator-(const Matrix&) const;
+        template<class Q = T>
+        __device__ __host__ SignedEnable<Q, Matrix>     operator-() const;
+        __device__ __host__ Matrix                      operator/(const Matrix&) const;
+        __device__ __host__ Matrix                      operator/(T) const;
 
-    __device__ __host__ Matrix                      operator*(const Matrix&) const;
-    template<int M>
-    __device__ __host__ Vector<M, T>                operator*(const Vector<M, T>&) const;
-    __device__ __host__ Matrix                      operator*(T) const;
+        __device__ __host__ Matrix                      operator*(const Matrix&) const;
+        template<int M>
+        __device__ __host__ Vector<M, T>                operator*(const Vector<M, T>&) const;
+        __device__ __host__ Matrix                      operator*(T) const;
 
-    // Logic
-    __device__ __host__ bool                        operator==(const Matrix&) const;
-    __device__ __host__ bool                        operator!=(const Matrix&) const;
+        // Logic
+        __device__ __host__ bool                        operator==(const Matrix&) const;
+        __device__ __host__ bool                        operator!=(const Matrix&) const;
 
-    // Utilty
-    __device__ __host__ T                           Determinant() const;
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix>      Inverse() const;
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix&>     InverseSelf();
-    __device__ __host__ Matrix                      Transpose() const;
-    __device__ __host__ Matrix&                     TransposeSelf();
+        // Utilty
+        __device__ __host__ T                           Determinant() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix>      Inverse() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix&>     InverseSelf();
+        __device__ __host__ Matrix                      Transpose() const;
+        __device__ __host__ Matrix&                     TransposeSelf();
 
-    __device__ __host__ Matrix                      Clamp(const Matrix&, const Matrix&) const;
-    __device__ __host__ Matrix                      Clamp(T min, T max) const;
-    __device__ __host__ Matrix& ClampSelf(const Matrix&, const Matrix&);
-    __device__ __host__ Matrix& ClampSelf(T min, T max);
+        __device__ __host__ Matrix          Clamp(const Matrix&, const Matrix&) const;
+        __device__ __host__ Matrix          Clamp(T min, T max) const;
+        __device__ __host__ Matrix&         ClampSelf(const Matrix&, const Matrix&);
+        __device__ __host__ Matrix&         ClampSelf(T min, T max);
 
-    template<class Q = T>
-    __device__ __host__ SignedEnable<Q, Matrix>     Abs() const;
-    template<class Q = T>
-    __device__ __host__ SignedEnable<Q, Matrix&>    AbsSelf();
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix>      Round() const;
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix&>     RoundSelf();
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix>      Floor() const;
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix&>     FloorSelf();
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix>      Ceil() const;
-    template<class Q = T>
-    __device__ __host__ FloatEnable<Q, Matrix&>     CeilSelf();
+        template<class Q = T>
+        __device__ __host__ SignedEnable<Q, Matrix>     Abs() const;
+        template<class Q = T>
+        __device__ __host__ SignedEnable<Q, Matrix&>    AbsSelf();
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix>      Round() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix&>     RoundSelf();
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix>      Floor() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix&>     FloorSelf();
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix>      Ceil() const;
+        template<class Q = T>
+        __device__ __host__ FloatEnable<Q, Matrix&>     CeilSelf();
 
-    template<class Q = T>
-    static __device__ __host__ FloatEnable<Q, Matrix>   Lerp(const Matrix&, const Matrix&, T);
+        template<class Q = T>
+        static __device__ __host__ FloatEnable<Q, Matrix>   Lerp(const Matrix&, const Matrix&, T);
 
-    static __device__ __host__ Matrix                   Min(const Matrix&, const Matrix&);
-    static __device__ __host__ Matrix                   Min(const Matrix&, T);
-    static __device__ __host__ Matrix                   Max(const Matrix&, const Matrix&);
-    static __device__ __host__ Matrix                   Max(const Matrix&, T);
+        static __device__ __host__ Matrix       Min(const Matrix&, const Matrix&);
+        static __device__ __host__ Matrix       Min(const Matrix&, T);
+        static __device__ __host__ Matrix       Max(const Matrix&, const Matrix&);
+        static __device__ __host__ Matrix       Max(const Matrix&, T);
 };
 
 // Determinants

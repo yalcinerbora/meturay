@@ -332,7 +332,7 @@ T Matrix<N, T>::Determinant() const
         return Determinant3<T>(static_cast<const T*>(*this));
     else
         return Determinant4<T>(static_cast<const T*>(*this));
-    __builtin_unreachable();
+    UNREACHABLE();
 }
 
 template <int N, class T>
@@ -346,7 +346,7 @@ inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
         return Inverse3<T>(static_cast<const T*>(*this));
     else
         return Inverse4<T>(static_cast<const T*>(*this));
-    __builtin_unreachable();
+    UNREACHABLE();
 }
 
 template <int N, class T>
