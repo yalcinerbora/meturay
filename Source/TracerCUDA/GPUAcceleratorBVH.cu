@@ -146,24 +146,12 @@ void GPUBaseAcceleratorBVH::GenerateBaseBVHNode(// Output
 void GPUBaseAcceleratorBVH::GetReady(const CudaSystem& system,
                                      uint32_t rayCount)
 {
-    size_t stateSize = rayCount * sizeof(uint32_t);
-    stateSize = Memory::AlignSize(stateSize, AlignByteCount);
-    size_t prevIndexSize = rayCount * sizeof(uint32_t);
-    prevIndexSize = Memory::AlignSize(prevIndexSize, AlignByteCount);
-
-    size_t requiredSize = stateSize + prevIndexSize;
-
-    // Alloc if not enough memory
-    if(rayStateMemory.Size() < requiredSize)
-        rayStateMemory = std::move(DeviceMemory(requiredSize));
-
-    // Set Ptrs
-    Byte* memPtr = static_cast<Byte*>(rayStateMemory);
-    dRayStates = reinterpret_cast<uint32_t*>(memPtr);
-    dPrevBVHIndex = reinterpret_cast<uint32_t*>(memPtr + stateSize);
+    GPUMemFuncs::AllocateMultiData(std::tie(dRayStates, dPrevBVHIndex),
+                                   rayStateMemory,
+                                   {rayCount, rayCount}, AlignByteCount);
 
     // Memset previous bvh index as the root (index 0)
-    CUDA_CHECK(cudaMemset(dPrevBVHIndex, 0x00, prevIndexSize));
+    CUDA_CHECK(cudaMemset(dPrevBVHIndex, 0x00, rayCount * sizeof(uint32_t)));
 
     // Set Device
     const CudaGPU& gpu = system.BestGPU();

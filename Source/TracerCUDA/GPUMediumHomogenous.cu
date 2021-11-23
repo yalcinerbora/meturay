@@ -51,24 +51,8 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
     }
     // Finally Allocate and load to GPU memory
     mediumCount = static_cast<uint32_t>(mediumData.size());
-    size_t sizeOfData = sizeof(GPUMediumHomogenous::Data) * mediumCount;
-    sizeOfData = Memory::AlignSize(sizeOfData);
-    size_t sizeOfMediumClasses = sizeof(GPUMediumHomogenous) * mediumCount;
-    sizeOfMediumClasses = Memory::AlignSize(sizeOfMediumClasses);
-
-    size_t requiredSize = (sizeOfData + sizeOfMediumClasses);
-
-    // Reallocate if memory is not enough
-    GPUMemFuncs::EnlargeBuffer(memory, requiredSize);
-
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(memory);
-    dMediumData = reinterpret_cast<GPUMediumHomogenous::Data*>(dBasePtr + offset);
-    offset += sizeOfData;
-    dGPUMediums = reinterpret_cast<GPUMediumHomogenous*>(dBasePtr + offset);
-    offset += sizeOfMediumClasses;
-    assert(requiredSize == offset);
-
+    GPUMemFuncs::AllocateMultiData(std::tie(dMediumData, dGPUMediums), memory,
+                                   {mediumCount, mediumCount});
     // Copy
     CUDA_CHECK(cudaMemcpy(const_cast<GPUMediumHomogenous::Data*>(dMediumData),
                           mediumData.data(),
