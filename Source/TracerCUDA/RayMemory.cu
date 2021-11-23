@@ -252,6 +252,8 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     int bitEnd = bitMaxValues[1];
     if(bitStart != bitEnd)
     {
+        // METU_LOG("TempMem {} TempSize {} Count{} bit[{}-{}]",
+        //          dTempMemory, cubSortMemSize, count, bitStart, bitEnd);
         CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
                                                              dbKeys, dbIds,
                                                              static_cast<int>(count),
@@ -265,6 +267,8 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     bitEnd = HitKey::IdBits + bitMaxValues[0];
     if(bitStart != bitEnd)
     {
+        // METU_LOG("TempMem {} TempSize {} Count{} bit[{}-{}]",
+        //          dTempMemory, cubSortMemSize, count, bitStart, bitEnd);
         CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
                                                              dbKeys, dbIds,
                                                              static_cast<int>(count),

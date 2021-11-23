@@ -18,7 +18,8 @@ Utility header for header only cuda vector and cpu vector implementations
     {
         if(code != cudaSuccess)
         {
-            METU_ERROR_LOG("CUDA Failure: {:s} {:s} {:d}",
+            METU_ERROR_LOG("{:s}: {:s} {:s} {:d}",
+                           fmt::format(fg(fmt::color::green), std::string("CUDA Failure")),
                            cudaGetErrorString(code), file, line);
             assert(false);
         }
@@ -76,12 +77,12 @@ Utility header for header only cuda vector and cpu vector implementations
     constexpr bool METU_DEBUG_BOOL = false;
     #define CUDA_CHECK_ERROR(err)
     #define CUDA_KERNEL_PRINTF()
-    #define CUDA_CHECK(func) func
-    #define CUDA_KERNEL_CHECK()
-    //#define CUDA_CHECK(func) GPUAssert((func), __FILE__, __LINE__)
-    //#define CUDA_KERNEL_CHECK() \
-    //            CUDA_CHECK(cudaDeviceSynchronize()); \
-    //            CUDA_CHECK(cudaGetLastError())
+    // #define CUDA_CHECK(func) func
+    // #define CUDA_KERNEL_CHECK()
+    #define CUDA_CHECK(func) GPUAssert((func), __FILE__, __LINE__)
+    #define CUDA_KERNEL_CHECK() \
+               CUDA_CHECK(cudaDeviceSynchronize()); \
+               CUDA_CHECK(cudaGetLastError())
     // TODO: Check this from time to time..
     // Ok after kernels i need to put get last error
     // in order to properly synchronize i did not understand this

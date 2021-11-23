@@ -193,7 +193,6 @@ class SimpleTracerSetup
             false
         };
 
-
         static constexpr uint32_t MAX_S_TREE = std::numeric_limits<uint32_t>::max();
         const TracerOptions opts = VariableList
         {
@@ -203,9 +202,9 @@ class SimpleTracerSetup
             {"NextEventEstimation", OptionVariable(true)},
             {"DirectLightMIS", OptionVariable(false)},
             {"RussianRouletteStart", OptionVariable(5u)},
-            {"NEESampler", OptionVariable("Uniform")},
+            {"NEESampler", OptionVariable(std::string("Uniform"))},
             // Direct Tracer Related
-            {"RenderType", OptionVariable("Furnace")},
+            {"RenderType", OptionVariable(std::string("Furnace"))},
             // AO Related
             {"MaxDistance", OptionVariable(0.17f)},
             // PPG Related
