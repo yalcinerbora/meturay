@@ -32,4 +32,5 @@ void TransformArrayGPU(Type* dData,
         static_cast<uint32_t>(elementCount),
         f
     );
+    CUDA_KERNEL_CHECK();
 }

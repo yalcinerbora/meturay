@@ -46,11 +46,14 @@ RayCasterOptiX::~RayCasterOptiX()
     int optixDeviceIndex = 0;
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
     {
-        // Destroy using opostie
-        OPTIX_CHECK(optixPipelineDestroy(optixGPUData[optixDeviceIndex].pipeline));
-        for(auto pg : optixGPUData[optixDeviceIndex].programGroups)
+        const auto& optixData = optixGPUData[optixDeviceIndex];
+
+        // Destroy using opostie order
+        if(optixData.pipeline) OPTIX_CHECK(optixPipelineDestroy(optixData.pipeline));
+        for(auto pg : optixData.programGroups)
             OPTIX_CHECK(optixProgramGroupDestroy(pg));
-        OPTIX_CHECK(optixModuleDestroy(optixGPUData[optixDeviceIndex].mdl));
+
+        if(optixData.mdl) OPTIX_CHECK(optixModuleDestroy(optixData.mdl));
         optixDeviceIndex++;
 
         baseAccelerator.Destruct(cudaSystem);
@@ -306,7 +309,7 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     // CullFace flags (for each accelerator in the scene)
     std::vector<bool> hCullFlags;
     // SBT Offsets (for each accelerator in the scene)
-    std::vector<uint32_t> hGlobalSBTOffsets;
+    std::vector<uint32_t> hGlobalSBTCounts;
     // Reserve Memory
     traversables.resize(optixSystem.OptixCapableDevices().size());
     hPrimTransformTypes.reserve(accelBatches.size());
@@ -363,9 +366,9 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
 
         // Push back the counts currently we will do a prefix sum after
         const auto& localSBTCounts = accOptiX->GetSBTCounts();
-        hGlobalSBTOffsets.insert(hGlobalSBTOffsets.end(),
-                                 localSBTCounts.cbegin(),
-                                 localSBTCounts.cend());
+        hGlobalSBTCounts.insert(hGlobalSBTCounts.end(),
+                                localSBTCounts.cbegin(),
+                                localSBTCounts.cend());
 
         const auto& accRecords = accOptiX->GetRecords();
         hRecords.insert(hRecords.end(),
@@ -394,10 +397,14 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     //Generate global SBT offsets from local SBT offsets
     // cpp reference says this can run in-place
     // (d_first can be equal to first)
+    // Clang does not like this and fails so i do it over
+    // an temp buffer instead (probably a bug on either MSVC or Clang)
+    std::vector<uint32_t> hGlobalSBTOffsets(hGlobalSBTCounts.size());
     std::exclusive_scan(std::execution::par_unseq,
-                        hGlobalSBTOffsets.cbegin(),
-                        hGlobalSBTOffsets.cend(),
+                        hGlobalSBTCounts.cbegin(),
+                        hGlobalSBTCounts.cend(),
                         hGlobalSBTOffsets.begin(), 0u);
+    hGlobalSBTCounts.clear();
 
     // Construct Base accelerator using the fetched data
     if((e = baseAccOptiX.Construct(traversables, hPrimTransformTypes,

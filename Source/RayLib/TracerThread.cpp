@@ -20,6 +20,7 @@ TracerThread::TracerThread(TracerSystemI& t,
     , tracerParameters(params)
     , tracerTypeName(tracerTypeName)
     , tracerCallbacks(tracerCallbacks)
+    , tracerCrashSignal(false)
     , isPrevStopped(false)
 {}
 

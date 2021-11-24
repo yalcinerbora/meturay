@@ -32,8 +32,9 @@ struct ImageIOError : public ErrorI
                     ImageIOError(Type, const std::string& extra);
                     ~ImageIOError() = default;
 
-        operator    Type() const;
-        operator    std::string() const override;
+        const std::string&  Extra();
+        operator            Type() const;
+        operator            std::string() const override;
 };
 
 class ImageIOException : public std::runtime_error
@@ -66,6 +67,11 @@ inline ImageIOError::ImageIOError(Type t, const std::string& extra)
     : type(t)
     , extra(extra)
 {}
+
+inline const std::string& ImageIOError::Extra()
+{
+    return extra;
+}
 
 inline ImageIOError::operator Type() const
 {

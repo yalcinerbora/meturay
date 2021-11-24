@@ -11,16 +11,16 @@ SceneError ConvertImageIOErrorToSceneError(ImageIOError e)
     switch(e)
     {
         case ImageIOError::IMAGE_NOT_FOUND:
-            return SceneError::TEXTURE_NOT_FOUND;
+            return SceneError(SceneError::TEXTURE_NOT_FOUND, e.Extra());
         case ImageIOError::UNKNOWN_IMAGE_TYPE:
-            return SceneError::UNKNOWN_TEXTURE_TYPE;
+            return SceneError(SceneError::UNKNOWN_TEXTURE_TYPE, e.Extra());
 
         // TODO More Specific Texture Errors
         case ImageIOError::TYPE_IS_NOT_SIGN_CONVERTIBLE:
         case ImageIOError::READ_INTERNAL_ERROR:
         case ImageIOError::UNKNOWN_PIXEL_FORMAT:
         default:
-            return SceneError::UNABLE_TO_LOAD_TEXTURE;
+            return SceneError(SceneError::UNABLE_TO_LOAD_TEXTURE, e.Extra());
     }
 }
 

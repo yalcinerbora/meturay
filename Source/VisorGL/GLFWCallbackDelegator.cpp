@@ -3,6 +3,7 @@
 #include "RayLib/Log.h"
 #include "RayLib/VisorError.h"
 #include "RayLib/VisorInputI.h"
+#include "RayLib/System.h"
 
 #include "VisorGL.h"
 
@@ -184,6 +185,12 @@ void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
                                         GLenum severity,
                                         const char* message)
 {
+    #ifdef METURAY_LINUX
+        // Ignore "Integer fast clear not enabled for ISL_FORMAT_R32_UINT"
+        // on OpenGL Mesa Driver
+        if(id == 1) return;
+    #endif
+
     // Dont Show Others For Now
     if(type == GL_DEBUG_TYPE_OTHER ||   //
        id == 131186                ||   // Buffer Copy warning omit

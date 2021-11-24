@@ -119,6 +119,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
         totalCount,
         f
     );
+    CUDA_KERNEL_CHECK();
 
     // Do not sort all 32-bits
     int bitStart = 0;
@@ -179,6 +180,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
         static_cast<const Key*>(sortedIds),
         locCount
     );
+    CUDA_KERNEL_CHECK();
     // We have start location of each partition densely packed
     uint32_t* dSplitCount = static_cast<uint32_t*>(ifOutput);
     uint32_t* dDenseSplitIndices = static_cast<uint32_t*>(ifOutput) + 1;
@@ -203,6 +205,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
         static_cast<Key*>(sortedIds), // Aka sparse keys
         hSelectCount
     );
+    CUDA_KERNEL_CHECK();
 
     // Fetch these to host
     std::vector<Key> hDenseKeys(hSelectCount);

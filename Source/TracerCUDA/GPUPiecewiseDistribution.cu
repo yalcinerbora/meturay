@@ -276,7 +276,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             TransformArrayGPU(dRowPDF, dim[0], pdfNormFunctor);
             // Normalize CDF with the total accumulation (last element)
             // to perfectly match the [0,1) interval
-            DeviceDivideFunctor<float> cdfNormFunctor(static_cast<float>(dRowCDF[dim[0]]));
+            DeviceDivideFunctor<float> cdfNormFunctor(dRowCDF[dim[0]]);
             TransformArrayGPU(dRowCDF, dim[0] + 1, cdfNormFunctor);
         }
 
