@@ -12,12 +12,6 @@
 
 using Tex2DMap = std::map<uint32_t, std::unique_ptr<TextureI<2>>>;
 
-// CUDA complains when generator function
-// is called as a static member function
-// instead we supply it as a template parameter
-template <class S, class H, class D>
-using SurfaceFuncGenerator = SurfaceFunc<S, H, D>(*)();
-
 class GPULightP : public GPULightI
 {
     protected:

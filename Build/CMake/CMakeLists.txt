@@ -82,10 +82,10 @@ endif()
 
 # Use currently selected compiler
 if(MSVC)
-    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_C_COMPILER})
+    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 else()
     # This should be set automatically I think...
-    add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_C_COMPILER}>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_CXX_COMPILER}>)
 endif()
 # Force Colored Output on Ninja
 if ((CMAKE_GENERATOR MATCHES "Ninja") AND UNIX)

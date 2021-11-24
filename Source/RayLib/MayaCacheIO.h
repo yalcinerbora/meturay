@@ -48,4 +48,4 @@ namespace MayaCache
     IOError         LoadNCacheNavierStokes(std::vector<float>& velocityDensityData,
                                            const MayaNSCacheInfo&,
                                            const std::u8string& fileName);
-};
+}

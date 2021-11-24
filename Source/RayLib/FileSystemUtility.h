@@ -20,7 +20,7 @@ namespace Utility
                                                     const std::string& prefix);
 
     std::vector<std::string>    ListFilesInFolder(const std::string& folder,
-                                                  const std::regex& regex = std::regex("*."));;
+                                                  const std::regex& regex = std::regex("*."));
 
     void                        ForceMakeDirectoriesInPath(const std::string& path);
 

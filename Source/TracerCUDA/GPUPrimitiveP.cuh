@@ -33,6 +33,15 @@ using SurfaceFunc = Surface(*)(const HitData&,
                                PrimitiveId,
                                const PrimitiveData&);
 
+
+// Surface Function Generator are used to determine
+// if a primitive can supply a certain surface
+//
+// CUDA complains when generator function
+// is called as a static member function
+// instead we supply it as a template parameter
+template <class S, class H, class D>
+using SurfaceFuncGenerator = SurfaceFunc<S, H, D>(*)();
 namespace PrimitiveSurfaceFind
 {
     namespace Detail
@@ -69,7 +78,7 @@ namespace PrimitiveSurfaceFind
     {
         return Detail::LoopAndFind<CheckType, ReturnType, 0, Tuple>(std::forward<Tuple>(tuple));
     }
-};
+}
 
 template <class PrimitiveD>
 class GPUPrimitiveGroupP

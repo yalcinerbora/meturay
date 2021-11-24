@@ -64,7 +64,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
                                                      dim,
                                                      1);
         ptr->Copy(textureData.data(), dim);
-        return std::move(ptr);
+        return ptr;
     };
 
     // According to the pixel format allocate texture

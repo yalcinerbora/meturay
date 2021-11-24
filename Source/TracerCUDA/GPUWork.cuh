@@ -11,14 +11,8 @@
 
 #include "RayLib/TracerError.h"
 
-// Meta Tracer Code
+// Meta Tracer Work Code
 // With custom global Data
-
-// CUDA complains when generator function
-// is called as a static member function
-// instead we supply it as a template parameter
-template <class S, class H, class D>
-using SurfaceFuncGenerator = SurfaceFunc<S, H, D>(*)();
 
 // Material/Primitive invaritant part of the code
 template<class GlobalData, class RayData>

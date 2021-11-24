@@ -41,7 +41,7 @@ FUNCTION(NVCC_COMPILE_PTX)
 
     # Linux wants this i dunno why
     if(UNIX)
-        list(APPEND NVCC_COMPILE_OPTIONS --compiler-bindir=${CMAKE_C_COMPILER})
+        list(APPEND NVCC_COMPILE_OPTIONS --compiler-bindir=${CMAKE_CXX_COMPILER})
     endif()
     # Generic Options
     list(APPEND NVCC_COMPILE_OPTIONS ${NVCC_COMPILE_PTX_EXTRA_OPTIONS}

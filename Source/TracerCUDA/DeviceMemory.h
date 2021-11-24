@@ -168,7 +168,7 @@ namespace GPUMemFuncs
     void     AllocateMultiData(std::tuple<Args*&...> pointers, GPUMem& memory,
                                const std::array<size_t, sizeof...(Args)>& sizeList,
                                size_t alignment = Memory::AlignByteCount);
-};
+}
 
 inline const CudaGPU* DeviceLocalMemoryI::Device() const
 {

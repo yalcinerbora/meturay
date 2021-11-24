@@ -94,8 +94,8 @@ class GuideDebugGL : public WindowGLI
 // Some functions that are not necessary for GuideDebug
 inline const VisorOptions& GuideDebugGL::VisorOpts() const { return dummyVOpts; }
 inline void GuideDebugGL::SetImageFormat(PixelFormat) {}
-inline void GuideDebugGL::SetImageRes(Vector2i){};
-inline void GuideDebugGL::ResetSamples(Vector2i, Vector2i) {};
+inline void GuideDebugGL::SetImageRes(Vector2i){}
+inline void GuideDebugGL::ResetSamples(Vector2i, Vector2i) {}
 inline void GuideDebugGL::AccumulatePortion(const std::vector<Byte>,
                                           PixelFormat, size_t, Vector2i, Vector2i) {}
 inline void GuideDebugGL::SetTransform(const VisorTransform&) {}

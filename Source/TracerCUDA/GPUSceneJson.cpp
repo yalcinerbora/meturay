@@ -86,7 +86,7 @@ bool GPUSceneJson::FindNode(const nlohmann::json*& jsn, const char* c)
     bool found = (i != sceneJson->end());
     if(found) jsn = &(*i);
     return found;
-};
+}
 
 SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
                                      const nlohmann::json& array,

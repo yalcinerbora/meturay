@@ -108,11 +108,13 @@ ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
             if(channelCount == 2) { pf = PixelFormat::RG_HALF; break; }
             if(channelCount == 3) { pf = PixelFormat::RGB_HALF; break; }
             if(channelCount == 4) { pf = PixelFormat::RGBA_HALF; break; }
+            break;
         case Imf_3_1::FLOAT:
             if(channelCount == 1) { pf = PixelFormat::R_FLOAT; break; }
             if(channelCount == 2) { pf = PixelFormat::RG_FLOAT; break; }
             if(channelCount == 3) { pf = PixelFormat::RGB_FLOAT; break; }
             if(channelCount == 4) { pf = PixelFormat::RGBA_FLOAT; break; }
+            [[fallthrough]];
         default: break;
     }
 

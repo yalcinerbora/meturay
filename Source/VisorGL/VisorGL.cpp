@@ -532,38 +532,38 @@ VisorError VisorGL::Initialize(VisorInputI& vInput)
     switch(vOpts.wFormat)
     {
         case PixelFormat::RGBA8_UNORM:
-            aBits = 8;
+            aBits = 8; [[fallthrough]];
         case PixelFormat::RGB8_UNORM:
-            bBits = 8;
+            bBits = 8; [[fallthrough]];
         case PixelFormat::RG8_UNORM:
-            gBits = 8;
+            gBits = 8; [[fallthrough]];
         case PixelFormat::R8_UNORM:
             rBits = 8;
             break;
         case PixelFormat::RGBA16_UNORM:
-            aBits = 16;
+            aBits = 16; [[fallthrough]];
         case PixelFormat::RGB16_UNORM:
-            bBits = 16;
+            bBits = 16; [[fallthrough]];
         case PixelFormat::RG16_UNORM:
-            gBits = 16;
+            gBits = 16; [[fallthrough]];
         case PixelFormat::R16_UNORM:
             rBits = 16;
             break;
         case PixelFormat::RGBA_HALF:
-            aBits = 16;
+            aBits = 16; [[fallthrough]];
         case PixelFormat::RGB_HALF:
-            bBits = 16;
+            bBits = 16; [[fallthrough]];
         case PixelFormat::RG_HALF:
-            gBits = 16;
+            gBits = 16; [[fallthrough]];
         case PixelFormat::R_HALF:
             rBits = 16;
             break;
         case PixelFormat::RGBA_FLOAT:
-            aBits = 32;
+            aBits = 32; [[fallthrough]];
         case PixelFormat::RGB_FLOAT:
-            bBits = 32;
+            bBits = 32; [[fallthrough]];
         case PixelFormat::RG_FLOAT:
-            gBits = 32;
+            gBits = 32; [[fallthrough]];
         case PixelFormat::R_FLOAT:
             rBits = 32;
             break;

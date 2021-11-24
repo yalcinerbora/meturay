@@ -17,7 +17,7 @@ std::vector<T> SceneNodeJson::AccessSingle(const std::string& name,
         const nlohmann::json& innerNode = (isMultiNode) ? nodeInner[i] : nodeInner;
         result.push_back(LoadF(innerNode, time));
     }
-    return std::move(result);
+    return result;
 }
 
 template <class T>
@@ -58,7 +58,7 @@ std::vector<T> SceneNodeJson::AccessRanged(const std::string& name) const
             }
         }
     }
-    return std::move(result);
+    return result;
 }
 
 template <class T, LoadFunc<T> LoadF>
@@ -79,7 +79,7 @@ std::vector<std::vector<T>> SceneNodeJson::AccessList(const std::string& name,
         for(const nlohmann::json& n : innerNode)
             result.back().push_back(LoadF(n, time));
     }
-    return std::move(result);
+    return result;
 }
 
 template <class T, LoadFunc<T> LoadF>
@@ -96,7 +96,7 @@ OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
         OptionalNode<T> optNode;
         optNode.first = false;
         result.resize(idIndexPairs.size(), optNode);
-        return std::move(result);
+        return result;
     }
 
     // Access the node and continue
@@ -121,7 +121,7 @@ OptionalNodeList<T> SceneNodeJson::AccessOptional(const std::string& name,
         }
         result.push_back(optNode);
     }
-    return std::move(result);
+    return result;
 }
 
 template <class T, LoadFunc<T> LoadF>
@@ -138,7 +138,7 @@ OptionalNodeList<std::vector<T>> SceneNodeJson::AccessOptionalList(const std::st
         OptionalNode<std::vector<T>> optNode;
         optNode.first = false;
         result.resize(idIndexPairs.size(), optNode);
-        return std::move(result);
+        return result;
     }
 
     // Access the node and continue
@@ -164,7 +164,7 @@ OptionalNodeList<std::vector<T>> SceneNodeJson::AccessOptionalList(const std::st
         }
         result.push_back(optNode);
     }
-    return std::move(result);
+    return result;
 }
 
 template <class T, LoadFunc<T> LoadF>
@@ -175,7 +175,7 @@ std::vector<T> SceneNodeJson::CommonList(const std::string& name,
     const nlohmann::json& nodeInner = node[name];
     for(const nlohmann::json& n : nodeInner)
         result.push_back(LoadF(n, time));
-    return std::move(result);
+    return result;
 }
 
 template <class T, LoadFunc<T> LoadF>
@@ -205,7 +205,7 @@ TexturedDataNodeList<T> SceneNodeJson::AccessTextured(const std::string& name,
         }
         result.push_back(texNode);
     }
-    return std::move(result);
+    return result;
 }
 
 template <class T, LoadFunc<T> LoadF>
@@ -225,7 +225,7 @@ TexturedDataNode<T> SceneNodeJson::CommonTextured(const std::string& name,
         result.isTexture = false;
         result.data = LoadF(innerNode, time);
     }
-    return std::move(result);
+    return result;
 }
 
 SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id, bool forceFetchAll)

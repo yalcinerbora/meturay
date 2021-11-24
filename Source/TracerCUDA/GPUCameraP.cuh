@@ -19,13 +19,6 @@ void KCCopyCamera(GPUCamera* newCamera,
     new (newCamera) GPUCamera(gRefAsDerived);
 }
 
-
-// CUDA complains when generator function
-// is called as a static member function
-// instead we supply it as a template parameter
-template <class S, class H, class D>
-using SurfaceFuncGenerator = SurfaceFunc<S, H, D>(*)();
-
 template<class GPUCamera, class PGroup = GPUPrimitiveEmpty,
          SurfaceFuncGenerator<UVSurface,
                               typename PGroup::HitData,

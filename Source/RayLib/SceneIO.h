@@ -73,7 +73,7 @@ namespace SceneIO
 
     TextureAccessLayout         LoadTextureAccessLayout(const nlohmann::json&);
     std::vector<TextureStruct>  LoadTexture(const nlohmann::json&);
-};
+}
 
 inline bool SceneIO::IsTimeDependent(const nlohmann::json& jsn)
 {

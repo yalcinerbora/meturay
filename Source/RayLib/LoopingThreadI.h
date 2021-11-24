@@ -78,7 +78,7 @@ inline LoopingThreadI::LoopingThreadI()
 inline LoopingThreadI::~LoopingThreadI()
 {
     Stop();
-};
+}
 
 inline void LoopingThreadI::Start()
 {
