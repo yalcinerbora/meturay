@@ -24,9 +24,10 @@ struct ValidSplit
     }
 };
 
-__global__ void FillMatIdsForSortKC(HitKey* gKeys, RayId* gIds,
-                                    const HitKey* gWorkKeys,
-                                    uint32_t rayCount)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void FillMatIdsForSortKC(HitKey* gKeys, RayId* gIds,
+                         const HitKey* gWorkKeys,
+                         uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -38,8 +39,9 @@ __global__ void FillMatIdsForSortKC(HitKey* gKeys, RayId* gIds,
     }
 }
 
-__global__ void ResetHitKeysKC(HitKey* gKeys,
-                               HitKey key, uint32_t rayCount)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void ResetHitKeysKC(HitKey* gKeys,
+                    HitKey key, uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -50,11 +52,12 @@ __global__ void ResetHitKeysKC(HitKey* gKeys,
     }
 }
 
-__global__ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
-                              TransformId* gTransformIds,
-                              PrimitiveId* gPrimitiveIds,
-                              uint32_t identityTransformIndex,
-                              uint32_t rayCount)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
+                   TransformId* gTransformIds,
+                   PrimitiveId* gPrimitiveIds,
+                   uint32_t identityTransformIndex,
+                   uint32_t rayCount)
 {
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -68,9 +71,10 @@ __global__ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
     }
 }
 
-__global__ void FindSplitsSparseKC(uint32_t* gPartLoc,
-                                   const HitKey* gKeys,
-                                   const uint32_t locCount)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void FindSplitsSparseKC(uint32_t* gPartLoc,
+                        const HitKey* gKeys,
+                        const uint32_t locCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < locCount;
@@ -92,10 +96,11 @@ __global__ void FindSplitsSparseKC(uint32_t* gPartLoc,
         gPartLoc[0] = 0;
 }
 
-__global__ void FindSplitBatchesKC(uint16_t* gBatches,
-                                   const uint32_t* gDenseIds,
-                                   const HitKey* gSparseKeys,
-                                   const uint32_t locCount)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void FindSplitBatchesKC(uint16_t* gBatches,
+                        const uint32_t* gDenseIds,
+                        const HitKey* gSparseKeys,
+                        const uint32_t locCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < locCount;
@@ -109,23 +114,10 @@ __global__ void FindSplitBatchesKC(uint16_t* gBatches,
 
 void RayMemory::ResizeRayOut(uint32_t rayCount, HitKey baseBoundMatKey)
 {
-    // Align to proper memory strides
-    size_t sizeOfWorkKeys = sizeof(HitKey) * rayCount;
-    sizeOfWorkKeys = Memory::AlignSize(sizeOfWorkKeys);
-    size_t sizeOfRays = rayCount * sizeof(RayGMem);
-    sizeOfRays =  Memory::AlignSize(sizeOfRays);
-
-    size_t requiredSize = sizeOfRays + sizeOfWorkKeys;
-    GPUMemFuncs::EnlargeBuffer(memOut, requiredSize);
-
-    size_t offset = 0;
-    std::uint8_t* dRay = static_cast<uint8_t*>(memOut);
-    dRayOut = reinterpret_cast<RayGMem*>(dRay + offset);
-    offset += sizeOfRays;
-    dWorkKeys = reinterpret_cast<HitKey*>(dRay + offset);
-    offset += sizeOfWorkKeys;
-    assert(requiredSize == offset);
-
+    // Allocate Rays & Work Keys
+    GPUMemFuncs::AllocateMultiData(std::tie(dRayOut, dWorkKeys),
+                                   memOut,
+                                   {rayCount, rayCount});
     // Initialize memory
     if(rayCount != 0)
         leaderDevice.GridStrideKC_X(0, 0, rayCount,
@@ -147,20 +139,7 @@ void RayMemory::SwapRays()
 void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
                                uint32_t rayCount, size_t hitStructSize)
 {
-    size_t sizeOfTransformIds = sizeof(TransformId) * rayCount;
-    sizeOfTransformIds = Memory::AlignSize(sizeOfTransformIds);
-
-    size_t sizeOfPrimitiveIds = sizeof(PrimitiveId) * rayCount;
-    sizeOfPrimitiveIds = Memory::AlignSize(sizeOfPrimitiveIds);
-
-    size_t sizeOfHitStructs = hitStructSize * rayCount;
-    sizeOfHitStructs = Memory::AlignSize(sizeOfHitStructs);
-
-    size_t sizeOfIds = sizeof(RayId) * rayCount;
-    sizeOfIds = Memory::AlignSize(sizeOfIds);
-
-    size_t sizeOfAcceleratorKeys = sizeof(HitKey) * rayCount;
-    sizeOfAcceleratorKeys = Memory::AlignSize(sizeOfAcceleratorKeys);
+    CUDA_CHECK(cudaSetDevice(leaderDevice.DeviceId()));
 
     // Find out sort auxiliary storage
     cub::DoubleBuffer<HitKey::Type> dbKeys(nullptr, nullptr);
@@ -168,7 +147,6 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
     CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(nullptr, cubSortMemSize,
                                                          dbKeys, dbIds,
                                                          static_cast<int>(rayCount)));
-
     // Check if while partitioning  double buffer data is
     // enough for using (Unique and Scan) algos
     uint32_t* in = nullptr;
@@ -186,42 +164,22 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
     size_t sizeOfTempMemory = std::max(cubSortMemSize, cubIfMemSize + sizeof(uint32_t));
     sizeOfTempMemory = Memory::AlignSize(sizeOfTempMemory);
 
-    // Finally allocate
-    size_t requiredSize = ((sizeOfIds + sizeOfAcceleratorKeys) * 2 +
-                           sizeOfTransformIds +
-                           sizeOfPrimitiveIds +
-                           sizeOfHitStructs +
-                           sizeOfTempMemory);
-
-    // Reallocate if memory is not enough
-    GPUMemFuncs::EnlargeBuffer(memHit, requiredSize);
-
-    // Populate pointers
-    size_t offset = 0;
-    std::uint8_t* dBasePtr = static_cast<uint8_t*>(memHit);
-    dTransformIds = reinterpret_cast<TransformId*>(dBasePtr + offset);
-    offset += sizeOfTransformIds;
-    dPrimitiveIds = reinterpret_cast<PrimitiveId*>(dBasePtr + offset);
-    offset += sizeOfPrimitiveIds;
-    dHitStructs = HitStructPtr(reinterpret_cast<void*>(dBasePtr + offset), static_cast<int>(hitStructSize));
-    offset += sizeOfHitStructs;
-    dIds0 = reinterpret_cast<RayId*>(dBasePtr + offset);
-    offset += sizeOfIds;
-    dKeys0 = reinterpret_cast<HitKey*>(dBasePtr + offset);
-    offset += sizeOfAcceleratorKeys;
-    dIds1 = reinterpret_cast<RayId*>(dBasePtr + offset);
-    offset += sizeOfIds;
-    dKeys1 = reinterpret_cast<HitKey*>(dBasePtr + offset);
-    offset += sizeOfAcceleratorKeys;
-    dTempMemory = reinterpret_cast<void*>(dBasePtr + offset);
-    offset += sizeOfTempMemory;
-    assert(requiredSize == offset);
-
+    Byte* dHitStructBytePtr = nullptr;
+    Byte* dTempBytePtr = nullptr;
+    GPUMemFuncs::AllocateMultiData(std::tie(dTransformIds, dPrimitiveIds, dHitStructBytePtr,
+                                            dIds0, dKeys0, dIds1, dKeys1, dTempBytePtr),
+                                   memHit,
+                                   {rayCount, rayCount, rayCount * hitStructSize,
+                                   rayCount, rayCount, rayCount, rayCount, sizeOfTempMemory});
+    // Set Allocated pointers to propert ptrs
+    dHitStructs = HitStructPtr(reinterpret_cast<void*>(dHitStructBytePtr),
+                               static_cast<int>(hitStructSize));
+    dTempMemory = reinterpret_cast<void*>(dTempBytePtr);
     dCurrentIds = dIds0;
     dCurrentKeys = dKeys0;
 
     // Make nullptr if no hitstruct is needed
-    if(sizeOfHitStructs == 0)
+    if(hitStructSize == 0)
         dHitStructs = HitStructPtr(nullptr, static_cast<int>(hitStructSize));
 
     // Initialize memory
@@ -239,6 +197,8 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
                          uint32_t count,
                          const Vector2i& bitMaxValues)
 {
+    CUDA_CHECK(cudaSetDevice(leaderDevice.DeviceId()));
+
     // Sort Call over buffers
     HitKey* keysOther = (dCurrentKeys == dKeys0) ? dKeys1 : dKeys0;
     RayId* idsOther = (dCurrentIds == dIds0) ? dIds1 : dIds0;
@@ -252,8 +212,6 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     int bitEnd = bitMaxValues[1];
     if(bitStart != bitEnd)
     {
-        // METU_LOG("TempMem {} TempSize {} Count{} bit[{}-{}]",
-        //          dTempMemory, cubSortMemSize, count, bitStart, bitEnd);
         CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
                                                              dbKeys, dbIds,
                                                              static_cast<int>(count),
@@ -267,8 +225,6 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     bitEnd = HitKey::IdBits + bitMaxValues[0];
     if(bitStart != bitEnd)
     {
-        // METU_LOG("TempMem {} TempSize {} Count{} bit[{}-{}]",
-        //          dTempMemory, cubSortMemSize, count, bitStart, bitEnd);
         CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
                                                              dbKeys, dbIds,
                                                              static_cast<int>(count),
@@ -285,6 +241,8 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
 
 RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 {
+    CUDA_CHECK(cudaSetDevice(leaderDevice.DeviceId()));
+
     // Use double buffers for partition auxilary data
     RayId* dEmptyIds = (dCurrentIds == dIds0) ? dIds1 : dIds0;
     HitKey* dEmptyKeys = (dCurrentKeys == dKeys0) ? dKeys1 : dKeys0;

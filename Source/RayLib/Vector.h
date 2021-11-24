@@ -295,37 +295,37 @@ struct IsVectorType
         std::is_same<T, Vector4us>::value;
 };
 
-// Vector Extern
-// Float Type
-extern template class Vector<2, float>;
-extern template class Vector<3, float>;
-extern template class Vector<4, float>;
-// Double Type
-extern template class Vector<2, double>;
-extern template class Vector<3, double>;
-extern template class Vector<4, double>;
-// Integer Type
-extern template class Vector<2, int32_t>;
-extern template class Vector<3, int32_t>;
-extern template class Vector<4, int32_t>;
-// Unsigned Integer Type
-extern template class Vector<2, uint32_t>;
-extern template class Vector<3, uint32_t>;
-extern template class Vector<4, uint32_t>;
-// Long Types
-extern template class Vector<2, int64_t>;
-extern template class Vector<2, uint64_t>;
-// Short
-extern template class Vector<2, int16_t>;
-extern template class Vector<2, uint16_t>;
-extern template class Vector<3, int16_t>;
-extern template class Vector<3, uint16_t>;
-extern template class Vector<4, int16_t>;
-extern template class Vector<4, uint16_t>;
-// Byte
-extern template class Vector<2, int8_t>;
-extern template class Vector<2, uint8_t>;
-extern template class Vector<3, int8_t>;
-extern template class Vector<3, uint8_t>;
-extern template class Vector<4, int8_t>;
-extern template class Vector<4, uint8_t>;
+//// Vector Extern
+//// Float Type
+//extern template class Vector<2, float>;
+//extern template class Vector<3, float>;
+//extern template class Vector<4, float>;
+//// Double Type
+//extern template class Vector<2, double>;
+//extern template class Vector<3, double>;
+//extern template class Vector<4, double>;
+//// Integer Type
+//extern template class Vector<2, int32_t>;
+//extern template class Vector<3, int32_t>;
+//extern template class Vector<4, int32_t>;
+//// Unsigned Integer Type
+//extern template class Vector<2, uint32_t>;
+//extern template class Vector<3, uint32_t>;
+//extern template class Vector<4, uint32_t>;
+//// Long Types
+//extern template class Vector<2, int64_t>;
+//extern template class Vector<2, uint64_t>;
+//// Short
+//extern template class Vector<2, int16_t>;
+//extern template class Vector<2, uint16_t>;
+//extern template class Vector<3, int16_t>;
+//extern template class Vector<3, uint16_t>;
+//extern template class Vector<4, int16_t>;
+//extern template class Vector<4, uint16_t>;
+//// Byte
+//extern template class Vector<2, int8_t>;
+//extern template class Vector<2, uint8_t>;
+//extern template class Vector<3, int8_t>;
+//extern template class Vector<3, uint8_t>;
+//extern template class Vector<4, int8_t>;
+//extern template class Vector<4, uint8_t>;

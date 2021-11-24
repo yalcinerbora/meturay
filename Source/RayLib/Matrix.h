@@ -300,32 +300,32 @@ template<class T>
 struct IsMatrixType
 {
     static constexpr bool value =
-        std::is_same<T, Matrix2x2f>::value ||
-        std::is_same<T, Matrix2x2d>::value ||
-        std::is_same<T, Matrix2x2i>::value ||
+        std::is_same<T, Matrix2x2f>::value  ||
+        std::is_same<T, Matrix2x2d>::value  ||
+        std::is_same<T, Matrix2x2i>::value  ||
         std::is_same<T, Matrix2x2ui>::value ||
-        std::is_same<T, Matrix3x3f>::value ||
-        std::is_same<T, Matrix3x3d>::value ||
-        std::is_same<T, Matrix3x3i>::value ||
+        std::is_same<T, Matrix3x3f>::value  ||
+        std::is_same<T, Matrix3x3d>::value  ||
+        std::is_same<T, Matrix3x3i>::value  ||
         std::is_same<T, Matrix3x3ui>::value ||
-        std::is_same<T, Matrix4x4f>::value ||
-        std::is_same<T, Matrix4x4d>::value ||
-        std::is_same<T, Matrix4x4i>::value ||
+        std::is_same<T, Matrix4x4f>::value  ||
+        std::is_same<T, Matrix4x4d>::value  ||
+        std::is_same<T, Matrix4x4i>::value  ||
         std::is_same<T, Matrix4x4ui>::value;
 };
 
-// Matrix Etern
-extern template class Matrix<2, float>;
-extern template class Matrix<2, double>;
-extern template class Matrix<2, int>;
-extern template class Matrix<2, unsigned int>;
-
-extern template class Matrix<3, float>;
-extern template class Matrix<3, double>;
-extern template class Matrix<3, int>;
-extern template class Matrix<3, unsigned int>;
-
-extern template class Matrix<4, float>;
-extern template class Matrix<4, double>;
-extern template class Matrix<4, int>;
-extern template class Matrix<4, unsigned int>;
+//// Matrix Extern
+//extern template class Matrix<2, float>;
+//extern template class Matrix<2, double>;
+//extern template class Matrix<2, int>;
+//extern template class Matrix<2, unsigned int>;
+//
+//extern template class Matrix<3, float>;
+//extern template class Matrix<3, double>;
+//extern template class Matrix<3, int>;
+//extern template class Matrix<3, unsigned int>;
+//
+//extern template class Matrix<4, float>;
+//extern template class Matrix<4, double>;
+//extern template class Matrix<4, int>;
+//extern template class Matrix<4, unsigned int>;

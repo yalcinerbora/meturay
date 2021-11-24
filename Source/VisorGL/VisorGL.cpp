@@ -123,7 +123,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
 
             // Images
             glBindImageTexture(I_SAMPLE, sampleCountTexture,
-                               0, false, 0, GL_READ_WRITE, GL_R32I);
+                               0, false, 0, GL_READ_WRITE, GL_R32UI);
             glBindImageTexture(I_OUT_COLOR, outTexture,
                                0, false, 0, GL_WRITE_ONLY,
                                PixelFormatToSizedGL(imagePixFormat));

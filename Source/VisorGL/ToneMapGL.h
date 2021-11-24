@@ -84,12 +84,18 @@ inline ToneMapGL::ToneMapGL(bool isOGLContextActive)
     // Allocate Buffers
     glGenBuffers(1, &luminanceBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, luminanceBuffer);
+
+    //glBufferData(GL_COPY_WRITE_BUFFER,
+    //             sizeof(LumBufferGL), nullptr,
+    //             GL_DYNAMIC_DRAW);
+
     glBufferStorage(GL_COPY_WRITE_BUFFER,
                     sizeof(LumBufferGL), nullptr,
                     // This buffer is GPU only so no flags required
-                    0x0);
-                    //GL_MAP_READ_BIT |
-                    //GL_DYNAMIC_STORAGE_BIT);
+                    // Intel UHD Graphics does not call
+                    // "glClearBufferData" over non-dynamic
+                    // storages so I've set the bit
+                    GL_DYNAMIC_STORAGE_BIT);
 
     glGenBuffers(1, &tmOptionBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, tmOptionBuffer);

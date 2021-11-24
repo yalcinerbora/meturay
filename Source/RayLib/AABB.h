@@ -132,11 +132,11 @@ static constexpr AABB2 ZeroAABB2 = ZeroAABB2f;
 static constexpr AABB3 ZeroAABB3 = ZeroAABB3f;
 static constexpr AABB4 ZeroAABB4 = ZeroAABB4f;
 
-// AABB Extern
-extern template class AABB<2, float>;
-extern template class AABB<3, float>;
-extern template class AABB<4, float>;
-
-extern template class AABB<2, double>;
-extern template class AABB<3, double>;
-extern template class AABB<4, double>;
+//// AABB Extern
+//extern template class AABB<2, float>;
+//extern template class AABB<3, float>;
+//extern template class AABB<4, float>;
+//
+//extern template class AABB<2, double>;
+//extern template class AABB<3, double>;
+//extern template class AABB<4, double>;

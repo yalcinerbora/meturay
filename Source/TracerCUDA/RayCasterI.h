@@ -55,8 +55,6 @@ inline Vector2i RayCasterI::DetermineMaxBitFromId(const Vector2i& maxIds)
 {
     Vector2i result((maxIds[0] == 0) ? 0 : (Utility::FindLastSet32(maxIds[0]) + 1),
                     (maxIds[1] == 0) ? 0 : (Utility::FindLastSet32(maxIds[1]) + 1));
-    METU_LOG("Determined Bits [{},{}] => [{},{}]",
-              maxIds[0], maxIds[1], result[0], result[1]);
     return result;
 }
 

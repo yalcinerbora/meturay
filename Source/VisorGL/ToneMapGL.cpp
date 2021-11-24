@@ -14,8 +14,9 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
     if(tmOpts.doToneMap)
     {
         // Clear Luminance Buffer
-        glBindBuffer(GL_COPY_READ_BUFFER, luminanceBuffer);
-        glClearBufferData(GL_COPY_READ_BUFFER, GL_R8, GL_RED,
+        const Byte zero = 0;
+        glBindBuffer(GL_COPY_WRITE_BUFFER, luminanceBuffer);
+        glClearBufferData(GL_COPY_WRITE_BUFFER, GL_R8, GL_RED,
                           GL_BYTE, nullptr);
 
         // Unbind Luminance buffer as UBO just to be sure

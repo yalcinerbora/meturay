@@ -62,13 +62,13 @@ class Quaternion<T>
 
     // Utility
     __device__ __host__ Quaternion          Normalize() const;
-    __device__ __host__ Quaternion& NormalizeSelf();
+    __device__ __host__ Quaternion&         NormalizeSelf();
     __device__ __host__ T                   Length() const;
     __device__ __host__ T                   LengthSqr() const;
     __device__ __host__ Quaternion          Conjugate() const;
-    __device__ __host__ Quaternion& ConjugateSelf();
+    __device__ __host__ Quaternion&         ConjugateSelf();
     __device__ __host__ T                   Dot(const Quaternion&) const;
-    __device__ __host__ Vector<3, T>         ApplyRotation(const Vector<3, T>&) const;
+    __device__ __host__ Vector<3, T>        ApplyRotation(const Vector<3, T>&) const;
 };
 
 // Quaternion Alias
@@ -142,6 +142,6 @@ struct IsQuatType
         std::is_same<T, QuatD>::value;
 };
 
-// Quaternion Extern
-extern template class Quaternion<float>;
-extern template class Quaternion<double>;
+//// Quaternion Extern
+//extern template class Quaternion<float>;
+//extern template class Quaternion<double>;
