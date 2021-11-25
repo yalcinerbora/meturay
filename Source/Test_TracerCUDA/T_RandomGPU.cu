@@ -40,18 +40,18 @@ TEST(RandomGPU, All)
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
     const CudaGPU& gpu = system.BestGPU();
-    
+
     RNGMemory rngMem(Seed, system);
 
     // Kernel Call
-    uint32_t* h_data = static_cast<uint32_t*>(numbers);    
+    uint32_t* h_data = static_cast<uint32_t*>(numbers);
     gpu.GridStrideKC_X(0, 0, NumberCount,
                        //
                        KCRandomNumbers,
                        //
                        rngMem.RNGData(gpu),
                        h_data,
-                       static_cast<uint32_t>(NumberCount));    
+                       static_cast<uint32_t>(NumberCount));
     CUDA_KERNEL_CHECK();
     CUDA_CHECK(cudaDeviceSynchronize());
 
