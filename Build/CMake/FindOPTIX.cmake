@@ -24,12 +24,18 @@ if(WIN32)
         )
 else()
     set(OPTIX_POTENTIAL_PATH_LIST
-            "~/NVIDIA-OptiX-SDK-7.5.0-linux64"
-            "~/NVIDIA-OptiX-SDK-7.4.0-linux64"
-            "~/NVIDIA-OptiX-SDK-7.3.0-linux64"
-            "~/NVIDIA-OptiX-SDK-7.2.0-linux64"
-            "~/NVIDIA-OptiX-SDK-7.1.0-linux64"
-            "~/NVIDIA-OptiX-SDK-7.0.0-linux64"
+            "~/NVIDIA-Optix-SDK-7.5.0-linux64"
+            "~/NVIDIA-Optix-SDK-7.4.0-linux64"
+            "~/NVIDIA-Optix-SDK-7.3.0-linux64"
+            "~/NVIDIA-Optix-SDK-7.2.0-linux64"
+            "~/NVIDIA-Optix-SDK-7.1.0-linux64"
+            "~/NVIDIA-Optix-SDK-7.0.0-linux64"
+            "~/NVIDIA-Optix-SDK-7.5.0"
+            "~/NVIDIA-Optix-SDK-7.4.0"
+            "~/NVIDIA-Optix-SDK-7.3.0"
+            "~/NVIDIA-Optix-SDK-7.2.0"
+            "~/NVIDIA-Optix-SDK-7.1.0"
+            "~/NVIDIA-Optix-SDK-7.0.0"
         )
 endif()
 
@@ -45,6 +51,5 @@ endif()
 set(OPTIX_INCLUDE_DIR ${OPTIX_INSTALL_DIR}/include)
 
 include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set LIBXML2_FOUND to TRUE
-# if all listed variables are TRUE
-find_package_handle_standard_args(OPTIX DEFAULT_MSG OPTIX_INCLUDE_DIR)
+
+find_package_handle_standard_args(OPTIX DEFAULT_MSG OPTIX_INSTALL_DIR OPTIX_INCLUDE_DIR)

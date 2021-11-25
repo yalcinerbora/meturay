@@ -1,0 +1,103 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired":
+    {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+    {
+        "name": "folders",
+        "displayName": "Default folders",
+        "description": "this config only provies binary dir",
+        "binaryDir": "${sourceDir}/../../Bin/Build",
+        "installDir": "${sourceDir}/../../Bin/Install",
+        "cacheVariables":
+        {
+            "USE_OPTIX": false
+        }
+    },
+    {
+        "name": "Win-VS-2019",
+        "displayName": "Win-VS-2019-x64",
+        "description": "Windows Visual Studio 2019 x64",
+
+        "inherits": "folders",
+        "generator": "Visual Studio 16 2019",
+        "architecture": "x64",
+        "condition":
+        {
+            "type": "equals",
+            "lhs": "${hostSystemName}",
+            "rhs": "Windows"
+        }
+    },
+    {
+        "name": "Win-VS-2019-OptiX",
+        "displayName": "Win-VS-2019-x64 OptiX Enabled",
+        "description": "Windows Visual Studio 2019 x64 with OptiX",
+
+        "inherits": "Win-VS-2019",
+        "cacheVariables":
+        {
+            "USE_OPTIX": true
+        }
+    },
+    {
+        "name": "Linux-Clang-11",
+        "displayName": "Linux-Clang-11-x64",
+        "description": "Linux Clang-11 using ninja multi config",
+
+        "inherits": "folders",
+        "generator": "Ninja Multi-Config",
+        "condition":
+        {
+            "type": "equals",
+            "lhs": "${hostSystemName}",
+            "rhs": "Linux"
+        },
+        "cacheVariables":
+        {
+            "CMAKE_CXX_COMPILER": "clang++-11"
+        }
+    },
+    {
+        "name": "Linux-Clang-11-OptiX",
+        "displayName": "Linux-Clang-11-x64 with OptiX",
+        "description": "Linux Clang-11 using ninja multi config and using OptiX",
+        "inherits": "Linux-Clang-11",
+        "cacheVariables":
+        {
+            "USE_OPTIX": true
+        }
+    },
+    {
+        "name": "Linux-GCC-9",
+        "displayName": "Linux-GCC-9-x64",
+        "description": "Linux GCC-9 using ninja multi config",
+
+        "inherits": "folders",
+        "generator": "Ninja Multi-Config",
+        "condition":
+        {
+            "type": "equals",
+            "lhs": "${hostSystemName}",
+            "rhs": "Linux"
+        },
+        "cacheVariables":
+        {
+            "CMAKE_CXX_COMPILER": "g++-9"
+        }
+    },
+    {
+        "name": "Linux-GCC-9-OptiX",
+        "displayName": "Linux-GCC-9-x64 with OptiX",
+        "description": "Linux GCC-9 using ninja multi config and using OptiX",
+        "inherits": "Linux-GCC-9",
+        "cacheVariables":
+        {
+            "USE_OPTIX": true
+        }
+    }]
+}

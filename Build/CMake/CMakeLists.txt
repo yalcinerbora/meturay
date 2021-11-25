@@ -40,7 +40,7 @@ if(USE_OPTIX)
     if(NOT OPTIX_FOUND)
         # Maybe we could not able to find the optix
         # expose the OPTIX_DIR (in cmake-gui) so user can manually set it
-        message("Optix Not Found")
+        message(FATAL_ERROR "Optix Not Found, either set OPTIX_INSTALL_DIR or disable USE_OPTIX")
         set(USE_OPTIX CACHE BOOL OFF)
     else()
         set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC} -DMRAY_OPTIX)
