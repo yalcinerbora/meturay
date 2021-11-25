@@ -58,12 +58,12 @@ FUNCTION(NVCC_COMPILE_PTX)
         # So -lineinfo is used on both configurations
         $<$<CONFIG:Debug>:-G>
         $<$<CONFIG:Release>:-lineinfo>
-        #-lineinfo
+        # Debug related preprocessor flags
         $<$<CONFIG:Debug>:-DMETU_DEBUG>
         $<$<CONFIG:Release>:-DNDEBUG>
         -DMETU_CUDA
         $<$<CONFIG:Release>:-DNDEBUG>
-        #${ALL_COMPILE_DEFS}
+
      )
 
     # Custom Target Name
