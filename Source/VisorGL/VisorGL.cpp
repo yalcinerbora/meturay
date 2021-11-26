@@ -152,7 +152,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // use C array (std::array also does not guarantee the alignment)
             // ImageIO does not care about the underlying type it assumes data
             // properly holds the format (PixelFormat type) contagiously
-            using RGBData = unsigned char[3];
+            struct alignas(1) RGBData { unsigned char c[3]; };
             std::vector<RGBData> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = sdrTexture;
             // Thightly pack pixels for reading
@@ -160,7 +160,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glBindTexture(GL_TEXTURE_2D, readTexture);
             // [n] version does not work on mesa OGL
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
-                          pixels.data());
+                          static_cast<void*>(pixels.data()));
             // GLsizei pixelBufferSize = static_cast<GLsizei>(pixels.size() * sizeof(RGBData));
             // glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
             //                pixelBufferSize,
