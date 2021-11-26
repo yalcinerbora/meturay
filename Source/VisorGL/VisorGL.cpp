@@ -147,15 +147,24 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         }
         case VisorGLCommand::SAVE_IMAGE:
         {
-            // TODO: load as 8-bit color (but alignment trolls i think heap gets corrupted)
-            std::vector<Vector3uc> pixels(imageSize[0] * imageSize[1]);
+            // Load as 8-bit color
+            // We cant use Vector3uc  here it is aligned to 4byte boundaries
+            // use C array (std::array also does not guarantee the alignment)
+            // ImageIO does not care about the underlying type it assumes data
+            // properly holds the format (PixelFormat type) contagiously
+            using RGBData = unsigned char[3];
+            std::vector<RGBData> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = sdrTexture;
             // Thightly pack pixels for reading
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
             glBindTexture(GL_TEXTURE_2D, readTexture);
-            glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
-                           static_cast<GLsizei>(pixels.size() * sizeof(Vector4uc)),
-                           pixels.data());
+            // [n] version does not work on mesa OGL
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
+                          pixels.data());
+            // GLsizei pixelBufferSize = static_cast<GLsizei>(pixels.size() * sizeof(RGBData));
+            // glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
+            //                pixelBufferSize,
+            //                pixels.data());
 
             ImageIOError e = ImageIOError::OK;
             const ImageIOI& io = *ImageIOInstance();
