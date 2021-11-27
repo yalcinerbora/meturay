@@ -129,16 +129,20 @@ class VisorGL : public WindowGLI
                                                       const void* userParam);
 
         // Image Allocation
-        void                        ReallocImages();
+        void                    ReallocImages();
 
         // Internal Command Handling
-        void                        ProcessCommand(const VisorGLCommand&);
-        void                        RenderImage();
+        void                    ProcessCommand(const VisorGLCommand&);
+        void                    RenderImage();
 
-         void                       SetFBSizeFromInput(const Vector2i&) override;
-         void                       SetWindowSizeFromInput(const Vector2i&) override;
-         void                       SetOpenStateFromInput(bool) override;
-         VisorInputI*               InputInterface() override;
+        void                    SetFBSizeFromInput(const Vector2i&) override;
+        void                    SetWindowSizeFromInput(const Vector2i&) override;
+        void                    SetOpenStateFromInput(bool) override;
+        VisorInputI*            InputInterface() override;
+
+        // Helpers
+        void                    GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
+                                                   const Vector2i& fbSize);
 
     protected:
     public:

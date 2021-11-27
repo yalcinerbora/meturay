@@ -15,6 +15,9 @@ class VisorGUI
 
         TMOptionWindow                  tmWindow;
 
+        bool                            topBarOn;
+        bool                            bottomBarOn;
+
     protected:
     public:
         // Construtors & Destructor

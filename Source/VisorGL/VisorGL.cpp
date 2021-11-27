@@ -204,14 +204,20 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
 void VisorGL::RenderImage()
 {
     // Clear
-    Vector2i size;
-    if(viewportSize.CheckChanged(size))
+    Vector2i fbSize;
+    if(viewportSize.CheckChanged(fbSize))
     {
-        glViewport(0, 0, size[0], size[1]);
+        Vector2i vpOffset;
+        Vector2i vpSize;
+        GenAspectCorrectVP(vpOffset, vpSize,
+                           fbSize);
+
+        glViewport(vpOffset[0], vpOffset[1],
+                   vpSize[0], vpSize[1]);
     }
 
     // Clear Buffer
-    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Bind Shaders
@@ -244,6 +250,34 @@ void VisorGL::SetOpenStateFromInput(bool b)
 VisorInputI* VisorGL::InputInterface()
 {
     return input;
+}
+
+void VisorGL::GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
+                                 const Vector2i& fbSize)
+{
+    // Determine viewport by checking aspect ratio
+    Vector2i screenSize = viewportSize.Get();
+    float imgAspect = static_cast<float>(imageSize[0]) / static_cast<float>(imageSize[1]);
+    float screenAspect = static_cast<float>(screenSize[0]) / static_cast<float>(screenSize[1]);
+
+    vpOffset = Zero2i;
+    vpSize = Zero2i;
+    if(imgAspect > screenAspect)
+    {
+        float ySize = std::round(screenSize[1] * screenAspect / imgAspect);
+        float yOffset = std::round((static_cast<float>(screenSize[1]) - ySize) * 0.5f);
+        vpSize[0] = screenSize[0];
+        vpSize[1] = static_cast<int32_t>(ySize);
+        vpOffset[1] = static_cast<int32_t>(yOffset);
+    }
+    else
+    {
+        float xSize = std::round(screenSize[0] * imgAspect / screenAspect);
+        float xOffset = std::round((static_cast<float>(screenSize[0]) - xSize) * 0.5f);
+        vpSize[0] = static_cast<int32_t>(xSize);
+        vpSize[1] = screenSize[1];
+        vpOffset[0] = static_cast<int32_t>(xOffset);
+    }
 }
 
 VisorGL::VisorGL(const VisorOptions& opts,
@@ -710,6 +744,10 @@ VisorError VisorGL::Initialize(VisorInputI& vInput)
     // CheckGUI and Initialize
     if(vOpts.enableGUI)
         visorGUI = std::make_unique<VisorGUI>(window);
+
+    // Viewport does not get updated by the callback initially.
+    // Set it here
+    viewportSize = vOpts.wSize;
 
     // Unmake context current on this
     // thread after initialization

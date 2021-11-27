@@ -372,5 +372,9 @@ WorkingDir/*
 !WorkingDir/Scenes/
 !WorkingDir/Scenes/*.json
 
-
+# No Nsight debugger stuffs
 /Build/Win/*.nvsettings
+
+# Nothing on ext is maintained
+Ext/**
+

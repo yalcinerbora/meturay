@@ -12,6 +12,7 @@ set(SRC_GL
     ${CURRENT_SOURCE_DIR}/ToneMapGL.h)
 
 set(SRC_GUI
+    ${CURRENT_SOURCE_DIR}/OpenFontIconsTable.h
     ${CURRENT_SOURCE_DIR}/TMOptionWindow.cpp
     ${CURRENT_SOURCE_DIR}/TMOptionWindow.h
     ${CURRENT_SOURCE_DIR}/VisorGUI.cpp
