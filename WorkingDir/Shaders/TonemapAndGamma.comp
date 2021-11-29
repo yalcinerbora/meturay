@@ -41,9 +41,9 @@ UB_LUM_DATA uniform LuminanceData
 
 UB_TM_PARAMS uniform Parameters
 {
-	bool	doToneMap;
-	bool	doGamma;
-	bool	doKeyAdjust;
+	bool	    doToneMap;
+	bool	    doGamma;
+	bool	    doKeyAdjust;
 	float	gammaValue;
 	float	burnRatio;
 	float	key;
@@ -95,7 +95,7 @@ vec4 TonemapReinhard2005(in vec4 hdrColor)
 		colorXxy.r = (key / avgLum) * colorXxy.r;
 	// Equation 4
 	float oldY = colorXxy.r;
-	float white = maxLum;// * burnRatio;
+	float white = maxLum * burnRatio;
 	float whiteSqr = white * white;
 	float newY = oldY * (1 + (oldY / whiteSqr)) / (1 + oldY);
 	colorXxy.r = newY;

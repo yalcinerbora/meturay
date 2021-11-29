@@ -1434,3 +1434,24 @@ const NamedList<GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
 {
     return primitives;
 }
+
+SceneAnalyticData GPUSceneJson::AnalyticData() const
+{
+    return
+    {
+        scene.Name(),
+        scene.LoadTime(),
+        scene.UpdateTime(),
+        {
+            scene.MaterialGroups().size(),
+            scene.PrimitiveGroups().size(),
+            scene.Lights().size(),
+            scene.Cameras().size(),
+            scene.AcceleratorGroups().size(),
+            scene.Transforms().size(),
+            scene.Mediums().size()
+        },
+        scene.MaxAccelIds(),
+        scene.MaxMatIds(),
+    };
+}

@@ -93,7 +93,10 @@ void VisorGUI::Render(GLuint, const Vector2i&)
         {
             if(ImGui::BeginMenuBar())
             {
-                ImGui::Text("Happy top menu bar");
+                if(ImGui::Button("Tone Mapping"))
+                {
+                    tmWindow.ToggleWindowOpen();
+                }
                 ImGui::EndMenuBar();
             }
         }
@@ -156,21 +159,8 @@ void VisorGUI::Render(GLuint, const Vector2i&)
     //bool open     = true;
     ImGui::ShowDemoWindow(&showDemo);
 
-    // ImGui::Begin("TestWindow", &open);
 
-    // ImVec2 ws = ImGui::GetWindowSize();
-    // ImGui::Image((void*)(intptr_t)sdrTex,
-    //             ImVec2(ws.x - 10,
-    //                    ws.y),
-    //             //ImVec2(static_cast<float>(640),
-    //                    //static_cast<float>(360)),
-    //             //ImVec2(static_cast<float>(resolution[0]),
-    //             //       static_cast<float>(resolution[1])),
-    //             ImVec2(0, 1), ImVec2(1, 0));
-    ////ImGui::SetWindowSize()
-    // ImGui::SetWindowSize(ImVec2());
-
-    // ImGui::End();
+    tmWindow.Render();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -51,6 +51,12 @@
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGUIFuncs.h">
       <Filter>GuideDebug</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\IcoMoonFontTable.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\MainStatusBar.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
@@ -82,6 +88,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\VisorGL\GDebugRendererReference.cpp">
       <Filter>GuideDebug\Debug Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\VisorGL\MainStatusBar.cpp">
+      <Filter>GUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

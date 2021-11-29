@@ -9,6 +9,7 @@
 
 struct SceneError;
 struct TextureStruct;
+struct SceneAnalyticData;
 
 enum class SceneLoadFlagType
 {
@@ -56,4 +57,6 @@ class GPUSceneI
         virtual const std::map<NameGPUPair, GPUMatGPtr>&    MaterialGroups() const = 0;
         virtual const NamedList<GPUAccelGPtr>&              AcceleratorGroups() const = 0;
         virtual const NamedList<GPUPrimGPtr>&               PrimitiveGroups() const = 0;
+        // Analytic Data Generation
+        virtual SceneAnalyticData                           AnalyticData() const = 0;
 };

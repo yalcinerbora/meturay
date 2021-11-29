@@ -22,21 +22,26 @@ struct SceneAnalyticData
     double                      sceneUpdateTime;    // secs
     // Group Counts
     std::array<uint32_t, END>   groupCounts;
+    // Key Maxiums
+    Vector2i                    accKeyMax;
+    Vector2i                    workKeyMax;
 };
 
 struct AnalyticData
 {
     // Performance
     double          throughput;
-    std::string     throughputName;
-    double          time;
+    std::string     throughputSuffix;
+    //
+    double          workPerPixel;
+    std::string     workPerPixelSuffix;
     // Timings
-
+    float           iterationTime;      // msecs
 
     // GPU Related
-    double      workGroupCount;
+    double          workGroupCount;
     // Memory Related
-    double      TotalGPUMemoryMiB; // MiB
-    double      totalCPUMemoruMiB; // MiB
+    double          totalGPUMemoryMiB; // MiB
+    double          totalCPUMemoruMiB; // MiB
 
 };

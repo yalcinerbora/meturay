@@ -14,7 +14,7 @@ static constexpr ToneMapOptions DefaultTMOptions =
 {
     true,      // Do tonemap
     true,      // Do gamma
-    true,      // Do key adjust
+    false,     // Do key adjust
     2.2f,      // sRGB Gamma
     1.0f,      // Utilize Lwhite as is
     0.18f      // Reinhard 2002 Key value

@@ -111,6 +111,8 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugGUIFuncs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugStructs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\GuideDebugTypeGen.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\IcoMoonFontTable.h" />
+    <ClInclude Include="..\..\..\Source\VisorGL\MainStatusBar.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\ShaderGL.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\Structs.h" />
     <ClInclude Include="..\..\..\Source\VisorGL\TextureGL.h" />
@@ -128,6 +130,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     <ClCompile Include="..\..\..\Source\VisorGL\GLFWCallbackDelegator.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\GuideDebugGUI.cpp" />
+    <ClCompile Include="..\..\..\Source\VisorGL\MainStatusBar.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\ShaderGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\TextureGL.cpp" />
     <ClCompile Include="..\..\..\Source\VisorGL\TMOptionWindow.cpp" />

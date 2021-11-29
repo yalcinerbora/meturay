@@ -192,6 +192,11 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , callbacks(nullptr)
     , crashed(false)
     , currentCameraIndex(std::numeric_limits<uint32_t>::max())
+    , sceneAnalytics(scene.SceneAnalyticData())
+    , frameAnalytics
+    {
+
+    }
 {
     #ifdef MRAY_OPTIX
         bool allOptiXScene = true;

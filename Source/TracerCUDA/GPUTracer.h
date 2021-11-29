@@ -26,6 +26,8 @@ All Tracers should inherit this class
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
+#include "RayLib/AnalyticData.h"
+
 class GPUMediumI;
 class GPUTransformI;
 class GPUSceneI;
@@ -44,9 +46,6 @@ class GPUTracer : public GPUTracerI
 
         //
         const uint32_t                              maxHitSize;
-        // Batches of Accelerator
-        //GPUBaseAcceleratorI&                        baseAccelerator;
-        //const AcceleratorBatchMap&                  accelBatches;
         // Batches of Material
         const std::map<NameGPUPair, GPUMatGPtr>&    materialGroups;
         const NamedList<CPUTransformGPtr>&          transforms;
@@ -104,6 +103,10 @@ class GPUTracer : public GPUTracerI
         // Callbacks
         TracerCallbacksI*                   callbacks;
         bool                                crashed;
+        // Analytic Data
+        AnalyticData                        frameAnalytics;
+        SceneAnalyticData                   sceneAnalytics;
+
         // Interface
         virtual void                        ResetHitMemory(uint32_t rayCount,
                                                            HitKey baseBoundMatKey);

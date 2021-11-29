@@ -217,4 +217,7 @@ class GPUSceneJson : public GPUSceneI
         const std::map<NameGPUPair, GPUMatGPtr>&    MaterialGroups() const override;
         const NamedList<GPUAccelGPtr>&              AcceleratorGroups() const override;
         const NamedList<GPUPrimGPtr>&               PrimitiveGroups() const override;
+
+        //
+        SceneAnalyticData                           AnalyticData() const override;
 };
