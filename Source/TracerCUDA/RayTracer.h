@@ -24,6 +24,8 @@ class RayTracer : public GPUTracer
 
         const GPUSceneI&        scene;
 
+        int32_t                 totalSamplePerPixel;
+
         template <class AuxStruct, class AuxInitFunctor>
         void                    GenerateRays(uint32_t sceneCamId,
                                              int32_t sampleCount,
@@ -43,6 +45,9 @@ class RayTracer : public GPUTracer
                                              bool incSampleCount = true,
                                              bool antiAliasOn = true);
         void                    SwapAuxBuffers();
+
+        void                    UpdateFrameAnalytics(const std::string& throughputSuffix,
+                                                     uint32_t spp);
 
     public:
         // Constructors & Destructor

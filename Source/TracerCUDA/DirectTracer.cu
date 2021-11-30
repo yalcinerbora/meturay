@@ -248,6 +248,15 @@ bool DirectTracer::Render()
     return true;
 }
 
+void DirectTracer::Finalize()
+{
+    cudaSystem.SyncAllGPUs();
+    frameTimer.Stop();
+    UpdateFrameAnalytics("rays / sec", options.sampleCount * options.sampleCount);
+
+    GPUTracer::Finalize();
+}
+
 void DirectTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(callbacks)

@@ -84,6 +84,7 @@ class MockNode
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override {}
+        void        SendSceneAnalyticData(SceneAnalyticData) override {}
         void        SendImageSectionReset(Vector2i start, Vector2i end) override;
         void        SendImage(const std::vector<Byte> data,
                               PixelFormat, size_t offset,

@@ -392,7 +392,8 @@ void VisorGL::Render()
     RenderImage();
 
     // After Render GUI
-    if(vOpts.enableGUI) visorGUI->Render(sdrTexture,
+    if(vOpts.enableGUI) visorGUI->Render(tracerAnalyticData,
+                                         sceneAnalyticData,
                                          imageSize);
 
     // Finally Swap Buffers
@@ -498,6 +499,26 @@ void VisorGL::SetTransform(const VisorTransform& c)
 void VisorGL::SetSceneCameraCount(uint32_t c)
 {
     if(input) input->SetSceneCameraCount(c);
+}
+
+void VisorGL::Update(const SceneAnalyticData& a)
+{
+    sceneAnalyticData = a;
+}
+
+void VisorGL::Update(const AnalyticData& a)
+{
+    tracerAnalyticData = a;
+}
+
+void VisorGL::Update(const TracerOptions& tOpts)
+{
+    currentTOpts = tOpts;
+}
+
+void VisorGL::Update(const TracerParameters& tParams)
+{
+    currentTParams = tParams;
 }
 
 void VisorGL::SetRenderingContextCurrent()

@@ -45,6 +45,9 @@ class GPUSceneJson : public GPUSceneI
         const CudaSystem&                       cudaSystem;
         // Flags
         SceneLoadFlags                          loadFlags;
+        //
+        double                                  loadTime;
+        double                                  lastUpdateTime;
 
         // Loaded
         Vector2i                                maxAccelIds;

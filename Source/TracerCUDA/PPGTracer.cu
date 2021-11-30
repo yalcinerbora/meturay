@@ -440,6 +440,12 @@ void PPGTracer::Finalize()
         ResetImage();
     }
 
+
+    cudaSystem.SyncAllGPUs();
+    frameTimer.Stop();
+    UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
+
+
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);
     if(options.alwaysSendSamples ||
        // Do not send samples untill we exceed prev iteration samples

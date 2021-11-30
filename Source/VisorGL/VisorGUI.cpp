@@ -72,7 +72,9 @@ VisorGUI::~VisorGUI()
     ImGui::DestroyContext();
 }
 
-void VisorGUI::Render(GLuint, const Vector2i&)
+void VisorGUI::Render(const AnalyticData& ad,
+                      const SceneAnalyticData& sad,
+                      const Vector2i& resolution)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -105,53 +107,7 @@ void VisorGUI::Render(GLuint, const Vector2i&)
 
     if(bottomBarOn)
     {
-        if(ImGui::BeginViewportSideBar("##MainStatusBar", NULL, ImGuiDir_Down, height, window_flags))
-        {
-            if(ImGui::BeginMenuBar())
-            {
-
-                ImGui::Text("1280 x 720");
-                ImGui::Separator();
-
-                ImGui::Text("10.3322M paths / sec");
-                ImGui::Separator();
-
-                ImGui::Text("300 spp");
-                ImGui::Separator();
-
-                ImGui::Text("Rendering test.json...");
-
-                ImGui::Separator();
-
-                ImGui::Button(ICON_ICOMN_ARROW_LEFT);
-                if(ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 2)
-                {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Prev Frame");
-                    ImGui::EndTooltip();
-                }
-
-                ImGui::Button(ICON_ICOMN_ARROW_RIGHT);
-                if(ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 2)
-                {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Next Frame");
-                    ImGui::EndTooltip();
-                }
-
-                ImGui::Separator();
-
-                ImGui::Button(ICON_ICOMN_STOP2);
-                ImGui::Button(ICON_ICOMN_PAUSE2);
-                ImGui::Button(ICON_ICOMN_PLAY3);
-
-
-
-
-                ImGui::EndMenuBar();
-            }
-        }
-        ImGui::End();
+        statusBar.Render(ad, sad, resolution);
     }
 
 

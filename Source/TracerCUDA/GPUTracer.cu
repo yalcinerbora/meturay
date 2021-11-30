@@ -192,11 +192,8 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , callbacks(nullptr)
     , crashed(false)
     , currentCameraIndex(std::numeric_limits<uint32_t>::max())
-    , sceneAnalytics(scene.SceneAnalyticData())
-    , frameAnalytics
-    {
-
-    }
+    , sceneAnalytics(scene.AnalyticData())
+    , frameAnalytics {}
 {
     #ifdef MRAY_OPTIX
         bool allOptiXScene = true;
@@ -240,6 +237,9 @@ GPUTracer::GPUTracer(const CudaSystem& system,
 
 TracerError GPUTracer::Initialize()
 {
+    if(callbacks)
+        callbacks->SendSceneAnalyticData(sceneAnalytics);
+
     // Init RNGs for each block
     TracerError e = TracerError::OK;
     rngMemory = RNGMemory(params.seed, cudaSystem);
@@ -481,6 +481,9 @@ void GPUTracer::Finalize()
                                        offset,
                                        start, end);
     SendLog("Image sent!");
+
+    if(callbacks)
+        callbacks->SendAnalyticData(frameAnalytics);
 }
 
 void GPUTracer::AskParameters()

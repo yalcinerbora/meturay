@@ -182,3 +182,12 @@ bool AOTracer::Render()
     // Or continue
     return true;
 }
+
+void AOTracer::Finalize()
+{
+    cudaSystem.SyncAllGPUs();
+    frameTimer.Stop();
+    UpdateFrameAnalytics("rays / sec", options.sampleCount * options.sampleCount);
+
+    GPUTracer::Finalize();
+}

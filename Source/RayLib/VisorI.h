@@ -23,6 +23,11 @@ class VisorCallbacksI;
 struct VisorTransform;
 struct VisorError;
 
+struct AnalyticData;
+struct SceneAnalyticData;
+class TracerOptions;
+struct TracerParameters;
+
 struct VisorOptions
 {
     // Technical
@@ -75,6 +80,11 @@ class VisorI
         // Camera Related (Tracer Callbacks)
         virtual void                    SetTransform(const VisorTransform&) = 0;
         virtual void                    SetSceneCameraCount(uint32_t) = 0;
+
+        virtual void                    Update(const SceneAnalyticData&) = 0;
+        virtual void                    Update(const AnalyticData&) = 0;
+        virtual void                    Update(const TracerOptions&) = 0;
+        virtual void                    Update(const TracerParameters&) = 0;
         // Image Save Related
         virtual void                    SaveImage(bool saveAsHDR) = 0;
 };

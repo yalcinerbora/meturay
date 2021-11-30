@@ -15,6 +15,8 @@ the VisorGL singleton.
 
 #include "RayLib/MPMCQueue.h"
 #include "RayLib/ThreadVariable.h"
+#include "RayLib/AnalyticData.h"
+#include "RayLib/TracerOptions.h"
 
 #include "ShaderGL.h"
 #include "VisorGUI.h"
@@ -92,6 +94,12 @@ class VisorGL : public WindowGLI
 
         // GL Classes
         ToneMapGL                   toneMapGL;
+
+        //
+        AnalyticData                tracerAnalyticData;
+        SceneAnalyticData           sceneAnalyticData;
+        TracerOptions               currentTOpts;
+        TracerParameters            currentTParams;
 
         // Image portion list
         MPMCQueue<VisorGLCommand>   commandList;
@@ -179,6 +187,11 @@ class VisorGL : public WindowGLI
         Vector2i                MonitorResolution() const override;
         void                    SetTransform(const VisorTransform&) override;
         void                    SetSceneCameraCount(uint32_t) override;
+        // Incoming Data From Tracer
+        void                    Update(const SceneAnalyticData&) override;
+        void                    Update(const AnalyticData&) override;
+        void                    Update(const TracerOptions&) override;
+        void                    Update(const TracerParameters&) override;
 
         // Setting rendering context on current thread
         void                    SetRenderingContextCurrent() override;

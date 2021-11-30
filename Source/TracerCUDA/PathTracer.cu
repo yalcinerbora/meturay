@@ -224,6 +224,15 @@ bool PathTracer::Render()
     return true;
 }
 
+void PathTracer::Finalize()
+{
+    cudaSystem.SyncAllGPUs();
+    frameTimer.Stop();
+    UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
+
+    GPUTracer::Finalize();
+}
+
 void PathTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(callbacks)

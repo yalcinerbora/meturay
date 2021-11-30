@@ -63,6 +63,11 @@ class GuideDebugGL : public WindowGLI
         void                    SetSceneCameraCount(uint32_t) override;
         //
         void                    SaveImage(bool saveAsHDR) override;
+        //
+        void                    Update(const SceneAnalyticData&) override;
+        void                    Update(const AnalyticData&) override;
+        void                    Update(const TracerOptions&) override;
+        void                    Update(const TracerParameters&) override;
 
     protected:
     public:
@@ -102,3 +107,8 @@ inline void GuideDebugGL::SetTransform(const VisorTransform&) {}
 inline void GuideDebugGL::SetSceneCameraCount(uint32_t) {}
 
 inline void GuideDebugGL::SaveImage(bool) {}
+
+inline void GuideDebugGL::Update(const SceneAnalyticData&) {}
+inline void GuideDebugGL::Update(const AnalyticData&) {}
+inline void GuideDebugGL::Update(const TracerOptions&) {}
+inline void GuideDebugGL::Update(const TracerParameters&) {}

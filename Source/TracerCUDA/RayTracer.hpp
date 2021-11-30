@@ -11,6 +11,8 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
                              bool incSampleCount,
                              bool antiAliasOn)
 {
+    frameTimer.Start();
+
     int32_t sampleCountSqr = sampleCount * sampleCount;
 
     const Vector2i resolution = imgMemory.Resolution();
@@ -106,6 +108,8 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
                              bool incSampleCount,
                              bool antiAliasOn)
 {
+    frameTimer.Start();
+
     // TODO: shouldn't have copy pasted this code but
     // it requires unnecessary work to not dereference GPU pointer and put it on a kernel
 

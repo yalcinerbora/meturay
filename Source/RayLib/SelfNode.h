@@ -57,6 +57,7 @@ class SelfNode
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
         void        SendAnalyticData(AnalyticData) override;
+        void        SendSceneAnalyticData(SceneAnalyticData) override;
         void        SendImageSectionReset(Vector2i start = Zero2i,
                                           Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendImage(const std::vector<Byte> data,

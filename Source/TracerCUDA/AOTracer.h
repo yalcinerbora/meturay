@@ -41,8 +41,8 @@ class AOTracer final : public RayTracer
     public:
         // Constructors & Destructor
                                 AOTracer(const CudaSystem&,
-                                           const GPUSceneI&,
-                                           const TracerParameters&);
+                                         const GPUSceneI&,
+                                         const TracerParameters&);
                                 ~AOTracer() = default;
 
         TracerError             Initialize() override;
@@ -53,6 +53,7 @@ class AOTracer final : public RayTracer
         void                    GenerateWork(const VisorTransform&, uint32_t cameraIndex) override;
         void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
+        void                    Finalize() override;
 };
 
 static_assert(IsTracerClass<AOTracer>::value,

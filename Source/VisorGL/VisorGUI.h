@@ -1,11 +1,15 @@
 #pragma once
 
-#include "TMOptionWindow.h"
 #include <GL/glew.h>
+
+#include "TMOptionWindow.h"
+#include "MainStatusBar.h"
 
 #include "RayLib/Vector.h"
 
 struct GLFWwindow;
+struct AnalyticData;
+struct SceneAnalyticData;
 
 class VisorGUI
 {
@@ -14,6 +18,7 @@ class VisorGUI
         bool init = false;
 
         TMOptionWindow                  tmWindow;
+        MainStatusBar                   statusBar;
 
         bool                            topBarOn;
         bool                            bottomBarOn;
@@ -24,7 +29,8 @@ class VisorGUI
                                         VisorGUI(GLFWwindow*);
                                         ~VisorGUI();
         // Members
-        void                            Render(GLuint sdrTex,
+        void                            Render(const AnalyticData& ad,
+                                               const SceneAnalyticData& sad,
                                                const Vector2i& resolution);
         // Access GUI Controlled Parameters
         const ToneMapOptions&           TMOptions() const;

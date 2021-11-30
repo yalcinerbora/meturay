@@ -6,6 +6,10 @@
 #include "RayLib/SceneNodeI.h"
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/StripComments.h"
+#include "RayLib/FileSystemUtility.h"
+#include "RayLib/UTF8StringConversion.h"
+#include "RayLib/AnalyticData.h"
+#include "RayLib/CPUTimer.h"
 
 #include "GPUCameraI.h"
 #include "GPULightI.h"
@@ -1291,6 +1295,8 @@ size_t GPUSceneJson::UsedCPUMemory() const
 
 SceneError GPUSceneJson::LoadScene(double time)
 {
+    Utility::CPUTimer t;
+    t.Start();
     SceneError e = SceneError::OK;
     try
     {
@@ -1310,11 +1316,15 @@ SceneError GPUSceneJson::LoadScene(double time)
         METU_ERROR_LOG("{:s}", e.what());
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
+    t.Stop();
+    loadTime = t.Elapsed<CPUTimeSeconds>();
     return e;
 }
 
 SceneError GPUSceneJson::ChangeTime(double time)
 {
+    Utility::CPUTimer t;
+    t.Start();
     SceneError e = SceneError::OK;
     try
     {
@@ -1331,6 +1341,8 @@ SceneError GPUSceneJson::ChangeTime(double time)
     {
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
+    t.Stop();
+    lastUpdateTime = t.Elapsed<CPUTimeSeconds>();
     return e;
 }
 
@@ -1437,21 +1449,21 @@ const NamedList<GPUPrimGPtr>& GPUSceneJson::PrimitiveGroups() const
 
 SceneAnalyticData GPUSceneJson::AnalyticData() const
 {
-    return
+    return SceneAnalyticData
     {
-        scene.Name(),
-        scene.LoadTime(),
-        scene.UpdateTime(),
+        Utility::PathFile(Utility::CopyU8ToString(fileName)),
+        loadTime,
+        lastUpdateTime,
         {
-            scene.MaterialGroups().size(),
-            scene.PrimitiveGroups().size(),
-            scene.Lights().size(),
-            scene.Cameras().size(),
-            scene.AcceleratorGroups().size(),
-            scene.Transforms().size(),
-            scene.Mediums().size()
+            static_cast<uint32_t>(MaterialGroups().size()),
+            static_cast<uint32_t>(PrimitiveGroups().size()),
+            static_cast<uint32_t>(Lights().size()),
+            static_cast<uint32_t>(Cameras().size()),
+            static_cast<uint32_t>(AcceleratorGroups().size()),
+            static_cast<uint32_t>(Transforms().size()),
+            static_cast<uint32_t>(Mediums().size())
         },
-        scene.MaxAccelIds(),
-        scene.MaxMatIds(),
+        MaxAccelIds(),
+        MaxMatIds(),
     };
 }

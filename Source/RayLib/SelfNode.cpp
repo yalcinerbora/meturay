@@ -102,9 +102,14 @@ void SelfNode::SendError(TracerError err)
     METU_ERROR_LOG("Tracer: {:s}", static_cast<std::string>(err));
 }
 
-void SelfNode::SendAnalyticData(AnalyticData)
+void SelfNode::SendAnalyticData(AnalyticData ad)
 {
-    //TODO:
+    visor.Update(ad);
+}
+
+void SelfNode::SendSceneAnalyticData(SceneAnalyticData ad)
+{
+    visor.Update(ad);
 }
 
 void SelfNode::SendImageSectionReset(Vector2i start, Vector2i end)
@@ -119,17 +124,14 @@ void SelfNode::SendImage(const std::vector<Byte> data,
     visor.AccumulatePortion(std::move(data), f, offset, start, end);
 }
 
-void SelfNode::SendCurrentOptions(TracerOptions)
+void SelfNode::SendCurrentOptions(TracerOptions tOpts)
 {
-    // We have only one trader so no delegation to other tracers
-    // Only refresh the visor if it shows the current options
-
-    //visor.
+    visor.Update(tOpts);
 }
 
-void SelfNode::SendCurrentParameters(TracerParameters)
+void SelfNode::SendCurrentParameters(TracerParameters tParams)
 {
-    // Same as Tracer Options
+    visor.Update(tParams);
 }
 
 void SelfNode::SendCurrentTransform(VisorTransform t)

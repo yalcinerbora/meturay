@@ -1,5 +1,9 @@
 #pragma once
 
+#include <array>
+#include <string>
+#include "Vector.h"
+
 struct SceneAnalyticData
 {
     enum SceneGroupTypes
@@ -38,10 +42,8 @@ struct AnalyticData
     // Timings
     float           iterationTime;      // msecs
 
-    // GPU Related
-    double          workGroupCount;
     // Memory Related
-    double          totalGPUMemoryMiB; // MiB
-    double          totalCPUMemoruMiB; // MiB
+    double          totalGPUMemoryMiB;  // MiB
+    double          totalCPUMemoryMiB;  // MiB
 
 };

@@ -20,6 +20,7 @@ All Tracers should inherit this class
 #include "RayLib/TracerStructs.h"
 #include "RayLib/GPUTracerI.h"
 #include "RayLib/VisorTransform.h"
+#include "RayLib/CPUTimer.h"
 
 #include "RayCasterI.h"
 #include "RNGMemory.h"
@@ -55,11 +56,12 @@ class GPUTracer : public GPUTracerI
         const WorkBatchCreationInfo&                workInfo;
         // Current camera index for copying the camera for transform
         uint32_t                                    currentCameraIndex;
-
         // GPU Memory
         DeviceMemory                                tempTransformedCam;
         DeviceMemory                                commonTypeMemory;
-
+        //
+        SceneAnalyticData                           sceneAnalytics;
+        //
         TracerError                                 LoadCameras(std::vector<const GPUCameraI*>&,
                                                                 std::vector<const GPUEndpointI*>&);
         TracerError                                 LoadLights(std::vector<const GPULightI*>&,
@@ -105,7 +107,7 @@ class GPUTracer : public GPUTracerI
         bool                                crashed;
         // Analytic Data
         AnalyticData                        frameAnalytics;
-        SceneAnalyticData                   sceneAnalytics;
+        Utility::CPUTimer                   frameTimer;
 
         // Interface
         virtual void                        ResetHitMemory(uint32_t rayCount,

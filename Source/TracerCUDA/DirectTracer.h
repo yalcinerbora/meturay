@@ -66,6 +66,7 @@ class DirectTracer : public RayTracer
         void                    GenerateWork(const VisorTransform&, uint32_t cameraIndex) override;
         void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
+        void                    Finalize() override;
 };
 
 static_assert(IsTracerClass<DirectTracer>::value,
