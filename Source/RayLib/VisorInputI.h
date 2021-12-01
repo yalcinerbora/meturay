@@ -64,6 +64,7 @@ class VisorInputI : public WindowInputI
 
         // Interface
         virtual void                        AttachVisorCallback(VisorCallbacksI&) = 0;
+        virtual VisorCallbacksI*            CurrentVisorCallback() const = 0;
 
         virtual void                        SetTransform(const VisorTransform&) = 0;
         virtual void                        SetSceneCameraCount(uint32_t) = 0;

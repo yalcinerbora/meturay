@@ -53,6 +53,7 @@ class VisorWindowInput : public VisorInputI
 
         // Implementation
         void                    AttachVisorCallback(VisorCallbacksI&) override;
+        VisorCallbacksI*        CurrentVisorCallback() const override;
         void                    SetVisor(VisorI&) override;
 
         void                    WindowPosChanged(int posX, int posY) override;

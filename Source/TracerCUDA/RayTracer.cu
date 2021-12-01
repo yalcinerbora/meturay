@@ -36,9 +36,7 @@ void RayTracer::UpdateFrameAnalytics(const std::string& throughputSuffix,
     totalSamplePerPixel += spp;
 
     float iterationTime = static_cast<float>(frameTimer.Elapsed<CPUTimeMillis>());
-
-    double throughput = pixCount * iterationTime;
-    throughput /= 1'000'000.0;
+    double throughput = pixCount / iterationTime / 1'000.0;
 
     frameAnalytics.iterationTime = iterationTime;
     frameAnalytics.throughput = throughput;

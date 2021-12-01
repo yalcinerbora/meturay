@@ -40,9 +40,6 @@ void TracerThread::InitialWork()
 
 void TracerThread::LoopWork()
 {
-    Utility::CPUTimer timer;
-    timer.Start();
-
     bool imageAlreadyChanged = false;
     bool newSceneGenerated = false;
     bool reallocateTracer = false;
@@ -180,16 +177,6 @@ void TracerThread::LoopWork()
 
     // Set previously stopped to false since we cycled once
     isPrevStopped = false;
-
-    // These timer operations
-    timer.Stop();
-    double elapsedS = timer.Elapsed<CPUTimeSeconds>();
-    double rps = resolution.Get()[0] * resolution.Get()[1];
-    rps *= (1.0 / elapsedS);
-    rps /= 1'000'000.0;
-    fprintf(stdout, "%c[2K", 27);
-    fprintf(stdout, "Time: %fs Rps: %fM ray/s\r",
-            elapsedS, rps);
 }
 
 void TracerThread::FinalWork()

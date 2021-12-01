@@ -14,7 +14,6 @@ VisorGUI::VisorGUI(GLFWwindow* window)
     : bottomBarOn(true)
     , topBarOn(true)
 {
-    init = true;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
@@ -120,4 +119,54 @@ void VisorGUI::Render(const AnalyticData& ad,
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void VisorGUI::ChangeScene(std::u8string s)
+{
+    if(delegatedCallbacks) delegatedCallbacks->ChangeScene(s);
+}
+
+void VisorGUI::ChangeTime(double t)
+{
+    if(delegatedCallbacks) delegatedCallbacks->ChangeTime(t);
+}
+
+void VisorGUI::IncreaseTime(double t)
+{
+    if(delegatedCallbacks) delegatedCallbacks->IncreaseTime(t);
+}
+
+void VisorGUI::DecreaseTime(double t)
+{
+    if(delegatedCallbacks) delegatedCallbacks->DecreaseTime(t);
+}
+
+void VisorGUI::ChangeCamera(VisorTransform t)
+{
+    if(delegatedCallbacks) delegatedCallbacks->ChangeCamera(t);
+}
+
+void VisorGUI::ChangeCamera(unsigned int i)
+{
+    if(delegatedCallbacks) delegatedCallbacks->ChangeCamera(i);
+}
+
+void VisorGUI::StartStopTrace(bool b)
+{
+    if(delegatedCallbacks) delegatedCallbacks->StartStopTrace(b);
+}
+
+void VisorGUI::PauseContTrace(bool b)
+{
+    if(delegatedCallbacks) delegatedCallbacks->PauseContTrace(b);
+}
+
+void VisorGUI::WindowMinimizeAction(bool minimized)
+{
+    if(delegatedCallbacks) delegatedCallbacks->WindowMinimizeAction(minimized);
+}
+
+void VisorGUI::WindowCloseAction()
+{
+    if(delegatedCallbacks) delegatedCallbacks->WindowCloseAction();
 }

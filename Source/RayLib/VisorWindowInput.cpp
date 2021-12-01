@@ -144,6 +144,11 @@ void VisorWindowInput::AttachVisorCallback(VisorCallbacksI& vc)
     visorCallbacks = &vc;
 }
 
+VisorCallbacksI* VisorWindowInput::CurrentVisorCallback() const
+{
+    return visorCallbacks;
+}
+
 void VisorWindowInput::SetVisor(VisorI& v)
 {
     visor = &v;
