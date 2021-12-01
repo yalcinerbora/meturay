@@ -490,3 +490,24 @@ void GPUTracer::AskParameters()
 {
     if(callbacks) callbacks->SendCurrentParameters(params);
 }
+
+size_t GPUTracer::TotalGPUMemoryUsed() const
+{
+    size_t mem = 0;
+    for(const auto& mat : materialGroups)
+        mem += mat.second->UsedGPUMemory();
+    for(const auto& t : transforms)
+        mem += t.second->UsedGPUMemory();
+    for(const auto& m : mediums)
+        mem += m.second->UsedGPUMemory();
+    for(const auto& l : lights)
+        mem += l.second->UsedGPUMemory();
+    for(const auto& c : cameras)
+        mem += c.second->UsedGPUMemory();
+    mem += tempTransformedCam.Size();
+    mem += commonTypeMemory.Size();
+    mem += rngMemory.UsedGPUMemory();
+    mem += imgMemory.UsedGPUMemory();
+    mem += rayCaster->UsedGPUMemory();
+    return mem;
+}

@@ -106,7 +106,7 @@ class GPUTracer : public GPUTracerI
         TracerCallbacksI*                   callbacks;
         bool                                crashed;
         // Analytic Data
-        AnalyticData                        frameAnalytics;
+        TracerAnalyticData                  frameAnalytics;
         Utility::CPUTimer                   frameTimer;
 
         // Interface
@@ -153,6 +153,8 @@ class GPUTracer : public GPUTracerI
                                                Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void                    ResizeImage(Vector2i resolution) override;
         void                    ResetImage() override;
+
+        size_t                  TotalGPUMemoryUsed() const override;
 };
 
 inline void GPUTracer::AttachTracerCallbacks(TracerCallbacksI& tc)

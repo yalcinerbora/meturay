@@ -366,6 +366,18 @@ const AABB3f& GPUBaseAcceleratorBVH::SceneExtents() const
     return sceneAABB;
 }
 
+size_t GPUBaseAcceleratorBVH::UsedGPUMemory() const
+{
+    return bvhMemory.Size() + rayStateMemory.Size();
+}
+
+size_t GPUBaseAcceleratorBVH::UsedCPUMemory() const
+{
+    return (idLookup.size() * sizeof(std::pair<uint32_t, uint32_t>) +
+            leafs.size() + sizeof(BaseLeaf) +
+            sizeof(GPUBaseAcceleratorBVH));
+}
+
 // Accelerator Instancing for basic primitives
 template class GPUAccBVHGroup<GPUPrimitiveTriangle>;
 template class GPUAccBVHGroup<GPUPrimitiveSphere>;

@@ -65,3 +65,20 @@ struct TracerParameters
     bool        verbose;    // Let Tracer to Log what it is doing
     uint32_t    seed;       // RNG Seed
 };
+
+enum class TracerCameraMode
+{
+    SCENE_CAM,
+    CUSTOM_CAM,
+
+    END
+};
+
+enum class TracerRunState
+{
+    RUNNING,
+    STOPPED,
+    PAUSED,
+
+    END
+};

@@ -11,8 +11,8 @@
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
 VisorI* CreateVisorGL(const VisorOptions&,
-                                const Vector2i& imgRes,
-                                const PixelFormat&);
+                      const Vector2i& imgRes,
+                      const PixelFormat&);
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
 VisorI * CreateGuideDebugGL(const Vector2i& winSize,

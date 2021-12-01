@@ -4,8 +4,8 @@
 
 extern "C" METU_SHARED_VISORGL_ENTRY_POINT
 VisorI* CreateVisorGL(const VisorOptions& opts,
-                                const Vector2i& imgRes,
-                                const PixelFormat& f)
+                      const Vector2i& imgRes,
+                      const PixelFormat& f)
 {
     return new VisorGL(opts, imgRes, f);
 }

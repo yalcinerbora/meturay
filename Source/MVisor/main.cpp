@@ -8,7 +8,6 @@
 // Visor
 #include "RayLib/VisorI.h"
 #include "RayLib/VisorCallbacksI.h"
-#include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
 #include "RayLib/VisorError.h"
 
@@ -81,12 +80,10 @@ int main(int argc, const char* argv[])
         EmptyVisorCallback emptyCallback;
         KeyboardKeyBindings kb = VisorConstants::DefaultKeyBinds;
         MouseKeyBindings bb = VisorConstants::DefaultButtonBinds;
-        auto visorInput = std::make_unique<VisorWindowInput>(std::move(kb), std::move(bb),
-                                                             MovementSchemeList());
+
         // Init Visor with input scheme
-        VisorError vError = debugVisor->Initialize(*visorInput);
+        VisorError vError = debugVisor->Initialize(emptyCallback, kb, bb, {});
         ERROR_CHECK_INT(VisorError, vError);
-        visorInput->AttachVisorCallback(emptyCallback);
 
         // Render Loop
         while(debugVisor->IsOpen())

@@ -23,10 +23,14 @@ class VisorCallbacksI;
 struct VisorTransform;
 struct VisorError;
 
-struct AnalyticData;
-struct SceneAnalyticData;
 class TracerOptions;
 struct TracerParameters;
+
+struct TracerAnalyticData;
+struct SceneAnalyticData;
+
+class MovementSchemeI;
+using MovementSchemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
 
 struct VisorOptions
 {
@@ -44,13 +48,24 @@ struct VisorOptions
     bool                enableTMO;
 };
 
-class VisorI
+class ImageSaverI
+{
+    public:
+        virtual         ~ImageSaverI() = default;
+        // Image Save Related
+        virtual void    SaveImage(bool saveAsHDR) = 0;
+};
+
+class VisorI : public ImageSaverI
 {
     public:
         virtual                         ~VisorI() = default;
 
         // Interface
-        virtual VisorError              Initialize(VisorInputI&) = 0;
+        virtual VisorError              Initialize(VisorCallbacksI&,
+                                                   const KeyboardKeyBindings&,
+                                                   const MouseKeyBindings&,
+                                                   MovementSchemeList&&) = 0;
         virtual bool                    IsOpen() = 0;
         virtual void                    Render() = 0;
         // Data Related
@@ -77,14 +92,11 @@ class VisorI
         virtual void                    ReleaseRenderingContext() = 0;
         // Main Thread only Calls
         virtual void                    ProcessInputs() = 0;
-        // Camera Related (Tracer Callbacks)
-        virtual void                    SetTransform(const VisorTransform&) = 0;
-        virtual void                    SetSceneCameraCount(uint32_t) = 0;
-
+        // Updates (Data coming from Tracer Callbacks)
+        virtual void                    Update(const VisorTransform&) = 0;
+        virtual void                    Update(uint32_t sceneCameraCount) = 0;
         virtual void                    Update(const SceneAnalyticData&) = 0;
-        virtual void                    Update(const AnalyticData&) = 0;
+        virtual void                    Update(const TracerAnalyticData&) = 0;
         virtual void                    Update(const TracerOptions&) = 0;
         virtual void                    Update(const TracerParameters&) = 0;
-        // Image Save Related
-        virtual void                    SaveImage(bool saveAsHDR) = 0;
 };

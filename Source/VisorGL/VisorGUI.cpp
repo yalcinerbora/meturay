@@ -10,9 +10,24 @@
 // Icon Font UTF Definitions
 #include "IcoMoonFontTable.h"
 
-VisorGUI::VisorGUI(GLFWwindow* window)
-    : bottomBarOn(true)
+VisorGUI::VisorGUI(VisorCallbacksI& cb,
+                   bool& isWindowOpen,
+                   Vector2i& windowSize,
+                   Vector2i& viewportSize,
+                   ToneMapOptions& tmOpts,
+                   ImageSaverI& saver,
+                   const Vector2i& imageSize,
+                   const GLFWwindow* window,
+                   const KeyboardKeyBindings& kb,
+                   const MouseKeyBindings& mb,
+                   MovementSchemeList&& mvList)
+    : VisorWindowInput(cb, isWindowOpen,
+                       windowSize, viewportSize, saver,
+                       kb, mb, std::move(mvList))
+    , bottomBarOn(true)
     , topBarOn(true)
+    , tmWindow(tmOpts)
+    , imageSize(imageSize)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -21,7 +36,7 @@ VisorGUI::VisorGUI(GLFWwindow* window)
 
     // Get Scale Info
     float x, y;
-    glfwGetWindowContentScale(window, &x, &y);
+    glfwGetWindowContentScale(const_cast<GLFWwindow*>(window), &x, &y);
     assert(x == y);
 
     x *= INITIAL_SCALE;
@@ -60,7 +75,7 @@ VisorGUI::VisorGUI(GLFWwindow* window)
     style.Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0.1f);
 
     // Initi renderer & platform
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplGlfw_InitForOpenGL(const_cast<GLFWwindow*>(window), true);
     ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
 }
 
@@ -71,9 +86,7 @@ VisorGUI::~VisorGUI()
     ImGui::DestroyContext();
 }
 
-void VisorGUI::Render(const AnalyticData& ad,
-                      const SceneAnalyticData& sad,
-                      const Vector2i& resolution)
+void VisorGUI::RenderGUI()
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -106,14 +119,16 @@ void VisorGUI::Render(const AnalyticData& ad,
 
     if(bottomBarOn)
     {
-        statusBar.Render(ad, sad, resolution);
+        statusBar.Render(visorCallbacks,
+                         tracerRunState,
+                         tracerAnalyticData,
+                         sceneAnalyticData,
+                         imageSize);
     }
 
 
-    bool showDemo = true;
-    //bool open     = true;
-    ImGui::ShowDemoWindow(&showDemo);
-
+    //bool showDemo = true;
+    //ImGui::ShowDemoWindow(&showDemo);
 
     tmWindow.Render();
 
@@ -121,52 +136,22 @@ void VisorGUI::Render(const AnalyticData& ad,
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void VisorGUI::ChangeScene(std::u8string s)
+void VisorGUI::SetSceneAnalyticData(const SceneAnalyticData& sad)
 {
-    if(delegatedCallbacks) delegatedCallbacks->ChangeScene(s);
+    sceneAnalyticData = sad;
 }
 
-void VisorGUI::ChangeTime(double t)
+void VisorGUI::SetTracerAnalyticData(const TracerAnalyticData& tad)
 {
-    if(delegatedCallbacks) delegatedCallbacks->ChangeTime(t);
+    tracerAnalyticData = tad;
 }
 
-void VisorGUI::IncreaseTime(double t)
+void VisorGUI::SetTracerOptions(const TracerOptions& tOpts)
 {
-    if(delegatedCallbacks) delegatedCallbacks->IncreaseTime(t);
+    currentTOpts = tOpts;
 }
 
-void VisorGUI::DecreaseTime(double t)
+void VisorGUI::SetTracerParams(const TracerParameters& tParams)
 {
-    if(delegatedCallbacks) delegatedCallbacks->DecreaseTime(t);
-}
-
-void VisorGUI::ChangeCamera(VisorTransform t)
-{
-    if(delegatedCallbacks) delegatedCallbacks->ChangeCamera(t);
-}
-
-void VisorGUI::ChangeCamera(unsigned int i)
-{
-    if(delegatedCallbacks) delegatedCallbacks->ChangeCamera(i);
-}
-
-void VisorGUI::StartStopTrace(bool b)
-{
-    if(delegatedCallbacks) delegatedCallbacks->StartStopTrace(b);
-}
-
-void VisorGUI::PauseContTrace(bool b)
-{
-    if(delegatedCallbacks) delegatedCallbacks->PauseContTrace(b);
-}
-
-void VisorGUI::WindowMinimizeAction(bool minimized)
-{
-    if(delegatedCallbacks) delegatedCallbacks->WindowMinimizeAction(minimized);
-}
-
-void VisorGUI::WindowCloseAction()
-{
-    if(delegatedCallbacks) delegatedCallbacks->WindowCloseAction();
+    currentTParams = tParams;
 }

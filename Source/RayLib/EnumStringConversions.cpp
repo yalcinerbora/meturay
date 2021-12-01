@@ -25,7 +25,7 @@ static const EnumNameList<TracerOptionsI::OptionType> TracerOptionTypeNames =
     "string"
 };
 
-static const EnumNameList<CameraMode> CameraModeTypeNames =
+static const EnumNameList<TracerCameraMode> CameraModeTypeNames =
 {
     "SCENE_CAM",
     "CUSTOM_CAM"
@@ -260,7 +260,7 @@ std::string EnumStringConverter::VisorActionTypeToString(VisorActionType t)
     return VisorActionTypeNames[static_cast<uint32_t>(t)];
 }
 
-std::string EnumStringConverter::CameraModeToString(CameraMode t)
+std::string EnumStringConverter::CameraModeToString(TracerCameraMode t)
 {
     return CameraModeTypeNames[static_cast<uint32_t>(t)];
 }
@@ -300,9 +300,9 @@ VisorActionType EnumStringConverter::StringToVisorActionType(const std::string& 
     return StrToEnum<VisorActionType>(s, VisorActionTypeNames);
 }
 
-CameraMode EnumStringConverter::StringToCameraMode(const std::string& s)
+TracerCameraMode EnumStringConverter::StringToCameraMode(const std::string& s)
 {
-    return StrToEnum<CameraMode>(s, CameraModeTypeNames);
+    return StrToEnum<TracerCameraMode>(s, CameraModeTypeNames);
 }
 
 ScenePartitionerType EnumStringConverter::StringToScenePartitionerType(const std::string& s)

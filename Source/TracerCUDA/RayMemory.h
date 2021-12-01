@@ -128,6 +128,8 @@ class RayMemory
         RayPartitions<uint32_t>     Partition(uint32_t rayCount);
         // Initialize HitIds and Indices
         void                        FillMatIdsForSort(uint32_t rayCount);
+        // Mem Usage
+        size_t                      UsedGPUMemory() const;
 };
 
 inline const CudaGPU& RayMemory::LeaderDevice() const
@@ -201,4 +203,11 @@ inline RayId* RayMemory::CurrentIds()
 inline const RayId* RayMemory::CurrentIds() const
 {
     return dCurrentIds;
+}
+
+inline size_t RayMemory::UsedGPUMemory() const
+{
+    return (memIn.Size() +
+            memOut.Size() +
+            memHit.Size());
 }

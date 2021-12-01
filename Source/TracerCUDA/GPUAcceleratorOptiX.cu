@@ -501,6 +501,21 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
     return TracerError::OK;
 }
 
+size_t GPUBaseAcceleratorOptiX::UsedGPUMemory() const
+{
+    size_t mem = 0;
+    for(const auto& oData : optixGPUData)
+        mem += oData.tMemory.Size();
+    return mem;
+}
+
+size_t GPUBaseAcceleratorOptiX::UsedCPUMemory() const
+{
+    return (idLookup.size() * sizeof(std::pair<uint32_t, uint32_t>) +
+            optixGPUData.size() + sizeof(OptixGPUData) +
+            sizeof(GPUBaseAcceleratorOptiX));
+}
+
 void GPUBaseAcceleratorOptiX::SetOptiXSystem(const OptiXSystem* sys)
 {
     optixSystem = sys;

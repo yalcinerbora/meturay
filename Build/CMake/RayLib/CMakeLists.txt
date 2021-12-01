@@ -131,9 +131,7 @@ set(SRC_UTILITY
 
 set(SRC_VISOR_INPUT
     ${CURRENT_SOURCE_DIR}/MovementSchemes.cpp
-    ${CURRENT_SOURCE_DIR}/MovementSchemes.h
-    ${CURRENT_SOURCE_DIR}/VisorWindowInput.cpp
-    ${CURRENT_SOURCE_DIR}/VisorWindowInput.h)
+    ${CURRENT_SOURCE_DIR}/MovementSchemes.h)
 
 set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/Constants.h

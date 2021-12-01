@@ -187,13 +187,5 @@ enum class VisorActionType
     END
 };
 
-enum class CameraMode
-{
-    SCENE_CAM,
-    CUSTOM_CAM,
-
-    END
-};
-
 using KeyboardKeyBindings = std::multimap<KeyboardKeyType, VisorActionType>;
 using MouseKeyBindings = std::multimap<MouseButtonType, VisorActionType>;

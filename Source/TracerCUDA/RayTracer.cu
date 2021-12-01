@@ -38,11 +38,21 @@ void RayTracer::UpdateFrameAnalytics(const std::string& throughputSuffix,
     float iterationTime = static_cast<float>(frameTimer.Elapsed<CPUTimeMillis>());
     double throughput = pixCount / iterationTime / 1'000.0;
 
+    double totalMemMiB = static_cast<double>(cudaSystem.TotalMemory()) / 1024.0 / 1024.0;
+    double usedMemMiB = static_cast<double>(TotalGPUMemoryUsed()) / 1024.0 / 1024.0;
+
     frameAnalytics.iterationTime = iterationTime;
     frameAnalytics.throughput = throughput;
     frameAnalytics.throughputSuffix = std::string("M ") + throughputSuffix;
-    frameAnalytics.totalCPUMemoryMiB = 0;
-    frameAnalytics.totalGPUMemoryMiB = 0;
+    frameAnalytics.usedGPUMemoryMiB = usedMemMiB;
+    frameAnalytics.totalGPUMemoryMiB = totalMemMiB;
     frameAnalytics.workPerPixel = totalSamplePerPixel;
     frameAnalytics.workPerPixelSuffix = " spp";
+}
+
+size_t RayTracer::TotalGPUMemoryUsed() const
+{
+    return (GPUTracer::TotalGPUMemoryUsed() +
+            auxBuffer0.Size() +
+            auxBuffer1.Size());
 }

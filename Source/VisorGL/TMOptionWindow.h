@@ -6,14 +6,12 @@
 class TMOptionWindow : public VisorGUIWindowI
 {
     private:
-        ToneMapOptions          opts;
+        ToneMapOptions&          opts;
 
     protected:
     public:
         // Constructors & Destructor
-                                TMOptionWindow();
-                                TMOptionWindow(bool windowClosed,
-                                               const ToneMapOptions& defaultOptions);
+                                TMOptionWindow(ToneMapOptions& defaultOptions);
                                 ~TMOptionWindow() = default;
 
         const ToneMapOptions&   TMOptions() const;
@@ -21,12 +19,7 @@ class TMOptionWindow : public VisorGUIWindowI
         void                    Render() override;
 };
 
-inline TMOptionWindow::TMOptionWindow()
-    : opts{DefaultTMOptions}
-{}
-
-inline TMOptionWindow::TMOptionWindow(bool windowClosed,
-                                      const ToneMapOptions& defaultOptions)
+inline TMOptionWindow::TMOptionWindow(ToneMapOptions& defaultOptions)
     : opts(defaultOptions)
 {}
 

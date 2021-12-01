@@ -493,3 +493,10 @@ void PPGTracer::GenerateWork(const GPUCameraI& dCam)
     ResizeAndInitPathMemory();
     currentDepth = 0;
 }
+
+size_t PPGTracer::TotalGPUMemoryUsed() const
+{
+    return (RayTracer::TotalGPUMemoryUsed() +
+            sTree->UsedGPUMemory() +
+            lightSamplerMemory.Size() + pathMemory.Size());
+}

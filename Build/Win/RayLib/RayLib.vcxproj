@@ -241,7 +241,6 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\Imath.dll" "$(OutDir)"</Command>
     <ClInclude Include="..\..\..\Source\RayLib\VisorI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorInputI.h" />
     <ClInclude Include="..\..\..\Source\RayLib\VisorThread.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h" />
     <ClInclude Include="..\..\..\Source\RayLib\WorkerThread.h" />
   </ItemGroup>
   <ItemGroup>
@@ -259,7 +258,6 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\Imath.dll" "$(OutDir)"</Command>
     <ClCompile Include="..\..\..\Source\RayLib\SurfaceLoaderGenerator.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\TracerThread.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\VisorThread.cpp" />
-    <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp" />
     <ClCompile Include="..\..\..\Source\RayLib\WorkerThread.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -106,6 +106,8 @@ class RayCasterOptiX : public RayCasterI
         void                    SwapRays() override;
         // Work Related
         void                    OverrideWorkBits(const Vector2i newWorkBits) override;
+        // Mem Usage
+        size_t                  UsedGPUMemory() const override;
 };
 
 inline uint32_t RayCasterOptiX::CurrentRayCount() const

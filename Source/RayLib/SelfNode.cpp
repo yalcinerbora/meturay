@@ -102,7 +102,7 @@ void SelfNode::SendError(TracerError err)
     METU_ERROR_LOG("Tracer: {:s}", static_cast<std::string>(err));
 }
 
-void SelfNode::SendAnalyticData(AnalyticData ad)
+void SelfNode::SendAnalyticData(TracerAnalyticData ad)
 {
     visor.Update(ad);
 }
@@ -136,12 +136,12 @@ void SelfNode::SendCurrentParameters(TracerParameters tParams)
 
 void SelfNode::SendCurrentTransform(VisorTransform t)
 {
-    visor.SetTransform(t);
+    visor.Update(t);
 }
 
 void SelfNode::SendCurrentSceneCameraCount(uint32_t camCount)
 {
-    visor.SetSceneCameraCount(camCount);
+    visor.Update(camCount);
 }
 
 // From Node Interface

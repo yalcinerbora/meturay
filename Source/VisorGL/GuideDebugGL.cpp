@@ -1,9 +1,9 @@
 #include "GuideDebugGL.h"
 #include "GLFWCallbackDelegator.h"
+#include "VisorWindowInput.h"
 
 #include "RayLib/VisorError.h"
 #include "RayLib/ImageIOError.h"
-
 #include "RayLib/Log.h"
 #include "RayLib/FileSystemUtility.h"
 #include "RayLib/VisorInputI.h"
@@ -22,26 +22,6 @@ void GuideDebugGL::OGLCallbackRender(GLenum,
                                      const void*)
 {
     GLFWCallbackDelegator::OGLDebugLog(type, id, severity, message);
-}
-
-void GuideDebugGL::SetFBSizeFromInput(const Vector2i& fbs)
-{
-    viewportSize = fbs;
-}
-
-void GuideDebugGL::SetWindowSizeFromInput(const Vector2i& ws)
-{
-    windowSize = ws;
-}
-
-void GuideDebugGL::SetOpenStateFromInput(bool b)
-{
-    open = b;
-}
-
-VisorInputI* GuideDebugGL::InputInterface()
-{
-    return input;
 }
 
 GuideDebugGL::GuideDebugGL(const Vector2i& ws,
@@ -74,10 +54,11 @@ GuideDebugGL::~GuideDebugGL()
     GLFWCallbackDelegator::Instance().DetachWindow(glfwWindow);
 }
 
-VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
+VisorError GuideDebugGL::Initialize(VisorCallbacksI& callbacks,
+                                    const KeyboardKeyBindings& keyBindings,
+                                    const MouseKeyBindings& mouseBindings,
+                                    MovementSchemeList&& moveSchemeList)
 {
-    input = &vInput;
-
     GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
 
     // Common Window Hints
@@ -128,8 +109,15 @@ VisorError GuideDebugGL::Initialize(VisorInputI& vInput)
     }
 
     // Set Callbacks
-    vInput.SetVisor(*this);
-    glfwCallback.AttachWindow(glfwWindow, this);
+    input = std::make_unique<VisorWindowInput>(callbacks,
+                                               open,
+                                               windowSize,
+                                               viewportSize,
+                                               *this,
+                                               keyBindings,
+                                               mouseBindings,
+                                               std::move(moveSchemeList));
+    glfwCallback.AttachWindow(glfwWindow, input.get());
 
     glfwMakeContextCurrent(glfwWindow);
     glfwSwapInterval(0);

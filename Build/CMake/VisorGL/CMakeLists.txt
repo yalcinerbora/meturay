@@ -12,6 +12,8 @@ set(SRC_GL
     ${CURRENT_SOURCE_DIR}/ToneMapGL.h)
 
 set(SRC_GUI
+    ${CURRENT_SOURCE_DIR}/InfoPanel.cpp
+    ${CURRENT_SOURCE_DIR}/InfoPanel.h
     ${CURRENT_SOURCE_DIR}/TMOptionWindow.cpp
     ${CURRENT_SOURCE_DIR}/TMOptionWindow.h
     ${CURRENT_SOURCE_DIR}/VisorGUI.cpp
@@ -19,7 +21,9 @@ set(SRC_GUI
     ${CURRENT_SOURCE_DIR}/VisorGUIWindowI.h
     ${CURRENT_SOURCE_DIR}/IcoMoonFontTable.h
     ${CURRENT_SOURCE_DIR}/MainStatusBar.cpp
-    ${CURRENT_SOURCE_DIR}/MainStatusBar.h)
+    ${CURRENT_SOURCE_DIR}/MainStatusBar.h
+    ${CURRENT_SOURCE_DIR}/VisorWindowInput.cpp
+    ${CURRENT_SOURCE_DIR}/VisorWindowInput.h)
 
 set(SRC_SHADERS
     ${SHADER_SOURCE_DIR}/AccumInput.comp
@@ -56,8 +60,7 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/VisorGL.cpp
     ${CURRENT_SOURCE_DIR}/VisorGL.h
     ${CURRENT_SOURCE_DIR}/VisorGLEntry.cpp
-    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h
-    ${CURRENT_SOURCE_DIR}/WindowGLI.h)
+    ${CURRENT_SOURCE_DIR}/VisorGLEntry.h)
 
 set(SRC_ALL
     ${SRC_GL}

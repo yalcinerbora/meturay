@@ -211,6 +211,9 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
 
         const AABB3f&               SceneExtents() const override;
 
+        size_t                      UsedGPUMemory() const override;
+        size_t                      UsedCPUMemory() const override;
+
         // OptiX Related
         void                        SetOptiXSystem(const OptiXSystem*);
         OptixTraversableHandle      GetBaseTraversable(int optixGPUIndex) const;

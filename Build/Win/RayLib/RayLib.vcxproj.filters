@@ -243,9 +243,6 @@
     <ClInclude Include="..\..\..\Source\RayLib\CoordinateConversion.h">
       <Filter>Utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\VisorWindowInput.h">
-      <Filter>VisorInput</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\MovementSchemes.h">
       <Filter>VisorInput</Filter>
     </ClInclude>
@@ -354,9 +351,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\FileSystemUtility.cpp">
       <Filter>Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\Source\RayLib\VisorWindowInput.cpp">
-      <Filter>VisorInput</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\RayLib\MovementSchemes.cpp">
       <Filter>VisorInput</Filter>

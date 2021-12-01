@@ -57,4 +57,6 @@ class RayTracer : public GPUTracer
                                 ~RayTracer() = default;
 
         TracerError             Initialize() override;
+
+        size_t                  TotalGPUMemoryUsed() const override;
 };

@@ -64,6 +64,9 @@ class ImageMemory
         template <class T>
         ImageGMemConst<T>   GMem() const;
 
+        // Memory Usage
+        size_t              UsedGPUMemory() const;
+
         // Direct CPU
         std::vector<Byte>   GetImageToCPU(const CudaSystem&);
 };
@@ -103,4 +106,9 @@ template<class T>
 inline ImageGMemConst<T> ImageMemory::GMem() const
 {
     return ImageGMemConst<T>{static_cast<T*>(dPixels), dSampleCounts};
+}
+
+inline size_t ImageMemory::UsedGPUMemory() const
+{
+    return memory.Size();
 }

@@ -517,3 +517,10 @@ void RefPGTracer::ResetImage()
     // Reset the shown image
     if(callbacks) callbacks->SendImageSectionReset(iPortionStart, iPortionEnd);
 }
+
+size_t RefPGTracer::TotalGPUMemoryUsed() const
+{
+    return (RayTracer::TotalGPUMemoryUsed() +
+            accumulationBuffer.UsedGPUMemory() +
+            lsMemory.Size() + camMemory.Size());
+}

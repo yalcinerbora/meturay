@@ -101,6 +101,8 @@ class PPGTracer final : public RayTracer
         void                    GenerateWork(const GPUCameraI&) override;
         bool                    Render() override;
         void                    Finalize() override;
+
+        size_t                  TotalGPUMemoryUsed() const override;
 };
 
 static_assert(IsTracerClass<PPGTracer>::value,

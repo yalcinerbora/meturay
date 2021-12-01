@@ -4,9 +4,10 @@
 #include <Imgui/imgui_internal.h>
 
 #include "RayLib/AnalyticData.h"
+#include "RayLib/TracerStructs.h"
+#include "RayLib/VisorCallbacksI.h"
 
 #include "IcoMoonFontTable.h"
-
 
 namespace ImGui
 {
@@ -38,21 +39,26 @@ namespace ImGui
     }
 }
 
-
 MainStatusBar::MainStatusBar()
     : paused(false)
     , running(true)
     , stopped(false)
 {}
 
-void MainStatusBar::Render(const AnalyticData& ad,
+void MainStatusBar::Render(VisorCallbacksI& cb,
+                           TracerRunState& rs,
+                           const TracerAnalyticData& ad,
                            const SceneAnalyticData& sad,
                            const Vector2i& iSize)
 {
     using namespace std::string_literals;
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar |
-                                    ImGuiWindowFlags_NoSavedSettings |
-                                    ImGuiWindowFlags_MenuBar;
+    constexpr ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar |
+                                              ImGuiWindowFlags_NoSavedSettings |
+                                              ImGuiWindowFlags_MenuBar;
+
+    // Pre-init button state if it changed by keyboard
+    SetButtonState(stopped, running, paused, rs);
+
     float height = ImGui::GetFrameHeight();
     if(ImGui::BeginViewportSideBar("##MainStatusBar", NULL, ImGuiDir_Down, height, window_flags))
     {
@@ -80,6 +86,7 @@ void MainStatusBar::Render(const AnalyticData& ad,
             ImGui::SameLine(ImGui::GetWindowContentRegionMax().x -
                             (buttonSize * 5 +
                              spacingSize * 6 + 2));
+
             ImGui::Separator();
             ImGui::Button(ICON_ICOMN_ARROW_LEFT);
             if(ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 1)
@@ -100,52 +107,66 @@ void MainStatusBar::Render(const AnalyticData& ad,
 
             if(ImGui::ToggleButton(ICON_ICOMN_STOP2, stopped))
             {
+                if(running || paused)
+                    cb.StartStopTrace(false);
+
                 stopped = true;
                 running = !stopped;
                 paused = !stopped;
+
             }
             if(ImGui::ToggleButton(ICON_ICOMN_PAUSE2, paused))
             {
                 if(!stopped)
+                {
+                    cb.PauseContTrace(paused);
                     running = !paused;
+                }
                 else paused = false;
             }
             if(ImGui::ToggleButton(ICON_ICOMN_PLAY3, running))
             {
+                if(stopped) cb.StartStopTrace(true);
+                else if(paused) cb.PauseContTrace(false);
+
                 running = true;
-                stopped = !running;
-                paused = !running;
+                stopped = false;
+                paused = false;
             }
             ImGui::EndMenuBar();
         }
     }
     ImGui::End();
+
+    rs = DetermineTracerState(stopped, running, paused);
 }
 
-
-void MainStatusBar::SetState(RenderState rs)
+TracerRunState MainStatusBar::DetermineTracerState(bool stopToggle,
+                                                   bool runToggle,
+                                                   bool pauseToggle)
 {
-    switch(rs)
-    {
-        case MainStatusBar::RUNNING:
-        {
-            stopped = paused = false;
-            running = true;
-            break;
-        }
-        case MainStatusBar::PAUSED:
-        {
-            running = stopped = false;
-            paused = true;
-            break;
-        }
-        case MainStatusBar::STOPPED:
-        {
-            running = paused = false;
-            stopped = true;
+    if(stopToggle)
+        return TracerRunState::STOPPED;
+    else if(pauseToggle)
+        return TracerRunState::PAUSED;
+    return TracerRunState::RUNNING;
+}
 
-            break;
-        }
-        default: break;
+void MainStatusBar::SetButtonState(bool& stopToggle,
+                                   bool& runToggle,
+                                   bool& pauseToggle,
+                                   TracerRunState tracerRunState)
+{
+    stopToggle = false;
+    runToggle = false;
+    pauseToggle = false;
+    switch(tracerRunState)
+    {
+        case TracerRunState::PAUSED:
+            pauseToggle = true; break;
+        case TracerRunState::RUNNING:
+            runToggle = true; break;
+        case TracerRunState::STOPPED:
+            stopToggle = true; break;
     }
 }

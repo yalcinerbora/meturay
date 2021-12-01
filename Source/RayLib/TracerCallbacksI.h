@@ -8,7 +8,7 @@
 #include "Constants.h"
 
 struct TracerError;
-struct AnalyticData;
+struct TracerAnalyticData;
 struct SceneAnalyticData;
 struct TracerParameters;
 struct VisorTransform;
@@ -23,7 +23,7 @@ class TracerCallbacksI
         virtual void    SendCrashSignal() = 0;
         virtual void    SendLog(const std::string) = 0;
         virtual void    SendError(TracerError) = 0;
-        virtual void    SendAnalyticData(AnalyticData) = 0;
+        virtual void    SendAnalyticData(TracerAnalyticData) = 0;
         virtual void    SendSceneAnalyticData(SceneAnalyticData) = 0;
         virtual void    SendImageSectionReset(Vector2i start = Zero2i,
                                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;

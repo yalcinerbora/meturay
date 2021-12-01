@@ -149,6 +149,17 @@ const AABB3f& GPUBaseAcceleratorLinear::SceneExtents() const
     return sceneAABB;
 }
 
+size_t GPUBaseAcceleratorLinear::UsedGPUMemory() const
+{
+    return leafMemory.Size() + rayLocMemory.Size();
+}
+
+size_t GPUBaseAcceleratorLinear::UsedCPUMemory() const
+{
+    return (idLookup.size() * sizeof(std::pair<uint32_t, uint32_t>) +
+            sizeof(GPUBaseAcceleratorLinear));
+}
+
 static_assert(IsTracerClass<GPUBaseAcceleratorLinear>::value,
               "GPUBaseAcceleratorLinear is not a Tracer Class.");
 

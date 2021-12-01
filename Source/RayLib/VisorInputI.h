@@ -12,11 +12,16 @@ Can be attached to a Visor to capture window actions
 
 class VisorCallbacksI;
 struct VisorTransform;
+struct SceneAnalyticData;
+struct TracerAnalyticData;
+class TracerOptions;
+struct TracerParameters;
 
 using KeyCallbacks = std::multimap<std::pair<KeyboardKeyType, KeyAction>, std::function<void()>>;
 using MouseButtonCallbacks = std::multimap<std::pair<MouseButtonType, KeyAction>, std::function<void()>>;
 
 class VisorI;
+struct TracerState;
 
 class WindowInputI
 {
@@ -32,8 +37,6 @@ class WindowInputI
         virtual                             ~WindowInputI() = default;
 
         // Interface
-        virtual void                        SetVisor(VisorI&) = 0;
-
         virtual void                        WindowPosChanged(int posX, int posY) = 0;
         virtual void                        WindowFBChanged(int fbWidth, int fbHeight) = 0;
         virtual void                        WindowSizeChanged(int width, int height) = 0;
@@ -60,14 +63,18 @@ class WindowInputI
 class VisorInputI : public WindowInputI
 {
     public:
-        virtual                             ~VisorInputI() = default;
-
+        virtual             ~VisorInputI() = default;
         // Interface
-        virtual void                        AttachVisorCallback(VisorCallbacksI&) = 0;
-        virtual VisorCallbacksI*            CurrentVisorCallback() const = 0;
+        // Renders GUI if available (GUI considered as an input interface)
+        virtual void        RenderGUI() = 0;
 
-        virtual void                        SetTransform(const VisorTransform&) = 0;
-        virtual void                        SetSceneCameraCount(uint32_t) = 0;
+        // Setters
+        virtual void        SetTransform(const VisorTransform&) = 0;
+        virtual void        SetSceneCameraCount(uint32_t) = 0;
+        virtual void        SetSceneAnalyticData(const SceneAnalyticData&) = 0;
+        virtual void        SetTracerAnalyticData(const TracerAnalyticData&) = 0;
+        virtual void        SetTracerOptions(const TracerOptions&) = 0;
+        virtual void        SetTracerParams(const TracerParameters&) = 0;
 };
 
 template <class Function, class... Args>

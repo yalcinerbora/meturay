@@ -213,7 +213,10 @@ class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
                                               const SurfaceAABBList&) override;
         TracerError                 Destruct(const CudaSystem&) override;
 
-        const AABB3f& SceneExtents() const override;
+        const AABB3f&               SceneExtents() const override;
+
+        size_t                      UsedGPUMemory() const override;
+        size_t                      UsedCPUMemory() const override;
 };
 
 #include "GPUAcceleratorBVH.hpp"

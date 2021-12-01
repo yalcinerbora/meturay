@@ -59,10 +59,12 @@ class GPUTracerI
         virtual void                    Finalize() = 0; // Finalize work (write to image)
 
         // Image Reated
-
         virtual void                    SetImagePixelFormat(PixelFormat) = 0;
         virtual void                    ReportionImage(Vector2i start = Zero2i,
                                                        Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         virtual void                    ResizeImage(Vector2i resolution) = 0;
         virtual void                    ResetImage() = 0;
+
+        // Misc
+        virtual size_t                  TotalGPUMemoryUsed() const = 0;
 };

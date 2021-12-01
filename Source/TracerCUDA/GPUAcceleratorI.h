@@ -134,4 +134,7 @@ class GPUBaseAcceleratorI
         virtual TracerError     Destruct(const CudaSystem&) = 0;
 
         virtual const AABB3f&   SceneExtents() const = 0;
+
+        virtual size_t          UsedGPUMemory() const = 0;
+        virtual size_t          UsedCPUMemory() const = 0;
 };

@@ -685,3 +685,19 @@ void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
     // and continue
     rayMemory.SwapRays();
 }
+
+size_t RayCasterOptiX::UsedGPUMemory() const
+{
+    size_t mem = 0;
+    for(const auto& accel : accelBatches)
+        mem += accel.second->UsedGPUMemory();
+    mem += baseAccelerator.UsedGPUMemory();
+    mem += rayMemory.UsedGPUMemory();
+
+    for(const auto& optixData : optixGPUData)
+    {
+        mem += optixData.paramsMemory.Size();
+        mem += optixData.sbtMemory.Size();
+    }
+    return mem;
+}

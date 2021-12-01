@@ -57,6 +57,12 @@
     <ClInclude Include="..\..\..\Source\VisorGL\MainStatusBar.h">
       <Filter>GUI</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\VisorWindowInput.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\VisorGL\InfoPanel.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\VisorGL\VisorGL.cpp" />
@@ -90,6 +96,12 @@
       <Filter>GuideDebug\Debug Renderers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\VisorGL\MainStatusBar.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\VisorGL\VisorWindowInput.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\VisorGL\InfoPanel.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
   </ItemGroup>

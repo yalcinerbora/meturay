@@ -17,11 +17,11 @@ the VisorGL singleton.
 #include "RayLib/ThreadVariable.h"
 #include "RayLib/AnalyticData.h"
 #include "RayLib/TracerOptions.h"
+#include "RayLib/VisorI.h"
 
 #include "ShaderGL.h"
 #include "VisorGUI.h"
 #include "ToneMapGL.h"
-#include "WindowGLI.h"
 
 // Basic command list implementation
 struct VisorGLCommand
@@ -54,7 +54,7 @@ struct VisorGLCommand
         VisorGLCommand&         operator=(VisorGLCommand&&) = default;
 };
 
-class VisorGL : public WindowGLI
+class VisorGL : public VisorI
 {
     private:
         static constexpr float      PostProcessTriData[6] =
@@ -84,7 +84,7 @@ class VisorGL : public WindowGLI
         static constexpr GLenum     U_END = 2;
 
     private:
-        VisorInputI*                input;
+        VisorCallbacksI*            visorCallbacks;
         GLFWwindow*                 window;
         bool                        open;
 
@@ -95,15 +95,9 @@ class VisorGL : public WindowGLI
         // GL Classes
         ToneMapGL                   toneMapGL;
 
-        //
-        AnalyticData                tracerAnalyticData;
-        SceneAnalyticData           sceneAnalyticData;
-        TracerOptions               currentTOpts;
-        TracerParameters            currentTParams;
-
         // Image portion list
         MPMCQueue<VisorGLCommand>   commandList;
-        ThreadVariable<Vector2i>    viewportSize;
+        Vector2i                    viewportSize;
 
         // Texture Related
         GLuint                      outputTextures[2];
@@ -115,26 +109,29 @@ class VisorGL : public WindowGLI
         GLuint                      sdrTexture;
         int                         currentIndex;
 
+        // Updated GUI Data that is used by Visor
+        ToneMapOptions              tmOptions;
+
         // Shader
-        ShaderGL                    vertPP;
-        ShaderGL                    fragPP;
-        ShaderGL                    compAccum;
+        ShaderGL                        vertPP;
+        ShaderGL                        fragPP;
+        ShaderGL                        compAccum;
 
         // Vertex
-        GLuint                      vao;
-        GLuint                      vBuffer;
+        GLuint                          vao;
+        GLuint                          vBuffer;
 
-        // GUI
-        std::unique_ptr<VisorGUI>   visorGUI;
+        // GUI / Input
+        std::unique_ptr<VisorInputI>    visorInput;
 
         // OGL Debug Context Callback
-        static void                 OGLCallbackRender(GLenum source,
-                                                      GLenum type,
-                                                      GLuint id,
-                                                      GLenum severity,
-                                                      GLsizei length,
-                                                      const char* message,
-                                                      const void* userParam);
+        static void             OGLCallbackRender(GLenum source,
+                                                  GLenum type,
+                                                  GLuint id,
+                                                  GLenum severity,
+                                                  GLsizei length,
+                                                  const char* message,
+                                                  const void* userParam);
 
         // Image Allocation
         void                    ReallocImages();
@@ -142,11 +139,6 @@ class VisorGL : public WindowGLI
         // Internal Command Handling
         void                    ProcessCommand(const VisorGLCommand&);
         void                    RenderImage();
-
-        void                    SetFBSizeFromInput(const Vector2i&) override;
-        void                    SetWindowSizeFromInput(const Vector2i&) override;
-        void                    SetOpenStateFromInput(bool) override;
-        VisorInputI*            InputInterface() override;
 
         // Helpers
         void                    GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
@@ -163,7 +155,10 @@ class VisorGL : public WindowGLI
                                 ~VisorGL();
 
         // Interface
-        VisorError              Initialize(VisorInputI&) override;
+        VisorError              Initialize(VisorCallbacksI&,
+                                           const KeyboardKeyBindings&,
+                                           const MouseKeyBindings&,
+                                           MovementSchemeList&&) override;
 
         bool                    IsOpen() override;
         void                    Render() override;
@@ -185,11 +180,11 @@ class VisorGL : public WindowGLI
         void                    SetWindowSize(const Vector2i& size) override;
         void                    SetFPSLimit(float) override;
         Vector2i                MonitorResolution() const override;
-        void                    SetTransform(const VisorTransform&) override;
-        void                    SetSceneCameraCount(uint32_t) override;
-        // Incoming Data From Tracer
+        // Updates (Data coming from Tracer Callbacks)
+        void                    Update(const VisorTransform&) override;
+        void                    Update(uint32_t sceneCameraCount) override;
         void                    Update(const SceneAnalyticData&) override;
-        void                    Update(const AnalyticData&) override;
+        void                    Update(const TracerAnalyticData&) override;
         void                    Update(const TracerOptions&) override;
         void                    Update(const TracerParameters&) override;
 

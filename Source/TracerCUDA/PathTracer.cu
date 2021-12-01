@@ -260,3 +260,9 @@ void PathTracer::GenerateWork(const GPUCameraI& dCam)
                                              true);
     currentDepth = 0;
 }
+
+size_t PathTracer::TotalGPUMemoryUsed() const
+{
+    return (RayTracer::TotalGPUMemoryUsed() +
+            lightSamplerMemory.Size());
+}

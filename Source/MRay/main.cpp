@@ -7,7 +7,6 @@
 #include "RayLib/ConfigParsers.h"
 // Visor
 #include "RayLib/VisorI.h"
-#include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
 #include "RayLib/VisorError.h"
 // Tracer
@@ -83,7 +82,6 @@ int main(int argc, const char* argv[])
     // Variables Related to the MRay
     SharedLibPtr<TracerSystemI> tracerSystem = {nullptr, nullptr};
     SharedLibPtr<GPUTracerI> tracer = {nullptr, nullptr};
-    std::unique_ptr<VisorInputI> visorInput = nullptr;
 
     // Parse Tracer Config
     TracerOptions tracerOptions;
@@ -125,10 +123,6 @@ int main(int argc, const char* argv[])
     }
 
     // Generate Visor
-    // First create visor input with teh specific key binds
-    visorInput = std::make_unique<VisorWindowInput>(std::move(keyBinds),
-                                                    std::move(mouseBinds),
-                                                    std::move(movementSchemeList));
     // Attach visors window callbacks to this input scheme
     // Additionally attach this specific visor to this?????????????
     SharedLib visorDLL(visorDLLName);
@@ -139,8 +133,6 @@ int main(int argc, const char* argv[])
                                              resolution,
                                              PixelFormat::RGBA_FLOAT);
     ERROR_CHECK_INT(DLLError, dError);
-    vError = visor->Initialize(*visorInput);
-    ERROR_CHECK_INT(VisorError, vError);
 
     // Generate Tracer
     SharedLib tracerDLL(tracerDLLName);
@@ -154,8 +146,13 @@ int main(int argc, const char* argv[])
                       tracerOptions, tracerParameters,
                       tracerTypeName,
                       Vector2i(resolution.data()));
+
+    // Init Visor with the self node (callbacks)
+    vError = visor->Initialize(selfNode, keyBinds, mouseBinds, std::move(movementSchemeList));
+    ERROR_CHECK_INT(VisorError, vError);
+
+    // Init Self Node
     nError = selfNode.Initialize();
-    visorInput->AttachVisorCallback(selfNode);
     ERROR_CHECK_INT(NodeError, nError);
 
     // Do work loop of the self node

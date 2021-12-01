@@ -31,7 +31,7 @@ struct SceneAnalyticData
     Vector2i                    workKeyMax;
 };
 
-struct AnalyticData
+struct TracerAnalyticData
 {
     // Performance
     double          throughput;
@@ -44,6 +44,6 @@ struct AnalyticData
 
     // Memory Related
     double          totalGPUMemoryMiB;  // MiB
-    double          totalCPUMemoryMiB;  // MiB
+    double          usedGPUMemoryMiB;  // MiB
 
 };

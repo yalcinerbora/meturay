@@ -238,6 +238,8 @@ class CudaSystem
         const GPUList&              SystemGPUs() const;
         const CudaGPU&              BestGPU() const;
 
+        size_t                      TotalMemory() const;
+
         // Device Synchronization
         void                        SyncAllGPUsMainStreamOnly() const;
         void                        SyncAllGPUs() const;
@@ -281,4 +283,14 @@ inline void CudaSystem::SyncAllGPUs() const
         break;
     }
     CUDA_CHECK(cudaSetDevice(currentDevice));
+}
+
+inline size_t CudaSystem::TotalMemory() const
+{
+    size_t memSize = 0;
+    for(const auto& gpu : systemGPUs)
+    {
+        memSize += gpu.TotalMemory();
+    }
+    return memSize;
 }

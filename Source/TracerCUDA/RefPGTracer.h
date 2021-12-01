@@ -107,6 +107,8 @@ class RefPGTracer : public RayTracer
                                                Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void                    ResizeImage(Vector2i resolution) override;
         void                    ResetImage() override;
+
+        size_t                  TotalGPUMemoryUsed() const override;
 };
 
 static_assert(IsTracerClass<RefPGTracer>::value,

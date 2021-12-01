@@ -8,7 +8,7 @@ enum class KeyboardKeyType;
 enum class MouseButtonType;
 enum class KeyAction;
 enum class VisorActionType;
-enum class CameraMode;
+enum class TracerCameraMode;
 
 // Tracer Related
 enum class ScenePartitionerType;
@@ -26,7 +26,7 @@ namespace EnumStringConverter
     std::string             MouseButtonTypeToString(MouseButtonType);
     std::string             KeyActionToString(KeyAction);
     std::string             VisorActionTypeToString(VisorActionType);
-    std::string             CameraModeToString(CameraMode);
+    std::string             CameraModeToString(TracerCameraMode);
 
     // Tracer Related
     std::string             ScenePartitionerTypeToString(ScenePartitionerType);
@@ -45,7 +45,7 @@ namespace EnumStringConverter
     MouseButtonType             StringToMouseButtonType(const std::string&);
     KeyAction                   StringToKeyAction(const std::string&);
     VisorActionType             StringToVisorActionType(const std::string&);
-    CameraMode                  StringToCameraMode(const std::string&);
+    TracerCameraMode            StringToCameraMode(const std::string&);
 
     // Tracer Related
     ScenePartitionerType        StringToScenePartitionerType(const std::string&);

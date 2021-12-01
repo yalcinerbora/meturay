@@ -49,6 +49,9 @@ class RayCasterI
         // Work Related
         virtual void                    OverrideWorkBits(const Vector2i newWorkBits) = 0;
 
+        // Memory Usage
+        virtual size_t                  UsedGPUMemory() const = 0;
+
 };
 
 inline Vector2i RayCasterI::DetermineMaxBitFromId(const Vector2i& maxIds)

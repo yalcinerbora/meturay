@@ -203,18 +203,13 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
 
 void VisorGL::RenderImage()
 {
-    // Clear
-    Vector2i fbSize;
-    if(viewportSize.CheckChanged(fbSize))
-    {
-        Vector2i vpOffset;
-        Vector2i vpSize;
-        GenAspectCorrectVP(vpOffset, vpSize,
-                           fbSize);
-
-        glViewport(vpOffset[0], vpOffset[1],
-                   vpSize[0], vpSize[1]);
-    }
+    // SetVP
+    Vector2i vpOffset;
+    Vector2i vpSize;
+    GenAspectCorrectVP(vpOffset, vpSize,
+                        viewportSize);
+    glViewport(vpOffset[0], vpOffset[1],
+                vpSize[0], vpSize[1]);
 
     // Clear Buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -232,50 +227,36 @@ void VisorGL::RenderImage()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void VisorGL::SetFBSizeFromInput(const Vector2i& fbSize)
-{
-    viewportSize = fbSize;
-}
-
-void VisorGL::SetWindowSizeFromInput(const Vector2i& winSize)
-{
-    vOpts.wSize = winSize;
-}
-
-void VisorGL::SetOpenStateFromInput(bool b)
-{
-    open = b;
-}
-
-VisorInputI* VisorGL::InputInterface()
-{
-    return input;
-}
-
 void VisorGL::GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
                                  const Vector2i& fbSize)
 {
+    if(fbSize == Zero2i)
+    {
+        vpOffset = Zero2i;
+        vpSize = Zero2i;
+        return;
+    }
+
     // Determine viewport by checking aspect ratio
-    Vector2i screenSize = viewportSize.Get();
     float imgAspect = static_cast<float>(imageSize[0]) / static_cast<float>(imageSize[1]);
-    float screenAspect = static_cast<float>(screenSize[0]) / static_cast<float>(screenSize[1]);
+    float screenAspect = static_cast<float>(fbSize[0]) / static_cast<float>(fbSize[1]);
 
     vpOffset = Zero2i;
     vpSize = Zero2i;
     if(imgAspect > screenAspect)
     {
-        float ySize = std::round(screenSize[1] * screenAspect / imgAspect);
-        float yOffset = std::round((static_cast<float>(screenSize[1]) - ySize) * 0.5f);
-        vpSize[0] = screenSize[0];
+        float ySize = std::round(fbSize[1] * screenAspect / imgAspect);
+        float yOffset = std::round((static_cast<float>(fbSize[1]) - ySize) * 0.5f);
+        vpSize[0] = fbSize[0];
         vpSize[1] = static_cast<int32_t>(ySize);
         vpOffset[1] = static_cast<int32_t>(yOffset);
     }
     else
     {
-        float xSize = std::round(screenSize[0] * imgAspect / screenAspect);
-        float xOffset = std::round((static_cast<float>(screenSize[0]) - xSize) * 0.5f);
+        float xSize = std::round(fbSize[0] * imgAspect / screenAspect);
+        float xOffset = std::round((static_cast<float>(fbSize[0]) - xSize) * 0.5f);
         vpSize[0] = static_cast<int32_t>(xSize);
-        vpSize[1] = screenSize[1];
+        vpSize[1] = fbSize[1];
         vpOffset[0] = static_cast<int32_t>(xOffset);
     }
 }
@@ -283,7 +264,7 @@ void VisorGL::GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
 VisorGL::VisorGL(const VisorOptions& opts,
                  const Vector2i& imgRes,
                  const PixelFormat& imagePixelFormat)
-    : input(nullptr)
+    : visorCallbacks(nullptr)
     , window(nullptr)
     , open(false)
     , vOpts(opts)
@@ -298,9 +279,10 @@ VisorGL::VisorGL(const VisorOptions& opts,
     , nearestSampler(0)
     , sdrTexture(0)
     , currentIndex(0)
+    , tmOptions(DefaultTMOptions)
     , vao(0)
     , vBuffer(0)
-    , visorGUI(nullptr)
+    , visorInput(nullptr)
 {}
 
 VisorGL::~VisorGL()
@@ -328,7 +310,7 @@ VisorGL::~VisorGL()
     glDeleteTextures(2, outputTextures);
     glDeleteTextures(2, &sdrTexture);
 
-    if(visorGUI) visorGUI = nullptr;
+    visorInput = nullptr;
 
     if(window != nullptr) glfwDestroyWindow(window);
     GLFWCallbackDelegator::Instance().DetachWindow(window);
@@ -373,10 +355,7 @@ void VisorGL::Render()
             tmOpts.doGamma = false;
             tmOpts.doToneMap = false;
         }
-        else if(visorGUI)
-            tmOpts = visorGUI->TMOptions();
-        else
-            tmOpts = DefaultTMOptions;
+        else tmOpts = tmOptions;
 
         // Always call this even if there are no parameters
         // set to do tone mapping since this function
@@ -392,9 +371,7 @@ void VisorGL::Render()
     RenderImage();
 
     // After Render GUI
-    if(vOpts.enableGUI) visorGUI->Render(tracerAnalyticData,
-                                         sceneAnalyticData,
-                                         imageSize);
+    visorInput->RenderGUI();
 
     // Finally Swap Buffers
     glfwSwapBuffers(window);
@@ -491,34 +468,34 @@ Vector2i VisorGL::MonitorResolution() const
     return Vector2i(mode->width, mode->height);
 }
 
-void VisorGL::SetTransform(const VisorTransform& c)
+void VisorGL::Update(const VisorTransform& c)
 {
-    if(input) input->SetTransform(c);
+    visorInput->SetTransform(c);
 }
 
-void VisorGL::SetSceneCameraCount(uint32_t c)
+void VisorGL::Update(uint32_t sceneCameraCount)
 {
-    if(input) input->SetSceneCameraCount(c);
+    visorInput->SetSceneCameraCount(sceneCameraCount);
 }
 
 void VisorGL::Update(const SceneAnalyticData& a)
 {
-    sceneAnalyticData = a;
+    visorInput->SetSceneAnalyticData(a);
 }
 
-void VisorGL::Update(const AnalyticData& a)
+void VisorGL::Update(const TracerAnalyticData& a)
 {
-    tracerAnalyticData = a;
+    visorInput->SetTracerAnalyticData(a);
 }
 
 void VisorGL::Update(const TracerOptions& tOpts)
 {
-    currentTOpts = tOpts;
+    visorInput->SetTracerOptions(tOpts);
 }
 
 void VisorGL::Update(const TracerParameters& tParams)
 {
-    currentTParams = tParams;
+    visorInput->SetTracerParams(tParams);
 }
 
 void VisorGL::SetRenderingContextCurrent()
@@ -547,10 +524,11 @@ void VisorGL::ReleaseRenderingContext()
     glfwMakeContextCurrent(nullptr);
 }
 
-VisorError VisorGL::Initialize(VisorInputI& vInput)
+VisorError VisorGL::Initialize(VisorCallbacksI& callbacks,
+                               const KeyboardKeyBindings& keyBindings,
+                               const MouseKeyBindings& mouseBindings,
+                               MovementSchemeList&& moveSchemeList)
 {
-    input = &vInput;
-
     GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
 
     // Common Window Hints
@@ -654,11 +632,6 @@ VisorError VisorGL::Initialize(VisorInputI& vInput)
         return VisorError::WINDOW_GENERATION_ERROR;
     }
 
-
-    // Set Callbacks
-    vInput.SetVisor(*this);
-    glfwCallback.AttachWindow(window, this);
-
     glfwMakeContextCurrent(window);
     // Initial Option set
     glfwSwapInterval((vOpts.vSyncOn) ? 1 : 0);
@@ -761,7 +734,28 @@ VisorError VisorGL::Initialize(VisorInputI& vInput)
 
     // CheckGUI and Initialize
     if(vOpts.enableGUI)
-        visorGUI = std::make_unique<VisorGUI>(window);
+        visorInput = std::make_unique<VisorGUI>(callbacks,
+                                                open, vOpts.wSize,
+                                                viewportSize,
+                                                tmOptions,
+                                                *this,
+                                                imageSize,
+                                                window,
+                                                keyBindings,
+                                                mouseBindings,
+                                                std::move(moveSchemeList));
+    else
+        visorInput = std::make_unique<VisorWindowInput>(callbacks,
+                                                        open, vOpts.wSize,
+                                                        viewportSize,
+                                                        *this,
+                                                        keyBindings,
+                                                        mouseBindings,
+                                                        std::move(moveSchemeList));
+
+
+    // Set Callbacks
+    glfwCallback.AttachWindow(window, visorInput.get());
 
     // Viewport does not get updated by the callback initially.
     // Set it here
@@ -778,8 +772,8 @@ void VisorGL::SaveImage(bool saveAsHDR)
 
     VisorGLCommand command;
     command.type = saveAsHDR
-                    ? VisorGLCommand::SAVE_IMAGE_HDR
-                    : VisorGLCommand::SAVE_IMAGE;
+        ? VisorGLCommand::SAVE_IMAGE_HDR
+        : VisorGLCommand::SAVE_IMAGE;
 
     commandList.Enqueue(std::move(command));
 }

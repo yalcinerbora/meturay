@@ -15,7 +15,6 @@
 
 // Visor
 #include "RayLib/VisorI.h"
-#include "RayLib/VisorWindowInput.h"
 #include "RayLib/MovementSchemes.h"
 #include "VisorGL/VisorGLEntry.h"
 #include "RayLib/VisorError.h"
@@ -83,7 +82,7 @@ class MockNode
         void        SendCrashSignal() override {}
         void        SendLog(const std::string) override;
         void        SendError(TracerError) override;
-        void        SendAnalyticData(AnalyticData) override {}
+        void        SendAnalyticData(TracerAnalyticData) override {}
         void        SendSceneAnalyticData(SceneAnalyticData) override {}
         void        SendImageSectionReset(Vector2i start, Vector2i end) override;
         void        SendImage(const std::vector<Byte> data,
@@ -227,7 +226,6 @@ class SimpleTracerSetup
 
         // Visor Related
         std::unique_ptr<VisorI>             visorView;
-        std::unique_ptr<VisorWindowInput>   visorInput;
 
         // Self Node
         std::unique_ptr<MockNode>           node;
@@ -262,7 +260,6 @@ inline SimpleTracerSetup::SimpleTracerSetup(std::string tracerType,
     , gpuScene(nullptr)
     , tracer(nullptr, nullptr)
     , visorView(nullptr)
-    , visorInput(nullptr)
     , node(nullptr)
     , tracerType(tracerType)
     , sceneName(sceneName)
@@ -314,9 +311,7 @@ inline bool SimpleTracerSetup::Init()
     movementSchemeList.emplace_back(new MovementSchemeFPS());
     KeyboardKeyBindings KeyBinds = VisorConstants::DefaultKeyBinds;
     MouseKeyBindings MouseBinds = VisorConstants::DefaultButtonBinds;
-    visorInput = std::make_unique<VisorWindowInput>(std::move(KeyBinds),
-                                                    std::move(MouseBinds),
-                                                    std::move(movementSchemeList));
+
     // Window Params
     VisorOptions visorOpts;
     visorOpts.stereoOn = false;
@@ -332,9 +327,6 @@ inline bool SimpleTracerSetup::Init()
     visorView = std::unique_ptr<VisorI>(CreateVisorGL(visorOpts,
                                                       MockNode::IMAGE_RESOLUTION,
                                                       IMAGE_PIXEL_FORMAT));
-
-    VisorError vError = visorView->Initialize(*visorInput);
-    ERROR_CHECK(VisorError, vError);
 
     visorView->SetRenderingContextCurrent();
     visorView->SetImageFormat(IMAGE_PIXEL_FORMAT);
@@ -366,8 +358,12 @@ inline bool SimpleTracerSetup::Init()
                                       WINDOW_DURATION);
     NodeError nodeE = node->Initialize();
     ERROR_CHECK(NodeError, nodeE);
-    visorInput->AttachVisorCallback(*node);
     tracer->AttachTracerCallbacks(*node);
+
+    // Init Visor with callbacks
+    VisorError vError = visorView->Initialize(*node, KeyBinds, MouseBinds,
+                                              std::move(movementSchemeList));
+    ERROR_CHECK(VisorError, vError);
 
     return true;
 }

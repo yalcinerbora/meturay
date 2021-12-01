@@ -471,17 +471,28 @@ TracerError GPUAccOptiXGroup<PGroup>::DestroyAccelerators(const std::vector<uint
 template <class PGroup>
 size_t GPUAccOptiXGroup<PGroup>::UsedGPUMemory() const
 {
-    // TODO:
-    return 0;
+    size_t mem = 0;
+    for(const auto& tData : optixDataPerGPU)
+        for(const auto& tMemory : tData.tMemories)
+            mem += tMemory.Size();
+
+    mem += memory.Size();
+    return mem;
 }
 
 template <class PGroup>
 size_t GPUAccOptiXGroup<PGroup>::UsedCPUMemory() const
 {
-    // TODO:
-    // Write allocator wrapper for which keeps track of total bytes allocated
-    // and deallocated
-    return 0;
+    return (primitiveIds.size() * sizeof(PrimitiveIdList) +
+            primitiveRanges.size() * sizeof(PrimitiveRangeList) +
+            primitiveMaterialKeys.size() * sizeof(HitKeyList) +
+            accRanges.size() * sizeof(Vector2ul) +
+            keyExpandOption.size() * sizeof(bool) +
+            sbtRecords.size() * sizeof(Record<void, void>) +
+            sbtCounts.size() * sizeof(uint32_t) +
+            idLookup.size() * sizeof(std::pair<uint32_t, uint32_t>) +
+            surfaceAABBs.size() * sizeof(std::pair<uint32_t, AABB3f>) +
+            sizeof(GPUAccOptiXGroup<PGroup>));
 }
 
 template <class PGroup>
