@@ -378,3 +378,5 @@ WorkingDir/*
 # Nothing on ext is maintained
 Ext/**
 
+
+Build/CMake/cmake-build-debug/
