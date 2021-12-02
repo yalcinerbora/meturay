@@ -123,36 +123,34 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.vert">
-      <Filter>Shaders</Filter>
-    </Text>
-    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.frag">
-      <Filter>Shaders</Filter>
-    </Text>
-    <Text Include="..\..\..\WorkingDir\Shaders\AccumInput.comp">
-      <Filter>Shaders</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp">
+    <None Include="..\..\..\Source\Shaders\AccumInput.comp">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp">
+    <None Include="..\..\..\Source\Shaders\AvgDivisor.comp">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\..\WorkingDir\Shaders\AvgDivisor.comp">
+    <None Include="..\..\..\Source\Shaders\DTreeRender.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.vert">
+    <None Include="..\..\..\Source\Shaders\DTreeRender.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.frag">
+    <None Include="..\..\..\Source\Shaders\LumReduction.comp">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\..\WorkingDir\Shaders\PGReferenceRender.comp">
+    <None Include="..\..\..\Source\Shaders\PGReferenceRender.comp">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\..\..\WorkingDir\Shaders\TextureMaxReduction.comp">
+    <None Include="..\..\..\Source\Shaders\PProcessGeneric.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\..\Source\Shaders\PProcessGeneric.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\..\Source\Shaders\TextureMaxReduction.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\..\..\Source\Shaders\TonemapAndGamma.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

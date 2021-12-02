@@ -51,15 +51,17 @@ project(METURay LANGUAGES CUDA CXX)
 
 # CMAKE Project Definitions and Source, Library Folders are seperate
 # Directories
-set(MRAY_SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Source)
-set(MRAY_LIB_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Lib)
-set(MRAY_LIB_INCLUDE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Lib/Include)
-set(MRAY_BIN_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Bin)
+set(MRAY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set(MRAY_SOURCE_DIRECTORY ${MRAY_DIRECTORY}/Source)
+set(MRAY_LIB_DIRECTORY ${MRAY_DIRECTORY}/Lib)
+set(MRAY_LIB_INCLUDE_DIRECTORY ${MRAY_DIRECTORY}/Lib/Include)
+set(MRAY_BIN_DIRECTORY ${MRAY_DIRECTORY}/Bin)
+set(MRAY_RESOURCE_DIRECTORY ${MRAY_DIRECTORY}/Resources)
 # Build is probably not used but its here for convenience
-set(MRAY_BUILD_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Build)
+set(MRAY_BUILD_DIRECTORY ${MRAY_DIRECTORY}/Build)
 # Working Dir is used for debugging (currently shaders are here so...)
 # For Visual Studio Projects this is copied to WorkingDir property for executables
-set(MRAY_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../WorkingDir)
+set(MRAY_WORKING_DIRECTORY ${MRAY_DIRECTORY}/WorkingDir)
 
 # Determine Platform and Config
 if(MSVC)

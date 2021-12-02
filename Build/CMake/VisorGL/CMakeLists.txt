@@ -1,5 +1,11 @@
 set(CURRENT_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/VisorGL)
-set(SHADER_SOURCE_DIR ${MRAY_WORKING_DIRECTORY}/Shaders)
+set(SHADER_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/Shaders)
+set(FONT_SOURCE_DIR ${MRAY_RESOURCE_DIRECTORY}/Fonts)
+
+# FONTS
+set(SRC_FONTS
+    ${FONT_SOURCE_DIR}/VeraMono.ttf
+    ${FONT_SOURCE_DIR}/icomoon.ttf)
 
 # SOURCES
 set(SRC_GL
@@ -106,6 +112,24 @@ target_link_libraries(VisorGL
                       Imgui
                       Imgui_tex_inspect
                       ${PLATFORM_SPEC_LIBRARIES})
+
+# Copy Shaders to DLL Loc
+add_custom_command(TARGET VisorGL POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E make_directory
+                   "${MRAY_CONFIG_BIN_DIRECTORY}/Shaders"
+
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                   ${SRC_SHADERS}
+                   "${MRAY_CONFIG_BIN_DIRECTORY}/Shaders")
+
+# Copy Fonts
+add_custom_command(TARGET VisorGL POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E make_directory
+                   "${MRAY_CONFIG_BIN_DIRECTORY}/Fonts"
+
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                   ${SRC_FONTS}
+                   "${MRAY_CONFIG_BIN_DIRECTORY}/Fonts")
 
 # Copy DLLS
 if(MSVC)

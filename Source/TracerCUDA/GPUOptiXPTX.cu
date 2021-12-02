@@ -76,7 +76,7 @@ void ReportIntersection(float newT, unsigned int kind,
     uint32_t hitStructAsInts[HitStructRegSize];
     memcpy(hitStructAsInts, reinterpret_cast<const Byte*>(&hs), sizeof(HitStruct));
 
-    // You think above code was bas, watch this
+    // You think above code was bad, watch this
     // Instead of switch I am using constexpr if
     // it hints that only one of this functions will be
     // available in this function better I think.

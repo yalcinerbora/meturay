@@ -71,7 +71,9 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glew32.dll" "$(OutDir)"
-xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
+xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"
+xcopy /Y "..\..\..\Resources\Fonts\*.*" "$(OutDir)Fonts"
+xcopy /Y "..\..\..\Source\Shaders\*.*" "$(OutDir)Shaders"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -97,7 +99,9 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glew32.dll" "$(OutDir)"
-xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
+xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"
+xcopy /Y "..\..\..\Resources\Fonts\*.*" "$(OutDir)Fonts"
+xcopy /Y "..\..\..\Source\Shaders\*.*" "$(OutDir)Shaders"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -152,26 +156,16 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\glfw3.dll" "$(OutDir)"</Command>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.frag">
-      <FileType>Document</FileType>
-    </Text>
-    <Text Include="..\..\..\WorkingDir\Shaders\PProcessGeneric.vert">
-      <FileType>Document</FileType>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\..\WorkingDir\Shaders\AccumInput.comp">
-      <FileType>Document</FileType>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\WorkingDir\Shaders\AvgDivisor.comp" />
-    <None Include="..\..\..\WorkingDir\Shaders\LumReduction.comp" />
-    <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.frag" />
-    <None Include="..\..\..\WorkingDir\Shaders\DTreeRender.vert" />
-    <None Include="..\..\..\WorkingDir\Shaders\PGReferenceRender.comp" />
-    <None Include="..\..\..\WorkingDir\Shaders\TextureMaxReduction.comp" />
-    <None Include="..\..\..\WorkingDir\Shaders\TonemapAndGamma.comp" />
+    <None Include="..\..\..\Source\Shaders\AccumInput.comp" />
+    <None Include="..\..\..\Source\Shaders\AvgDivisor.comp" />
+    <None Include="..\..\..\Source\Shaders\DTreeRender.frag" />
+    <None Include="..\..\..\Source\Shaders\DTreeRender.vert" />
+    <None Include="..\..\..\Source\Shaders\LumReduction.comp" />
+    <None Include="..\..\..\Source\Shaders\PGReferenceRender.comp" />
+    <None Include="..\..\..\Source\Shaders\PProcessGeneric.frag" />
+    <None Include="..\..\..\Source\Shaders\PProcessGeneric.vert" />
+    <None Include="..\..\..\Source\Shaders\TextureMaxReduction.comp" />
+    <None Include="..\..\..\Source\Shaders\TonemapAndGamma.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

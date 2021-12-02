@@ -6,6 +6,7 @@
 
 #include "RayLib/Log.h"
 #include "RayLib/UTF8StringConversion.h"
+#include "RayLib/FileSystemUtility.h"
 
 #include <filesystem>
 
@@ -52,12 +53,16 @@ ShaderGL::ShaderGL(ShaderType t, const std::u8string& path)
     , valid(false)
 {
     const std::u8string onlyFileName = std::filesystem::path(path).filename().u8string();
+    std::filesystem::path execPath = Utility::CurrentExecPath();
+    std::filesystem::path filePath(path);
+    std::filesystem::path fullPath = execPath / filePath;
 
-    std::streamoff size = std::ifstream(std::filesystem::path(path),
+
+    std::streamoff size = std::ifstream(fullPath,
                                         std::ifstream::ate |
                                         std::ifstream::binary).tellg();
     std::vector<char> source(size + 1, 0);
-    std::ifstream shaderFile = std::ifstream(std::filesystem::path(path));
+    std::ifstream shaderFile = std::ifstream(fullPath);
     assert(shaderFile.is_open());
     shaderFile.read(source.data(), source.size());
 

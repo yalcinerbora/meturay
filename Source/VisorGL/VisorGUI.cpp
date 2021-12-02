@@ -48,6 +48,8 @@ VisorGUI::VisorGUI(VisorCallbacksI& cb,
     float scaledPixelSize = std::roundf(PIXEL_SIZE * x);
 
     // Set Scaled Fonts
+    const std::string execPath = Utility::CurrentExecPath();
+
     ImGuiIO& io = ImGui::GetIO();
     io.Fonts->Clear();
     ImFontConfig config;
@@ -55,7 +57,8 @@ VisorGUI::VisorGUI(VisorCallbacksI& cb,
     config.PixelSnapH = false;
     config.MergeMode = false;
     std::string monoTTFPath = Utility::MergeFileFolder("Fonts", "VeraMono.ttf");
-    io.Fonts->AddFontFromFileTTF(monoTTFPath.c_str(),
+    std::string fullMonoTTFPath = Utility::MergeFileFolder(execPath, monoTTFPath);
+    io.Fonts->AddFontFromFileTTF(fullMonoTTFPath.c_str(),
                                  config.SizePixels,
                                  &config);
     // Icomoon
@@ -67,7 +70,8 @@ VisorGUI::VisorGUI(VisorCallbacksI& cb,
     config.GlyphOffset = ImVec2(0, 4);
     static const ImWchar icon_ranges[] = {ICON_MIN_ICOMN, ICON_MAX_ICOMN, 0};
     std::string ofiTTFPath = Utility::MergeFileFolder("Fonts", FONT_ICON_FILE_NAME_ICOMN);
-    io.Fonts->AddFontFromFileTTF(ofiTTFPath.c_str(),
+    std::string fullOfiTTFPath = Utility::MergeFileFolder(execPath, ofiTTFPath);
+    io.Fonts->AddFontFromFileTTF(fullOfiTTFPath.c_str(),
                                  scaledPixelSize,
                                  &config, icon_ranges);
 
