@@ -96,8 +96,8 @@ template<class GPUCamera, class PGroup,
 inline CPUCameraGroupP<GPUCamera, PGroup, SGen>::CPUCameraGroupP(const GPUPrimitiveGroupI& eg)
 
     : pg(static_cast<const PGroup&>(eg))
-    , cameraCount(0)
     , dGPUCameras(nullptr)
+    , cameraCount(0)
 {}
 
 template<class GPUCamera, class PGroup,

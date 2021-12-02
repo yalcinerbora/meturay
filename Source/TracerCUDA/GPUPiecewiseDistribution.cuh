@@ -159,8 +159,8 @@ __host__ __device__ HYBRID_INLINE
 GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
                                                  const float* dPDFList,
                                                  uint32_t count)
-    : gCDF(dCDFList)
-    , gPDF(dPDFList)
+    : gPDF(dPDFList)
+    , gCDF(dCDFList)
     , count(count)
 {}
 

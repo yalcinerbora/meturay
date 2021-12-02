@@ -105,8 +105,8 @@ inline GPULightSpot::GPULightSpot(// Per Light Data
                                   const GPUTransformI& gTrans)
     : GPULightP(gRad, mediumIndex, hk, gTrans)
     , position(gTrans.LocalToWorld(position))
-    , direction(gTrans.LocalToWorld(direction, true))
     , cosMin(aperture[0])
+    , direction(gTrans.LocalToWorld(direction, true))
     , cosMax(aperture[1])
 {}
 

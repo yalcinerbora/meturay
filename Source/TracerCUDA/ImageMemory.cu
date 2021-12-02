@@ -95,11 +95,11 @@ ImageMemory::ImageMemory(const Vector2i& offset,
                          const Vector2i& size,
                          const Vector2i& resolution,
                          PixelFormat f)
-    : segmentSize(size)
+    : format(f)
+    , pixelSize(static_cast<int>(ImageIOI::FormatToPixelSize(format)))
+    , segmentSize(size)
     , segmentOffset(offset)
     , resolution(resolution)
-    , format(f)
-    , pixelSize(static_cast<int>(ImageIOI::FormatToPixelSize(format)))
 {}
 
 void ImageMemory::SetPixelFormat(PixelFormat f, const CudaSystem& s)

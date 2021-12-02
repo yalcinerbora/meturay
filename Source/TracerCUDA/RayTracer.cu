@@ -12,9 +12,9 @@ RayTracer::RayTracer(const CudaSystem& s,
                      const GPUSceneI& scene,
                      const TracerParameters& param)
     : GPUTracer(s, scene, param)
-    , scene(scene)
     , dAuxIn(&auxBuffer0)
     , dAuxOut(&auxBuffer1)
+    , scene(scene)
     , totalSamplePerPixel(0)
 {}
 

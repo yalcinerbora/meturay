@@ -39,12 +39,12 @@ OutputWriter<AuxType>::OutputWriter(HitKey* gOutBoundKeys,
                                     RayGMem* gOutRays,
                                     AuxType* gOutAux,
                                     uint32_t maxOut)
-    : gOutRays(gOutRays)
-    , gOutAux(gOutAux)
-    , maxOut(maxOut)
-    , gOutBoundKeys(gOutBoundKeys)
-    , isWritten{false, false, false, false,
+    : isWritten{false, false, false, false,
                 false, false, false, false}
+    , gOutRays(gOutRays)
+    , gOutAux(gOutAux)
+    , gOutBoundKeys(gOutBoundKeys)
+    , maxOut(maxOut)
 {}
 
 template<class AuxType>

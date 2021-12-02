@@ -114,8 +114,8 @@ void STree::LoadSDTree(const std::string& path, const CudaSystem& system)
 
 STree::STree(const AABB3f& sceneExtents,
              const CudaSystem& system)
-    : nodeCount(0)
-    , dSTree(nullptr)
+    : dSTree(nullptr)
+    , nodeCount(0)
 {
     ExpandTree(INITIAL_NODE_CAPACITY);
 

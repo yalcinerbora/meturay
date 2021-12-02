@@ -127,9 +127,8 @@ else()
                         $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
                         $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
                         $<$<COMPILE_LANGUAGE:CXX>:-g3>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wextra>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wpedantic>
+                        # Directly passing Wall etc. causes many warnings
+                        # $<$<COMPILE_LANGUAGE:CUDA>:-Wreorder>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-g3>)
 endif()
 

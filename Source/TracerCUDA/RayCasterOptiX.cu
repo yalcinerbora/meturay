@@ -11,13 +11,13 @@
 
 RayCasterOptiX::RayCasterOptiX(const GPUSceneI& gpuScene,
                                const CudaSystem& system)
-    : baseAccelerator(*gpuScene.BaseAccelerator())
-    , accelBatches(gpuScene.AcceleratorBatchMappings())
-    , boundaryTransformIndex(gpuScene.BoundaryTransformIndex())
-    , maxAccelBits(DetermineMaxBitFromId(gpuScene.MaxAccelIds()))
+    : maxAccelBits(DetermineMaxBitFromId(gpuScene.MaxAccelIds()))
     , maxWorkBits(DetermineMaxBitFromId(gpuScene.MaxMatIds()))
     , maxHitSize(gpuScene.HitStructUnionSize())
+    , boundaryTransformIndex(gpuScene.BoundaryTransformIndex())
     , cudaSystem(system)
+    , baseAccelerator(*gpuScene.BaseAccelerator())
+    , accelBatches(gpuScene.AcceleratorBatchMappings())
     , currentRayCount(0)
     , optixSystem(system)
     , rayMemory(system.BestGPU())

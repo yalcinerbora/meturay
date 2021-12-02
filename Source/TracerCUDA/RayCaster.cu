@@ -9,14 +9,14 @@
 // Constructors & Destructor
 RayCaster::RayCaster(const GPUSceneI& gpuScene,
                      const CudaSystem& system)
-    : baseAccelerator(*gpuScene.BaseAccelerator())
-    , accelBatches(gpuScene.AcceleratorBatchMappings())
-    , boundaryTransformIndex(gpuScene.BoundaryTransformIndex())
+    : rayMemory(system.BestGPU())
     , maxAccelBits(DetermineMaxBitFromId(gpuScene.MaxAccelIds()))
     , maxWorkBits(DetermineMaxBitFromId(gpuScene.MaxMatIds()))
     , maxHitSize(gpuScene.HitStructUnionSize())
-    , rayMemory(system.BestGPU())
+    , boundaryTransformIndex(gpuScene.BoundaryTransformIndex())
     , cudaSystem(system)
+    , baseAccelerator(*gpuScene.BaseAccelerator())
+    , accelBatches(gpuScene.AcceleratorBatchMappings())
     , currentRayCount(0)
 {}
 

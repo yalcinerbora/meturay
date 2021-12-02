@@ -62,8 +62,6 @@ class RayCasterOptiX : public RayCasterI
         // GPU Memory
         RayMemory                       rayMemory;
         const GPUTransformI**           dGlobalTransformArray;
-        // Debug
-        OptixTraversableHandle          gas;
 
         // Funcs
         TracerError                 CreateProgramGroups(const std::string& rgFuncName,

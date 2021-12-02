@@ -69,13 +69,13 @@ void MainStatusBar::Render(VisorCallbacksI& cb,
             std::string memUsage = fmt::format("{:.1f}MiB / {:.1f}GiB",
                                                usedGPUMemMiB, totalGPUMemGiB);
 
-            ImGui::Text(memUsage.c_str());
+            ImGui::Text("%s", memUsage.c_str());
             ImGui::Separator();
-            ImGui::Text((std::to_string(iSize[0]) + "x" + std::to_string(iSize[1])).c_str());
+            ImGui::Text("%s", (std::to_string(iSize[0]) + "x" + std::to_string(iSize[1])).c_str());
             ImGui::Separator();
-            ImGui::Text(fmt::format("{:>7.3f}{:s}", ad.throughput, ad.throughputSuffix).c_str());
+            ImGui::Text("%s", fmt::format("{:>7.3f}{:s}", ad.throughput, ad.throughputSuffix).c_str());
             ImGui::Separator();
-            ImGui::Text((fmt::format("{:>6.0f}{:s}", ad.workPerPixel, ad.workPerPixelSuffix).c_str()));
+            ImGui::Text("%s", (fmt::format("{:>6.0f}{:s}", ad.workPerPixel, ad.workPerPixelSuffix).c_str()));
             ImGui::Separator();
 
             std::string prefix = std::string(RENDERING_NAME);
@@ -84,7 +84,7 @@ void MainStatusBar::Render(VisorCallbacksI& cb,
                 body += " ("s + std::string(PAUSED_NAME) + ")"s;
             else if(stopped)
                 body += " ("s + std::string(STOPPED_NAME) + ")"s;
-            ImGui::Text(body.c_str());
+            ImGui::Text("%s", body.c_str());
 
             float buttonSize = (ImGui::CalcTextSize(ICON_ICOMN_ARROW_LEFT).x +
                                 ImGui::GetStyle().FramePadding.x * 2.0f);
@@ -149,7 +149,7 @@ void MainStatusBar::Render(VisorCallbacksI& cb,
 }
 
 TracerRunState MainStatusBar::DetermineTracerState(bool stopToggle,
-                                                   bool runToggle,
+                                                   bool,
                                                    bool pauseToggle)
 {
     if(stopToggle)
@@ -175,5 +175,6 @@ void MainStatusBar::SetButtonState(bool& stopToggle,
             runToggle = true; break;
         case TracerRunState::STOPPED:
             stopToggle = true; break;
+        default: break;
     }
 }

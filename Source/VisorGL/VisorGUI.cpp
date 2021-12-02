@@ -24,14 +24,14 @@ VisorGUI::VisorGUI(VisorCallbacksI& cb,
     : VisorWindowInput(cb, isWindowOpen,
                        windowSize, viewportSize, saver,
                        kb, mb, std::move(mvList))
-    , bottomBarOn(true)
-    , topBarOn(true)
     , tmWindow(tmOpts)
-    , imageSize(imageSize)
+    , topBarOn(true)
+    , bottomBarOn(true)
     , tracerAnalyticData{}
     , sceneAnalyticData{}
     , currentTOpts{}
     , currentTParams{}
+    , imageSize(imageSize)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

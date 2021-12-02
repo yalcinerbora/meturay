@@ -84,7 +84,6 @@ class VisorGL : public VisorI
         static constexpr GLenum     U_END = 2;
 
     private:
-        VisorCallbacksI*            visorCallbacks;
         GLFWwindow*                 window;
         bool                        open;
 

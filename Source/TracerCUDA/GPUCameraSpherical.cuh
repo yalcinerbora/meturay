@@ -132,11 +132,11 @@ inline GPUCameraSpherical::GPUCameraSpherical(float pixelRatio,
                                               uint16_t mediumId, HitKey hk,
                                               const GPUTransformI& gTrans)
     : GPUCameraI(mediumId, hk, gTrans)
-    , position(gTrans.LocalToWorld(pos))
-    , up(gTrans.LocalToWorld(upp))
-    , direction(gTrans.LocalToWorld(dir))
-    , nearFar(nearFar)
     , pixelRatio(pixelRatio)
+    , position(gTrans.LocalToWorld(pos))
+    , direction(gTrans.LocalToWorld(dir))
+    , up(gTrans.LocalToWorld(upp))
+    , nearFar(nearFar)
 {
     // Camera Vector Correction
     right = Cross(direction, up).Normalize();

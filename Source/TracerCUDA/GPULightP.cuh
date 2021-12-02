@@ -163,13 +163,13 @@ inline CPULightGroupP<GPULight, PGroup, SGen>::CPULightGroupP(const GPUPrimitive
                                                               const CudaGPU& gpu)
     : gpu(gpu)
     , pg(static_cast<const PGroup&>(pg))
-    , lightCount(0)
+    , dGPULights(nullptr)
     , texDataCount(0)
     , constDataCount(0)
-    , dGPULights(nullptr)
     , dConstantRadiance(nullptr)
     , dTextureRadiance(nullptr)
     , dRadiances(nullptr)
+    , lightCount(0)
 {}
 
 template<class GPULight, class PGroup,

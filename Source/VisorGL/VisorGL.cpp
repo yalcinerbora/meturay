@@ -264,8 +264,7 @@ void VisorGL::GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
 VisorGL::VisorGL(const VisorOptions& opts,
                  const Vector2i& imgRes,
                  const PixelFormat& imagePixelFormat)
-    : visorCallbacks(nullptr)
-    , window(nullptr)
+    : window(nullptr)
     , open(false)
     , vOpts(opts)
     , imageSize(imgRes)
