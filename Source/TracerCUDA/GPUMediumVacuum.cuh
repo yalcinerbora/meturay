@@ -140,10 +140,10 @@ inline uint32_t CPUMediumVacuum::MediumCount() const
 
 inline size_t CPUMediumVacuum::UsedGPUMemory() const
 {
-    return 0;
+    return memory.Size();
 }
 
 inline size_t CPUMediumVacuum::UsedCPUMemory() const
 {
-    return memory.Size();
+    return sizeof(CPUMediumVacuum);
 }

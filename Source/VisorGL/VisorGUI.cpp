@@ -28,6 +28,10 @@ VisorGUI::VisorGUI(VisorCallbacksI& cb,
     , topBarOn(true)
     , tmWindow(tmOpts)
     , imageSize(imageSize)
+    , tracerAnalyticData{}
+    , sceneAnalyticData{}
+    , currentTOpts{}
+    , currentTParams{}
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

@@ -105,7 +105,10 @@ if(MSVC)
                         # Ignore inline functions are not defined warning
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4984>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4506>
-                        )
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3>
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zi>
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/external:W0>)
+                        # DROPPED W4 On MSVC it shows many uncessary info
                         # These Flags for W4 however /external does not work properly i think
                         # it still returns warnings and clutters the code extensively
                         # Thus these are commented out
@@ -121,7 +124,11 @@ else()
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall>
                         $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
                         $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
-                        $<$<COMPILE_LANGUAGE:CXX>:-g3>)
+                        $<$<COMPILE_LANGUAGE:CXX>:-g3>
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wall>
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wextra>
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-Wpedantic>
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-g3>)
 endif()
 
 # Cuda Compile Options

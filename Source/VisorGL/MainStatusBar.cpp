@@ -64,6 +64,13 @@ void MainStatusBar::Render(VisorCallbacksI& cb,
     {
         if(ImGui::BeginMenuBar())
         {
+            double usedGPUMemMiB = ad.usedGPUMemoryMiB;
+            double totalGPUMemGiB = ad.totalGPUMemoryMiB / 1024.0;
+            std::string memUsage = fmt::format("{:.1f}MiB / {:.1f}GiB",
+                                               usedGPUMemMiB, totalGPUMemGiB);
+
+            ImGui::Text(memUsage.c_str());
+            ImGui::Separator();
             ImGui::Text((std::to_string(iSize[0]) + "x" + std::to_string(iSize[1])).c_str());
             ImGui::Separator();
             ImGui::Text(fmt::format("{:>7.3f}{:s}", ad.throughput, ad.throughputSuffix).c_str());

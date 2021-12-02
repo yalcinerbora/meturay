@@ -85,7 +85,7 @@ class CPULightGroupNull final : public CPULightGroupI
         const GPULightList&         GPULights() const override { return lList; }
         const GPUEndpointList&      GPUEndpoints() const override {return epList;}
         const CudaGPU&              GPU() const override { return gpu; }
-        uint32_t				    EndpointCount() const override { return 0; }
+        uint32_t				        EndpointCount() const override { return 0; }
         const std::vector<HitKey>&  PackedHitKeys() const override { return hkList; }
         uint32_t                    MaxInnerId() const override { return 1; }
 
