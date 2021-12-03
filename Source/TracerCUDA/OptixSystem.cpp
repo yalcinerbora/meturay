@@ -92,6 +92,7 @@ OptiXSystem::~OptiXSystem()
     {
         OPTIX_CHECK(optixDeviceContextDestroy(context));
     }
+    spdlog::drop(OPTIX_LOGGER_NAME);
 }
 
 const std::vector<OptiXSystem::OptixDevice>& OptiXSystem::OptixCapableDevices() const
