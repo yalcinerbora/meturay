@@ -187,18 +187,6 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
     float sinPhi = sin(thetaPhi[1]);
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
-
-    //if(isnan(pdf))
-    //    printf("NAN PDF %f, (uv) (%f, %f) phi %f\n"
-    //           " d  (%f, %f, %f)\n"
-    //           " dY (%f, %f, %f)\n"
-    //           " dZ (%f, %f, %f)\n"
-    //           "________________\n",
-    //           pdf, u, v, thetaPhi[1],
-    //           direction[0], direction[1], direction[2],
-    //           dirYUp[0], dirYUp[1], dirYUp[2],
-    //           dirZUp[0], dirZUp[1], dirZUp[2]);
-
     return pdf;
 }
 
@@ -223,12 +211,6 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
                                         //
                                         const UVSurface& surface) const
 {
-    //printf("WtT: %f, %f, %f, %f\n",
-    //       surface.worldToTangent[0],
-    //       surface.worldToTangent[1],
-    //       surface.worldToTangent[2],
-    //       surface.worldToTangent[3]);
-
     // Convert Y up from Z up
     Vector3 woTrans = GPUSurface::ToTangent(wo, gTransform.ToLocalRotation());
     Vector3 woZup = -Vector3(woTrans[2], woTrans[0], woTrans[1]);
@@ -241,13 +223,6 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
     // phi range [0, pi]
     float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
-
-    //printf("Received Light from (%f, %f, %f)\n"
-    //       "Zup     : %f, %f, %f\n"
-    //       "UV      : %f, %f\n",
-    //       wo[0], wo[1], wo[2],
-    //       woZup[0], woZup[1], woZup[2],
-    //       u, v);
 
     // Gen Directional vector
     Vector2 uv = Vector2(u, v);

@@ -309,7 +309,6 @@ void PathTracerPathWork(// Output
                                          gMatData,
                                          matIndex,
                                          0);
-
     // Factor the radiance of the surface
     Vector3f pathRadianceFactor = radianceFactor * reflectance;
     // Check singularities

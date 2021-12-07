@@ -427,16 +427,20 @@ void PPGTracerPathWork(// Output
         pdfPath = BxDF_DTreeSampleRatio          * pdfBxDF +
                   (1.0f - BxDF_DTreeSampleRatio) * pdfTree;
 
+
+
+
+        // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))
             printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
                    (xi < BxDF_DTreeSampleRatio) ? "BxDF": "Tree",
                    pdfPath, pdfBxDF, pdfTree, BxDF_DTreeSampleRatio);
-        if(rayPath.getDirection().HasNaN())
+        if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
             printf("[%s] NAN DIR %f, %f, %f\n",
-                   (xi < BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
-                   rayPath.getDirection()[0],
-                   rayPath.getDirection()[1],
-                   rayPath.getDirection()[2]);
+                    (xi < BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
+                    rayPath.getDirection()[0],
+                    rayPath.getDirection()[1],
+                    rayPath.getDirection()[2]);
         if(reflectance.HasNaN())
             printf("[%s] NAN REFL %f %f %f\n",
                    (xi < BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
@@ -444,10 +448,9 @@ void PPGTracerPathWork(// Output
                    reflectance[1],
                    reflectance[2]);
 
-        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree) ||
-           rayPath.getDirection().HasNaN() ||
-           reflectance.HasNaN())
-            return;
+        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree) ||
+        //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
+        //    return;
     }
     else
     {

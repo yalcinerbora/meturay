@@ -172,13 +172,6 @@ inline void GPUCameraSpherical::GenerateRay(// Output
                                             // Options
                                             bool antiAliasOn) const
 {
-    //if(threadIdx.x == 0)
-    //{
-    //    printf("SI: %d, %d | SM: %d, %d\n",
-    //           sampleId[0], sampleMax[1],
-    //           sampleMax[0], sampleMax[1]);
-    //}
-
     // Create random location over sample pixel
     Vector2 randomOffset = (antiAliasOn)
                                 ? Vector2(GPUDistribution::Uniform<float>(rng),
@@ -210,12 +203,6 @@ inline void GPUCameraSpherical::GenerateRay(// Output
     Matrix3x3 viewMat;
     TransformGen::Space(viewMat, right, up, direction);
     dirYUp = viewMat * dirYUp;
-
-    // DEBUG
-    //printf("NC: (%f, %f), DIR: (%f, %f, %f)\n",
-    //       normCoords[0], normCoords[1],
-    //       dirYUp[0], dirYUp[1], dirYUp[2]);
-    //printf("%f, %f\n", sphericalCoords[0], sphericalCoords[1]);
 
     // Initialize Ray
     ray.ray = RayF(dirYUp, position);

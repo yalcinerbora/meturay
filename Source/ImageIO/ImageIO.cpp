@@ -139,8 +139,6 @@ ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
     uint32_t i = 0;
     for(auto c = channels.begin(); c != channels.end(); c++)
     {
-        //const Imf::Channel& channel = c.channel();
-
         // Force order to RGB (i.e. BGR is provided etc.)
         uint32_t channelIndex;
         if(std::string(c.name()) == "R")
@@ -152,11 +150,14 @@ ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
         // Just use the current order if name is not R,G,B
         else channelIndex = i;
 
-        // TODO: change this when half precision textures etc. is implemented
+        // TODO: change this when half precision textures etc. are implemented
         // Force load float
+        size_t xStride = pixelSize;
+        size_t yStride = pixelSize * width;
+
         Imf::Slice slice(Imf::PixelType::FLOAT,
                          reinterpret_cast<char*>(data.data() + channelIndex * channelSize),
-                         pixelSize, pixelSize * width);
+                         xStride, yStride);
         fb.insert(c.name(), slice);
         i++;
     }
@@ -487,34 +488,6 @@ ImageIOError ImageIO::ReadImage_OpenEXR(std::vector<Byte>& pixels,
         std::copy(scanLine1, scanLine1 + scanLineSize, scanLine0);
         std::copy(tempScanLine.data(), tempScanLine.data() + scanLineSize, scanLine1);
     }
-
-
-
-
-    //// Convert to float vector and Invert Y Axis
-    //pixels.resize(dimension[0] * dimension[1] * FormatToPixelSize(pf));
-    //for(uint32_t y = 0; y < dimension[1]; y++)
-    //for(uint32_t x = 0; x < dimension[0]; x++)
-    //{
-    //    uint32_t invertexY = dimension[1] - y - 1;
-    //    uint32_t outIndex = invertexY * dimension[0] + x;
-
-    //    const Imf::Rgba& inPixel = exrPixels[y][x];
-    //    float* outPixelPtr = reinterpret_cast<float*>(pixels.data() + outIndex * FormatToPixelSize(pf));
-
-    //    for(int8_t i = 0; i < FormatToChannelCount(pf); i++)
-    //    {
-    //        Imath::half channel = (i == 0) ? inPixel.r :
-    //                              (i == 1) ? inPixel.g :
-    //                              (i == 2) ? inPixel.b :
-    //                              (i == 3) ? inPixel.a : Imath::half();
-
-    //        if(channel.isNan() || channel.isInfinity())
-    //            METU_ERROR_LOG("HALF [{:d}, {:d}], pixel channel is {:f}", x, y, channel);
-
-    //        outPixelPtr[i] = static_cast<float>(channel);
-    //    }
-    //}
     return ImageIOError::OK;
 }
 

@@ -66,17 +66,11 @@ struct UnrealDeviceFuncs
         float metallic = (*matData.dMetallic[matId])(surface.uv);
         float specular = (*matData.dSpecular[matId])(surface.uv);
         Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
-        /* albedo = N;*/
         // Since we using capital terms alias wi as V
         Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
         // Sample a H (Half Vector)
         Vector3 H;
         float D = TracerFunctions::DGGXSample(H, pdf, roughness, rng);
-        //Vector2 xi(GPUDistribution::Uniform<float>(rng),
-        //           GPUDistribution::Uniform<float>(rng));
-        //Vector3 H = HemiDistribution::HemiCosineCDF(xi, pdf);
-        //float D = TracerFunctions::GGX(max(N.Dot(H), 0.0f),
-        //                               roughness);
 
         // Gen L (aka. wo)
         Vector3 L = 2.0f * V.Dot(H) * H - V;
@@ -101,7 +95,7 @@ struct UnrealDeviceFuncs
 
         // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
-            TracerFunctions::GSchlick(NdV, roughness);
+                  TracerFunctions::GSchlick(NdV, roughness);
         // Frenel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
@@ -114,10 +108,6 @@ struct UnrealDeviceFuncs
         Vector3f woDir = GPUSurface::ToWorld(L, surface.worldToTangent);
         Vector3f woPos = pos + normalWorld * MathConstants::Epsilon;
 
-        //if(isnan(G)) printf("S: G Term NANn");
-        //if(F.HasNaN()) printf("S: F Term NANn");
-        //if(isnan(D)) printf("S: D Term NANn");
-
         // Calculate Radiance
         // Blend between albedo-black for metallic material
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
@@ -125,19 +115,27 @@ struct UnrealDeviceFuncs
         // Notice that NdL terms are cancelled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
 
-        if(specularTerm.HasNaN())
-            printf("pdf %f, G %f, D %f \n"
-                   "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
-                   "F %f %f %f\n---\n",
-                   pdf, G, D,
-                   NdL, NdV, NdH, VdH, LdH,
-                   F[0], F[1], F[2]);
-
-            // Ray Out
+        // Ray Out
         wo = RayF(woDir, pos);
-        // PDF is already written
 
-        // Finally Radiance
+        // DEBUG
+        //if(specularTerm.HasNaN() || woDir.HasNaN() ||
+        //   L.HasNaN() || H.HasNaN() ||
+        //   wo.getDirection().HasNaN())
+        //{
+        //    printf("pdf %f, G %f, D %f \n"
+        //           "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
+        //           "F %f %f %f\n"
+        //           "L: (%f, %f, %f)\n"
+        //           "---\n",
+        //           pdf, G, D,
+        //           NdL, NdV, NdH, VdH, LdH,
+        //           F[0], F[1], F[2],
+        //           L[0], L[1], L[2]);
+        //}
+
+        // PDF is already written
+        // Finally return Radiance
         // All Done!
         return diffuseTerm + specularTerm;
     }
@@ -221,13 +219,13 @@ struct UnrealDeviceFuncs
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
         // Blend diffuse term due to metallic
-        if(specularTerm.HasNaN())
-            printf("G %f, D %f \n"
-                   "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
-                   "F %f %f %f\n---\n",
-                   G, D,
-                   NdL, NdV, NdH, VdH, LdH,
-                   F[0], F[1], F[2]);
+        //if(specularTerm.HasNaN())
+        //    printf("G %f, D %f \n"
+        //           "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
+        //           "F %f %f %f\n---\n",
+        //           G, D,
+        //           NdL, NdV, NdH, VdH, LdH,
+        //           F[0], F[1], F[2]);
 
         return diffuseTerm + specularTerm;
     }

@@ -112,12 +112,6 @@ inline Vector3 GPUMediumHomogenous::Transmittance(float distance) const
     result[1] = expf(result[1]);
     result[2] = expf(result[2]);
 
-    //printf("%f, %f, %f --- %f, %f, %f --- %f, %f, %f -- %f\n",
-    //       result[0], result[1], result[2],
-    //       result2[0], result2[1], result2[2],
-    //       sigmaT[0], sigmaT[1], sigmaT[2],
-    //       distance);
-
     return result;
 }
 
