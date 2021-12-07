@@ -9,6 +9,9 @@ namespace Utility
     uint64_t FindLastSet64(uint64_t);
     uint32_t FindLastSet32(uint32_t);
 
+    uint32_t NextPowOfTwo(uint32_t);
+    uint64_t NextPowOfTwo(uint64_t);
+
     template<class T>
     uint32_t BitCount(T);
 }

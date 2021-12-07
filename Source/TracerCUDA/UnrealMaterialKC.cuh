@@ -189,7 +189,6 @@ struct UnrealDeviceFuncs
         Vector3 L = GPUSurface::ToTangent(wo, surface.worldToTangent);
         Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
         Vector3 H = (L + V).Normalize();
-        /*albedo = N;*/
         // BRDF Calculation
         float NdL = max(N.Dot(L), 0.0f);
         float NdV = max(N.Dot(V), 0.0f);
@@ -218,7 +217,8 @@ struct UnrealDeviceFuncs
         // Notice that NdL terms are cancelled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
-        // Blend diffuse term due to metallic
+
+        // DEBUG
         //if(specularTerm.HasNaN())
         //    printf("G %f, D %f \n"
         //           "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
@@ -227,6 +227,7 @@ struct UnrealDeviceFuncs
         //           NdL, NdV, NdH, VdH, LdH,
         //           F[0], F[1], F[2]);
 
+        // Blend diffuse term due to metallic
         return diffuseTerm + specularTerm;
     }
 

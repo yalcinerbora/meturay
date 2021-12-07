@@ -202,6 +202,7 @@ set(SRC_SCENE
     ${CURRENT_SOURCE_DIR}/ScenePartitioner.cpp
     ${CURRENT_SOURCE_DIR}/ScenePartitioner.h
     ${CURRENT_SOURCE_DIR}/ScenePartitionerI.h)
+
 set(SRC_SHARED_LIB
     ${CURRENT_SOURCE_DIR}/EntryPoint.cpp
     ${CURRENT_SOURCE_DIR}/EntryPoint.h
@@ -236,6 +237,10 @@ set(SRC_TRACERS_COMMON
     ${CURRENT_SOURCE_DIR}/Tracers.cpp
     ${CURRENT_SOURCE_DIR}/Tracers.h
     ${CURRENT_SOURCE_DIR}/WorkOutputWriter.cuh)
+
+set(SRC_SURFACE_SVO
+    ${CURRENT_SOURCE_DIR}/SurfaceSVO.cu
+    ${CURRENT_SOURCE_DIR}/SurfaceSVO.cuh)
 
 set(SRC_TRACERS_STRUCTS
     ${CURRENT_SOURCE_DIR}/PathNode.cuh
@@ -334,6 +339,7 @@ set(SRC_ALL
     ${SRC_PPG_TRACER}
     ${SRC_PPG_TRACER_AUX_CLASSES}
     ${SRC_REF_PG_TRACER}
+    ${SRC_SURFACE_SVO}
     ${SRC_TRANSFORMS}
     ${SRC_WORK}
     ${SRC_COMMON}
@@ -384,6 +390,7 @@ source_group("Tracers/PathTracer" FILES ${SRC_PATH_TRACER})
 source_group("Tracers/PPGTracer" FILES ${SRC_PPG_TRACER})
 source_group("Tracers/PPGTracer/Aux Classes" FILES ${SRC_PPG_TRACER_AUX_CLASSES})
 source_group("Tracers/RefPGTracer" FILES ${SRC_REF_PG_TRACER})
+source_group("Tracers/SurfaceSVO" FILES ${SRC_SURFACE_SVO})
 
 source_group("Transforms" FILES ${SRC_TRANSFORMS})
 source_group("Work" FILES ${SRC_WORK})

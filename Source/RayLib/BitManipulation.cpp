@@ -1,6 +1,8 @@
 #include "BitManipulation.h"
 #include "System.h"
 
+#include <bit>
+
 uint64_t Utility::FindLastSet64(uint64_t val)
 {
     #ifdef METURAY_WIN
@@ -21,4 +23,14 @@ uint32_t Utility::FindLastSet32(uint32_t val)
     #elif defined(METURAY_LINUX)
         return (sizeof(uint32_t) * BYTE_BITS) - __builtin_clz(val) - 1;
     #endif
+}
+
+uint32_t Utility::NextPowOfTwo(uint32_t val)
+{
+    return std::bit_ceil(val);
+}
+
+uint64_t Utility::NextPowOfTwo(uint64_t val)
+{
+    return std::bit_ceil(val);
 }
