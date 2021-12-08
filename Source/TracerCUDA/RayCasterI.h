@@ -56,8 +56,10 @@ class RayCasterI
 
 inline Vector2i RayCasterI::DetermineMaxBitFromId(const Vector2i& maxIds)
 {
-    Vector2i result((maxIds[0] == 0) ? 0 : (Utility::FindLastSet32(maxIds[0]) + 1),
-                    (maxIds[1] == 0) ? 0 : (Utility::FindLastSet32(maxIds[1]) + 1));
+    assert(maxIds[0] >= 0 && maxIds[1] >= 0);
+
+    Vector2i result((maxIds[0] == 0) ? 0 : static_cast<int32_t>(Utility::FindLastSet<uint32_t>(maxIds[0]) + 1),
+                    (maxIds[1] == 0) ? 0 : static_cast<int32_t>(Utility::FindLastSet<uint32_t>(maxIds[1]) + 1));
     return result;
 }
 

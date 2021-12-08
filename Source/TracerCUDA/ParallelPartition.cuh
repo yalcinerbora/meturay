@@ -123,7 +123,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
 
     // Do not sort all 32-bits
     int bitStart = 0;
-    int bitEnd = (maxKey == 0) ? 0 : (Utility::FindLastSet32(maxKey) + 1);
+    int bitEnd = (maxKey == 0) ? 0 : (Utility::FindLastSet(maxKey) + 1);
 
     // Check temp memory requirements of the kernels and alloc mem
     size_t sortTempBufferSize;

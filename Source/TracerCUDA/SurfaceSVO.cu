@@ -9,6 +9,12 @@ void KCMarkReduction()
 
 }
 
+SurfaceSVOCPU::SurfaceSVOCPU()
+    : svoGPU{nullptr, 0u, ZeroAABB3f}
+    , nodeCount(0)
+    , leafCount(0)
+{}
+
 void SurfaceSVOCPU::Construct(const AcceleratorBatchMap& sceneAccelerators,
                               const AABB3f& sceneExtents,
                               float normalAngleThreshold, float areaThreshold,

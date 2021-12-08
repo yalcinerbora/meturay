@@ -15,7 +15,7 @@ struct SurfaceSVONode
     uint32_t dataIndex;
 };
 
-class SurfaceSVOGPU
+struct SurfaceSVOGPU
 {
     const SurfaceSVONode*   root;
     uint32_t                nodeCount;

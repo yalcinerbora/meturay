@@ -1,36 +1,29 @@
 #include "BitManipulation.h"
-#include "System.h"
-
 #include <bit>
 
-uint64_t Utility::FindLastSet64(uint64_t val)
+template<class T>
+int Utility::BitCount(T val)
 {
-    #ifdef METURAY_WIN
-        unsigned long ul;
-        _BitScanReverse64(&ul, val);
-        return ul;
-    #elif defined(METURAY_LINUX)
-        return (sizeof(uint64_t) * BYTE_BITS) - __builtin_clzl(val) - 1;
-    #endif
+    return std::popcount(val);
 }
 
-uint32_t Utility::FindLastSet32(uint32_t val)
-{
-    #ifdef METURAY_WIN
-        unsigned long ul;
-        _BitScanReverse(&ul, val);
-        return ul;
-    #elif defined(METURAY_LINUX)
-        return (sizeof(uint32_t) * BYTE_BITS) - __builtin_clz(val) - 1;
-    #endif
-}
-
-uint32_t Utility::NextPowOfTwo(uint32_t val)
+template<class T>
+T Utility::NextPowOfTwo(T val)
 {
     return std::bit_ceil(val);
 }
 
-uint64_t Utility::NextPowOfTwo(uint64_t val)
+template<class T>
+T Utility::FindLastSet(T val)
 {
-    return std::bit_ceil(val);
+    return (sizeof(T) * BYTE_BITS) - std::countl_zero(val) - 1;
 }
+
+template int Utility::BitCount<uint32_t>(uint32_t);
+template int Utility::BitCount<uint64_t>(uint64_t);
+
+template uint32_t Utility::NextPowOfTwo<uint32_t>(uint32_t);
+template uint64_t Utility::NextPowOfTwo<uint64_t>(uint64_t);
+
+template uint32_t Utility::FindLastSet<uint32_t>(uint32_t);
+template uint64_t Utility::FindLastSet<uint64_t>(uint64_t);

@@ -367,7 +367,7 @@ void PPGTracer::Finalize()
         // Double the amount of iterations required for this
         nextTreeSwap <<= 1;
 
-        uint32_t treeSwapIterationCount = Utility::FindLastSet32(nextTreeSwap) - 1;
+        uint32_t treeSwapIterationCount = Utility::FindLastSet(nextTreeSwap) - 1;
         uint64_t sTreeSplit64 = static_cast<uint64_t>((std::pow(2.0f, treeSwapIterationCount) *
                                                        options.sTreeSplitThreshold));
         uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>(std::min<uint64_t>(sTreeSplit64,
