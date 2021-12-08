@@ -191,10 +191,10 @@ void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
         if(id == 1) return;
     #endif
 
-    // Dont Show Others For Now
+    // Don't Show Others For Now
     if(type == GL_DEBUG_TYPE_OTHER ||   //
        id == 131186                ||   // Buffer Copy warning omit
-       id == 131218)                    // Shader recompile cuz of state mismatch omit
+       id == 131218)                    // Shader recompile because of state mismatch omit
         return;
 
     std::stringstream sStream;

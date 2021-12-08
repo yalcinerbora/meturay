@@ -111,7 +111,7 @@ void GuideDebugGUIFuncs::ValueRenderer<T>::DrawAnnotation(ImDrawList* drawList, 
     else
         worldPosAsString = "INV-VAL";
 
-    // Add text to drawlist!
+    // Add text to draw list!
     ImVec2 pixelCenter = texelsToPixels * texel;
     pixelCenter.x -= textSize.x * 0.5f;
     pixelCenter.y -= textSize.y * 0.5f;
@@ -184,7 +184,7 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
             uint32_t linearIndex = (tex.Size()[0] * static_cast<uint32_t>(texelClampedY) +
                                                     static_cast<uint32_t>(texelClampedX));
 
-            // Zoomed Tooltip
+            // Zoomed Tool-tip
             ImGui::BeginTooltip();
             static constexpr float ZOOM_FACTOR = 8.0f;
             static constexpr float REGION_SIZE = 16.0f;
@@ -200,7 +200,7 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
                                       (region_y + REGION_SIZE) / tex.Size()[1]);
             // Invert Y (.......)
             std::swap(zoomUVStart.y, zoomUVEnd.y);
-            // Center the image on the tooltip window
+            // Center the image on the tool-tip window
             ImVec2 ttImgSize(REGION_SIZE * ZOOM_FACTOR,
                              REGION_SIZE * ZOOM_FACTOR);
             ImGui::Image(texId, ttImgSize, zoomUVStart, zoomUVEnd);

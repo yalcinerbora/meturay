@@ -64,6 +64,7 @@ set(SRC_DEBUG
     ${CURRENT_SOURCE_DIR}/TracerDebug.h)
 
 set(SRC_GPU_ALGORITHMS_COMMON
+    ${CURRENT_SOURCE_DIR}/MortonCode.cuh
     ${CURRENT_SOURCE_DIR}/BinarySearch.cuh
     ${CURRENT_SOURCE_DIR}/ParallelPartition.cuh
     ${CURRENT_SOURCE_DIR}/ParallelReduction.cuh
@@ -71,7 +72,7 @@ set(SRC_GPU_ALGORITHMS_COMMON
     ${CURRENT_SOURCE_DIR}/ParallelScan.cuh
     ${CURRENT_SOURCE_DIR}/ParallelSequence.cuh
     ${CURRENT_SOURCE_DIR}/ParallelTransform.cuh
-    ${CURRENT_SOURCE_DIR}/RadixSort.cuh
+    ${CURRENT_SOURCE_DIR}/ParallelRadixSort.cuh
     ${CURRENT_SOURCE_DIR}/Random.cuh)
 
 set(SRC_GPU_ALGORITHMS_FUNCTIONS
@@ -88,7 +89,7 @@ set(SRC_GPU_ALGORITHMS_IMPLEMENTATIONS
     ${CURRENT_SOURCE_DIR}/ParallelScanMatrix4x4.cu
     ${CURRENT_SOURCE_DIR}/ParallelScanQuaternion.cu
     ${CURRENT_SOURCE_DIR}/ParallelScanVector.cu
-    ${CURRENT_SOURCE_DIR}/RadixSort.cu)
+    ${CURRENT_SOURCE_DIR}/ParallelRadixSort.cu)
 
 set(SRC_GPU_CLASSES
     ${CURRENT_SOURCE_DIR}/GPUPiecewiseDistribution.cu
@@ -159,8 +160,8 @@ set(SRC_MATERIALS
     ${CURRENT_SOURCE_DIR}/MetaMaterialFunctions.cuh)
 
 set(SRC_MEDIUMS
-    ${CURRENT_SOURCE_DIR}/GPUMediumHomogenous.cu
-    ${CURRENT_SOURCE_DIR}/GPUMediumHomogenous.cuh
+    ${CURRENT_SOURCE_DIR}/GPUMediumHomogeneous.cu
+    ${CURRENT_SOURCE_DIR}/GPUMediumHomogeneous.cuh
     ${CURRENT_SOURCE_DIR}/GPUMediumVacuum.cuh)
 
 set(SRC_MEMORY
@@ -238,9 +239,9 @@ set(SRC_TRACERS_COMMON
     ${CURRENT_SOURCE_DIR}/Tracers.h
     ${CURRENT_SOURCE_DIR}/WorkOutputWriter.cuh)
 
-set(SRC_SURFACE_SVO
-    ${CURRENT_SOURCE_DIR}/SurfaceSVO.cu
-    ${CURRENT_SOURCE_DIR}/SurfaceSVO.cuh)
+set(SRC_DATA_STRUCTURES
+    ${CURRENT_SOURCE_DIR}/LinearBVH.cu
+    ${CURRENT_SOURCE_DIR}/LinearBVH.cuh)
 
 set(SRC_TRACERS_STRUCTS
     ${CURRENT_SOURCE_DIR}/PathNode.cuh
@@ -339,7 +340,7 @@ set(SRC_ALL
     ${SRC_PPG_TRACER}
     ${SRC_PPG_TRACER_AUX_CLASSES}
     ${SRC_REF_PG_TRACER}
-    ${SRC_SURFACE_SVO}
+    ${SRC_DATA_STRUCTURES}
     ${SRC_TRANSFORMS}
     ${SRC_WORK}
     ${SRC_COMMON}
@@ -390,7 +391,7 @@ source_group("Tracers/PathTracer" FILES ${SRC_PATH_TRACER})
 source_group("Tracers/PPGTracer" FILES ${SRC_PPG_TRACER})
 source_group("Tracers/PPGTracer/Aux Classes" FILES ${SRC_PPG_TRACER_AUX_CLASSES})
 source_group("Tracers/RefPGTracer" FILES ${SRC_REF_PG_TRACER})
-source_group("Tracers/SurfaceSVO" FILES ${SRC_SURFACE_SVO})
+source_group("Tracers/Data Structures" FILES ${SRC_DATA_STRUCTURES})
 
 source_group("Transforms" FILES ${SRC_TRANSFORMS})
 source_group("Work" FILES ${SRC_WORK})
@@ -412,7 +413,7 @@ set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC}
     METU_SHARED_TRACER_CUDA)
 
-# TBB for std::exectuion (clang & GCC)
+# TBB for std::execution (clang & GCC)
 if(MSVC)
     set(PLATFORM_SPEC_LIBRARIES)
 elseif(UNIX)

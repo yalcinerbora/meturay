@@ -125,7 +125,7 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
             uint32_t j = 0;
             for(const auto& range : ranges)
             {
-                // Lamda to elimtinate repetition
+                // Lambda to eliminate repetition
                 auto EmplaceToResult = [&](uint32_t id, uint32_t outer, uint32_t inner) -> SceneError
                 {
                     auto r = result.emplace(id, std::make_pair(outer, inner));
@@ -155,7 +155,7 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
     return SceneError::OK;
 }
 
-SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped from unsued nodes)
+SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped from unused nodes)
                                                   PrimitiveNodeList& primGroupNodes,
                                                   //
                                                   MediumNodeList& mediumGroupNodes,
@@ -460,7 +460,7 @@ SceneError GPUSceneJson::GenerateConstructionData(// Striped Listings (Striped f
         surfId++;
     }
     // Additionally For Lights & Cameras
-    // generate an empty primitive (if not already requrested)
+    // generate an empty primitive (if not already requested)
     primGroupNodes.emplace(BaseConstants::EMPTY_PRIMITIVE_NAME, NodeListing());
 
     // Find the base medium and tag its index
@@ -1138,7 +1138,7 @@ SceneError GPUSceneJson::FindBoundaryLight(const BoundaryMaterialKeyListing& bMa
                                            uint32_t bLightId, uint32_t bTransformId)
 {
     SceneError e = SceneError::OK;
-    // From that node find equavilent material,
+    // From that node find equivalent material,
     auto tripletKey = std::make_tuple(bLightGroupTypeName, bLightId,
                                       bTransformId);
     auto loc = bMatKeys.find(tripletKey);
@@ -1268,7 +1268,7 @@ SceneError GPUSceneJson::LoadAll(double time)
        return e;
 
     // MaxIds are generated but those are inclusive
-    // Make them exclusve
+    // Make them exclusive
     maxAccelIds += Vector2i(1);
     maxMatIds += Vector2i(1);
 
@@ -1280,7 +1280,7 @@ SceneError GPUSceneJson::ChangeAll(double)
 {
     // TODO:
     return SceneError(SceneError::TYPE_MISMATCH,
-                      "\"GPUSceneJson\" not yet implmented change time");
+                      "\"GPUSceneJson\" not yet implemented change time");
 }
 
 size_t GPUSceneJson::UsedGPUMemory() const

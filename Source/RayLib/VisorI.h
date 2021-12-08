@@ -4,7 +4,7 @@
 Visor Interface
 
 Visor is a standalone program to monitor current
-image that si being rendered by Tracers
+image that is being rendered by Tracers
 
 VisorView Interface encapsulates rendering window and real-time GPU portion
 Visor

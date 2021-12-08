@@ -14,7 +14,7 @@
 // Meta Tracer Work Code
 // With custom global Data
 
-// Material/Primitive invaritant part of the code
+// Material/Primitive invariant part of the code
 template<class GlobalData, class RayData>
 class GPUWorkBatchD : public GPUWorkBatchI
 {
@@ -86,11 +86,11 @@ class GPUWorkBatch
 
         const GPUTransformI* const*     dTransforms;
 
-        // Per-Bathch Data
+        // Per-Batch Data
         LocalData                       localData;
 
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         GPUWorkBatch(const GPUMaterialGroupI& mg,
                                                      const GPUPrimitiveGroupI& pg,
                                                      const GPUTransformI* const* t);
@@ -140,11 +140,11 @@ class GPUBoundaryWorkBatch
 
         const GPUTransformI* const*     dTransforms;
 
-        // Per-Bathch Data
+        // Per-Batch Data
         LocalData                       localData;
 
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         GPUBoundaryWorkBatch(const CPUEndpointGroupI& eg,
                                                              const GPUTransformI* const* t);
                                         ~GPUBoundaryWorkBatch() = default;

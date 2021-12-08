@@ -27,7 +27,7 @@ static constexpr const char* PrimitiveDataTypeNames[static_cast<int>(PrimitiveDa
     "uv",
     "radius",
     "tangent",
-    "bitangent",
+    "bi-tangent",
     "weight",
     "weight index",
     "color",
@@ -168,14 +168,14 @@ enum class PrimitiveDataLayout : uint32_t
                         // OGL Feed : use GL_UNSIGNED_INT with one component
                         // Unpack it on shader
 
-    // Tangent Binormal Packed Data
+    // Tangent Bi-normal Packed Data
     CUSTOM_TANG_H_2N,	// Packed Data, LSB to MSB
                         // 2N:  2 x norm32 types (for normalized tangent)
                         // which shows x, y
                         // H: 4 byte data in which
-                        // two byte shows binorm direction (least
+                        // two byte shows bi-norm direction (least
                         // other two byte show tang direction
-                        // binorm headedness shows weather "N cross T"
+                        // bi-norm headedness shows weather "N cross T"
                         // is on wrong direction
                         // positive dir (0x00), negative dir (0x01)
                         // OGL Feed : use GL_FLOAT with three component
@@ -409,17 +409,17 @@ static constexpr size_t PrimitiveLayoutSizes[static_cast<size_t>(PrimitiveDataLa
     //------------------------------------//
     // Custom Data Types
     4,		// CUSTOM_1_15N_16N,		// Packed Data, LSB to MSB is 16F to 15F, msb bit shows sign of the z component of the vector
-                                        // 15F is Y component, 16F is the X component
-                                        // X and Y components are fixed point [-1, 1] (for easier coversion to float)
-                                        // Z = sqrt(X^2 + Y^2) * ((bit) ? -1 : 1)
-                                        //
-                                        // OGL Feed : use GL_UNSIGNED_INT with one component
-                                        // Unpack it on shader
-    4 * 3,	//CUSTOM_TANG_H_2N,			// Packed Data, LSB to MSB
-                                        // 12 byte composition of 2 floats (normalized tangent)
-                                        // which shows x
-                                        // 1 4 byte data in which one byte shows binorm direction
-                                        // other bytes show tang direction
+                                    // 15F is Y component, 16F is the X component
+                                    // X and Y components are fixed point [-1, 1] (for easier conversion to float)
+                                    // Z = sqrt(X^2 + Y^2) * ((bit) ? -1 : 1)
+                                    //
+                                    // OGL Feed : use GL_UNSIGNED_INT with one component
+                                    // Unpack it on shader
+    4 * 3,	//CUSTOM_TANG_H_2N,		// Packed Data, LSB to MSB
+                                    // 12 byte composition of 2 floats (normalized tangent)
+                                    // which shows x
+                                    // 1 4 byte data in which one byte shows bi-norm direction
+                                    // other bytes show tang direction
 
     // High Amount Weight data
     16,		//UNORM8_4_4,			// 8 bit unorm weight in a 4 component 32 bit type
@@ -427,7 +427,7 @@ static constexpr size_t PrimitiveLayoutSizes[static_cast<size_t>(PrimitiveDataLa
     16,		//UNORM16_2_4,			// 16 bit unorm weight in a 4 component 32 bit type
                                     // holds 8 16 bit unorm values
 
-    16,		//UINT8_4_4,			// 8 bit integer weight in a 4 component 32 bit type
+    16,		//UINT8_4_4,			    // 8 bit integer weight in a 4 component 32 bit type
                                     // holds 16 8 bit integer values
     16,		//UINT16_2_4,			// 16 bit integer index in a 4 component 32 bit type
                                     // holds 8 16 bit integer values

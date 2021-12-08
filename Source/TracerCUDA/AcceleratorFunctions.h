@@ -36,11 +36,11 @@ using BoxGenFunction = AABB3f(*)(const GPUTransformI&,
                                  PrimitiveId primitiveId,
                                  const PrimitiveData&);
 
-// Surface area generation function for bound hierarcy generation
+// Surface area generation function for bound hierarchy generation
 template <class PrimitiveData>
 using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
 
-// Center generation function for bound hierarcy generation
+// Center generation function for bound hierarchy generation
 template <class PrimitiveData>
 using CenterGenFunction = Vector3(*)(const GPUTransformI& transform,
                                      PrimitiveId primitiveId, const PrimitiveData&);
@@ -177,7 +177,7 @@ AABB3f DefaultAABBGen(const GPUTransformI&,
     return AABB3f(minInf, minInf);
 }
 
-// Surface area generation function for bound hierarcy generation
+// Surface area generation function for bound hierarchy generation
 template <class PrimitiveData>
 __device__ __forceinline__
 float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
@@ -185,7 +185,7 @@ float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
     return 0.0f;
 }
 
-// Center generation function for bound hierarcy generation
+// Center generation function for bound hierarchy generation
 template <class PrimitiveData>
 __device__ __forceinline__
 Vector3 DefaultCenterGen(const GPUTransformI&,

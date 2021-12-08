@@ -45,7 +45,7 @@ class GPUEndpointI
         // Sample the endpoint from a point
         // Return directional pdf
         // Direction is NOT normalized (and should not be normalized)
-        // that data may be usefull (when sampling a light source using NEE)
+        // that data may be useful (when sampling a light source using NEE)
         // tMax (distance) can be generated from it
         virtual __device__ void     Sample(// Output
                                            float& distance,

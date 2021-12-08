@@ -33,10 +33,10 @@ class CPUTimer
                         CPUTimer() = default;
                         ~CPUTimer() = default;
 
-        // Util
+        // Utility
         void            Start();
-        void			Stop();
-        void			Lap();
+        void			    Stop();
+        void			    Lap();
 
         template <class Time>
         double          Elapsed();

@@ -32,7 +32,7 @@
 		"type" : "Vacuum"
 	},
 	{
-		"type" : "Homogenous",
+		"type" : "Homogeneous",
 		"id": 1,
 		"absorption": [2.075, 0.825, 1.615],
 		"scattering": [0, 0, 0],

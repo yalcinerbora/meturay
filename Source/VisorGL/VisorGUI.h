@@ -34,7 +34,7 @@ class VisorGUI : public VisorWindowInput
 
     protected:
     public:
-        // Construtors & Destructor
+        // Constructors & Destructor
                         VisorGUI(VisorCallbacksI&,
                                  bool& isWindowOpen,
                                  Vector2i& windowSize,

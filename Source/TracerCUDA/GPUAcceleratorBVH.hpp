@@ -269,7 +269,7 @@ void GPUAccBVHGroup<PGroup>::GenerateBVHNode(// Output
                               cudaMemcpyDeviceToDevice));
         CUDA_CHECK(cudaMemcpy(&partitionSplit, dPartitionSplitOut, sizeof(uint32_t), cudaMemcpyDeviceToHost));
 
-        // If there is bad partition (location is start or end) then atleast put single node to a split
+        // If there is bad partition (location is start or end) then at least put single node to a split
         if(partitionSplit == 0) partitionSplit += 1;
         else if(partitionSplit == static_cast<uint32_t>(end - start)) partitionSplit -= 1;
         // Split Loc
@@ -530,7 +530,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     gpu.WaitMainStream();
 
     // TODO: this is required for cuda when accessing managed memory
-    // but it shouldnt since we are syncing main stream just above
+    // but it shouldn't since we are syncing main stream just above
     CUDA_CHECK(cudaDeviceSynchronize());
 
     // Breath first tree generation (top-down)

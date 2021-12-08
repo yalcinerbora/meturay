@@ -30,7 +30,7 @@ struct Record
     // Each Accelerator has its own accelerator Id
     TransformId transformId;
     // PrimData holds the global info of the primitive
-    // Data inside should be accesed as such:
+    // Data inside should be accessed as such:
     //   int leafId = optixGetPrimitiveIndex();
     //   (*primData).positions[gLeafs[leafId].primitiveId]
     const PrimData* gPrimData;
@@ -50,7 +50,7 @@ struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) HitGroupRecord
 struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) EmptyRecord
 {
     __align__(OPTIX_SBT_RECORD_ALIGNMENT) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
-    // Optix 7 Course had dummy pointer here so i will leave it aswell
+    // Optix 7 Course had dummy pointer here so i will leave it as well
     void* data;
 };
 

@@ -74,7 +74,7 @@ class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupSkySphere(const GPUPrimitiveGroupI*,
                                                            const CudaGPU&);
                                     ~CPULightGroupSkySphere() = default;
@@ -162,7 +162,7 @@ inline float GPULightSkySphere::Pdf(const Vector3& direction,
     Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
 
     // Normalize to generate UV [0, 1]
-    // tetha range [-pi, pi]
+    // theta range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
     // If we are at edge point (u == 1) make it zero since
     // piecewise constant function will not have that pdf (out of bounds)
@@ -219,7 +219,7 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
     Vector2f thetaPhi = Utility::CartesianToSphericalUnit(woZup);
 
     // Normalize to generate UV [0, 1]
-    // tetha range [-pi, pi]
+    // theta range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
     // phi range [0, pi]
     float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);

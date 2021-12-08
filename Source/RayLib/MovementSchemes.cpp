@@ -103,7 +103,7 @@ bool MovementSchemeFPS::MouseMovementAction(VisorTransform& transform,
         transform.gazePoint = transform.position + rotated;
 
         // Redefine up
-        // Enforce an up vector which is ortogonal to the xz plane
+        // Enforce an up vector which is orthogonal to the xz plane
         transform.up = Cross(rotated, side);
         transform.up[0] = 0.0f;
         transform.up[1] = (transform.up[1] < 0.0f) ? -1.0f : 1.0f;
@@ -181,7 +181,7 @@ bool MovementSchemeMaya::MouseMovementAction(VisorTransform& transform,
         transform.position = transform.gazePoint - rotated;
 
 		// Redefine up
-		// Enforce an up vector which is ortogonal to the xz plane
+		// Enforce an up vector which is orthogonal to the xz plane
         transform.up = Cross(rotated, left);
         transform.up[2] = 0.0f;
         transform.up[0] = 0.0f;

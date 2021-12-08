@@ -38,7 +38,6 @@ RNGMemory::RNGMemory(uint32_t seed,
     }
 
     // Do Temp Alloc for a MT19937 seeds
-    // ang generate
     DeviceMemory seeds(totalCount * sizeof(uint32_t));
 
     // Before touching gpu mem from cpu do a sync

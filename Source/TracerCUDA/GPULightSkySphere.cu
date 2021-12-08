@@ -99,8 +99,8 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
         return e;
 
     // TODO: We go to GPU -> CPU -> GPU here
-    // normaly distribution data were coming from another class
-    // Rewrite PWDistributions to be contructed directly from the GPUMemory as well
+    // normally distribution data were coming from another class
+    // Rewrite PWDistributions to be constructed directly from the GPUMemory as well
     std::vector<std::vector<float>> hLuminances;
     std::vector<Vector2ui> hLuminanceSizes;
     hLuminances.reserve(lightCount);
@@ -145,7 +145,7 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
     hLuminanceDistributions = CPUDistGroupPiecewiseConst2D(hLuminances, hLuminanceSizes,
                                                            factorInSpherical, system);
 
-    // As a madlad directly copy the CPU residing GPU class to the GPU memory
+    // As a mad lad directly copy the CPU residing GPU class to the GPU memory
     CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst2D*>(dGPUDistributions),
                           hLuminanceDistributions.DistributionGPU().data(),
                           sizeof(GPUDistPiecewiseConst2D) * lightCount,

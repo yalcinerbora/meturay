@@ -118,8 +118,8 @@ ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
         default: break;
     }
 
-    // TODO: Allow reading half fromat
-    // since we dont have a half library available currently
+    // TODO: Allow reading half format
+    // since we don't have a half library available currently
     // just convert it to float type
     switch(pf)
     {
@@ -392,7 +392,7 @@ ImageIOError ImageIO::WriteUsingFreeImage(const Byte* pixels,
 
 bool ImageIO::CheckIfEXR(const std::string& filePath)
 {
-    // Utilitze FreeImage to find ext
+    // Utilize FreeImage to find ext
     FREE_IMAGE_FORMAT f;
     // Check file to find type
     if((f = FreeImage_GetFileType(filePath.c_str())) == FIF_UNKNOWN)
@@ -483,7 +483,7 @@ ImageIOError ImageIO::ReadImage_OpenEXR(std::vector<Byte>& pixels,
         Byte* scanLine0 = pixels.data() + y * scanLineSize;
         Byte* scanLine1 = pixels.data() + invertexY * scanLineSize;
 
-        // Do scanline swap (using copy)
+        // Do scan line swap (using copy)
         std::copy(scanLine0, scanLine0 + scanLineSize, tempScanLine.data());
         std::copy(scanLine1, scanLine1 + scanLineSize, scanLine0);
         std::copy(tempScanLine.data(), tempScanLine.data() + scanLineSize, scanLine1);
@@ -530,7 +530,7 @@ void ImageIO::ConvertPixelsInternal(Byte* toData, PixelFormat toFormat,
                                     const Byte* fromData, PixelFormat fromFormat, size_t fromPitch,
                                     const Vector2ui& dimension) const
 {
-    // Just to paralleize create a iota
+    // Just to parallelize create a iota
     // TODO: change to parallelizable ranges C++23 or after
     // This is static just to prevent some alloc/unalloc etc
     static std::vector<uint32_t> indices;
@@ -677,12 +677,12 @@ ImageIOError ImageIO::ReadImage(std::vector<Byte>& pixels,
     {
         ConvertPixelsInternal(pixels.data(), convertedFormat,
                               exrPixels.data(), pf,
-                              // Exr pixels are packed tightly (atleast after load)
+                              // Exr pixels are packed tightly (at least after load)
                               dimension[0] * FormatToPixelSize(pf),
                               dimension);
     }
     // FreeImg files have pitch so directly convert from its buffer
-    // If no conversion occurs ConvertPixels just packs the scanlines
+    // If no conversion occurs ConvertPixels just packs the scan lines
     else
     {
         // Directly Convert from FreeImg Buffer
@@ -725,7 +725,7 @@ ImageIOError ImageIO::ReadImageChannelAsBitMap(std::vector<Byte>& bitMap,
     {
         PackChannelBits(bitMap.data(),
                         exrPixels.data(), pf,
-                        // Exr pixels are packed tightly (atleast after load)
+                        // Exr pixels are packed tightly (at least after load)
                         dimension[0] * FormatToPixelSize(pf),
                         channel, dimension);
     }

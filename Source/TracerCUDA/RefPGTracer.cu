@@ -189,7 +189,7 @@ TracerError RefPGTracer::Initialize()
                                                         cudaSystem)) != TracerError::OK)
         return err;
 
-    // Generate your worklist
+    // Generate your work list
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& wInfo : infoList)
     {
@@ -313,7 +313,7 @@ bool RefPGTracer::Render()
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
     {
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
@@ -490,7 +490,7 @@ void RefPGTracer::ReportionImage(Vector2i start, Vector2i end)
 
     ResetIterationVariables();
 
-    // Reportion the image buffers aswell
+    // Re-portion the image buffers as well
     imgMemory.Reportion(Zero2i, options.resolution, cudaSystem);
     accumulationBuffer.Reportion(Zero2i, options.resolution, cudaSystem);
 }

@@ -25,7 +25,7 @@ __host__ void IotaGPU(Type* dArray, Type startingElement,
     static constexpr unsigned int TPB = StaticThreadPerBlock1D;
     unsigned int gridSize = static_cast<unsigned int>((count + TPB - 1) / TPB);
 
-    // KC Paralel Reduction
+    // KC Parallel Reduction
     KCIota<Type><<<gridSize, TPB, 0, stream>>>
     (
         dArray,

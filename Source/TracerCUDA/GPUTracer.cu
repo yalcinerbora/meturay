@@ -217,7 +217,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
         for(const auto& acc : scene.AcceleratorGroups())
         {
             // TODO: primitive type maybe have a name OptiX
-            // probably not thow i will leave that case
+            // probably not throw i will leave that case
             std::string accType = acc.second->Type();
             bool accelIsOptiX = (accType.find("OptiX") != std::string::npos);
 

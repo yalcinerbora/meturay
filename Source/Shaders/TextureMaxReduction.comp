@@ -9,7 +9,7 @@
 		Texture Max Reduction Shader is a parallel reduction shader
 		that generates max luminance of the texture
 
-		It assumes image is R format (Single Channel Texutre)
+		It assumes image is R format (Single Channel Texture)
 
 */
 
@@ -59,7 +59,7 @@ void ReduceBlock(out float maxLum, in float lum)
 {
 	uint localId = gl_LocalInvocationID.x;
 
-	// Do this for max aswell
+	// Do this for max as well
 	reduceBuffer[localId] = lum;
 	memoryBarrierShared(); barrier();
 	if(localId < 128) reduceBuffer[localId] = max(reduceBuffer[localId], reduceBuffer[localId + 128]);

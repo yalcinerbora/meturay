@@ -124,7 +124,7 @@ bool Ray<T>::IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
     return true;
 
     //// Matrix Solution
-    //// Kramers Rule
+    //// Kramer's Rule
     //Vector<3, T> abDiff = t0 - t1;
     //Vector<3, T> acDiff = t0 - t2;
     //Vector<3, T> aoDiff = t0 - position;

@@ -25,7 +25,7 @@ class TracerLogicGeneratorI
         // of the DLL (A.K.A abstract factory)
         // It generates or returns (if already constructed) types
         // w.r.t. a type name and parent type if applicable
-        // Pritimive
+        // Primitive
         virtual SceneError      GeneratePrimitiveGroup(GPUPrimGPtr&,
                                                        const std::string& primitiveType) = 0;
         // Accelerator

@@ -104,7 +104,7 @@ class DTreeGroup
 
 
         // Interface
-        // Allocate extra trees and copy them frommthe old tree idss
+        // Allocate extra trees and copy them from the old tree ids
         void                    AllocateDefaultTrees(uint32_t count, const CudaSystem& system);
         void                    AllocateExtra(const std::vector<uint32_t>& oldTreeIds,
                                               const CudaSystem& system);

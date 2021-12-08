@@ -41,7 +41,7 @@ class PTBoundaryWork final
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                 PTBoundaryWork(const CPUEndpointGroupI& eg,
                                                const GPUTransformI* const* t,
                                                bool neeOn, bool misOn);
@@ -69,7 +69,7 @@ class PTPathWork final
                                   PGroup::GetSurfaceFunction>;
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                             PTPathWork(const GPUMaterialGroupI& mg,
                                         const GPUPrimitiveGroupI& pg,
                                         const GPUTransformI* const* t,

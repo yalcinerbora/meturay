@@ -15,7 +15,7 @@ void KCCopyCamera(GPUCamera* newCamera,
 
     // We should safely up cast here
     const GPUCamera& gRefAsDerived = static_cast<const GPUCamera&>(*gRefCamera);
-    // Use inplace new here
+    // Use in-place new here
     new (newCamera) GPUCamera(gRefAsDerived);
 }
 

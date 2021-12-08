@@ -437,7 +437,7 @@ TEST(PPG_DTree, SwapStress)
     constexpr Vector3f MIN_WORLD_BOUND = Vector3f(-10, -10, -10);
     constexpr Vector3f MAX_WORLD_BOUND = Vector3f(10, 10, 10);
     // Change depth on each iteration
-    // just sto stress
+    // just to stress
     constexpr uint32_t DEPTH_MIN = 0;
     constexpr uint32_t DEPTH_MAX = 16;
     // Also change the flux
@@ -464,7 +464,7 @@ TEST(PPG_DTree, SwapStress)
     std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ITERATION_COUNT; iCount++)
     {
-        // Constants for this itertion
+        // Constants for this iteration
         // If a node has %X or more total energy, split
         const float fluxRatio = FLUX_MIN + uniformDist(rng) * (FLUX_MAX - FLUX_MIN);
         // Maximum allowed depth of the tree
@@ -560,7 +560,7 @@ TEST(PPG_DTree, SwapStress)
             {
                 n = &nodes[n->parentIndex];
             }
-            // After back propogation
+            // After back propagation
             // check if we actually reached to the parent
             ptrdiff_t index = n - nodes.data();
             EXPECT_EQ(0, index);
@@ -725,7 +725,7 @@ TEST(PPG_DTree, LargeToSmall)
         {
             n = &nodes[n->parentIndex];
         }
-        // After back propogation
+        // After back propagation
         // check if we actually reached to the parent
         ptrdiff_t index = n - nodes.data();
         EXPECT_EQ(0, index);

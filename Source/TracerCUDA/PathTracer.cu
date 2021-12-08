@@ -62,7 +62,7 @@ TracerError PathTracer::Initialize()
                                                         cudaSystem)) != TracerError::OK)
         return err;
 
-    // Generate your worklist
+    // Generate your work list
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& wInfo : infoList)
     {
@@ -180,7 +180,7 @@ bool PathTracer::Render()
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
     {
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;

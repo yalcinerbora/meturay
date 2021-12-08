@@ -132,7 +132,7 @@ class CudaGPU
 
     protected:
     public:
-        // Constrctors & Destructor
+        // Constrictors & Destructor
         explicit                CudaGPU(int deviceId);
                                 CudaGPU(const CudaGPU&) = delete;
                                 CudaGPU(CudaGPU&&) = default;
@@ -196,7 +196,7 @@ class CudaGPU
         // Smart GPU Calls
         // Automatic stream split
         // Only for grid strided kernels,
-        // Material calls require difrrent GPUs (texture sharing)
+        // Material calls require different GPUs (texture sharing)
         // TODO:
         template<class Function, class... Args>
         __host__ void           AsyncGridStrideKC_X(uint32_t sharedMemSize,

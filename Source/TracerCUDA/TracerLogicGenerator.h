@@ -40,7 +40,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         TracerLogicGenerator&       operator=(const TracerLogicGenerator&) = delete;
                                     ~TracerLogicGenerator() = default;
 
-        // Pritimive
+        // Primitive
         SceneError                  GeneratePrimitiveGroup(GPUPrimGPtr&,
                                                            const std::string& primitiveType) override;
         // Accelerator

@@ -1,7 +1,7 @@
 #pragma once
 /**
 
-Many Constants that are used throught the tracer
+Many Constants that are used throughout the tracer
 
 */
 
@@ -66,7 +66,7 @@ namespace VisorConstants
         // Image Related
         {KeyboardKeyType::G, VisorActionType::SAVE_IMAGE},
         {KeyboardKeyType::H, VisorActionType::SAVE_IMAGE_HDR},
-        // Lifetime Realted
+        // Lifetime Related
         {KeyboardKeyType::ESCAPE, VisorActionType::CLOSE}
     };
 

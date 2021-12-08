@@ -5,7 +5,7 @@ Unreal Engine Physically Based Shader Implementation
 
 https://www.semanticscholar.org/paper/Real-Shading-in-Unreal-Engine-4-by-Karis/91ee695f6a64d8508817fa3c0203d4389c462536
 
-Implementation of Microfacet Shader definition of the Unreal Engine
+Implementation of Micro-facet Shader definition of the Unreal Engine
 
 */
 
@@ -79,7 +79,7 @@ class UnrealMat final
         const Constant1CRef*    dConstMetallic;
         const Constant1CRef*    dConstSpecular;
         const Constant1CRef*    dConstRoughness;
-        // Device Allocations of Textyre References
+        // Device Allocations of Texture References
         const Texture2D3CRef*   dTextureAlbedoRef;
         const Texture2D1CRef*   dTextureMetallicRef;
         const Texture2D1CRef*   dTextureSpecularRef;

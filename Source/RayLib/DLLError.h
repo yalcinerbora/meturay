@@ -2,7 +2,7 @@
 #pragma once
 /**
 
-DLL Error error "Enumeration"
+DLL Error "Enumeration"
 
 */
 

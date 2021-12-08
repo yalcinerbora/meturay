@@ -66,7 +66,7 @@ class CPULightGroupNull final : public CPULightGroupI
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupNull(const GPUPrimitiveGroupI*,
                                                       const CudaGPU&);
                                     ~CPULightGroupNull() = default;

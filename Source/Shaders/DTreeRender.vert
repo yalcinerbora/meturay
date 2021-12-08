@@ -49,7 +49,7 @@ void main(void)
 	// (max radiance already normalized)
 	radiance /= float(1 << (2 * (maxDepth - vDepth)));
 
-	// Do logaritmic scale if requested
+	// Do logarithmic scale if requested
 	float u;
 	if(doLogScale)
 		u = log(1 + radiance) / log(1 + maxRadiance);

@@ -23,7 +23,7 @@ struct PRList
 //
 // Material Key is the index of material
 // Primitive id is the index of the individual primitive
-// Hit is the interpolting weights of the primitive
+// Hit is the interpolating weights of the primitive
 //
 // PrimitiveData struct holds the array of the primitive data
 // (normal, position etc..)
@@ -54,7 +54,7 @@ static HitResult AcceptHit(// Output
                                          leaf,
                                          primData);
     bool closerHit = intersects && (newT < rayData.tMax);
-    // If intersected do alpha test aswell
+    // If intersected do alpha test as well
     if(closerHit)
     {
         bool opaque = PGroup::AlphaTest(hitData, leaf, primData);

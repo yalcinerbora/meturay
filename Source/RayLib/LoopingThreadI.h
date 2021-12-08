@@ -6,8 +6,8 @@ Looping Thread Partial Interface
 used by threads that do same work over and over again
 like tracer thread and visor thread.
 
-Visor thread continously renders stuff untill terminated
-Tracer(s) continiously render stuff untill terminated
+Visor thread continuously renders stuff until terminated
+Tracer(s) continuously render stuff until terminated
 
 User can define internal terminate condition where thread automatically ends
 

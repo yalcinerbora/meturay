@@ -12,7 +12,7 @@ struct ToneMapOptions
 
 static constexpr ToneMapOptions DefaultTMOptions =
 {
-    true,      // Do tonemap
+    true,      // Do tone-map
     true,      // Do gamma
     false,     // Do key adjust
     2.2f,      // sRGB Gamma

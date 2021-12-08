@@ -6,7 +6,7 @@
 // Loaders
 #include "BasicSurfaceLoaders.h"
 
-// SurfaceLoader Constructor/Destructor for pre-loadede DLL config
+// SurfaceLoader Constructor/Destructor for pre-loaded DLL config
 namespace TypeGenWrappers
 {
     template <class Base, class Loader>

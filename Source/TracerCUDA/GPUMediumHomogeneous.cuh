@@ -7,12 +7,11 @@
 
 #include "DeviceMemory.h"
 #include "GPUMediumI.h"
-
-struct GPUHomogenousMediumData
+struct GPUHomogeneousMediumData
 {
 };
 
-class GPUMediumHomogenous final : public GPUMediumI
+class GPUMediumHomogeneous final : public GPUMediumI
 {
     public:
         struct Data
@@ -30,8 +29,8 @@ class GPUMediumHomogenous final : public GPUMediumI
 
     public:
         // Constructors & Destructor
-        __device__                  GPUMediumHomogenous(const Data&, uint32_t index);
-        virtual                     ~GPUMediumHomogenous() = default;
+        __device__                  GPUMediumHomogeneous(const Data&, uint32_t index);
+        virtual                     ~GPUMediumHomogeneous() = default;
 
        // Interface
        __device__ Vector3           SigmaA() const override;
@@ -44,10 +43,10 @@ class GPUMediumHomogenous final : public GPUMediumI
        __device__ Vector3           Transmittance(float distance) const override;
 };
 
-class CPUMediumHomogenous final : public CPUMediumGroupI
+class CPUMediumHomogeneous final : public CPUMediumGroupI
 {
     public:
-        static const char* TypeName() { return "Homogenous"; }
+        static const char* TypeName() { return "Homogeneous"; }
 
         static constexpr const char*    ABSORBTION  = "absorption";
         static constexpr const char*    SCATTERING  = "scattering";
@@ -56,8 +55,8 @@ class CPUMediumHomogenous final : public CPUMediumGroupI
 
     private:
         DeviceMemory                        memory;
-        const GPUMediumHomogenous::Data*    dMediumData;
-        const GPUMediumHomogenous*          dGPUMediums;
+        const GPUMediumHomogeneous::Data*   dMediumData;
+        const GPUMediumHomogeneous*         dGPUMediums;
         GPUMediumList                       gpuMediumList;
         uint32_t                            mediumCount;
 
@@ -80,27 +79,21 @@ class CPUMediumHomogenous final : public CPUMediumGroupI
 };
 
 __device__
-inline GPUMediumHomogenous::GPUMediumHomogenous(const GPUMediumHomogenous::Data& d,
-                                                uint32_t index)
+inline GPUMediumHomogeneous::GPUMediumHomogeneous(const GPUMediumHomogeneous::Data& d,
+                                                 uint32_t index)
     : data(d)
     , index(index)
-    //: sigmaA(sigmaA)
-    //, sigmaS(sigmaS)
-    //, sigmaT(sigmaA + sigmaS)
-    //, ior(ior)
-    //, phase(phase)
-    //, id(id)
 {}
 
-__device__ inline Vector3 GPUMediumHomogenous::SigmaA() const {return data.sigmaA;}
-__device__ inline Vector3 GPUMediumHomogenous::SigmaS() const { return data.sigmaS; }
-__device__ inline Vector3 GPUMediumHomogenous::SigmaT() const { return data.sigmaT; }
-__device__ inline float GPUMediumHomogenous::IOR() const { return data.ior; }
-__device__ inline float GPUMediumHomogenous::Phase() const { return data.phase; }
-__device__ inline uint32_t GPUMediumHomogenous::GlobalIndex() const { return index; }
+__device__ inline Vector3 GPUMediumHomogeneous::SigmaA() const {return data.sigmaA;}
+__device__ inline Vector3 GPUMediumHomogeneous::SigmaS() const { return data.sigmaS; }
+__device__ inline Vector3 GPUMediumHomogeneous::SigmaT() const { return data.sigmaT; }
+__device__ inline float GPUMediumHomogeneous::IOR() const { return data.ior; }
+__device__ inline float GPUMediumHomogeneous::Phase() const { return data.phase; }
+__device__ inline uint32_t GPUMediumHomogeneous::GlobalIndex() const { return index; }
 
 __device__
-inline Vector3 GPUMediumHomogenous::Transmittance(float distance) const
+inline Vector3 GPUMediumHomogeneous::Transmittance(float distance) const
 {
     constexpr Vector3 Zero = Zero3;
     if(data.sigmaT == Zero) return Vector3(1.0f);
@@ -115,27 +108,27 @@ inline Vector3 GPUMediumHomogenous::Transmittance(float distance) const
     return result;
 }
 
-inline const char* CPUMediumHomogenous::Type() const
+inline const char* CPUMediumHomogeneous::Type() const
 {
     return TypeName();
 }
 
-inline const GPUMediumList& CPUMediumHomogenous::GPUMediums() const
+inline const GPUMediumList& CPUMediumHomogeneous::GPUMediums() const
 {
     return gpuMediumList;
 }
 
-inline uint32_t CPUMediumHomogenous::MediumCount() const
+inline uint32_t CPUMediumHomogeneous::MediumCount() const
 {
     return mediumCount;
 }
 
-inline size_t CPUMediumHomogenous::UsedGPUMemory() const
+inline size_t CPUMediumHomogeneous::UsedGPUMemory() const
 {
     return memory.Size();
 }
 
-inline size_t CPUMediumHomogenous::UsedCPUMemory() const
+inline size_t CPUMediumHomogeneous::UsedCPUMemory() const
 {
     return 0;
 }

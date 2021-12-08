@@ -65,7 +65,7 @@ class CPULightGroupPoint final : public CPULightGroupP<GPULightPoint>
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupPoint(const GPUPrimitiveGroupI*,
                                                        const CudaGPU&);
                                     ~CPULightGroupPoint() = default;
@@ -110,7 +110,7 @@ inline void GPULightPoint::Sample(// Output
     distance = direction.Length();
     direction *= (1.0f / distance);
 
-    // Fake pdf to incorporate square faloff
+    // Fake pdf to incorporate square falloff
     pdf = (distance * distance);
 }
 

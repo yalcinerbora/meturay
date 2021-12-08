@@ -96,7 +96,7 @@ struct UnrealDeviceFuncs
         // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
                   TracerFunctions::GSchlick(NdV, roughness);
-        // Frenel Term (Schlick's Approx)
+        // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
         // We need to slightly nudge the ray start
@@ -112,7 +112,7 @@ struct UnrealDeviceFuncs
         // Blend between albedo-black for metallic material
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
-        // Notice that NdL terms are cancelled out
+        // Notice that NdL terms are canceled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
 
         // Ray Out
@@ -207,14 +207,14 @@ struct UnrealDeviceFuncs
         // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
             TracerFunctions::GSchlick(NdV, roughness);
-        // Frenel Term (Schlick's Approx)
+        // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
         // Calculate Radiance
         // Blend between albedo-black for metallic material
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
-        // Notice that NdL terms are cancelled out
+        // Notice that NdL terms are canceled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
 

@@ -98,7 +98,7 @@ int main(int argc, const char* argv[])
     }
     else
     {
-        METU_ERROR_LOG("MVisor currently only support path guider visualzation..");
+        METU_ERROR_LOG("MVisor currently only support path guider visualization..");
     }
 
     return 0;

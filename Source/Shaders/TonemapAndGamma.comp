@@ -7,11 +7,11 @@
 	Description	:
 
 		Partial Implementation of the Paper
-		"Photographics Tone Reproduction for Digital Images"
+		"Photographic Tone Reproduction for Digital Images"
 		by Reinhard et al. and applies gamma correction.
 
 		Only implemented Equation 1,2 and 4. Only global keys are supported
-		there are no any gaussian rings to select optimal key per pixel.
+		there are no any Gaussian rings to select optimal key per pixel.
 
 		Additionally it applies gamma correction to the image assuming
 		supplied image is in linear space

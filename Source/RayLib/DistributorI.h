@@ -8,7 +8,7 @@ Main interface for data distribution between nodes
 Implementation has distributed system logics for creating cluster
 
 It also is responsible for data transfer between nodes.
-Distributor is main backend for all nodes (Analytic / Visor, Tracer)
+Distributor is main back-end for all nodes (Analytic / Visor, Tracer)
 
 */
 
@@ -40,7 +40,7 @@ class DistributorI
             OBJECT
         };
 
-        // Main Recieve
+        // Main Receive
         typedef void(*RecieveFunc)(CommandTag, std::vector<Byte>);
 
     private:
@@ -73,7 +73,7 @@ class DistributorI
         virtual void            Send(const CommandTag,
                                      const std::vector<const char*>) = 0;
 
-        // Recieving Data
+        // Receiving Data
         virtual void            AttachRecieveCallback(RecieveFunc) = 0;
 
         // Misc

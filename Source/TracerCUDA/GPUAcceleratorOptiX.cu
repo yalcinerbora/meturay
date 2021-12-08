@@ -97,7 +97,7 @@ void GPUBaseAcceleratorOptiX::Hit(const CudaSystem&,
                                   const uint32_t) const
 {
     // This call is not used for OptiX
-    // throw an execption if it is called
+    // throw an exception if it is called
     throw TracerException(TracerError::TRACER_INTERNAL_ERROR);
 }
 
@@ -408,7 +408,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             buildInput.triangleArray.numVertices = static_cast<uint32_t>(vertexCount);
             buildInput.triangleArray.vertexBuffers = vertexPtrs.data() + i;
             buildInput.triangleArray.vertexStrideInBytes = sizeof(Vector3f);
-            // Index (we dont use indices)
+            // Index (we don't use indices)
             //buildInput.triangleArray.indexFormat = OPTIX_INDICES_FORMAT_NONE;
             //buildInput.triangleArray.numIndexTriplets = 0;
             //buildInput.triangleArray.indexBuffer = 0;

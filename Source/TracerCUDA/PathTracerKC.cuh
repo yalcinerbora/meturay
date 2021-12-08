@@ -87,7 +87,7 @@ void PathTracerBoundaryWork(// Output
                                        direction,
                                        surface.worldToTangent);
 
-        // We are subsampling (discretely sampling) a single light
+        // We are sub-sampling (discretely sampling) a single light
         // pdf of BxDF should also incorporate this
         float bxdfPDF = aux.prevPDF;
         misWeight = TracerFunctions::PowerHeuristic(1, bxdfPDF,
@@ -99,7 +99,7 @@ void PathTracerBoundaryWork(// Output
        isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
        isCorrectNEERay   || // We hit the correct light as a NEE ray while NEE is on
        isCameraRay       || // We hit as a camera ray which should not be culled when NEE is on
-       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contibute
+       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contribute
     {
         // Data Fetch
         const RayF& r = ray.ray;
@@ -154,7 +154,7 @@ void PathTracerPathWork(// Output
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX  = 1;
-    // Helper Class for better code readibiliy
+    // Helper Class for better code readability
     OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys,
                                           gOutRays,
                                           gOutRayAux,
@@ -210,7 +210,7 @@ void PathTracerPathWork(// Output
     // ===================================== //
     //              NEE PORTION              //
     // ===================================== //
-    // Dont launch NEE if not requested
+    // Don't launch NEE if not requested
     // or material is highly specular
     if(renderState.nee && !isSpecularMat)
     {
@@ -338,7 +338,7 @@ void PathTracerPathWork(// Output
         // When we hit a light we will
         auxOut.prevPDF = pdfPath;
         auxOut.depth++;
-        // Wrie
+        // Write
         outputWriter.Write(PATH_RAY_INDEX, rayOut, auxOut);
     }
     // All Done!

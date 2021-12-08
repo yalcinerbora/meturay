@@ -101,7 +101,7 @@ void TracerThread::LoopWork()
             PrintErrorAndSignalTerminate(tError);
             return;
         }
-        // Reset the Image aswell
+        // Reset the Image as well
         Vector2i newRes, newStart, newEnd;
         resolution.CheckChanged(newRes);
         imgPortionStart.CheckChanged(newStart);
@@ -149,10 +149,10 @@ void TracerThread::LoopWork()
 
     try
     {
-        // Exaust all the generated work
+        // Exhaust all the generated work
         while(tracer->Render());
 
-        // Finalaze the Works
+        // Finalize the Works
         // (send the generated image to the visor etc.)
         tracer->Finalize();
     }
@@ -189,7 +189,7 @@ void TracerThread::FinalWork()
     tracerSystem.ClearScene();
     currentScene = nullptr;
 
-    // Eveything else should destroy gracefully
+    // Everything else should destroy gracefully
 }
 
 TracerError TracerThread::RecreateTracer()

@@ -1,7 +1,7 @@
 #pragma once
 /**
 
-Ray struct for cnvenient usability.
+Ray struct for convenient usability.
 
 */
 
@@ -68,7 +68,7 @@ class Ray<T>
         __device__ __host__ bool                    RefractSelf(const Vector<3, T>& normal,
                                                                 T fromMedium, T toMedium);
 
-        // Randomization (Hemi spherical)
+        // Randomization (Hemispherical)
         __device__ __host__ static Ray              RandomRayCosine(T xi0, T xi1,
                                                                     const Vector<3, T>& normal,
                                                                     const Vector<3, T>& position);

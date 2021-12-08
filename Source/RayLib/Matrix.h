@@ -80,7 +80,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
         __device__ __host__ bool                        operator==(const Matrix&) const;
         __device__ __host__ bool                        operator!=(const Matrix&) const;
 
-        // Utilty
+        // Utility
         __device__ __host__ T                           Determinant() const;
         template<class Q = T>
         __device__ __host__ FloatEnable<Q, Matrix>      Inverse() const;

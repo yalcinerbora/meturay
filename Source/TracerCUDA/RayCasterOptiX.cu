@@ -48,7 +48,7 @@ RayCasterOptiX::~RayCasterOptiX()
     {
         const auto& optixData = optixGPUData[optixDeviceIndex];
 
-        // Destroy using opostie order
+        // Destroy using opposite order
         if(optixData.pipeline) OPTIX_CHECK(optixPipelineDestroy(optixData.pipeline));
         for(auto pg : optixData.programGroups)
             OPTIX_CHECK(optixProgramGroupDestroy(pg));
@@ -205,7 +205,7 @@ TracerError RayCasterOptiX::CreateSBTs(const std::vector<Record<void,void>>& rec
         auto& optixData = optixGPUData[i];
         size_t sbtCount = records.size();
 
-        // I dont know what sbt record pack header wrties
+        // I don't know what sbt record pack header writes
         // to the header maybe it is GPU specific
         // set device beforehand
         CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
@@ -293,11 +293,11 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
         return TracerError::OK;
 
     // Required Data for OptiX
-    // List of traversables for each accellerator, (for each optix GPU)
+    // List of traversables for each accelerator, (for each optix GPU)
     std::vector<std::vector<OptixTraversableHandle>> traversables;
     // Primitive Transform type of the Accelerator Group's Primitive (for each AcceleratorGroup)
     std::vector<PrimTransformType> hPrimTransformTypes;
-    // List of all accelerator's transform ids (for each Acceleraor on the scene)
+    // List of all accelerator's transform ids (for each Accelerator on the scene)
     DeviceMemory allTransformIdMemory(totalAcceleratorCount * sizeof(TransformId));
     TransformId* dAllTransformIds = static_cast<TransformId*>(allTransformIdMemory);
     // Program Group index for each accelerator (for each SBT on the scene)
@@ -497,7 +497,7 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
     PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
     HitStructPtr dHitStructs = rayMemory.HitStructs();
 
-    // Dont bother launching rays if no accel is present on the scene
+    // Don't bother launching rays if no accel is present on the scene
     // (scene is empty)
     if(accelBatches.size() != 0)
     {
@@ -578,7 +578,7 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
     // Sort with respect to the materials keys
     rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
 
-    // Parition w.r.t.material batch
+    // Partition w.r.t.material batch
     RayPartitions<uint32_t> workPartition;
     workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
@@ -625,7 +625,7 @@ void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
     {
         //const auto& p = (*pIt);
 
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;

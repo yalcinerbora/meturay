@@ -73,7 +73,7 @@ class GPUSceneJson : public GPUSceneI
         std::unique_ptr<nlohmann::json>         sceneJson;
         std::u8string                           fileName;
         std::string                             parentPath;
-        // TODO: update scene based on time not yet implemented dont remove this
+        // TODO: update scene based on time not yet implemented don't remove this
         // instead mark it
         [[maybe_unused]] double                 currentTime;
 
@@ -93,7 +93,7 @@ class GPUSceneJson : public GPUSceneI
         void                                    ExpandHitStructSize(const GPUPrimitiveGroupI& pg);
 
         // Private Load Functionality
-        SceneError      GenerateConstructionData(// Striped Listings (Striped from unsued nodes)
+        SceneError      GenerateConstructionData(// Striped Listings (Striped from unused nodes)
                                                  PrimitiveNodeList& primGroupNodes,
                                                  //
                                                  MediumNodeList& mediumGroupNodes,

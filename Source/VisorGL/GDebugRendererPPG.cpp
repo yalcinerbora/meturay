@@ -341,7 +341,7 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
                                    GL_COLOR_ATTACHMENT0 + OUT_VALUE};
     glDrawBuffers(2, Attachments);
 
-    // Change Viewport
+    // Change View-port
     glViewport(0, 0, currentTexture.Width(), currentTexture.Height());
 
     // Global States

@@ -82,7 +82,7 @@ VisorGUI::VisorGUI(VisorCallbacksI& cb,
     style.ScaleAllSizes(x);
     style.Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0.1f);
 
-    // Initi renderer & platform
+    // Init renderer & platform
     ImGui_ImplGlfw_InitForOpenGL(const_cast<GLFWwindow*>(window), true);
     ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
 }

@@ -4,7 +4,7 @@
 Ray Struct that is mandatory for hit acceleration
 
     Ray has two different layouts
-    One is global memory layout which is optimized for memory acess (and minimize padding)
+    One is global memory layout which is optimized for memory access (and minimize padding)
     Second is register layout which is used for cleaner code
 
 */

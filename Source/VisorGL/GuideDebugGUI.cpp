@@ -24,7 +24,7 @@ void GuideDebugGUI::CalculateImageSizes(float& paddingY,
                                         ImVec2& pgImgSize,
                                         const ImVec2& viewportSize)
 {
-    // TODO: Dont assume that we would have at most 4 pg images (excluding ref pg image)
+    // TODO: Don't assume that we would have at most 4 pg images (excluding ref pg image)
     constexpr float REF_IMG_ASPECT = 16.0f / 9.0f;
     constexpr float PADDING_PERCENT = 0.01f;
 
@@ -94,7 +94,7 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     float x, y;
     glfwGetWindowContentScale(window, &x, &y);
 
-    // Initi renderer & platform
+    // Init renderer & platform
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
 

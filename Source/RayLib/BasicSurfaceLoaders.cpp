@@ -264,7 +264,7 @@ SceneError InNodeTriLoaderIndexed::PrimitiveCounts(std::vector<size_t>& result) 
 
 SceneError InNodeTriLoaderIndexed::PrimitiveDataRanges(std::vector<Vector2ul>& result) const
 {
-    // We assume data is shared between all primtives
+    // We assume data is shared between all primitives
     // So data range is [0-positionCount]
     const int index = static_cast<int>(PrimitiveDataType::POSITION);
     const std::string name = PrimitiveDataTypeNames[index];

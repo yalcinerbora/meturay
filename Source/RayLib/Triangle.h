@@ -131,7 +131,7 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     if(t1.HasNaN()) t1 = OrthogonalVector(n[1]);
     if(t2.HasNaN()) t2 = OrthogonalVector(n[2]);
 
-    // Gram�Schmidt othonormalization
+    // Gram-Schmidt orthonormalization
     // This is required since normal may be skewed to hide
     // edges (to create smooth lighting)
     t0 = (t0 - n[0] * n[0].Dot(t0)).Normalize();

@@ -24,7 +24,7 @@ struct STreeNode
     bool                    isLeaf;    // Determines which data the index is holding
 
     // It is either DTree index or next child index
-    // Childs are always grouped (childs + 1 is the other child)
+    // Children are always grouped (children + 1 is the other child)
     uint32_t                index;
 
     // True: left child (the small one), False: right child (the large one)

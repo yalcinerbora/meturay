@@ -5,10 +5,10 @@
 CUDA Device Memory RAII principle classes
 
 New unified memory classes are used where applicable
-These are wrapper of cuda functions and their most important responsiblity is
+These are wrapper of cuda functions and their most important responsibility is
 to delete allocated memory
 
-All of the operations (execpt allocation) are asyncronious.
+All of the operations (except allocation) are asynchronous.
 
 TODO: should we interface these?
 
@@ -85,7 +85,7 @@ class DeviceLocalMemory : public DeviceLocalMemoryI
 };
 
 // Has a CPU Image of current memory
-// Usefull for device static memory that can be generated at CPU while
+// Useful for device static memory that can be generated at CPU while
 // GPU doing work on GPU memory
 // in our case some form of function backed animation can be calculated using these)
 class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
@@ -107,7 +107,7 @@ class DeviceMemoryCPUBacked : public DeviceLocalMemoryI
         DeviceMemoryCPUBacked&      operator=(const DeviceMemoryCPUBacked&);
         DeviceMemoryCPUBacked&      operator=(DeviceMemoryCPUBacked&&);
 
-        // Memcopy
+        // Mem copy
         void                        CopyToDevice(size_t offset = 0, size_t copySize = std::numeric_limits<size_t>::max(), cudaStream_t stream = (cudaStream_t)0);
         void                        CopyToHost(size_t offset = 0, size_t copySize = std::numeric_limits<size_t>::max(), cudaStream_t stream = (cudaStream_t)0);
 

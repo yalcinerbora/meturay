@@ -6,7 +6,7 @@
 //Each process will  have single Distributor and a Tracer or Visor
 //
 //Visor is responsible for delegating commands to multiple Tracer Nodes
-//thorugh this interface (using udp or tcp we will see)
+//throughout this interface (using udp or tcp we will see)
 //
 //*/
 //
@@ -29,7 +29,7 @@
 //      struct Node
 //      {
 //          uint32_t id;
-//          asio::ip::address adress;
+//          asio::ip::address address;
 //
 //
 //      };
@@ -104,7 +104,7 @@
 //      // Check if distributed system is distributed at all
 //      bool                    Alone() override;
 //
-//      // Recieving data from callbacks
+//      // Receiving data from callbacks
 //      void                    AttachCameraCallback(SetCameraFunc) override;
 //      void                    AttachTimeCallback(SetTimeFunc) override;
 //      void                    AttachParamCallback(SetParameterFunc) override;

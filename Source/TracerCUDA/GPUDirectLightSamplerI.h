@@ -31,7 +31,7 @@ class GPUDirectLightSamplerI
                                  //
                                  RandomGPU& rng) const = 0;
 
-        // Probablity density of sampling a particular light
+        // Probability density of sampling a particular light
         // (indicated by lightIndex) towards a position and direction
         // Conditional is the chance of sampling this direction on a selected light
         // Marginal one returns chance of sampling this particular light

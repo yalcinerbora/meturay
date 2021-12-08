@@ -18,7 +18,7 @@ class GuideDebugGUI
         static constexpr const char*    REFERENCE_TEXT = "Reference";
         static constexpr const char*    OPTIONS_TEXT = "Options";
         // Constants & Limits
-        // (TODO: Dont limit this in future)
+        // (TODO: Don't limit this in future)
         static constexpr uint32_t       MAX_PG_IMAGE = 4;
         static constexpr uint32_t       PG_TEXTURE_SIZE = 1024;
 

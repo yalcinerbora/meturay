@@ -201,7 +201,7 @@ static const EnumNameList<VisorActionType> VisorActionTypeNames =
     "FRAME_PREV",
     // Image Related
     "SAVE_IMAGE",
-    // Lifetime Realted
+    // Lifetime Related
     "CLOSE"
 };
 

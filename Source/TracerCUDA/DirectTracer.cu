@@ -80,7 +80,7 @@ TracerError DirectTracer::Initialize()
     if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
 
-    // Generate your worklist
+    // Generate your work list
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& wInfo : infoList)
     {
@@ -116,7 +116,7 @@ TracerError DirectTracer::Initialize()
             {
                 const std::string workTypeName = MangledNames::WorkBatch(pg.Type(), "DirectNormal");
 
-                // Generate work batch from appropirate work pool
+                // Generate work batch from appropriate work pool
                 if((err = normalWorkPool.GenerateWorkBatch(batch, workTypeName.c_str(),
                                                            emptyMat, pg, dTransforms)) != TracerError::OK)
                     return err;
@@ -176,7 +176,7 @@ bool DirectTracer::Render()
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
     {
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;

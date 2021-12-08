@@ -157,8 +157,8 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
                                      static_cast<int>(rayCount),
                                      ValidSplit()));
 
-    // Select algo reads from split locations and writes to backbuffer Ids (half is used)
-    // uses backbuffer ids other half as auxiliary buffer
+    // Select algo reads from split locations and writes to back buffer Ids (half is used)
+    // uses back buffer ids other half as auxiliary buffer
     // This code tries to increase it accordingly
     // Output Count of If also should be considered (add sizeof uint32_t)
     size_t sizeOfTempMemory = std::max(cubSortMemSize, cubIfMemSize + sizeof(uint32_t));
@@ -171,14 +171,14 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
                                    memHit,
                                    {rayCount, rayCount, rayCount * hitStructSize,
                                    rayCount, rayCount, rayCount, rayCount, sizeOfTempMemory});
-    // Set Allocated pointers to propert ptrs
+    // Set Allocated pointers to proper ptrs
     dHitStructs = HitStructPtr(reinterpret_cast<void*>(dHitStructBytePtr),
                                static_cast<int>(hitStructSize));
     dTempMemory = reinterpret_cast<void*>(dTempBytePtr);
     dCurrentIds = dIds0;
     dCurrentKeys = dKeys0;
 
-    // Make nullptr if no hitstruct is needed
+    // Make nullptr if no hit struct is needed
     if(hitStructSize == 0)
         dHitStructs = HitStructPtr(nullptr, static_cast<int>(hitStructSize));
 
@@ -243,7 +243,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
 {
     CUDA_CHECK(cudaSetDevice(leaderDevice.DeviceId()));
 
-    // Use double buffers for partition auxilary data
+    // Use double buffers for partition auxiliary data
     RayId* dEmptyIds = (dCurrentIds == dIds0) ? dIds1 : dIds0;
     HitKey* dEmptyKeys = (dCurrentKeys == dKeys0) ? dKeys1 : dKeys0;
 
@@ -291,7 +291,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
                                 hSelectCount);
 
     // We need to get dDenseIndices & dDenseKeys
-    // Memcopy to vectors
+    // Mem copy to vectors
     std::vector<uint16_t> hDenseKeys(hSelectCount);
     std::vector<uint32_t> hDenseIndices(hSelectCount);
     CUDA_CHECK(cudaMemcpy(hDenseKeys.data(), dBatches,

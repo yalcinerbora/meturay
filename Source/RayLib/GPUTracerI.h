@@ -55,10 +55,10 @@ class GPUTracerI
         virtual void                    GenerateWork(const VisorTransform&, uint32_t cameraId) = 0;
         // Generate Work for Arbitrary GPU Camera
         virtual void                    GenerateWork(const GPUCameraI&) = 0;
-        virtual bool                    Render() = 0;   // Continue Working (untill no work is left)
+        virtual bool                    Render() = 0;   // Continue Working (until no work is left)
         virtual void                    Finalize() = 0; // Finalize work (write to image)
 
-        // Image Reated
+        // Image Seated
         virtual void                    SetImagePixelFormat(PixelFormat) = 0;
         virtual void                    ReportionImage(Vector2i start = Zero2i,
                                                        Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;

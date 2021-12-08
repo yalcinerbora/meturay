@@ -181,7 +181,7 @@ enum class VisorActionType
     // Image Related
     SAVE_IMAGE,
     SAVE_IMAGE_HDR,
-    // Lifetime Realted
+    // Lifetime Related
     CLOSE,
 
     END

@@ -44,7 +44,7 @@ uint32_t CalculateSphericalPixelId(const Vector3& dir,
     Vector2f thetaPhi = Utility::CartesianToSphericalUnit(dirZup);
 
     // Normalize to generate UV [0, 1]
-    // tetha range [-pi, pi]
+    // theta range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
     // If we are at edge point (u == 1) make it zero since
     // piecewise constant function will not have that pdf (out of bounds)
@@ -55,7 +55,7 @@ uint32_t CalculateSphericalPixelId(const Vector3& dir,
     // make it inbound
     v = (v == 1.0f) ? (v - MathConstants::SmallEpsilon) : v;
 
-    // Check for numeric unstaibility (just clamp the data)
+    // Check for numeric instability (just clamp the data)
     assert(u >= 0.0f && u < 1.0f);
     assert(v >= 0.0f && v < 1.0f);
 
@@ -120,7 +120,7 @@ void RPGTracerBoundaryWork(// Output
                                        position,
                                        direction,
                                        surface.worldToTangent);
-        // We are subsampling (discretely sampling) a single light
+        // We are sub-sampling (discretely sampling) a single light
         // pdf of BxDF should also incorporate this
         float bxdfPDF = aux.prevPDF;
         misWeight = TracerFunctions::PowerHeuristic(1, bxdfPDF,
@@ -187,7 +187,7 @@ void RPGTracerPathWork(// Output
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX  = 1;
-    // Helper Class for better code readibiliy
+    // Helper Class for better code readability
     OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys,
                                           gOutRays,
                                           gOutRayAux,
@@ -248,7 +248,7 @@ void RPGTracerPathWork(// Output
     // ===================================== //
     //              NEE PORTION              //
     // ===================================== //
-    // Dont launch NEE if not requested
+    // Don't launch NEE if not requested
     // or material is highly specular
     if(renderState.nee && !isSpecularMat && !isCameraRay)
     {
@@ -284,7 +284,7 @@ void RPGTracerPathWork(// Output
                               // Check if light can be sampled (meaning it is not a
                               // dirac delta light (point light spot light etc.)
                               renderState.gLightList[lightIndex]->CanBeSampled() &&
-                              // If current ray is camera ray we dont launch NEE ray anyway so
+                              // If current ray is camera ray we don't launch NEE ray anyway so
                               // this is kinda redundant
                               !isCameraRay);
 
@@ -382,7 +382,7 @@ void RPGTracerPathWork(// Output
 
         // Calculate the actual pixel id and add a sample
         // when the very first path ray is launched
-        // Dont multiply with BxDF here
+        // Don't multiply with BxDF here
         if(isCameraRay)
         {
             auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(),

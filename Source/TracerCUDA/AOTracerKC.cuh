@@ -97,7 +97,7 @@ inline void AOWork(// Output
         QuatF q = Quat::RotationBetweenZAxis(normal);
         direction = q.ApplyRotation(direction);
 
-        // Cos Tetha
+        // Cos Theta
         float nDotL = max(normal.Dot(direction), 0.0f);
 
         // Ray out

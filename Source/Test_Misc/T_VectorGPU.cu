@@ -117,7 +117,7 @@ __global__ void KOperators(Vector4* results)
    Vector4 b(1.0f, 1.0f, 1.0f, 1.0f);
    Vector4 c(2.0f, 4.0f, 6.0f, 8.0f);
 
-   // Artihmetic
+   // Arithmetic
    Vector4 v0 = a + b;
    Vector4 v1 = a - b;
    Vector4 v2 = a * c;
@@ -214,7 +214,7 @@ __global__ void KFunctions2(Vector4* results)
    Vector4 v2 = b.Floor();
    Vector4 v3 = b.Ceil();
 
-   // Self Equavilents
+   // Self Equivalents
    Vector4 v4 = c;
    v4.AbsSelf();
    Vector4 v5 = b;

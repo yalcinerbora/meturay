@@ -2,7 +2,7 @@
 /**
 
 Static Interface of Loop based primitive traversal
-with ustom Intersection and Hit
+with custom Intersection and Hit
 
 */
 
@@ -18,7 +18,7 @@ with ustom Intersection and Hit
 
 #include <cub/cub.cuh>
 
-// This is fundemental Linear traversal kernel
+// This is fundamental Linear traversal kernel
 template <class PGroup>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCIntersectLinear(// O

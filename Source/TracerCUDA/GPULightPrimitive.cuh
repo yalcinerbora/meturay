@@ -89,7 +89,7 @@ class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroup(const GPUPrimitiveGroupI*,
                                                   const CudaGPU& gpu);
                                     ~CPULightGroup() = default;
@@ -180,12 +180,12 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
     Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
     direction.NormalizeSelf();
 
-    // Generated direction vector is on surface space (hemisperical)
+    // Generated direction vector is on surface space (hemispherical)
     // Convert it to normal oriented hemisphere (world space)
     QuatF q = Quat::RotationBetweenZAxis(normal);
     direction = q.ApplyRotation(direction);
 
-    // Convert Ray to Worldspace
+    // Convert Ray to World space
     position = gTransform.LocalToWorld(position);
     direction = gTransform.LocalToWorld(direction);
 

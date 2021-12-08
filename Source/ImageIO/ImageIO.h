@@ -94,7 +94,7 @@ void ImageIO::ConvertForEXR(Imath::half* toData,
     for(uint32_t j = 0; j < dimension[1]; j++)
     for(uint32_t i = 0; i < dimension[0]; i++)
     {
-        // Dont forget to convert pixels
+        // Don't forget to convert pixels
         uint32_t inIndex = j * dimension[0] + i;
         uint32_t invertexY = dimension[1] - j - 1;
         uint32_t outIndex = invertexY * dimension[0] + i;

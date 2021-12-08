@@ -1,4 +1,4 @@
-#include "RadixSort.cuh"
+#include "ParallelRadixSort.cuh"
 
 //// Integral Types
 //DEFINE_RADIX_VALUE_BOTH(int)

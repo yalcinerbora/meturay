@@ -1,9 +1,9 @@
 #pragma once
 /**
-Parallel Radix Sort Algorithims
+Parallel Radix Sort Algorithms
 Can defines a custom type
 
-Uses cub backend.
+Uses cub back end.
 
 */
 
@@ -17,10 +17,10 @@ Uses cub backend.
 #include "CudaSystem.h"
 
 template<class Type, bool isAscending = true>
-__host__ void KCRadixSortArray(Type* dataOut, const Type* dataIn,
-                               size_t elementCount,
-                               int bitStart = 0, int bitEnd = sizeof(Type) * 8,
-                               cudaStream_t stream = (cudaStream_t)0)
+__host__ void RadixSortValGPU(Type* dataOut, const Type* dataIn,
+                              size_t elementCount,
+                              int bitStart = 0, int bitEnd = sizeof(Type) * BYTE_BITS,
+                              cudaStream_t stream = (cudaStream_t)0)
 {
     // Delegating to cub here
     size_t bufferSize = 0;
@@ -58,11 +58,11 @@ __host__ void KCRadixSortArray(Type* dataOut, const Type* dataIn,
 }
 
 template<class Type, class Key, bool isAscending = true>
-__host__ void KCRadixSortArray(Type* dataOut, Key* keyOut,
-                               const Type* dataIn, const Key* keyIn,
-                               size_t elementCount,
-                               int bitStart = 0, int bitEnd = sizeof(Key) * 8,
-                               cudaStream_t stream = (cudaStream_t)0)
+__host__ void RadixSortValKeyGPU(Type* dataOut, Key* keyOut,
+                                 const Type* dataIn, const Key* keyIn,
+                                 size_t elementCount,
+                                 int bitStart = 0, int bitEnd = sizeof(Key) * BYTE_BITS,
+                                 cudaStream_t stream = (cudaStream_t)0)
 {
     if(isAscending)
     {
@@ -109,16 +109,16 @@ __host__ void KCRadixSortArray(Type* dataOut, Key* keyOut,
 // Meta Definitions
 #define DEFINE_RADIX_VALUE(type, order) \
     template \
-    __host__ void KCRadixSortArray<type, order>(type*, const type*, \
-                                                size_t, int, int, \
-                                                cudaStream_t);
+    __host__ void RadixSortValGPU<type, order>(type*, const type*, \
+                                               size_t, int, int, \
+                                               cudaStream_t);
 
 #define DEFINE_RADIX_KEY_VALUE(key, type, order) \
     template \
-    __host__ void KCRadixSortArray<type, key, order>(type*, key*, \
-                                                     const type*, const key*, \
-                                                     size_t, int, int, \
-                                                     cudaStream_t);
+    __host__ void RadixSortValKeyGPU<type, key, order>(type*, key*, \
+                                                       const type*, const key*, \
+                                                       size_t, int, int, \
+                                                       cudaStream_t);
 
 #define DEFINE_RADIX_VALUE_BOTH(type) \
     DEFINE_RADIX_VALUE(type, true); \

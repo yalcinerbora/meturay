@@ -56,7 +56,7 @@ class CPULightGroupConstant final : public CPULightGroupP<GPULightConstant>
     private:
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupConstant(const GPUPrimitiveGroupI*,
                                                        const CudaGPU&);
                                     ~CPULightGroupConstant() = default;

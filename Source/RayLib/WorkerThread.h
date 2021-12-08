@@ -22,7 +22,7 @@ class WorkerThread
         std::thread                         workerThread;
         bool                                stopSignal;
 
-        // Queue and Associated Conc Helpers
+        // Queue and Associated Helpers
         std::queue<std::function<void()>>   assignedJobs;
         mutable std::mutex                  mutex;
         mutable std::condition_variable     conditionVar;

@@ -137,7 +137,7 @@ struct SphrFunctions
         Vector3f center = data;
         float radius = data[3];
 
-        // Do Intersecton test on local space
+        // Do Intersection test on local space
         RayF r = transform.WorldToLocal(rayData.ray);
         Vector3 pos; float t;
         bool intersects = r.IntersectsSphere(pos, t, center, radius);
@@ -252,7 +252,7 @@ struct SphereSurfaceGenerator
 
         // Gen UV
         Vector2 uv = sphrCoords;
-        // tetha is [0, 2 * pi], normalize
+        // theta is [0, 2 * pi], normalize
         uv[0] *= 0.5 * MathConstants::InvPi;
         // phi is [-pi/2, pi/2], normalize
         uv[1] = uv[1] * MathConstants::InvPi + 0.5f;
@@ -307,7 +307,7 @@ class GPUPrimitiveSphere final
                                                 ~GPUPrimitiveSphere() = default;
 
         // Interface
-        // Pirmitive type is used for delegating scene info to this class
+        // Primitive type is used for delegating scene info to this class
         const char*                             Type() const override;
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDataNodes, double time,

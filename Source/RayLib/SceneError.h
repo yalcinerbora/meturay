@@ -75,7 +75,7 @@ struct SceneError : public ErrorI
             PRIM_ACCEL_MISMATCH,
             PRIM_MAT_MISMATCH,
             // Updating the Scene
-            // Primitive Update Size Mismmatch
+            // Primitive Update Size Mismatch
             PRIM_UPDATE_SIZE_MISMATCH,
             // Too many types than key system can handle
             TOO_MANY_ACCELERATOR_GROUPS,
@@ -224,7 +224,7 @@ inline SceneError::operator std::string() const
         "Primitive-Material mismatch",
         "Primitive-Accelerator mismatch",
         // Updating the scene
-        // Primitive Update Size Mismmatch
+        // Primitive Update Size Mismatch
         "Updating primitive has more nodes than older itself",
         // Too many types than key system can handle
         "Accelerator groups required for this scene exceeds limit",

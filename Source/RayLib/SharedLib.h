@@ -2,7 +2,7 @@
 
 /**
 
-Functionalty to Load DLLs or SOs
+Functionality to Load DLLs or SOs
 
 */
 

@@ -28,7 +28,7 @@ void GDebugRendererRef::LoadPaths(const Vector2i& res,
     size_t locFile = fileRegexStr.find_first_of(RES_TOKEN);
     fileRegexStr.replace(locFile, RES_TOKEN.length(), REGEX);
 
-    // Dont forget to regexify extension '.'
+    // Don't forget to regexify extension '.'
     Utility::ReplaceAll(regexStr, ".", "\\.");
     Utility::ReplaceAll(fileRegexStr, ".", "\\.");
 
@@ -49,7 +49,7 @@ void GDebugRendererRef::LoadPaths(const Vector2i& res,
         std::regex_search(fileName, match, std::regex(REGEX.data()));
         std::string pixelPortion = match.str();
 
-        // Dont forget that pixels are ordered reverse
+        // Don't forget that pixels are ordered reverse
         // to be sorted properly
         Vector2i res;
         res[1] = std::stoi(pixelPortion.substr(pixelPortion.find_first_of('[') + 1,

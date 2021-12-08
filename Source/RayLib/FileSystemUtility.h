@@ -4,7 +4,7 @@
 #include <vector>
 #include <regex>
 
-// These Utiliy is provided only because NVCC complains
+// These Utility is provided only because NVCC complains
 // when it includes std::filesystem library
 // nvcc does not use latest libstdc++ i guess but w/e
 

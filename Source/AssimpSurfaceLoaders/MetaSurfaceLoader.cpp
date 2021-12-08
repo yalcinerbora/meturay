@@ -27,7 +27,7 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
                               aiProcess_GenBoundingBoxes |
                               // Generate Normals if not avail
                               aiProcess_GenNormals |
-                              // Generate Tangent and Bitangents if not avail
+                              // Generate Tangent and Bi-tangents if not avail
                               //aiProcess_CalcTangentSpace |
                               // Triangulate
                               aiProcess_Triangulate |
@@ -66,7 +66,7 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
                                  "Assimp_loader: Only triangle as a primitive is supported");
     }
-    // Take owneship of the scene
+    // Take ownership of the scene
     scene = importer.GetOrphanedScene();
 }
 

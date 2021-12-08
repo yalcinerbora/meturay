@@ -25,6 +25,6 @@ class NodeI
         virtual NodeError           Initialize() = 0;
 //        virtual TracerStatus        Status() const = 0;
 
-        // Main Thead
+        // Main Thread
         virtual void                Work() = 0;
 };

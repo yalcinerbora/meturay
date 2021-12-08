@@ -16,7 +16,7 @@ template class Vector<4, int32_t>;
 // Unsigned Integer Type
 // IMPORTANT: This (and the non extern brother in the Vector.cu)
 // Breaks the at the __cudaRegisterFatbinary() when you load VisorGL.so.
-// I dont know why...
+// I don't know why...
 // template class Vector<2, uint32_t>;
 // template class Vector<3, uint32_t>;
 // template class Vector<4, uint32_t>;

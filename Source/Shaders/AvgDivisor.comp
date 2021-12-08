@@ -1,13 +1,13 @@
 #version 430
 /*
-	**Avg Value Divison Shader**
+	**Avg Value Division Shader**
 
 	File Name	: AvgDivisor.comp
 	Author		: Bora Yalciner
 	Description	:
 
 		After Luminance Reduction shader
-		this shader simply divdies the accummulated luminance values
+		this shader simply divides the accumulated luminance values
 		with the resolution to actually get average lum value
 
 		This kernel should be called with a single thread
@@ -26,7 +26,7 @@ SSB_OUTPUT buffer LuminanceData
 	float avgLum;
 };
 
-// Unfiroms
+// Uniforms
 U_RES uniform ivec2 resolution;
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;

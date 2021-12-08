@@ -4,12 +4,12 @@
 Linear Accelerator Implementation
 
 This is actually not an accelerator
-it traverses the "constructed" (portionized)
+it traverses the "constructed"
 group of primitives and calls intersection functions
 one by one
 
-It is here for sinple scenes and objects in which
-tree constructio would provide additional overhead.
+It is here for simple scenes and objects in which
+tree construction would provide additional overhead.
 
 */
 
@@ -31,7 +31,7 @@ tree constructio would provide additional overhead.
 #include "GPUAcceleratorLinearKC.cuh"
 
 // This should be an array?
-// Most of the time each accelerator will be constructred with a
+// Most of the time each accelerator will be constructed with a
 // Singular primitive batch, it should be better to put size constraint
 //using SurfaceDataList = std::vector<uint32_t>;
 using SurfaceMaterialPairs = std::array<Vector2ul, SceneConstants::MaxPrimitivePerSurface>;

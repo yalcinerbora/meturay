@@ -41,7 +41,7 @@ class PPGBoundaryWork
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         PPGBoundaryWork(const CPUEndpointGroupI& eg,
                                                         const GPUTransformI* const* t,
                                                         bool neeOn, bool misOn);
@@ -70,7 +70,7 @@ class PPGWork
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         PPGWork(const GPUMaterialGroupI& mg,
                                                 const GPUPrimitiveGroupI& pg,
                                                 const GPUTransformI* const* t,

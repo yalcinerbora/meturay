@@ -36,7 +36,7 @@ class GPULightSamplerUniform : public GPUDirectLightSamplerI
                                         //
                                         RandomGPU& rng) const override;
 
-        // Probablity density of sampling a particular light
+        // Probability density of sampling a particular light
         // (indicated by lightIndex) towards a position and direction
         // Conditional is the chance of sampling this direction on a selected light
         // Marginal one returns chance of sampling this particular light
@@ -113,7 +113,7 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
     const GPULightI* light = gLights[index];
     light->Sample(lDistance, direction,
                   pdf, position, rng);
-    // Incorporate the PDF of selecting that ligjt
+    // Incorporate the PDF of selecting that light
     pdf *= (1.0f / static_cast<float>(lightCount));
     lightIndex = index;
     key = light->WorkKey();
@@ -121,14 +121,14 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
     // Return infinite (or very large distance) for
     // primitive lights since those have to hit in order to function properly
     // For rest slightly nudge the distance for preventing
-    // numerical unstability
+    // numerical instability
     lDistance = (light->IsPrimitiveBackedLight())
                     ? FLT_MAX
                     : (lDistance + MathConstants::Epsilon);
     return true;
 }
 
-// Probablity density of sampling a particular light
+// Probability density of sampling a particular light
 // (indicated by lightIndex) towards a position and direction
 __device__
 inline void GPULightSamplerUniform::Pdf(// Outputs

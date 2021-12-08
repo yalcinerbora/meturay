@@ -112,7 +112,7 @@ void PPGTracerBoundaryWork(// Output
                                        direction,
                                        surface.worldToTangent);
 
-        // We are subsampling (discretely sampling) a single light
+        // We are sub-sampling (discretely sampling) a single light
         // pdf of BxDF should also incorporate this
         float bxdfPDF = aux.prevPDF;
         misWeight = TracerFunctions::PowerHeuristic(1, bxdfPDF,
@@ -140,7 +140,7 @@ void PPGTracerBoundaryWork(// Output
     // else misWeight is 1.0f
     total *= misWeight;
 
-    // Prevous Path's index
+    // Previous Path's index
     int8_t prevDepth = aux.depth - 1;
     uint8_t pathIndex = DeterminePathIndex(prevDepth);
 
@@ -149,25 +149,25 @@ void PPGTracerBoundaryWork(// Output
        isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
        isCorrectNEERay   || // We hit the correct light as a NEE ray while NEE is on
        isCameraRay       || // We hit as a camera ray which should not be culled when NEE is on
-       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contibute
+       isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contribute
     {
         // Accumulate the pixel
         ImageAccumulatePixel(renderState.gImage,
                              aux.pixelIndex,
                              Vector4f(total, 1.0f));
 
-        // Also backpropogate this radiance to the path nodes
+        // Also back propagate this radiance to the path nodes
         if(aux.type != RayType::CAMERA_RAY &&
            // If current path is the first vertex in the chain skip
            pathIndex != 0)
         {
-            // Accummulate Radiance from 2nd vertex (including this vertex) away
+            // Accumulate Radiance from 2nd vertex (including this vertex) away
             uint8_t prevPathIndex = pathIndex - 1;
             gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
         }
     }
 
-    // Accumulate to the write tree aswell for direct contribution
+    // Accumulate to the write tree as well for direct contribution
     // Do this only if path ray hits the light
     // regardless of nee is on or off
     if(aux.type == RayType::PATH_RAY ||
@@ -211,7 +211,7 @@ void PPGTracerPathWork(// Output
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX  = 1;
-    // Helper Class for better code readibiliy
+    // Helper Class for better code readability
     OutputWriter<RayAuxPPG> outputWriter(gOutBoundKeys,
                                          gOutRays,
                                          gOutRayAux,
@@ -266,7 +266,7 @@ void PPGTracerPathWork(// Output
                              aux.pixelIndex,
                              Vector4f(total, 1.0f));
 
-        // Accumulate this to the paths aswell
+        // Accumulate this to the paths as well
         if(total.HasNaN()) printf("NAN Found emissive!!!\n");
         gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
@@ -278,7 +278,7 @@ void PPGTracerPathWork(// Output
     // ===================================== //
     //              NEE PORTION              //
     // ===================================== //
-    // Dont launch NEE if not requested
+    // Don't launch NEE if not requested
     // or material is highly specular
     if(renderState.nee && !isSpecularMat)
     {

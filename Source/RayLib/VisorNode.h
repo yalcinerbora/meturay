@@ -3,10 +3,10 @@
 
 V
 
-This Distributor is user interfacable thorugh
+This Distributor is user interfacable thorough
 Visor and Analytic Classes/Programs.
 
-This deleagtes user input and recieves user output (image)
+This delegates user input and receives user output (image)
 
 */
 

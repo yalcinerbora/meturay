@@ -19,7 +19,7 @@
             const size_t length = unicodeStr.length();
             const DWORD kFlags = MB_ERR_INVALID_CHARS;
 
-            // Quaery string size
+            // Quarry string size
             const int utf16Length = ::MultiByteToWideChar(
                 CP_UTF8,                    // Source string is in UTF-8
                 kFlags,                     // Conversion flags

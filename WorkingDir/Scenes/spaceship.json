@@ -52,7 +52,7 @@
         {
             // Glass Medium
             "id": 1,
-            "type" : "Homogenous",
+            "type" : "Homogeneous",
 
             "absorption": [0, 0 ,0],
             "scattering": [0, 0, 0],

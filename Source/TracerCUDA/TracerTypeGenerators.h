@@ -7,10 +7,10 @@ Most of the time each DLL will came with its own
 Class construction functions (which means calling constructor would suffice)
 
 These functions define how generators should be defined. If a type will be generated
-accross DLL boundaries it should declare
+across DLL boundaries it should declare
 
 It also hints how a constructor should be defined. Accelerator should take primitive
-as an input. (since those types are storngly tied)
+as an input. (since those types are strongly tied)
 
 */
 #include "RayLib/SceneStructs.h"
@@ -21,7 +21,7 @@ class GPUSceneI;
 class CudaGPU;
 class CudaSystem;
 
-// Statically Inerfaced Generators
+// Statically Interfaced Generators
 template<class TracerLogic>
 using TracerGeneratorFunc = GPUTracerI* (*)(const CudaSystem&,
                                             const GPUSceneI&,

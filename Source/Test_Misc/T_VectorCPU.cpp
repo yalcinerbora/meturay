@@ -81,7 +81,7 @@ TEST(VectorCPU, Operators)
     Vector4 b(1.0f, 1.0f, 1.0f, 1.0f);
     Vector4 c(2.0f, 4.0f, 6.0f, 8.0f);
 
-    // Artihmetic
+    // Arithmetic
     Vector4 v0 = a + b;
     Vector4 v1 = a - b;
     Vector4 v2 = a * c;
@@ -242,7 +242,7 @@ TEST(VectorCPU, Functions2)
                                    static_cast<const float*>(v3) + 4),
                 ElementsAre(FloatEq(-2.0f), FloatEq(-2.0f), FloatEq(3.0f), FloatEq(3.0f)));
 
-    // Self Equavilents
+    // Self Equivalents
     Vector4 v4 = c;
     v4.AbsSelf();
     Vector4 v5 = b;

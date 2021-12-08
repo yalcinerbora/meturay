@@ -55,7 +55,7 @@ void ToneMapGL::ToneMap(GLuint sdrTexture,
     }
     // Either gamma or not, call ToneMap shader
     // since we need to transport image to SDR image
-    // Post process sahder requires it to be there
+    // Post process shader requires it to be there
 
     // Align Padding for UBO
     TMOBufferGL tmOptsGL;

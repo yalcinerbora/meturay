@@ -65,7 +65,7 @@ class CPULightGroupDirectional final : public CPULightGroupP<GPULightDirectional
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupDirectional(const GPUPrimitiveGroupI*,
                                                              const CudaGPU&);
                                     ~CPULightGroupDirectional() = default;

@@ -89,7 +89,7 @@ set(PREPROCESSOR_GENERIC
     METU_SHARED_VISORGL)
 
 # Platform Specific Libraries
-# TBB for std::exectuion (clang & GCC)
+# TBB for std::execution (clang & GCC)
 if(MSVC)
     set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3dll)
 elseif(UNIX)

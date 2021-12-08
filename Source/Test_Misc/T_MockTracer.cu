@@ -64,7 +64,7 @@ using namespace std::chrono_literals;
 //                                           const std::map<uint32_t, BaseLeaf>&) override { return SceneError::OK; }
 //
 //                // Construction & Destruction
-//                TracerError         Constrcut(const CudaSystem&) override { return TracerError::OK; }
+//                TracerError         Construct(const CudaSystem&) override { return TracerError::OK; }
 //                TracerError         Destruct(const CudaSystem&) override { return TracerError::OK; }
 //        };
 //
@@ -227,7 +227,7 @@ using namespace std::chrono_literals;
 //    // Delegate Stuff Interleaved
 //    for(uint32_t i = 0; i < rayCount; i++)
 //    {
-//        // Key index is used to acces RayGMem (this program does not care about actual ray)
+//        // Key index is used to access RayGMem (this program does not care about actual ray)
 //        //uint32_t keyIndex = dRayIds[i];
 //
 //        // Each Iteration some of the rays are missed (only first ray in this case)
@@ -353,7 +353,7 @@ using namespace std::chrono_literals;
 //    materials.emplace(std::make_pair(static_cast<uint32_t>(BaseAcceleratorMock::BoundaryMatKey),
 //                                     &mockMaterials.back()));
 //
-//    // We have total of 8 material seperated by 2 accelerators
+//    // We have total of 8 material separated by 2 accelerators
 //    return TracerError::OK;
 //}
 //

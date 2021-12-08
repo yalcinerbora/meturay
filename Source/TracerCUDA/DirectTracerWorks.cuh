@@ -36,7 +36,7 @@ class DirectTracerBoundaryWork final
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                 DirectTracerBoundaryWork(const CPUEndpointGroupI& eg,
                                                          const GPUTransformI* const* t);
                                 ~DirectTracerBoundaryWork() = default;
@@ -62,7 +62,7 @@ class DirectTracerFurnaceWork final
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         DirectTracerFurnaceWork(const GPUMaterialGroupI& mg,
                                                                 const GPUPrimitiveGroupI& pg,
                                                                 const GPUTransformI* const* t);
@@ -92,7 +92,7 @@ class DirectTracerPositionWork final
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         DirectTracerPositionWork(const GPUMaterialGroupI& mg,
                                                                  const GPUPrimitiveGroupI& pg,
                                                                  const GPUTransformI* const* t);
@@ -125,7 +125,7 @@ class DirectTracerNormalWork final
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         DirectTracerNormalWork(const GPUMaterialGroupI& mg,
                                                                const GPUPrimitiveGroupI& pg,
                                                                const GPUTransformI* const* t);

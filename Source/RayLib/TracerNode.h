@@ -4,7 +4,7 @@
 
 Tracer Node Interface.
 
-This interface defines process behaviour between
+This interface defines process behavior between
 
 */
 

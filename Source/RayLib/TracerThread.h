@@ -40,7 +40,7 @@ class TracerThread : public LoopingThreadI
         // since it is GPU based) this will come in handy
         std::atomic_bool            tracerCrashSignal;
         // Not initialized Bool
-        // Only accesed from the thread
+        // Only accessed from the thread
         // If system is stopped and started again
         // All objects needs to be re-initialized (re-constructed)
         bool                        isPrevStopped;

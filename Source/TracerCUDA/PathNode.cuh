@@ -5,7 +5,7 @@
 Path Node Related Structures
 
 These structs are used to express chain of paths
-which are usefull when a tracer needs to hold an entire information
+which are useful when a tracer needs to hold an entire information
 about a path. (i.e MLT BDPT style tracers)
 
 In initial case path node structs are crated to hold "Practical Path Guiding" related
@@ -50,7 +50,7 @@ __device__ __forceinline__
 Vector3f PathNode::Wi(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType next = prevNext[1];
-    // Specifically put infinty here to catch some errors
+    // Specifically put infinity here to catch some errors
     if(next == InvalidIndex) return Vector3f(INFINITY);
     //
     Vector3f wi = gNodeList[pathStartIndex + next].worldPosition - worldPosition;
@@ -62,7 +62,7 @@ __device__ __forceinline__
 Vector3f PathNode::Wo(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType prev = prevNext[0];
-    // Specifically put infinty here to catch some errors
+    // Specifically put infinity here to catch some errors
     if(prev == InvalidIndex) return Vector3f(INFINITY);
     //
     Vector3f wi = gNodeList[pathStartIndex + prev].worldPosition - worldPosition;
@@ -89,7 +89,7 @@ struct PathGuidingNode : public PathNode
 
     // Accumulate the generated radiance to the path
     // Radiance provided has to be from the camera (or starting point)
-    // of the path so that the class can utilize its own throuhput to calculate
+    // of the path so that the class can utilize its own throughput to calculate
     // radiance of that path
     __device__ void     AccumRadiance(const Vector3f& endPointRadiance);
     __device__ void     AccumRadianceDownChain(const Vector3f& endPointRadiance,
@@ -102,7 +102,7 @@ __device__ __forceinline__
 void PathGuidingNode::AccumRadiance(const Vector3f& endPointRadiance)
 {
     // Radiance Factor shows the energy ratio between the path start point
-    // and this location, so divison will give the radiance of that location
+    // and this location, so division will give the radiance of that location
     totalRadiance[0] += (radFactor[0] == 0.0f) ? 0.0f : endPointRadiance[0] / radFactor[0];
     totalRadiance[1] += (radFactor[1] == 0.0f) ? 0.0f : endPointRadiance[1] / radFactor[1];
     totalRadiance[2] += (radFactor[2] == 0.0f) ? 0.0f : endPointRadiance[2] / radFactor[2];

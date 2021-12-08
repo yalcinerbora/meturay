@@ -42,14 +42,14 @@ class SceneNodeJson final : public SceneNodeI
                                         SceneNodeJson(const nlohmann::json&, NodeId id, bool forceFetchAll = false);
                                         ~SceneNodeJson() = default;
 
-        // Direct Singular data loading (id inspecific)
+        // Direct Singular data loading (id unspecific)
         std::string                     Name() const override;
         std::string                     Tag() const override;
 
         // Check availability of certain node
         bool                            CheckNode(const std::string& name) const override;
 
-        // Id pair inspecific data loading
+        // Id pair unspecific data loading
         size_t                          CommonListSize(const std::string& name) const override;
 
         bool                            CommonBool(const std::string& name, double time = 0.0) const override;

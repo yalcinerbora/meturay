@@ -31,7 +31,7 @@ class GPUAccGroupOptiXI
         virtual OptixTraversableList    GetOptixTraversables() const = 0;
         virtual PrimTransformType       GetPrimitiveTransformType() const = 0;
         virtual const std::vector<bool> GetCullFlagPerAccel() const = 0;
-        // This is not type safe unfortunely
+        // This is not type safe unfortunately
         virtual const RecordList&       GetRecords() const = 0;
         virtual const SBTCountList&     GetSBTCounts() const = 0;
         //

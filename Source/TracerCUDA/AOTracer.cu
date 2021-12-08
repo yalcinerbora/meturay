@@ -46,11 +46,11 @@ TracerError AOTracer::Initialize()
         return err;
     workMap.emplace(aoMissWorkBatchId, WorkBatchArray{aoMissBatch});
 
-    // Generate your worklist
+    // Generate your work list
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& wInfo : infoList)
     {
-        // Dont fetch mat group since we are not going to use it
+        // Don't fetch mat group since we are not going to use it
         const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
         uint32_t batchId = std::get<0>(wInfo);
 
@@ -62,7 +62,7 @@ TracerError AOTracer::Initialize()
             continue;
         }
 
-        // Generate work batch from appropirate work pool
+        // Generate work batch from appropriate work pool
         WorkPool<>& wp = workPool;
         GPUWorkBatchI* batch = nullptr;
         if((err = wp.GenerateWorkBatch(batch, workTypeName.c_str(),
@@ -144,7 +144,7 @@ bool AOTracer::Render()
     // Set Auxiliary Pointers
     for(auto p : outPartitions)
     {
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
@@ -177,7 +177,7 @@ bool AOTracer::Render()
 
     hitPhase = false;
     depth++;
-    // If we exausted the rays quit
+    // If we exhausted the rays quit
     if(totalOutRayCount == 0 || depth == 2) return false;
     // Or continue
     return true;

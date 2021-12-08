@@ -74,7 +74,7 @@ class CPULightGroupSpot final : public CPULightGroupP<GPULightSpot>
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupSpot(const GPUPrimitiveGroupI*,
                                                       const CudaGPU&);
                                     ~CPULightGroupSpot() = default;
@@ -123,7 +123,7 @@ inline void GPULightSpot::Sample(// Output
     dir = -direction;
     distance = (position - worldLoc).Length();
 
-    // Fake pdf to incorporate square faloff
+    // Fake pdf to incorporate square falloff
     pdf = (distance * distance);
 }
 

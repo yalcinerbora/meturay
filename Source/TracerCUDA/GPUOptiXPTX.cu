@@ -241,7 +241,7 @@ __device__ void KCIntersect()
                                 tMin, tMax);
 
     // Since OptiX does not support virtual(indirect) function calls
-    // Call with an empty transform (this is not virutal and does nothing)
+    // Call with an empty transform (this is not virtual and does nothing)
     // <GPUTransformEmpty>
     intersects = PGroup::IntersectsT(// Output
                                      newT,
@@ -277,7 +277,7 @@ void KCRayGenOptix()
 
     // Load Ray
     RayReg ray(params.gRays, launchIndex);
-    optixTrace(// Accelrator
+    optixTrace(// Accelerator
                params.baseAcceleratorOptix,
                // Ray Input
                make_float3(ray.ray.getPosition()[0],

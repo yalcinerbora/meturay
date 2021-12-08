@@ -15,7 +15,7 @@ using SpecularityFunc = float(*)(const Surface&,
                                  const Data&,
                                  const HitKey::Type& matId);
 
-// Sample function is responsible for random BRDF evalulation
+// Sample function is responsible for random BRDF evaluation
 // and required data access for BRDFs
 //
 // Returns evaluated BxDF function result, a sampled ray and prob density of the sample.
@@ -92,7 +92,7 @@ using PdfFunc = float(*)(// Input
 ////===================================//
 //
 //// This call is per-ray which returns multiple of UVs
-//// that is dependant of the material.
+//// that is dependent of the material.
 ////
 //// Each ray returns its own UV location which may be required by the texture cache
 ////

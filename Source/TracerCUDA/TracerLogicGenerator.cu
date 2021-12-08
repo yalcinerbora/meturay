@@ -12,7 +12,7 @@
     #include "GPUAcceleratorOptiX.cuh"
 #endif
 // Mediums
-#include "GPUMediumHomogenous.cuh"
+#include "GPUMediumHomogeneous.cuh"
 #include "GPUMediumVacuum.cuh"
 // Transforms
 #include "GPUTransformSingle.cuh"
@@ -77,7 +77,7 @@ template GPUPrimitiveGroupI* TypeGenWrappers::DefaultConstruct<GPUPrimitiveGroup
 template GPUAcceleratorGroupI* TypeGenWrappers::AccelGroupConstruct<GPUAcceleratorGroupI,
                                                                     GPUAccTriLinearGroup>(const GPUPrimitiveGroupI&);
 
-// Destructors
+// Destructor
 template void TypeGenWrappers::DefaultDestruct(GPUPrimitiveGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUMaterialGroupI*);
 template void TypeGenWrappers::DefaultDestruct(GPUAcceleratorGroupI*);
@@ -181,8 +181,8 @@ TracerLogicGenerator::TracerLogicGenerator()
     medGroupGenerators.emplace(CPUMediumVacuum::TypeName(),
                                CPUMediumGen(DefaultConstruct<CPUMediumGroupI, CPUMediumVacuum>,
                                             DefaultDestruct<CPUMediumGroupI>));
-    medGroupGenerators.emplace(CPUMediumHomogenous::TypeName(),
-                               CPUMediumGen(DefaultConstruct<CPUMediumGroupI, CPUMediumHomogenous>,
+    medGroupGenerators.emplace(CPUMediumHomogeneous::TypeName(),
+                               CPUMediumGen(DefaultConstruct<CPUMediumGroupI, CPUMediumHomogeneous>,
                                             DefaultDestruct<CPUMediumGroupI>));
 
     // Light Types

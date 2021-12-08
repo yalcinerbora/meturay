@@ -140,7 +140,7 @@ Vector2f DTreeGPU::WorldDirToTreeCoords(float& pdf, const Vector3f& worldDir)
     // Convert to Spherical Coordinates
     Vector2f thetaPhi = Utility::CartesianToSphericalUnit(wZup);
     // Normalize to generate UV [0, 1]
-    // tetha range [-pi, pi]
+    // theta range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
     // If we are at edge point (u == 1) make it zero since
     // piecewise constant function will not have that pdf (out of bounds)
@@ -250,12 +250,12 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
         // Locate X pos
         if(xi[0] < cdfMidX)
         {
-            // Renormalize sample for next iteration
+            // Re-normalize sample for next iteration
             xi[0] = xi[0] / cdfMidX;
         }
         else
         {
-            // Renormalize sample for next iteration
+            // Re-normalize sample for next iteration
             xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
             // Set the X bit on the iteration
             nextIndex |= (1 << 0) & (0b01);
@@ -269,12 +269,12 @@ Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
         // Locate Y Pos
         if(xi[1] < cdfMidY)
         {
-            // Renormalize sample for next iteration
+            // Re-normalize sample for next iteration
             xi[1] = xi[1] / cdfMidY;
         }
         else
         {
-            // Renormalize sample for next iteration
+            // Re-normalize sample for next iteration
             xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
             // Set the Y bit on the iteration
             nextIndex |= (1 << 1) & (0b10);
@@ -426,7 +426,7 @@ void DTreeGPU::AddSampleToLeaf(const Vector3f& worldDir)
         localCoords = node->NormalizeCoordsForChild(childIndex, localCoords);
         node = gRoot + node->childIndices[childIndex];
     }
-    // Also increment the total sampel count of the tree
+    // Also increment the total sample count of the tree
     atomicAdd(&totalSamples, 1);
 }
 
@@ -457,7 +457,7 @@ uint32_t AtomicAllocateNode(bool& allocated,
         if(old == EMPTY_NODE)
         {
             // This thread is selected to actually allocate
-            // Do atmost minimal here only set the child id on the parent
+            // Do at-most minimal here only set the child id on the parent
             // We are allocating in a top-down fashion set other memory stuff later
             uint32_t location = static_cast<uint32_t>(atomicAdd(&gAllocator, 1u));
             reinterpret_cast<volatile uint32_t&>(gParentNode->childIndices[childId]) = location;
@@ -539,7 +539,7 @@ void CalculateParentIrradiance(// I-O
     sum += currentNode->IsLeaf(2) ? irrad[2] : 0.0f;
     sum += currentNode->IsLeaf(3) ? irrad[3] : 0.0f;
 
-    // Back-propogate the sum towards the root
+    // Back-propagate the sum towards the root
     DTreeNode* n = currentNode;
     while(!(n->IsRoot()))
     {
@@ -558,7 +558,7 @@ void CalculateParentIrradiance(// I-O
         n = parentNode;
     }
 
-    // Finally add to the total aswell
+    // Finally add to the total as well
     atomicAdd(&gDTree.irradiance, sum);
 }
 
@@ -570,7 +570,7 @@ void CalculateParentIrradiance(// I-O
 //                       uint32_t nodeIndex)
 //{
 //    const DTreeNode& gMyNode = gDTree.gRoot[nodeIndex];
-//    // Only launch the loop if the all childs are leafs
+//    // Only launch the loop if the all children are leafs
 //    // since those will generate the max depth
 //    bool doMax = true;
 //    doMax &= gMyNode.IsLeaf(0);
@@ -703,9 +703,9 @@ void ReconstructEmptyTree(// Output
 
     //printf("My Point %f %f \n", discretePoint[0], discretePoint[1]);
 
-    // Punchthrough this node to the new tree
+    // Punch-through this node to the new tree
     // Meaning, traverse and allocate (if not already allocated)
-    // until we created the equavilent node
+    // until we created the equivalent node
     DTreeNode* punchedNode = PunchThroughNode(gDTreeAllocator, gDTree,
                                                 discretePoint, depth);
     uint32_t punchedNodeId = static_cast<uint32_t>(punchedNode - gDTree.gRoot);
@@ -713,7 +713,7 @@ void ReconstructEmptyTree(// Output
     // Do not create children if children over depth limit
     if((depth + 1) > depthLimit) return;
     // We allocated up to this point
-    // Check childs if they need allocation
+    // Check children if they need allocation
     uint8_t childCount = 0;
     Vector4uc childOffsets = Vector4uc(UINT8_MAX);
     UNROLL_LOOP

@@ -128,13 +128,13 @@ STree::STree(const AABB3f& sceneExtents,
     CUDA_CHECK(cudaMemcpy(nodeStart, &node, sizeof(STreeNode),
                           cudaMemcpyHostToDevice));
 
-    // Update total node count aswell
+    // Update total node count as well
     nodeCount = 1;
     Byte* nodeCountLocPtr = static_cast<Byte*>(memory) + offsetof(STreeGPU, nodeCount);
     CUDA_CHECK(cudaMemcpy(nodeCountLocPtr, &nodeCount, sizeof(uint32_t),
                cudaMemcpyHostToDevice));
-    // Copy AABB aswell
-    // Copy slightly larger AABB to prevent numerical unstabilities
+    // Copy AABB as well
+    // Copy slightly larger AABB to prevent numerical instabilities
     AABB3f sceneAABB = AABB3f(sceneExtents.Min() - MathConstants::Epsilon,
                               sceneExtents.Max() + MathConstants::Epsilon);
     Byte* nodeAABBLoc = static_cast<Byte*>(memory) + offsetof(STreeGPU, extents);
@@ -163,7 +163,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
     DeviceMemory selectedIndices;
     DeviceMemory splitMarks;
 
-    // Loop untill no subdivision is left
+    // Loop until no subdivision is left
     uint32_t offset = 0;
     uint32_t processedNodeCount = static_cast<uint32_t>(nodeCount);
     while(processedNodeCount > 0)
@@ -210,7 +210,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
 
         // No need to continue since there are no leaves to split
         if(hSubdivisionCount == 0) break;
-        // Each individual node will create two childs
+        // Each individual node will create two children
         uint32_t extraChildCount = hSubdivisionCount * 2;
 
         // Old Tree count will be the next "allocation"
@@ -244,7 +244,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
         // Create the tree copies
         dTrees.AllocateExtra(hOldTreeIds, system);
 
-        // Now get redy for next iteration
+        // Now get ready for next iteration
         offset = oldNodeCount;
         processedNodeCount = extraChildCount;
 
@@ -254,7 +254,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
     CUDA_CHECK(cudaMemcpy(nodeCountLocPtr, &nodeCount, sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 
-    // Subdivided recursively untill all leaf nodes
+    // Subdivided recursively until all leaf nodes
     // have sample count less than "maxSamplesPerNode"
     // All done!
 }

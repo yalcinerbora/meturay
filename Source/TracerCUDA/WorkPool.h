@@ -1,7 +1,7 @@
 #pragma once
 /**
 
-Slightly overengineered meta pool generation class
+Slightly over-engineered meta pool generation class
 
 */
 

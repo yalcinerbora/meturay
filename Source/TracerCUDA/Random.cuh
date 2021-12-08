@@ -39,7 +39,7 @@ class RandomGPU
         RandomGPU&                  operator=(const RandomGPU&) = delete;
         __device__                  ~RandomGPU();
 
-        // Fundemental Generation Function
+        // Fundamental Generation Function
         __device__  uint32_t        Generate();
 
         __device__                  operator curandStateMRG32k3a_t*();
@@ -70,7 +70,7 @@ RandomGPU::operator curandStateMRG32k3a_t*()
     return &rState;
 }
 
-// Pseduo Uniform Generation
+// Pseudo Uniform Generation
 namespace GPUDistribution
 {
     template <class T, typename = FloatEnable<T>>

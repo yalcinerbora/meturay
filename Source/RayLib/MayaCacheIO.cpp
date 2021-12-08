@@ -121,7 +121,7 @@ namespace MayaCache
                                   std::ifstream& file)
     {
         static_assert(WordSize == 4 || WordSize == 8);
-        // File stream should aready read the first 4 byte
+        // File stream should already read the first 4 byte
         if constexpr(WordSize == 8)
             file.seekg(4, std::ifstream::cur);
 
@@ -163,7 +163,7 @@ namespace MayaCache
             file.seekg(paddedByteSize, std::ifstream::cur);
         }
 
-        // Setsize
+        // Set size
         const size_t totalCount = info.dim[0] * info.dim[1] * info.dim[2];
         velocityDensityData.resize(totalCount * 4);
 

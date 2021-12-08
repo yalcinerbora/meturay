@@ -2,7 +2,7 @@
 
 #include <memory>
 
-// Load Base Instace
+// Load Base Instance
 template <class T>
 using ObjGeneratorFunc = T* (*)();
 

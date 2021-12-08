@@ -27,7 +27,7 @@ class ToneMapGL
         static constexpr GLenum     UB_TM_PARAMS = 1;
         // Shader Storage Buffers
         static constexpr GLenum     SSB_OUTPUT = 0;
-        // Texures
+        // Textures
         static constexpr GLenum     T_IN_HDR_IMAGE = 0;
         // Images
         static constexpr GLenum     I_OUT_SDR_IMAGE = 0;

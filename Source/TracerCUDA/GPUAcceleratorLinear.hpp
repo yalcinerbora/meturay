@@ -276,7 +276,7 @@ template <class PGroup>
 TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerators(const CudaSystem&)
 {
     //...
-    // Define destory??
+    // Define destroy??
     // There is no destruction or deallocation
     return TracerError::OK;
 }
@@ -286,7 +286,7 @@ TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerator(uint32_t,
                                                           const CudaSystem&)
 {
     //...
-    // Define destory??
+    // Define destroy??
     // There is no destruction or deallocation
     return TracerError::OK;
 }
@@ -296,7 +296,7 @@ TracerError GPUAccLinearGroup<PGroup>::DestroyAccelerators(const std::vector<uin
                                                            const CudaSystem&)
 {
     //...
-    // Define destory??
+    // Define destroy??
     // There is no destruction or deallocation
     return TracerError::OK;
 }

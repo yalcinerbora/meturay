@@ -8,14 +8,14 @@ set(CMAKE_CONFIGURATION_TYPES Debug;Release CACHE STRING "Selected by user")
 #set(CMAKE_DEFAULT_BUILD_TYPE Release CACHE STRING "Selected by user")
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Selected by user")
 
-# On Linux I dont know why but this is needs to be defined
+# On Linux I don't know why but this is needs to be defined
 # TODO: Maybe CUDA did not installed to default directory?
 if(UNIX)
     set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 endif()
 
 # Architecture
-# Use a dropdown menu for selecting Compute Capability
+# Use a drop-down menu for selecting Compute Capability
 # TODO: Add a "ReleaseAllCC" Configuration for final release compilation
 # including all compute capabilities etc.
 set(CMAKE_CUDA_ARCHITECTURES "61" CACHE STRING "Architecture chosen by the user at CMake configure time")
@@ -27,7 +27,7 @@ endif()
 option(USE_OPTIX "Try to find and use OptiX" OFF)
 
 # Globals Common for All Projects
-# TODO: Align CUDA Standart with CXX Standard
+# TODO: Align CUDA Standard with CXX Standard
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 20)
@@ -39,7 +39,7 @@ if(USE_OPTIX)
     find_package(OPTIX 7)
     if(NOT OPTIX_FOUND)
         # Maybe we could not able to find the optix
-        # expose the OPTIX_DIR (in cmake-gui) so user can manually set it
+        # expose the OPTIX_DIR (in cmake-GUI) so user can manually set it
         message(FATAL_ERROR "Optix Not Found, either set OPTIX_INSTALL_DIR or disable USE_OPTIX")
         set(USE_OPTIX CACHE BOOL OFF)
     else()
@@ -49,7 +49,7 @@ endif()
 
 project(METURay LANGUAGES CUDA CXX)
 
-# CMAKE Project Definitions and Source, Library Folders are seperate
+# CMAKE Project Definitions and Source, Library Folders are separate
 # Directories
 set(MRAY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 set(MRAY_SOURCE_DIRECTORY ${MRAY_DIRECTORY}/Source)
@@ -110,7 +110,7 @@ if(MSVC)
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zi>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/external:W0>)
-                        # DROPPED W4 On MSVC it shows many uncessary info
+                        # DROPPED W4 On MSVC it shows many unnecessary info
                         # These Flags for W4 however /external does not work properly i think
                         # it still returns warnings and clutters the code extensively
                         # Thus these are commented out
@@ -136,8 +136,8 @@ endif()
 add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
                     $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>)
 
-# All kernels started to show this warning (when a kernel uses a virtual funcion)
-# Supress that warning
+# All kernels started to show this warning (when a kernel uses a virtual function)
+# Suppress that warning
 add_link_options($<DEVICE_LINK:--nvlink-options=-suppress-stack-size-warning>)
 
 # Platform Specific Lib Bin Folders
@@ -155,7 +155,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
 link_directories(${MRAY_CONFIG_LIB_DIRECTORY}
                  ${MRAY_PLATFORM_LIB_DIRECTORY})
 
-# Generic Preprocessor Defitions
+# Generic Preprocessor Definitions
 set(MRAY_PREPROCESSOR_DEFS_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_GENERIC}
     $<$<CONFIG:Debug>:METU_DEBUG>
@@ -167,7 +167,7 @@ set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
 
 # After Everything is set
 # Include NVCC compile to ptx routine
-# Since Optix programs require pre-compiled *.ptx files
+# Since Optix programs require precompiled *.ptx files
 if(USE_OPTIX)
     include("NVCC_compile_ptx")
 endif()

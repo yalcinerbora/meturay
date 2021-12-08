@@ -271,7 +271,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
 
             // Use last element to normalize Function values to PDF
             // Since we used PDF buffer to calculate CDF
-            // multiply the function with the size aswell
+            // multiply the function with the size as well
             DeviceHostMulDivideComboFunctor<float> pdfNormFunctor(dRowCDF[dim[0]], static_cast<float>(dim[0]));
             TransformArrayGPU(dRowPDF, dim[0], pdfNormFunctor);
             // Normalize CDF with the total accumulation (last element)
@@ -290,7 +290,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dYCDF, dYPDF, (dim[1] + 1), 0.0f);
         // Use last element to normalize Function values to PDF
         // Since we used PDF buffer to calculate CDF
-        // multiply the function with the size aswell
+        // multiply the function with the size as well
         DeviceDivideFunctor<float> cdfNormFunctor(dYCDF[dim[1]]);
         DeviceHostMulDivideComboFunctor<float> pdfNormFunctor(dYCDF[dim[1]], static_cast<float>(dim[1]));
         TransformArrayGPU(dYPDF, dim[1], pdfNormFunctor);

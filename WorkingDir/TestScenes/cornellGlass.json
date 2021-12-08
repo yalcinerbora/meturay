@@ -33,7 +33,7 @@
 	},
 	{
 		"id": 1,
-		"type" : "Homogenous",
+		"type" : "Homogeneous",
 
 		"absorption": [1.25, 0.35, 0.97],
 		"scattering": [0, 0, 0],

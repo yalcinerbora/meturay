@@ -300,12 +300,12 @@ Quaternion<T> Quat::BarySLerp(const Quaternion<T>& q0,
     //
     // However vertex quaternions of the triangle will be closer or same.
     // instead we can directly average them.
-    // (for smooth edges neighbouring tri's face normal will be averaged)
+    // (for smooth edges neighboring tri's face normal will be averaged)
     //
     // One thing to note is to check quaternions are close
     // and use conjugate in order to have proper average
 
-    // Align tovards q0
+    // Align towards q0
     const Quaternion<T>& qA = q0;
     //Quaternion<T> qB = (q1.Dot(q0) < 0) ? q1.Conjugate() : q1;
     //Quaternion<T> qC = (q2.Dot(q0) < 0) ? q2.Conjugate() : q2;
@@ -345,7 +345,7 @@ Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
     Vector<3, T> zCrossD(-b[1], b[0], 0);
     T zDotD = b[2];
 
-    // Half angle teorem
+    // Half angle theorem
     T sin = sqrt((1 - zDotD) * static_cast<T>(0.5));
     T cos = sqrt((zDotD + 1) * static_cast<T>(0.5));
 
@@ -364,7 +364,7 @@ Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
     }
     else if(abs(zDotD - 1) < MathConstants::Epsilon)
     {
-        // Spaces are nearly equavilent
+        // Spaces are nearly equivalent
         // Just turn identity
         return Quaternion<T>(1, 0, 0, 0);
     }

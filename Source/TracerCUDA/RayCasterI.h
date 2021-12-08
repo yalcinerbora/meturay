@@ -76,7 +76,7 @@ inline RayPartitionsMulti<uint32_t> RayCasterI::PartitionOutputRays(uint32_t& to
     {
         const auto& p = (*pIt);
 
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;

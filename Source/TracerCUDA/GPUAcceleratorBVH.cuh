@@ -14,6 +14,24 @@
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"
 
+// Ad-hoc implementation of
+// http://www.sci.utah.edu/~wald/Publications/2011/StackFree/sccg2011.pdf
+// Please do not use this for comparison
+// This may not be an exact match of the proposal
+//
+// First of all Stack-less version of Accelerators & BaseAccelerator
+// holds a per-register bit stack instead of a state variable
+//
+// This was required for the base accelerator since it saves its state
+// when it reaches to a leaf. And continues the traversal where it left of
+// after leaf-accelerator does its traversal.
+//
+// This bit stack was not mandatory on leaf-accelerators but I'm lazy and copy
+// pasted the code :)
+// Additionally, leaf-accelerator has a stack code and be switched on/off from the
+// scene file (Both produces similar results even though stack version obviously
+// spilled into the global memory)
+
 struct BVHParameters
 {
     bool useStack = false;

@@ -60,7 +60,7 @@ class ImageIOI
 
         // Read Functions
         // Try to read any image as is
-        // Always pack the data (no scanline stuff)
+        // Always pack the data (no scan line stuff)
         virtual ImageIOError    ReadImage(std::vector<Byte>&,
                                           PixelFormat&, Vector2ui& dimensions,
                                           const std::string& filePath,

@@ -4,7 +4,7 @@
 
 Camera Ray Generation Kernel
 
-Uses statified sampling
+Uses stratified sampling
 
 */
 

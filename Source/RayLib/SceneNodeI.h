@@ -74,7 +74,7 @@ class SceneNodeI
         // Check availability of certain common / access node
         virtual bool                        CheckNode(const std::string& name) const = 0;
 
-        // Id pair inspecific data loading
+        // Id pair unspecific data loading
         virtual size_t                      CommonListSize(const std::string& name) const = 0;
 
         virtual bool                        CommonBool(const std::string& name, double time = 0.0) const = 0;

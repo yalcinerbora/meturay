@@ -22,7 +22,7 @@ class GPUDistPiecewiseConst1D
 
     protected:
     public:
-        // Construtors & Destructor
+        // Constructors & Destructor
                                     GPUDistPiecewiseConst1D() = default;
         __host__ __device__         GPUDistPiecewiseConst1D(const float* dCDFList,
                                                             const float* dPDFList,
@@ -51,7 +51,7 @@ class GPUDistPiecewiseConst2D
 
     protected:
     public:
-        // Construtors & Destructor
+        // Constructors & Destructor
                                     GPUDistPiecewiseConst2D() = default;
         __host__ __device__         GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D dDistributionsY,
                                                             const GPUDistPiecewiseConst1D* dDistributionsX,

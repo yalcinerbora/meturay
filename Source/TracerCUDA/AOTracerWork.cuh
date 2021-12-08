@@ -28,7 +28,7 @@ class AmbientOcclusionWork
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         AmbientOcclusionWork(const GPUMaterialGroupI& mg,
                                                              const GPUPrimitiveGroupI& pg,
                                                              const GPUTransformI* const* t);
@@ -52,7 +52,7 @@ class AmbientOcclusionMissWork
     private:
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         AmbientOcclusionMissWork(const GPUMaterialGroupI& mg,
                                                                  const GPUPrimitiveGroupI& pg,
                                                                  const GPUTransformI* const* t);

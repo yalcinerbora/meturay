@@ -16,7 +16,7 @@
 #define T_IN_LUM_TEX layout(binding = 0)
 #define T_IN_GRAD_TEX layout(binding = 1)
 
-#define I_OUT_REF_IMAGE layout(binding = 0) restrict writeonly
+#define I_OUT_REF_IMAGE layout(binding = 0) restrict write only
 
 #define UB_MAX_LUM layout(std140, binding = 0)
 
@@ -53,9 +53,9 @@ void main(void)
 
 	// Fetch Lum Value
 	float lum = texelFetch(tLum, pixId, 0).x;
-	// Gradiend Coords
+	// Gradient Coords
 	float u;
-	// Do logaritmic scale if requested
+	// Do logarithmic scale if requested
 	if(doLogScale)
 		u = log(1 + lum) / log(1 + maxLum);
 	else

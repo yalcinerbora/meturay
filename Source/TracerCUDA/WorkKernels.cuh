@@ -40,7 +40,7 @@ using WorkFunc = void(*)(// Output
                          const HitKey::Type matIndex);
 
 // Boundary Work Function is Slightly Different
-// It also provides the actual enpoint that is being hit
+// It also provides the actual endpoint that is being hit
 template <class GlobalState, class LocalState,
           class RayAuxiliary, class EGroup>
 using BoundaryWorkFunc = void(*)(// Output
@@ -60,7 +60,7 @@ using BoundaryWorkFunc = void(*)(// Output
                                  // Constants
                                  const typename EGroup::GPUType& gEndpoint);
 
-// Meta Kernel for divding work.
+// Meta Kernel for dividing work.
 template<class GlobalState, class LocalState,
          class RayAuxiliary, class PGroup, class MGroup,
          WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc,
@@ -152,7 +152,7 @@ void KCWork(// Output
     }
 }
 
-// Meta Kernel for divding work.
+// Meta Kernel for dividing work.
 template<class GlobalState, class LocalState,
          class RayAuxiliary, class EGroup,
          BoundaryWorkFunc<GlobalState, LocalState, RayAuxiliary, EGroup> BWFunc,
@@ -214,7 +214,7 @@ void KCBoundaryWork(// Output
         // This happens when NEE generates a ray with a
         // predefined workId (which did invoke this thread)
         // However the light is missed somehow
-        // (planar rays, numeric unstability etc.)
+        // (planar rays, numeric instability etc.)
         // Because of that primitive id did not get populated
         // Skip this ray
         if(gEndpoint.IsPrimitiveBackedLight() &&

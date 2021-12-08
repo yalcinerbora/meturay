@@ -230,7 +230,7 @@ std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
 
 std::ostream& operator<<(std::ostream& s, const DTreeGPU& n)
 {
-    s << "Irradiane  : " << n.irradiance << std::endl;
+    s << "Irradiance  : " << n.irradiance << std::endl;
     s << "NodeCount  : " << n.nodeCount << std::endl;
     s << "SampleCount: " << n.totalSamples << std::endl;
     return s;

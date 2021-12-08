@@ -14,7 +14,7 @@ namespace TracerFunctions
         // Total internal reflection
         if(sinOut >= 1.0f) return 1.0f;
 
-        // Frenel Equation
+        // Fresnel Equation
         float cosOut = sqrt(max(0.0f, 1.0f - sinOut * sinOut));
 
         float parallel = ((iorOut * cosIn - iorIn * cosOut) /
@@ -121,7 +121,7 @@ namespace TracerFunctions
 
         // Unreal Version
         // This is much more verbose than 0.125f
-        // and it shoud have same perf
+        // and it should have same perf
         //static constexpr float denom = 1.0f / 8.0f;
         //float k = (roughness + 1);
         //k = k * k;

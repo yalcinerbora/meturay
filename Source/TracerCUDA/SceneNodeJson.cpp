@@ -246,7 +246,7 @@ SceneNodeJson::SceneNodeJson(const nlohmann::json& jsn, NodeId id, bool forceFet
     }
     else
     {
-        // Determine if this node is a multinode
+        // Determine if this node is a multi node
         auto it = jsn.cend();
         if((it = jsn.find(NodeNames::ID)) != jsn.cend())
         {

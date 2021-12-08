@@ -49,7 +49,7 @@ class RayCasterOptiX : public RayCasterI
         // Combined hit struct size
         const uint32_t                  maxHitSize;
         const uint32_t                  boundaryTransformIndex;
-        // Cuda System for GPU Kernel Launces
+        // Cuda System for GPU Kernel Launches
         const CudaSystem&               cudaSystem;
         // Accelerators
         GPUBaseAcceleratorI&            baseAccelerator;

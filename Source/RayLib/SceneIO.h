@@ -1,7 +1,7 @@
 #pragma once
 /**
 
-Scene file json interpeter and writer
+Scene file json interpreter and writer
 
 */
 #include "SceneError.h"

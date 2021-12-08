@@ -446,14 +446,14 @@ void DTreeGroup::DTreeBuffer::AllocateExtra(const std::vector<uint32_t>& oldTree
     treeNodeMemory = std::move(newNodeMemory);
     dDTreeNodes = dNewNodes;
 
-    // Allocate offsets on GPU aswell
+    // Allocate offsets on GPU as well
     GPUMemFuncs::EnlargeBuffer(offsetMemory, hDTreeNodeOffsets.size() * sizeof(uint32_t));
     dDTreeNodeOffsets = static_cast<uint32_t*>(offsetMemory);
     CUDA_CHECK(cudaMemcpy(dDTreeNodeOffsets, hDTreeNodeOffsets.data(),
                           hDTreeNodeOffsets.size() * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 
-    // Change the Actual trees aswell
+    // Change the Actual trees as well
     DeviceMemory newTreeMemory = DeviceMemory(newTreeCount * sizeof(DTreeGPU));
     DTreeGPU* dDNewTrees = static_cast<DTreeGPU*>(newTreeMemory);
 
@@ -792,7 +792,7 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
     //}
 
     // We have a valid tree now
-    // New tree will be reconsturcted from this tree
+    // New tree will be reconstructed from this tree
     // Ask each node that how many child they will need
     gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
                        //
@@ -820,8 +820,8 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
         (cudaStream_t)0
     );
 
-    // Add root node (DTree will atleast have a root node)
-    // And above kernel only checks if childs should be generated
+    // Add root node (DTree will at least have a root node)
+    // And above kernel only checks if children should be generated
     // Root does not have any parent so we need to manually include here
     TransformArrayGPU(dTreeChildCounts, treeCount,
                       IncrementFunctor<uint32_t>(),

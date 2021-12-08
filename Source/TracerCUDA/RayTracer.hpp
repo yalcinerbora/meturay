@@ -42,7 +42,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     Vector2i localPixelStart = Zero2i;
     for(const CudaGPU& gpu : cudaSystem.SystemGPUs())
     {
-        // If no work is splitted to this GPU skip
+        // If no work is splits to this GPU skip
         if(splits[i] == 0) break;
 
         // Generic Args
@@ -142,7 +142,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     Vector2i localPixelStart = Zero2i;
     for(const CudaGPU& gpu : cudaSystem.SystemGPUs())
     {
-        // If no work is splitted to this GPU skip
+        // If no work is splits to this GPU skip
         if(splits[i] == 0) break;
 
         // Generic Args

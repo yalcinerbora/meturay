@@ -5,7 +5,7 @@ with Templates
 
 Can define custom reduce function and custom type
 
-Modern Paralel Reduction Code
+Modern Parallel Reduction Code
 Utilizing new Kepler warp data transfer discussed here
 http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 */
@@ -156,7 +156,7 @@ __host__ void ReduceArrayGPU(Type& result,
         // Current Grid Size is reduced by previous data size
         gridSize = (dataSize + TPB - 1) / TPB;
 
-        // KC Paralel Reduction
+        // KC Parallel Reduction
         KCParallelReduction<Type, F> <<<gridSize, TPB, SharedSize, stream>>>
         (
             dWrite,
@@ -193,7 +193,7 @@ __host__ void ReduceTextureGPU(Type& result,
     DeviceMemory reduceBuffer(gridSize.x * gridSize.y * sizeof(Type));
     Type* dReduceBuffer = static_cast<Type*>(reduceBuffer);
 
-    // KC Paralel Reduction
+    // KC Parallel Reduction
     KCParallelReductionTex<Type, F> <<<gridSize, blockSize, SharedSize, stream>>>
     (
         dReduceBuffer,

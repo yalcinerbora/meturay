@@ -141,8 +141,8 @@ struct MatDataAccessor
     // Data fetch function of the primitive
     // This struct should contain all necessary data required for kernel calls
     // related to this primitive
-    // I dont know any design pattern for converting from static polymorphism
-    // to dynamic one. This is my solution (it is quite werid)
+    // I don't know any design pattern for converting from static polymorphism
+    // to dynamic one. This is my solution (it is quite weird)
     template <class MaterialGroupS>
     static typename MaterialGroupS::Data Data(const MaterialGroupS& mg)
     {

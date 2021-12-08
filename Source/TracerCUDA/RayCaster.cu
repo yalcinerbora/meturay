@@ -36,7 +36,7 @@ TracerError RayCaster::ConstructAccelerators(const GPUTransformI** dTransforms,
         GPUAcceleratorGroupI* acc = accBatch.second;
         if((e = acc->ConstructAccelerators(cudaSystem)) != TracerError::OK)
             return e;
-        // Acquire surface aabb listings for base accelerator consrtuction
+        // Acquire surface aabb listings for base accelerator construction
         allSurfaceAABBs.insert(acc->AcceleratorAABBs().cbegin(),
                                acc->AcceleratorAABBs().cend());
     }
@@ -104,17 +104,17 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
         // We sort inner indices in addition to batches results for better data locality
         // We only sort up-to a certain bit (radix sort) which is tied to
         // accelerator count
-        // Move offset to skip null bathces
+        // Move offset to skip null batches
         rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, rayCount, accBitCounts);
-        // Parition to sub accelerators
+        // Partition to sub accelerators
         //
         // There may be invalid rays sprinkled along the array.
         // Holes occur in the structure since in previous iteration,
         // a material may required to write N rays for its output (which is defined
         // by the material) but it wrote < N rays.
         //
-        // One of the main examples for such behaviour can be transparent objects
-        // where ray may be only reflected (instead of refrating and reflecting) because
+        // One of the main examples for such behavior can be transparent objects
+        // where ray may be only reflected (instead of refracting and reflecting) because
         // of the total internal reflection phenomena.
         auto portions = rayMemory.Partition(rayCount);
 
@@ -170,10 +170,10 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
             rayCount = static_cast<uint32_t>(nullPortion->offset);
 
         // Iteration is done
-        // We cant continue loop untill these kernels are finished
+        // We cant continue loop until these kernels are finished
         // on gpu(s)
         //
-        // Tracer logic mostly utilizies mutiple GPUs so we need to
+        // Tracer logic mostly utilizes multiple GPUs so we need to
         // wait all GPUs to finish
         cudaSystem.SyncAllGPUs();
     }
@@ -186,7 +186,7 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
     rayMemory.FillMatIdsForSort(currentRayCount);
     // Sort with respect to the materials keys
     rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
-    // Parition w.r.t. material batch
+    // Partition w.r.t. material batch
     RayPartitions<uint32_t> workPartition;
     workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
@@ -223,7 +223,7 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
     // For each partition
     for(const auto& p : inPartitions)
     {
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;

@@ -5,7 +5,7 @@ CPU Representation of the camera
 No inheritance on CPU (Inheritance is on GPU)
 
 There are not many different types of Camera
-so it is somehow maintainable without using Interitance
+so it is somehow maintainable without using Inheritance
 */
 
 #include "Vector.h"

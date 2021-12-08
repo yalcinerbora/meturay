@@ -2,7 +2,7 @@
 /**
 
 OGL Implementation of Visor View
-Uses GLFW glfw has c style interface and required to be initalized
+Uses GLFW glfw has c style interface and required to be initialized
 at start of the program. We will need single window thus making
 the VisorGL singleton.
 
@@ -64,7 +64,7 @@ class VisorGL : public VisorI
             -1.0f, -1.0f
         };
 
-        // Shader Location Cnstants
+        // Shader Location Constants
         // T: Texture Object
         // I: Image Object
         // IN: Shader Inputs

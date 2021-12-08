@@ -645,7 +645,7 @@ template<class T>
 __device__ __host__
 T Determinant4(const T* m)
 {
-    // Hardcoded should be most optimizer friendly
+    // Hard-coded should be most optimizer friendly
     // TODO: Maybe register size etc.. for GPU
     // YOLO
     T det1 = m[0] * (m[5] * m[10] * m[15]
@@ -864,7 +864,7 @@ Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 {
     // This is kinda hacky
     // First it cannot determine negative scalings,
-    // Second it should fail if transform matrix has shear (didnt tested tho)
+    // Second it should fail if transform matrix has shear (didn't tested tho)
     T sX = Vector<3, T>(m[0], m[1], m[2]).Length();
     T sY = Vector<3, T>(m[4], m[5], m[6]).Length();
     T sZ = Vector<3, T>(m[8], m[9], m[10]).Length();
@@ -1059,7 +1059,7 @@ Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
                                          const Vector<3, T>& at,
                                          const Vector<3, T>& up)
 {
-    // Calculate Ortogonal Vectors for this rotation
+    // Calculate Orthogonal Vectors for this rotation
     Vector<3, T> zAxis = (eyePos - at).NormalizeSelf();
     Vector<3, T> xAxis = up.CrossProduct(zAxis).NormalizeSelf();
     Vector<3, T> yAxis = zAxis.CrossProduct(xAxis).NormalizeSelf();

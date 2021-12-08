@@ -41,7 +41,7 @@ class RPGBoundaryWork final
 
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         RPGBoundaryWork(const CPUEndpointGroupI& eg,
                                                         const GPUTransformI* const* t,
                                                         bool neeOn, bool misOn);
@@ -71,7 +71,7 @@ class RPGPathWork
                                   PGroup::GetSurfaceFunction>;
     protected:
     public:
-        // Constrcutors & Destructor
+        // Constructors & Destructor
                                         RPGPathWork(const GPUMaterialGroupI& mg,
                                                     const GPUPrimitiveGroupI& pg,
                                                     const GPUTransformI* const* t,

@@ -20,7 +20,7 @@ namespace HemiDistribution
         dir[2] = sqrt(max((T)0, (1 - dir[0] * dir[0]
                                  - dir[1] * dir[1])));
 
-      // Sampling from unit hemispere
+      // Sampling from unit hemisphere
       // Normal is (0,0,1) pdf is NdotD / Pi
       // Thus return D.z / Pi
         pdf = dir[2] * static_cast<T>(MathConstants::InvPi_d);

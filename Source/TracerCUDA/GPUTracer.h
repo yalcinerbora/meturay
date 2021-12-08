@@ -1,7 +1,7 @@
 #pragma once
 /**
 
-Tracer Partial Implementation for CUDA arcitechture
+Tracer Partial Implementation for CUDA architecture
 
 It utilizes hitting, ray memory and image memory allocation.
 

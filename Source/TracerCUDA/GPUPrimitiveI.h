@@ -10,10 +10,10 @@ or it can be analtyic types (such as splines, spheres)
 PrimtiveGroup holds multiple primitive lists (i.e. multiple meshes)
 
 PrimtiveGroup holds the same primitives that have the same layout in memory
-multiple triangle layouts will be on different primtive groups (this is required since
-their primtiive data fetch logics will be different)
+multiple triangle layouts will be on different primitive groups (this is required since
+their primitive data fetch logics will be different)
 
-Most of the time user will define a single primtive for same types to have better performance
+Most of the time user will define a single primitive for same types to have better performance
 since this API is being developed for customization this is mandatory.
 
 */
@@ -70,8 +70,8 @@ class GPUPrimitiveGroupI
         virtual PrimTransformType   TransformType() const = 0;
         // If primitive (by definition) is intersectable or not
         virtual bool                IsIntersectable() const = 0;
-        // If this primitive group consists of tiangle
-        // It may be usefull when a code (i.e. OptiX) can be optimized
+        // If this primitive group consists of triangle
+        // It may be useful when a code (i.e. OptiX) can be optimized
         // for triangles
         virtual bool                IsTriangle() const = 0;
 

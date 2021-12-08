@@ -548,7 +548,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) const
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
@@ -567,7 +567,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
@@ -586,7 +586,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& minVal, const Vector& maxVal)
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
@@ -604,7 +604,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
@@ -745,7 +745,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
@@ -764,7 +764,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
@@ -783,7 +783,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
@@ -802,7 +802,7 @@ __device__ __host__ HYBRID_INLINE
 Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 {
     // Clang min definition is only on std namespace
-    // this is a crappy workournd
+    // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif

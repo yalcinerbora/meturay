@@ -123,7 +123,7 @@ TracerError PPGTracer::Initialize()
                                                         cudaSystem)) != TracerError::OK)
         return err;
 
-    // Generate your worklist
+    // Generate your work list
     const auto& infoList = scene.WorkBatchInfo();
     for(const auto& wInfo : infoList)
     {
@@ -284,7 +284,7 @@ bool PPGTracer::Render()
     //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
     {
-        // Skip if null batch or unfound material
+        // Skip if null batch or not found material
         if(p.portionId == HitKey::NullBatch) continue;
         auto loc = workMap.find(p.portionId);
         if(loc == workMap.end()) continue;
@@ -358,7 +358,7 @@ void PPGTracer::Finalize()
                                MaximumPathNodePerPath(), cudaSystem);
     // We iterated once
     currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
-    // Swap the trees if we achieved treshold
+    // Swap the trees if we achieved threshold
     //if(currentTreeIteration <= 1)
     //if(false)
     //if(currentTreeIteration == nextTreeSwap * 10)
@@ -379,7 +379,7 @@ void PPGTracer::Finalize()
                                  cudaSystem);
 
         size_t mbSize = sTree->UsedGPUMemory() / 1024 / 1024;
-        METU_LOG("{:d}: Splitting and Swapping => Split: {:d}, Trees Size: {:d} Mib, Trees: {:d}",
+        METU_LOG("{:d}: Splitting and Swapping => Split: {:d}, Trees Size: {:d} MiB, Trees: {:d}",
                  currentTreeIteration,
                  currentSTreeSplitThreshold,
                  mbSize,
@@ -448,7 +448,7 @@ void PPGTracer::Finalize()
 
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);
     if(options.alwaysSendSamples ||
-       // Do not send samples untill we exceed prev iteration samples
+       // Do not send samples until we exceed prev iteration samples
        (currentTreeIteration - prevTreeSwap) >= prevTreeSwap)
     {
         // Base class finalize directly sends the image

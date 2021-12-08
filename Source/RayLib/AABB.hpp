@@ -97,3 +97,22 @@ AABB<N, T>& AABB<N, T>::UnionSelf(const AABB<N, T>& aabb)
         max = Vector<N, T>::Max(max, aabb.max);
     return *this;
 }
+
+
+template<int N, class T>
+__device__ __host__ HYBRID_INLINE
+bool AABB<N, T>::IsInside(const Vector<N, T>& point)
+{
+    bool result = true;
+    result &= (point[0] >= min[0] && point[0] <= max[0]);
+    result &= (point[1] >= min[1] && point[1] <= max[1]);
+    result &= (point[2] >= min[2] && point[2] <= max[2]);
+    return result;
+}
+
+template<int N, class T>
+__device__ __host__ HYBRID_INLINE
+bool AABB<N, T>::IsOutside(const Vector<N, T>& point)
+{
+    return !IsInside(point);
+}

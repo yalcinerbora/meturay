@@ -75,7 +75,7 @@ class CPULightGroupRectangular final : public CPULightGroupP<GPULightRectangular
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupRectangular(const GPUPrimitiveGroupI*,
                                                               const CudaGPU&);
                                     ~CPULightGroupRectangular() = default;
@@ -142,7 +142,7 @@ inline void GPULightRectangular::Sample(// Output
     //distance = direction.Length();
     //direction *= (1.0f / distance);
 
-    //// Fake pdf to incorporate square faloff
+    //// Fake pdf to incorporate square falloff
     //pdf = (distance * distance);
 }
 

@@ -74,7 +74,7 @@ class CPULightGroupDisk final : public CPULightGroupP<GPULightDisk>
 
     protected:
     public:
-        // Cosntructors & Destructor
+        // Constructors & Destructor
                                     CPULightGroupDisk(const GPUPrimitiveGroupI*,
                                                       const CudaGPU&);
                                     ~CPULightGroupDisk() = default;

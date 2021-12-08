@@ -42,8 +42,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
     ~AABB() = default;
 
     // Accessors
-    __device__ __host__ const Vector<N, T>& Min() const;
-    __device__ __host__ const Vector<N, T>& Max() const;
+    __device__ __host__ const Vector<N, T>&     Min() const;
+    __device__ __host__ const Vector<N, T>&     Max() const;
     __device__ __host__ Vector<N, T>            Min();
     __device__ __host__ Vector<N, T>            Max();
 
@@ -56,6 +56,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
     __device__ __host__ Vector<N, T>            Centroid() const;
     __device__ __host__ AABB                    Union(const AABB&) const;
     __device__ __host__ AABB&                   UnionSelf(const AABB&);
+    __device__ __host__ bool                    IsInside(const Vector<N, T>&);
+    __device__ __host__ bool                    IsOutside(const Vector<N, T>&);
 };
 
 // Typeless aabbs are defaulted to float

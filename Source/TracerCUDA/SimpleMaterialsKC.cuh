@@ -38,18 +38,18 @@ struct LambertConstFuncs
         // Ray Selection
         const Vector3& position = pos;
         const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-        // Generate New Ray Directiion
+        // Generate New Ray Direction
         Vector2 xi(GPUDistribution::Uniform<float>(rng),
                    GPUDistribution::Uniform<float>(rng));
         Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
         direction.NormalizeSelf();
 
-        // Generated direction vector is on surface space (hemisperical)
+        // Generated direction vector is on surface space (hemispherical)
         // Convert it to normal oriented hemisphere (world space)
         QuatF q = Quat::RotationBetweenZAxis(normal);
         direction = q.ApplyRotation(direction);
 
-        // Cos Tetha
+        // Cos Theta
         float nDotL = max(normal.Dot(direction), 0.0f);
 
         // Ray out
@@ -208,17 +208,17 @@ struct RefractMatFuncs
         // to work
         Vector3 refNormal = (entering) ? normal : (-normal);
 
-        // Calculate Frenel Term
+        // Calculate Fresnel Term
         float f = TracerFunctions::FrenelDielectric(abs(nDotI), fromMedium, toMedium);
 
-        // Sample ray according to the frenel term
+        // Sample ray according to the Fresnel term
         float xi = GPUDistribution::Uniform<float>(rng);
         if(xi < f)
         {
             // RNG choose to sample Reflection case
             wo = RayF(wi, position).Reflect(refNormal);
             wo.AdvanceSelf(MathConstants::Epsilon, refNormal);
-            // Frenel term is used to sample thus pdf is f
+            // Fresnel term is used to sample thus pdf is f
             pdf = f;
             // We reflected off of surface no medium change
             outMedium = &m;
@@ -234,13 +234,13 @@ struct RefractMatFuncs
             // Write pdf
             pdf = 1.0f - f;
 
-            // Refraction is choosen
+            // Refraction is chosen
             // Convert wi, refract func needs
             // the direction to be towards surface
             RayF rayIn(wi, position);
             // Get refracted ray
             bool refracted = rayIn.Refract(wo, refNormal, fromMedium, toMedium);
-            // Since Frenel term is used to sample,
+            // Since Fresnel term is used to sample,
             // code should not arrive here (raise exception)
             // Update:
             // Well code does arrive here rarely (due to numerical error i guess)
@@ -258,7 +258,7 @@ struct RefractMatFuncs
             // advance towards opposite direction
             wo.AdvanceSelf(MathConstants::Epsilon, -refNormal);
 
-            // Factor in the radiance discrapency due to refraction
+            // Factor in the radiance discrepancy due to refraction
             // Medium change causes rays to be scatter/focus
             // Since we try to calculate radiance towards that ray
             float radianceChangeFactor = (fromMedium * fromMedium) / (toMedium * toMedium);

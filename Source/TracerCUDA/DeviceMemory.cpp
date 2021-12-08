@@ -46,7 +46,7 @@ DeviceLocalMemory& DeviceLocalMemory::operator=(const DeviceLocalMemory& other)
 {
     assert(this != &other);
 
-    // Det Device
+    // Determine Device
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
     // Realloc if necessary
     if(size != other.size)
@@ -75,7 +75,7 @@ DeviceLocalMemory& DeviceLocalMemory::operator=(DeviceLocalMemory&& other)
     assert(this != &other);
     size = other.size;
 
-    // Det Device
+    // Determine Device
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
     CUDA_CHECK(cudaFree(d_ptr));
 
@@ -164,7 +164,7 @@ DeviceMemoryCPUBacked& DeviceMemoryCPUBacked::operator=(const DeviceMemoryCPUBac
 {
     assert(this != &other);
 
-    // Det Device
+    // Determine Device
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
 
     // Realloc if necessary
@@ -201,7 +201,7 @@ DeviceMemoryCPUBacked& DeviceMemoryCPUBacked::operator=(DeviceMemoryCPUBacked&& 
     assert(this != &other);
     size = other.size;
 
-    // Det Device
+    // Determine Device
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
     CUDA_CHECK(cudaFree(d_ptr));
     free(h_ptr);
@@ -238,7 +238,7 @@ void DeviceMemoryCPUBacked::CopyToDevice(size_t offset, size_t copySize, cudaStr
     copySize = std::max(size, copySize);
     assert(offset + copySize <= size);
 
-    // Det Device
+    // Determine Device
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
     CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<char*>(d_ptr) + offset,
                                reinterpret_cast<char*>(h_ptr) + offset,
@@ -250,7 +250,7 @@ void DeviceMemoryCPUBacked::CopyToHost(size_t offset, size_t copySize, cudaStrea
     copySize = std::max(size, copySize);
     assert(offset + copySize <= size);
 
-    // Det Device
+    // Determine Device
     CUDA_CHECK(cudaSetDevice(currentDevice->DeviceId()));
     CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<char*>(h_ptr) + offset,
                                reinterpret_cast<char*>(d_ptr) + offset,

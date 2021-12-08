@@ -32,7 +32,7 @@ class ImageMemory
 
     protected:
     public:
-        // Constructors & Destructors
+        // Constructors & Destructor
                             ImageMemory();
                             ImageMemory(const Vector2i& offset,
                                         const Vector2i& size,

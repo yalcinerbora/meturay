@@ -113,7 +113,7 @@ SceneError GPUAccOptiXGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
             size_t subLocalSize = primRangeList[i][1] - primRangeList[i][0];
             localSize += subLocalSize;
-            // Save the SBT leaf offset aswell
+            // Save the SBT leaf offset as well
             sbtLeafOffsets.push_back(sbtLeafOffset);
             sbtLeafOffset += subLocalSize;
 
@@ -594,13 +594,13 @@ const std::vector<bool> GPUAccOptiXGroup<PGroup>::GetCullFlagPerAccel() const
     result.reserve(idLookup.size());
     for(const auto& id : idLookup)
     {
-        // Here OptiX only let us to deffine a single cull option
+        // Here OptiX only let us to define a single cull option
         // per accelerator. METUray has definitions for each primitive batch
         // in the scene.
 
-        // So we return "cullface = true" iff all batches wants to be
+        // So we return "cull-face = true" iff all batches wants to be
         // culled (most of the time this should be fine, since only
-        // enclosed objects probably wants their backface culled)
+        // enclosed objects probably wants their back-face culled)
         bool doCullFace = true;
         const PrimitiveIdList& primBatchIdList = primitiveIds[id.second];
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)

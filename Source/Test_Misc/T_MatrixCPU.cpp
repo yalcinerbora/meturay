@@ -138,7 +138,7 @@ TEST(MatrixCPU, Operators)
                         3.0f, 7.0f, 11.0f, 15.0f,
                         4.0f, 8.0f, 12.0f, 16.0f), 1.0f * testMatrix);
 
-    // Matrix Matrix Mult
+    // Matrix Matrix Multiply
     Matrix4x4 multMatrix(1.0f, 5.0f, 9.0f, 13.0f,
                          2.0f, 6.0f, 10.0f, 14.0f,
                          3.0f, 7.0f, 11.0f, 15.0f,
@@ -148,7 +148,7 @@ TEST(MatrixCPU, Operators)
                         110.0f, 254.0f, 398.0f, 542.0f,
                         120.0f, 280.0f, 440.0f, 600.0f), multMatrix * multMatrix);
 
-    // Matrix Vector Mult
+    // Matrix Vector Multiply
     EXPECT_EQ(Vector3(14.0f, 38.0f, 62.0f), testMatrix * Vector3(1.0f, 2.0f, 3.0f));
     EXPECT_EQ(Vector4(30.0f, 70.0f, 110.0f, 150.0f), testMatrix * Vector4(1.0f, 2.0f, 3.0f, 4.0f));
 
@@ -161,7 +161,7 @@ TEST(MatrixCPU, Operators)
                         120.0f, 280.0f, 440.0f, 600.0f), leftCopy);
 
     leftCopy = testMatrix;
-    leftCopy *= leftCopy;   // Self Mult Testing data dependancy
+    leftCopy *= leftCopy;   // Self Multiply Testing data dependency
     EXPECT_EQ(Matrix4x4(90.0f, 202.0f, 314.0f, 426.0f,
                         100.0f, 228.0f, 356.0f, 484.0f,
                         110.0f, 254.0f, 398.0f, 542.0f,
@@ -300,5 +300,5 @@ TEST(TransformGen, Transformations)
     EXPECT_EQ(Vector4(2.0f, 3.0f, 11.0f, 1.0f), scaleMatrix * vectorS);
 
     // Projection Matrices / Look At Matrix
-    // Will Be Tested seperately
+    // Will Be Tested separately
 }

@@ -155,7 +155,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             struct alignas(1) RGBData { unsigned char c[3]; };
             std::vector<RGBData> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = sdrTexture;
-            // Thightly pack pixels for reading
+            // Tightly pack pixels for reading
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
             glBindTexture(GL_TEXTURE_2D, readTexture);
             // [n] version does not work on mesa OGL
@@ -182,7 +182,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             std::vector<Vector3f> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = outputTextures[currentIndex];
             glBindTexture(GL_TEXTURE_2D, readTexture);
-            // Thightly pack pixels for reading
+            // Tightly pack pixels for reading
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT,
                           pixels.data());
@@ -237,7 +237,7 @@ void VisorGL::GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
         return;
     }
 
-    // Determine viewport by checking aspect ratio
+    // Determine view-port by checking aspect ratio
     float imgAspect = static_cast<float>(imageSize[0]) / static_cast<float>(imageSize[1]);
     float screenAspect = static_cast<float>(fbSize[0]) / static_cast<float>(fbSize[1]);
 
@@ -286,7 +286,7 @@ VisorGL::VisorGL(const VisorOptions& opts,
 
 VisorGL::~VisorGL()
 {
-    // Tonemapper
+    // Tone-mapper
     toneMapGL = ToneMapGL();
 
     // Delete Vertex Arrays & Buffers
@@ -376,7 +376,7 @@ void VisorGL::Render()
     glfwSwapBuffers(window);
 
     // TODO: This is kinda wrong?? check it
-    // since it does not excatly makes it to a certain FPS value
+    // since it does not exactly makes it to a certain FPS value
     if(vOpts.fpsLimit > 0.0f)
     {
         t.Stop();
@@ -502,7 +502,7 @@ void VisorGL::SetRenderingContextCurrent()
     glfwMakeContextCurrent(window);
 
     // TODO: temp fix for multi threaded visor
-    // GLEW functions does not? accesible between threads?
+    // GLEW functions does not? accessible between threads?
     // It works on Maxwell but it did not work on
     // Pascal (GTX 1050 is pascal?).
 
@@ -756,7 +756,7 @@ VisorError VisorGL::Initialize(VisorCallbacksI& callbacks,
     // Set Callbacks
     glfwCallback.AttachWindow(window, visorInput.get());
 
-    // Viewport does not get updated by the callback initially.
+    // View-port does not get updated by the callback initially.
     // Set it here
     viewportSize = vOpts.wSize;
 

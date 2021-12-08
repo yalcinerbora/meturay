@@ -4,7 +4,7 @@
 #include "GPUPrimitiveEmpty.h"
 
 // Do not delete this file
-// maybe these classes will be required to be implmented
+// maybe these classes will be required to be implemented
 
 struct UVSurface;
 class GPULightI;

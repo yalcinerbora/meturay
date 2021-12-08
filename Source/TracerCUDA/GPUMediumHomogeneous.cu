@@ -1,29 +1,29 @@
-#include "GPUMediumHomogenous.cuh"
+#include "GPUMediumHomogeneous.cuh"
 #include "CudaSystem.h"
 #include "CudaSystem.hpp"
 #include "RayLib/MemoryAlignment.h"
 
-__global__ void KCConstructGPUMediumHomogenous(GPUMediumHomogenous* gMediumLocations,
+__global__ void KCConstructGPUMediumHomogeneous(GPUMediumHomogeneous* gMediumLocations,
                                                //
-                                               const GPUMediumHomogenous::Data* gDataList,
-                                               uint32_t indexOffset,
-                                               uint32_t mediumCount)
+                                                const GPUMediumHomogeneous::Data* gDataList,
+                                                uint32_t indexOffset,
+                                                uint32_t mediumCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < mediumCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gMediumLocations + globalId) GPUMediumHomogenous(gDataList[globalId],
-                                                              indexOffset + globalId);
+        new (gMediumLocations + globalId) GPUMediumHomogeneous(gDataList[globalId],
+                                                               indexOffset + globalId);
     }
 }
 
-SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
-												double time,
-												const std::string&)
+SceneError CPUMediumHomogeneous::InitializeGroup(const NodeListing& mediumNodes,
+												 double time,
+												 const std::string&)
 {
     //std::vector<GPUMediumHomogenous>
-    std::vector<GPUMediumHomogenous::Data> mediumData;
+    std::vector<GPUMediumHomogeneous::Data> mediumData;
 
     for(const auto& node : mediumNodes)
     {
@@ -39,7 +39,7 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
 
         for(uint32_t i = 0; i < node->IdCount(); i++)
         {
-            mediumData.push_back(GPUMediumHomogenous::Data
+            mediumData.push_back(GPUMediumHomogeneous::Data
             {
                 nodeAbsList[i],
                 nodeScatList[i],
@@ -54,23 +54,23 @@ SceneError CPUMediumHomogenous::InitializeGroup(const NodeListing& mediumNodes,
     GPUMemFuncs::AllocateMultiData(std::tie(dMediumData, dGPUMediums), memory,
                                    {mediumCount, mediumCount});
     // Copy
-    CUDA_CHECK(cudaMemcpy(const_cast<GPUMediumHomogenous::Data*>(dMediumData),
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUMediumHomogeneous::Data*>(dMediumData),
                           mediumData.data(),
-                          mediumCount * sizeof(GPUMediumHomogenous::Data),
+                          mediumCount * sizeof(GPUMediumHomogeneous::Data),
                           cudaMemcpyHostToDevice));
 
 	return SceneError::OK;
 }
 
-SceneError CPUMediumHomogenous::ChangeTime(const NodeListing&, double,
-										   const std::string&)
+SceneError CPUMediumHomogeneous::ChangeTime(const NodeListing&, double,
+										    const std::string&)
 {
     // TODO: Implement
 	return SceneError::MEDIUM_TYPE_INTERNAL_ERROR;
 }
 
-TracerError CPUMediumHomogenous::ConstructMediums(const CudaSystem& system,
-                                                  uint32_t indexStartOffset)
+TracerError CPUMediumHomogeneous::ConstructMediums(const CudaSystem& system,
+                                                   uint32_t indexStartOffset)
 {
     // Call allocation kernel
     const CudaGPU& gpu = system.BestGPU();
@@ -78,9 +78,9 @@ TracerError CPUMediumHomogenous::ConstructMediums(const CudaSystem& system,
     gpu.GridStrideKC_X(0, 0,
                        MediumCount(),
                        //
-                       KCConstructGPUMediumHomogenous,
+                       KCConstructGPUMediumHomogeneous,
                        //
-                       const_cast<GPUMediumHomogenous*>(dGPUMediums),
+                       const_cast<GPUMediumHomogeneous*>(dGPUMediums),
                        dMediumData,
                        indexStartOffset,
                        MediumCount());

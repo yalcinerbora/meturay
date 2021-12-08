@@ -223,7 +223,7 @@ struct TriFunctions
         Vector3 position1 = primData.positions[index1];
         Vector3 position2 = primData.positions[index2];
 
-        // Do Intersecton test on local space
+        // Do Intersection test on local space
         RayF r = transform.WorldToLocal(rayData.ray);
         //
         float t;
@@ -488,7 +488,7 @@ class GPUPrimitiveTriangle final
                                                 ~GPUPrimitiveTriangle() = default;
 
         // Interface
-        // Pirmitive type is used for delegating scene info to this class
+        // Primitive type is used for delegating scene info to this class
         const char*                             Type() const override;
         // Allocates and Generates Data
         SceneError                              InitializeGroup(const NodeListing& surfaceDataNodes, double time,

@@ -57,7 +57,7 @@ TextureGL::TextureGL(const std::string& filePath)
                     pixels.data());
 
     // Override Filtering to Nearest
-    // Usefull for imgui etc.
+    // Useful for imgui etc.
     glTextureParameteri(texId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(texId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }

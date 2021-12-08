@@ -126,7 +126,7 @@ inline void GPUCameraPixel::GenerateRay(// Output
                                         // Options
                                         bool antiAliasOn) const
 {
-    // DX DY from stratfied sample
+    // DX DY from stratified sample
     Vector2 delta = Vector2(planeSize[0] / static_cast<float>(sampleMax[0]),
                             planeSize[1] / static_cast<float>(sampleMax[1]));
 
@@ -249,7 +249,7 @@ __device__
 inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pId,
                                                           const Vector2i& res) const
 {
-    // DX DY from stratfied sample
+    // DX DY from stratified sample
     Vector2 delta = Vector2(planeSize[0] / static_cast<float>(res[0]),
                             planeSize[1] / static_cast<float>(res[1]));
 

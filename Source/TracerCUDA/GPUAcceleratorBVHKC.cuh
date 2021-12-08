@@ -25,7 +25,7 @@ static constexpr const uint8_t MAX_BASE_DEPTH_BITS = 5;
 static_assert((MAX_BASE_DEPTH + MAX_BASE_DEPTH_BITS) <= sizeof(uint32_t) * BYTE_BITS,
               "Base Accelerator State Bits should fit in 32-bit data.");
 static_assert((1llu << MAX_BASE_DEPTH_BITS) >= MAX_BASE_DEPTH,
-              "Base Accelerator bits shouldbe able to hold depth.");
+              "Base Accelerator bits should be able to hold depth.");
 
 // Base BVH Kernel Save/Load State
 __device__
@@ -106,7 +106,7 @@ static void KCReduceAABBs(AABB3f* gAABBsReduced,
 {
     static const AABB3 InitialAABB = NegativeAABB3;
 
-    // Specialize BlockReduce for  256 Threads and flot
+    // Specialize BlockReduce for  256 Threads and float
     typedef cub::BlockReduce<AABB3f, StaticThreadPerBlock1D> BlockReduce;
     // Shared Mem
     __shared__ typename BlockReduce::TempStorage tempStorage;
@@ -128,7 +128,7 @@ static void KCReduceAABBsFirst(AABB3f* gAABBsReduced,
 {
     static const AABB3 InitialAABB = NegativeAABB3;
 
-    // Specialize BlockReduce for  256 Threads and flot
+    // Specialize BlockReduce for  256 Threads and float
     typedef cub::BlockReduce<AABB3f, StaticThreadPerBlock1D> BlockReduce;
     // Shared Mem
     __shared__ typename BlockReduce::TempStorage tempStorage;
@@ -147,7 +147,7 @@ static void KCReduceCentroids(float* gCentersReduced,
                               const float* gCenters,
                               uint32_t count)
 {
-    // Specialize BlockReduce for  256 Threads and flot
+    // Specialize BlockReduce for  256 Threads and float
     typedef cub::BlockReduce<float, StaticThreadPerBlock1D> BlockReduce;
      // Shared Mem
     __shared__ typename BlockReduce::TempStorage tempStorage;
@@ -169,7 +169,7 @@ static void KCReduceCentroidsFirst(float* gCentersReduced,
                                    SplitAxis axis,
                                    uint32_t count)
 {
-    // Specialize BlockReduce for  256 Threads and flot
+    // Specialize BlockReduce for  256 Threads and float
     typedef cub::BlockReduce<float, StaticThreadPerBlock1D> BlockReduce;
     // Shared Mem
     __shared__ typename BlockReduce::TempStorage tempStorage;
@@ -306,8 +306,8 @@ void KCIntersectBVH(// O
     }
 }
 
-// This is fundemental BVH traversal kernel
-// It supparts partial traversal and continuation traversal(for scene tree)
+// This is fundamental BVH traversal kernel
+// It supports partial traversal and continuation traversal(for scene tree)
 template <class PGroup>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCIntersectBVHStackless(// O
@@ -424,7 +424,7 @@ void KCIntersectBVHStackless(// O
                 {
                     // Since by construction BVH tree has either no or both children
                     // avail. If a node is non-leaf it means that it has both of its children
-                    // no need to check for left or right index validty
+                    // no need to check for left or right index validity
 
                     // Directly go right
                     currentNode = gBVH + currentNode->body.left;
@@ -525,7 +525,7 @@ static void KCIntersectBaseBVH(// Output
         uint8_t depth;
         LoadRayState(list, depth, gRayStates[id]);
 
-        // Find your leftoff BVH node first
+        // Find your left off BVH node first
         const BVHNode<BaseLeaf>* currentNode = gBVH + gPrevBVHIndex[id];
 
         bool isSingleNode = false;
@@ -539,7 +539,7 @@ static void KCIntersectBaseBVH(// Output
                 bool isLeaf = currentNode->isLeaf;
 
                 // Check the leafs aabb or non-leaf aabb
-                // These are the same (cuz of union) but we need to be programatically correct
+                // These are the same (because of union) but we need to be programmatically correct
                 Vector3 aabbMin = (isLeaf) ? currentNode->leaf.aabbMin : currentNode->body.aabbMin;
                 Vector3 aabbMax = (isLeaf) ? currentNode->leaf.aabbMax : currentNode->body.aabbMax;
 
@@ -594,7 +594,7 @@ static void KCIntersectBaseBVH(// Output
             // Go up
             else
             {
-                // Wipe out lower bits of the bitstack for incoming iterations
+                // Wipe out lower bits of the bit-stack for incoming iterations
                 WipeLowerBits(list, depth);
                 currentNode = gBVH + currentNode->parent;
                 depth++;

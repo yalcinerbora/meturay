@@ -26,7 +26,7 @@ struct SceneAnalyticData
     double                      sceneUpdateTime;    // secs
     // Group Counts
     std::array<uint32_t, END>   groupCounts;
-    // Key Maxiums
+    // Key Maximums
     Vector2i                    accKeyMax;
     Vector2i                    workKeyMax;
 };

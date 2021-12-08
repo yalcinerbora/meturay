@@ -82,7 +82,7 @@ class GPUPrimitiveEmpty final
                                         ~GPUPrimitiveEmpty() = default;
 
         // Interface
-        // Pirmitive type is used for delegating scene info to this class
+        // Primitive type is used for delegating scene info to this class
         const char*                     Type() const override;
         // Allocates and Generates Data
         SceneError                      InitializeGroup(const NodeListing& surfaceDatalNodes, double time,

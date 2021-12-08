@@ -27,7 +27,7 @@ using TextureNodeMap = std::map<uint32_t, TextureStruct>;
 // Defines the same type materials
 // Logics consists of loading certain material
 // This struct holds the material data in a batched fashion (textures arrays etc)
-// These are singular and can be shared by multiple accelrator batches
+// These are singular and can be shared by multiple accelerator batches
 class GPUMaterialGroupI
 {
     public:

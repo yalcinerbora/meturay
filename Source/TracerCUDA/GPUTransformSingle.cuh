@@ -105,7 +105,7 @@ inline GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
 	Vector3f x(transform(0, 0), transform(0, 1), transform(0, 2));
 	Vector3f y(transform(1, 0), transform(1, 1), transform(1, 2));
 	Vector3f z(transform(2, 0), transform(2, 1), transform(2, 2));
-	// Normalize space definiting linearly indepenent
+	// Normalize space defining linearly independent
 	// and orthogonal vectors
 	// These may not be unit vectors since transformation
 	// may include scale factor

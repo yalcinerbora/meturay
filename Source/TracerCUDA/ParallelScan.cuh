@@ -3,13 +3,13 @@
 Parallel Scan Algorithms
 Can define custom reduce function and custom type
 
-Moderen Reduction using Kepler warp data transfer
+Modern Reduction using Kepler warp data transfer
 http://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 
 Implementation of
 https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch39.html
 
-Nevermind. Currently found cub backend which what i was planning to do
+Never mind. Currently found cub back end which what i was planning to do
 Wrapping functions to it from now on.
 
 */

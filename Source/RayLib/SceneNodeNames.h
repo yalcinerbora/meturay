@@ -50,6 +50,6 @@ namespace NodeNames
     // Light Related
     static constexpr const char* LIGHT_TYPE_PRIMITIVE = "Primitive";
 
-    // Indentity Transform Type Name
+    // Identity Transform Type Name
     static constexpr const char* TRANSFORM_IDENTITY = "Identity";
 }

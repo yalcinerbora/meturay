@@ -45,7 +45,7 @@ struct LambertMatFuncs
         Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
         direction.NormalizeSelf();
     
-        // Cos Tetha
+        // Cos Theta
         float nDotL = max(normal.Dot(direction), 0.0f);
     
         // Ray out

@@ -25,14 +25,14 @@ class RayMemory
 {
     private:
         // Leader GPU device that is responsible for
-        // parititoning and sorting the ray data
+        // partitioning and sorting the ray data
         // (Only useful in multi-GPU systems)
         const CudaGPU&              leaderDevice;
 
         // Ray Related
         DeviceMemory                memIn;
         DeviceMemory                memOut;
-        // In rays are goint to enter material kernels
+        // In rays are going to enter material kernels
         RayGMem*                    dRayIn;
         // Those kernels will output one or multiple rays
         // Each material has a predefined max ray output
@@ -51,11 +51,11 @@ class RayMemory
         TransformId*                dTransformIds;
         // Primitive Id of the hit
         // Inner accelerators fill this value with a primitive group local id
-        // Primitive group id can be determined by workgroup
+        // Primitive group id can be determined by work group
         PrimitiveId*                dPrimitiveIds;
         // Custom hit Structure allocation pointer
         // This pointer is capable of holding data for all
-        // hit stuructures currently active
+        // hit structures currently active
         // (i.e. it holds Vec2 bary coords for triangle primitives,
         // hold position for spheres (maybe spherical coords in order to save space).
         // or other custom value for a custom primitive (spline params maybe i dunno)
@@ -71,7 +71,7 @@ class RayMemory
         HitKey*                     dCurrentKeys;
         RayId*                      dCurrentIds;
 
-        // Cub Requires acutal tempMemory size
+        // Cub Requires actual tempMemory size
         // It sometimes crash if you give larger memory size
         // I dunno why
         size_t                      cubIfMemSize;

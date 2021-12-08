@@ -3,7 +3,7 @@
 /**
 
 Arbitrary sized vector. Vector is column vector (N x 1 matrix)
-which means that it can only be multipled with matrices from right.
+which means that it can only be multiplied with matrices from right.
 
 N should be 2, 3 or 4 at most.
 
@@ -124,7 +124,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         __device__ __host__ bool                        operator>(const Vector&) const;
         __device__ __host__ bool                        operator>=(const Vector&) const;
 
-        // Utilty
+        // Utility
         __device__ __host__ T                           Dot(const Vector&) const;
 
         // Reduction
@@ -311,7 +311,7 @@ extern template class Vector<4, int32_t>;
 // Unsigned Integer Type
 // IMPORTANT: This (and the non extern brother in the Vector.cu)
 // Breaks the at the __cudaRegisterFatbinary() when you load VisorGL.so.
-// I dont know why...
+// I don't know why...
 // extern template class Vector<2, uint32_t>;
 // extern template class Vector<3, uint32_t>;
 // extern template class Vector<4, uint32_t>;
