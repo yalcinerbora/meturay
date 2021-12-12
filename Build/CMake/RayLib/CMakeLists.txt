@@ -65,7 +65,8 @@ set(SRC_MATH
     ${CURRENT_SOURCE_DIR}/Triangle.h
     ${CURRENT_SOURCE_DIR}/Vector.cu
     ${CURRENT_SOURCE_DIR}/Vector.h
-    ${CURRENT_SOURCE_DIR}/Vector.hpp)
+    ${CURRENT_SOURCE_DIR}/Vector.hpp
+    ${CURRENT_SOURCE_DIR}/IntersectionFunctions.h)
 
 set(SRC_NODES
     ${CURRENT_SOURCE_DIR}/AnalyticNodeI.h

@@ -20,44 +20,48 @@ template<int N, class T>
 class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 {
     public:
-    static constexpr int                        AABBVertexCount = 8;
+        static constexpr int            AABBVertexCount = 8;
+        friend struct                   AABBOffsetChecker;
+
     private:
-    Vector<N, T> min;
-    Vector<N, T> max;
+        Vector<N, T>                    min;
+        Vector<N, T>                    max;
+
+
 
     protected:
     public:
         // Constructors & Destructor
-    constexpr                                   AABB() = default;
-    constexpr __device__ __host__               AABB(const Vector<N, T>& min,
-                                                     const Vector<N, T>& max);
-    __device__ __host__                         AABB(const T* dataMin,
-                                                     const T* dataMax);
+        constexpr                                   AABB() = default;
+        constexpr __device__ __host__               AABB(const Vector<N, T>& min,
+                                                         const Vector<N, T>& max);
+        __device__ __host__                         AABB(const T* dataMin,
+                                                         const T* dataMax);
 
-    template <class... Args0, class... Args1,
-        typename = AllArithmeticEnable<Args1...>,
-        typename = AllArithmeticEnable<Args0...>>
-        constexpr __device__ __host__           AABB(const Args0... dataList0,
-                                                     const Args1... dataList1);
-    ~AABB() = default;
+        template <class... Args0, class... Args1,
+                  typename = AllArithmeticEnable<Args1...>,
+                  typename = AllArithmeticEnable<Args0...>>
+            constexpr __device__ __host__           AABB(const Args0... dataList0,
+                                                         const Args1... dataList1);
+                                                    ~AABB() = default;
 
-    // Accessors
-    __device__ __host__ const Vector<N, T>&     Min() const;
-    __device__ __host__ const Vector<N, T>&     Max() const;
-    __device__ __host__ Vector<N, T>            Min();
-    __device__ __host__ Vector<N, T>            Max();
+        // Accessors
+        __device__ __host__ const Vector<N, T>&     Min() const;
+        __device__ __host__ const Vector<N, T>&     Max() const;
+        __device__ __host__ Vector<N, T>            Min();
+        __device__ __host__ Vector<N, T>            Max();
 
-    // Mutators
-    __device__ __host__ void                    SetMin(const Vector<N, T>&);
-    __device__ __host__ void                    SetMax(const Vector<N, T>&);
+        // Mutators
+        __device__ __host__ void                    SetMin(const Vector<N, T>&);
+        __device__ __host__ void                    SetMax(const Vector<N, T>&);
 
-    // Functionality
-    __device__ __host__ Vector<N, T>            Span() const;
-    __device__ __host__ Vector<N, T>            Centroid() const;
-    __device__ __host__ AABB                    Union(const AABB&) const;
-    __device__ __host__ AABB&                   UnionSelf(const AABB&);
-    __device__ __host__ bool                    IsInside(const Vector<N, T>&);
-    __device__ __host__ bool                    IsOutside(const Vector<N, T>&);
+        // Functionality
+        __device__ __host__ Vector<N, T>            Span() const;
+        __device__ __host__ Vector<N, T>            Centroid() const;
+        __device__ __host__ AABB                    Union(const AABB&) const;
+        __device__ __host__ AABB&                   UnionSelf(const AABB&);
+        __device__ __host__ bool                    IsInside(const Vector<N, T>&);
+        __device__ __host__ bool                    IsOutside(const Vector<N, T>&);
 };
 
 // Typeless aabbs are defaulted to float
@@ -77,6 +81,36 @@ using AABB4d = AABB<4, double>;
 //static_assert(std::is_literal_type<AABB3>::value == true, "AABBs has to be literal types");
 static_assert(std::is_trivially_copyable<AABB3>::value == true, "AABBs has to be trivially copyable");
 static_assert(std::is_polymorphic<AABB3>::value == false, "AABBs should not be polymorphic");
+
+struct AABBOffsetChecker
+{
+    // Some Sanity Traits
+    static_assert(offsetof(AABB2f, min) == 0,
+                  "AABB2f::min is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB2f, max) == sizeof(Vector<2, float>),
+                  "AABB2f:: max is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB3f, min) == 0,
+                  "AABB3f::min is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB3f, max) == sizeof(Vector<3, float>),
+                  "AABB3f:: max is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB4f, min) == 0,
+                  "AABB4f::min is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB4f, max) == sizeof(Vector<4, float>),
+                  "AABB4f:: max is not properly aligned for contagious mem read/write");
+    //
+    static_assert(offsetof(AABB2d, min) == 0,
+                  "AABB2d::min is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB2d, max) == sizeof(Vector<2, double>),
+                  "AABB2d:: max is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB3d, min) == 0,
+                  "AABB3d::min is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB3d, max) == sizeof(Vector<3, double>),
+                  "AABB3d:: max is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB4d, min) == 0,
+                  "AABB4d::min is not properly aligned for contagious mem read/write");
+    static_assert(offsetof(AABB4d, max) == sizeof(Vector<4, double>),
+                  "AABB4d:: max is not properly aligned for contagious mem read/write");
+};
 
 // Implementation
 #include "AABB.hpp" // CPU & GPU

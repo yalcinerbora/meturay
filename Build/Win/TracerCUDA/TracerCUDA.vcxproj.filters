@@ -115,6 +115,9 @@
     <Filter Include="RayCaster">
       <UniqueIdentifier>{c929825e-9173-41d3-bd22-ce9dd91a077a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tracers\Data Structures">
+      <UniqueIdentifier>{1a755114-28e6-451c-8021-27bbbd5b800d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp">
@@ -600,6 +603,15 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformEmpty.cuh">
       <Filter>Transforms</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ScenePositionTree.cuh">
+      <Filter>Tracers\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LinearBVH.cuh">
+      <Filter>Tracers\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LinearBVH.hpp">
+      <Filter>Tracers\Data Structures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -754,6 +766,12 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayCaster.cu">
       <Filter>RayCaster</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\LinearBVH.cu">
+      <Filter>Tracers\Data Structures</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ScenePositionTree.cu">
+      <Filter>Tracers\Data Structures</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

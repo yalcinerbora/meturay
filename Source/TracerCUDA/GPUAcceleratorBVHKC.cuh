@@ -76,9 +76,6 @@ struct SpacePartition
 template<class LeafStruct>
 struct alignas(16) BVHNode
 {
-    //static constexpr uint32_t NULL_NODE = std::numeric_limits<uint32_t>::max();
-
-    // Pointers
     union
     {
         // Non-leaf part
@@ -89,8 +86,8 @@ struct alignas(16) BVHNode
             uint32_t left;
             Vector3 aabbMax;
             uint32_t right;
-        }body;
-        // leaf part
+        } body;
+        // Leaf part
         LeafStruct leaf;
     };
     uint32_t parent;

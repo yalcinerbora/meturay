@@ -160,6 +160,7 @@ xcopy /Y "..\..\..\Lib\Win\$(Configuration)\Imath.dll" "$(OutDir)"</Command>
     <ClInclude Include="..\..\..\Source\RayLib\FileUtility.h" />
     <ClInclude Include="..\..\..\Source\RayLib\Flag.h" />
     <ClInclude Include="..\..\..\Source\RayLib\ImageIOError.h" />
+    <ClInclude Include="..\..\..\Source\RayLib\IntersectionFunctions.h" />
     <ClInclude Include="..\..\..\Source\RayLib\RandomColor.h" />
     <ClInclude Include="..\..\..\Source\RayLib\StringUtility.h" />
     <ClInclude Include="..\..\..\Source\RayLib\TracerSystemI.h" />

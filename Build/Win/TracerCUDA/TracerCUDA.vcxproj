@@ -71,6 +71,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageStructs.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterialKC.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LinearBVH.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\LinearBVH.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MangledNames.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\MaterialFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWork.cuh" />
@@ -94,6 +96,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracer.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\RefPGTracerWorks.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\ScenePositionTree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STree.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\STreeKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\TextureFunctions.h" />
@@ -194,6 +197,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\LinearBVH.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracer.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PPGTracerWorks.cu" />
@@ -207,6 +211,7 @@
     <ClCompile Include="..\..\..\Source\TracerCUDA\SceneNodeJson.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\ScenePartitioner.cpp" />
     <ClCompile Include="..\..\..\Source\TracerCUDA\Texture.cpp" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\ScenePositionTree.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerDebug.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DebugMaterials.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\DirectTracer.cu" />

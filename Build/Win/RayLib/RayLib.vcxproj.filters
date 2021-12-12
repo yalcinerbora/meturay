@@ -267,6 +267,9 @@
     <ClInclude Include="..\..\..\Source\RayLib\Unreachable.h">
       <Filter>System</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\IntersectionFunctions.h">
+      <Filter>Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
