@@ -183,6 +183,49 @@ static void KCReduceCentroidsFirst(float* gCentersReduced,
     if(threadIdx.x == 0) gCentersReduced[blockIdx.x] = valReduced;
 }
 
+template <class LeafData>
+__global__
+static void KCMarkLeafs(// Output
+                        uint32_t* gMarks,
+                        // Input
+                        const BVHNode<LeafData>** gBVHList,
+                        uint32_t accId,
+                        uint32_t nodeCount)
+{
+    const BVHNode<LeafData>* gBVHRoot = gBVHList[accId];
+
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < nodeCount; globalId += blockDim.x * gridDim.x)
+    {
+        const BVHNode<LeafData> node = gBVHRoot[globalId];
+        gMarks[globalId] = (node.isLeaf) ? 1u : 0u;
+    }
+}
+
+template <class LeafData>
+__global__
+static void KCCopyLeafs(// Output
+                        LeafData* gLeafOut,
+                        // Input
+                        uint32_t* gOffsets,
+                        const BVHNode<LeafData>** gBVHList,
+                        uint32_t accId,
+                        uint32_t nodeCount)
+{
+    const BVHNode<LeafData>* gBVHRoot = gBVHList[accId];
+
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < nodeCount; globalId += blockDim.x * gridDim.x)
+    {
+        const BVHNode<LeafData> node = gBVHRoot[globalId];
+        uint32_t offset = gOffsets[globalId];
+        // Write leaf to offset
+        if(node.isLeaf) gLeafOut[offset] = node.leaf;
+    }
+}
+
 template <class PGroup>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCIntersectBVH(// O

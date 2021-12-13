@@ -21,6 +21,8 @@ class RNGMemory
                             RNGMemory() = default;
                             RNGMemory(uint32_t seed,
                                       const CudaSystem&);
+                            RNGMemory(uint32_t seed,
+                                      const CudaGPU&);
                             RNGMemory(const RNGMemory&) = delete;
                             RNGMemory(RNGMemory&&) = default;
         RNGMemory&          operator=(const RNGMemory&) = delete;

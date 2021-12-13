@@ -6,16 +6,7 @@
 class ScenePositionTree
 {
     private:
-        LBVHPointCPU        lBVHPoint;
-
-        uint32_t            Subdivide(Vector3f* dPositions,
-                                      Vector3f* dNormals,
-                                      float* dAreas,
-                                      //
-                                      DeviceMemory& tempMemory,
-                                      uint32_t elementCount,
-                                      const CudaSystem&);
-        float               FindMortonDelta(const AABB3f& sceneExtents);
+        LBVHPointCPU            lBVHPoint;
 
     public:
         // Constructors & Destructor
@@ -26,8 +17,8 @@ class ScenePositionTree
         // Construct the linear bvh using all accelerators
         // Refine the svo using thresholds
         TracerError             Construct(const AcceleratorBatchMap& sceneAccelerators,
-                                          const AABB3f& sceneExtents,
-                                          float normalAngleThreshold, float areaThreshold,
+                                          float normalAngleThreshold,
+                                          uint32_t samplePointCount,
                                           const CudaSystem&);
 
         const LBVHPointGPU&     TreeGPU() const;

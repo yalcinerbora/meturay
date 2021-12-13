@@ -7,6 +7,7 @@
 
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
+#include "CudaSystem.hpp"
 // Algorithms and functors required for the operations
 #include "MortonCode.cuh"
 #include "ParallelReduction.cuh"

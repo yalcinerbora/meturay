@@ -294,6 +294,8 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
     std::vector<uint32_t> hTransformIndices;
     hTransformIndices.reserve(surfaceList.size());
+    surfaceLeafCounts.reserve(surfaceList.size());
+    bvhNodeCounts.reserve(surfaceList.size());
 
     // Get params
     bool useStack = node->CommonBool(USE_STACK_NAME);
@@ -308,6 +310,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
         primRangeList.fill(Vector2ul(std::numeric_limits<uint64_t>::max()));
         hitKeyList.fill(HitKey::InvalidKey);
 
+        uint32_t totalPrimCountInSurface = 0;
         const IdKeyPairs& pList = surface.second.primIdWorkKeyPairs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
@@ -317,8 +320,10 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
 
             primRangeList[i] = this->primitiveGroup.PrimitiveBatchRange(p.first);
             hitKeyList[i] = p.second;
+            totalPrimCountInSurface += primRangeList[i][1] - primRangeList[i][0];
         }
 
+        surfaceLeafCounts.push_back(totalPrimCountInSurface);
         hTransformIndices.push_back(surface.second.globalTransformIndex);
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
@@ -437,7 +442,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     size_t tempMemSize = std::max(cubIfMemSize,
                                   std::max(centerReduceMemSize,
                                            aabbReduceMemSize));
-    // GPU Memory    
+    // GPU Memory
     uint64_t*   dPrimIds;
     uint32_t*   dIdsIn;
     uint32_t*   dIdsTemp;
@@ -617,6 +622,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
 
     // Add to the list which will be delegated to the base accelerator
     surfaceAABBs.emplace(surface, accAABB);
+    // Set node count of this accelerator
+    bvhNodeCounts.push_back(bvhNodes.size());
 
     CUDA_CHECK(cudaMemcpy(bvhMemories[innerIndex],
                           bvhNodes.data(),
@@ -628,6 +635,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                           &dBVHStart,
                           sizeof(BVHNode<LeafData>*),
                           cudaMemcpyHostToDevice));
+
 
     t.Stop();
     METU_LOG("Surface{:d} BVH(d={:d}) generated in {:f} seconds.",
@@ -775,4 +783,137 @@ template <class PGroup>
 size_t GPUAccBVHGroup<PGroup>::AcceleratorCount() const
 {
     return idLookup.size();
+}
+
+template <class PGroup>
+size_t GPUAccBVHGroup<PGroup>::TotalPrimitiveCount() const
+{
+    uint32_t totalLeafCount = std::reduce(surfaceLeafCounts.cbegin(),
+                                          surfaceLeafCounts.cend(),
+                                          0u);
+
+    return totalLeafCount;
+}
+
+template <class PGroup>
+float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaGPU& gpu) const
+{
+    // It is quite expensive to get exact area estimate
+    // Utilize the root AABB surface areas for an approximation
+
+    return 1.0f;
+}
+
+template <class PGroup>
+void GPUAccBVHGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
+                                                               Vector3f* dPositions,
+                                                               Vector3f* dNormals,
+                                                               // I-O
+                                                               RNGMemory& rngMemory,
+                                                               // Inputs
+                                                               uint32_t surfacePatchCount,
+                                                               const CudaSystem& system) const
+{
+    const CudaGPU& gpu = system.BestGPU();
+    uint32_t totalLeafCount = TotalPrimitiveCount();
+
+    // Linearize the leafs and transform ids for all accelerators
+    // In this group
+    DeviceMemory areaMemory;
+    float* dAreas;
+    LeafData* dLinearLeafData;
+    TransformId* dLeafTransformIds;
+    GPUMemFuncs::AllocateMultiData(std::tie(dAreas, dLinearLeafData,
+                                            dLeafTransformIds),
+                                   areaMemory,
+                                   {totalLeafCount, totalLeafCount,
+                                   totalLeafCount});
+
+    // Populate the leafs
+    uint32_t offset = 0;
+    DeviceMemory offsetMemory;
+    for(uint32_t accId = 0;
+        accId < static_cast<uint32_t>(idLookup.size());
+        accId++)
+    {
+        uint32_t localLeafCount = surfaceLeafCounts[accId];
+        uint32_t localNodeCount = bvhNodeCounts[accId];
+
+        // Allocate a temp offset array
+        uint32_t* dMarks = nullptr;
+        uint32_t* dOffsets = nullptr;
+        GPUMemFuncs::AllocateMultiData(std::tie(dMarks, dOffsets),
+                                       offsetMemory,
+                                       {localLeafCount, localLeafCount});
+
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, localNodeCount,
+                           //
+                           KCMarkLeafs<LeafData>,
+                           // Output
+                           dMarks,
+                           // Input
+                           dBVHLists,
+                           accId,
+                           localNodeCount);
+
+        // Scan the find the offsets
+        ExclusiveScanArrayGPU<uint32_t, ReduceAdd<uint32_t>>(dOffsets,
+                                                             dMarks,
+                                                             localLeafCount,
+                                                             0u);
+
+        // Write Subset of the
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, localNodeCount,
+                           //
+                           KCCopyLeafs<LeafData>,
+                           // Input
+                           dLinearLeafData + offset,
+                           // Output
+                           dOffsets,
+                           dBVHLists,
+                           accId,
+                           localNodeCount);
+        // Expand the transform over leafs
+        ExpandValueGPU<TransformId>(dLeafTransformIds,
+                                    dAccTransformIds + offset,
+                                    localLeafCount);
+
+        offset += surfaceLeafCounts[accId];
+    }
+    // We generated linearized array
+
+    // Generate Area of each primitive
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalLeafCount,
+                       //
+                       KCGenerateAreas<PGroup>,
+                       // Output
+                       dAreas,
+                       // Input
+                       dLinearLeafData,
+                       dLeafTransformIds,
+                       dTransforms,
+                       totalLeafCount);
+
+    // Generate PWC Distribution over area
+    std::vector<const float*> dAreaPtrs = {dAreas};
+    std::vector<size_t> counts = {totalLeafCount};
+    CPUDistGroupPiecewiseConst1D areaDist(dAreaPtrs, counts, system);
+
+    // Now use this to fetch surface patches
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,
+                       //
+                       KCSampleSurfacePatch<PGroup>,
+                       // Inputs
+                       dPositions,
+                       dNormals,
+                       // I-O
+                       rngMemory.RNGData(gpu),
+                       //
+                       dLinearLeafData,
+                       dLeafTransformIds,
+                       dTransforms,
+                       areaDist.DistributionGPU(0),
+                       surfacePatchCount);
+
+    // All Done!
 }

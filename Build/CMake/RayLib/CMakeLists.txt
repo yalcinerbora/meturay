@@ -61,12 +61,16 @@ set(SRC_MATH
     ${CURRENT_SOURCE_DIR}/Ray.cu
     ${CURRENT_SOURCE_DIR}/Ray.h
     ${CURRENT_SOURCE_DIR}/Ray.hpp
-    ${CURRENT_SOURCE_DIR}/Sphere.h
-    ${CURRENT_SOURCE_DIR}/Triangle.h
     ${CURRENT_SOURCE_DIR}/Vector.cu
     ${CURRENT_SOURCE_DIR}/Vector.h
     ${CURRENT_SOURCE_DIR}/Vector.hpp
     ${CURRENT_SOURCE_DIR}/IntersectionFunctions.h)
+
+set(SRC_PRIMITIVES
+    ${CURRENT_SOURCE_DIR}/Sphere.h
+    ${CURRENT_SOURCE_DIR}/Triangle.h
+    ${CURRENT_SOURCE_DIR}/Disk.h)
+
 
 set(SRC_NODES
     ${CURRENT_SOURCE_DIR}/AnalyticNodeI.h
@@ -155,7 +159,8 @@ set(SRC_ALL
     ${SRC_THREADS}
     ${SRC_UTILITY}
     ${SRC_VISOR_INPUT}
-    ${SRC_COMMON})
+    ${SRC_COMMON}
+    ${SRC_PRIMITIVES})
 
 # IDE Filters
 source_group("CPU Containers" FILES ${SRC_CPU_CONTAINERS})
@@ -164,6 +169,7 @@ source_group("Errors" FILES ${SRC_ERRORS})
 source_group("File I-O" FILES ${SRC_FILE_IO})
 source_group("Interfaces" FILES ${SRC_INTERFACES})
 source_group("Math" FILES ${SRC_MATH})
+source_group("Math/Primitives" FILES ${SRC_PRIMITIVES})
 source_group("Nodes" FILES ${SRC_NODES})
 source_group("Structs" FILES ${SRC_STRUCTS})
 source_group("SurfaceLoader" FILES ${SRC_SURFACE_LOADER})

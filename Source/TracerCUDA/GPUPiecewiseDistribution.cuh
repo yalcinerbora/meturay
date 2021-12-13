@@ -89,11 +89,19 @@ class CPUDistGroupPiecewiseConst1D
         std::vector<const float*>                   dPDFs;
         std::vector<const float*>                   dCDFs;
 
+        void                                        GeneratePointers();
+        void                                        CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
+                                                                          const CudaSystem& system,
+                                                                          cudaMemcpyKind copyKind);
+
     protected:
     public:
         // Constructors & Destructor
                                         CPUDistGroupPiecewiseConst1D() = default;
                                         CPUDistGroupPiecewiseConst1D(const std::vector<std::vector<float>>& functions,
+                                                                     const CudaSystem& system);
+                                        CPUDistGroupPiecewiseConst1D(const std::vector<const float*>& dFunctions,
+                                                                     const std::vector<size_t>& counts,
                                                                      const CudaSystem& system);
                                         CPUDistGroupPiecewiseConst1D(const CPUDistGroupPiecewiseConst1D&) = delete;
                                         CPUDistGroupPiecewiseConst1D(CPUDistGroupPiecewiseConst1D&&) = default;

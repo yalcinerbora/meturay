@@ -39,20 +39,8 @@ T DeviceHostMulDivideComboFunctor<T>::operator()(const T& in) const
     return in * mulValue / gDivValue;
 }
 
-CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std::vector<float>>& functions,
-                                                           const CudaSystem& system)
+void CPUDistGroupPiecewiseConst1D::GeneratePointers()
 {
-    const CudaGPU& bestGPU = system.BestGPU();
-    CUDA_CHECK(cudaSetDevice(bestGPU.DeviceId()));
-
-    // Gen Sizes
-    counts.resize(functions.size());
-    std::transform(functions.cbegin(), functions.cend(), counts.begin(),
-                   [](const std::vector<float>& vec)
-                   {
-                       return vec.size();
-                   });
-
     std::vector<Vector2ui> alignedSizes(counts.size());
     std::transform(counts.cbegin(), counts.cend(),
                    alignedSizes.begin(),
@@ -86,15 +74,20 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
         dCDFs.push_back(reinterpret_cast<const float*>(dCDFPtr));
     }
     assert(offset == totalSizeLinear);
+}
 
-    // Construct CDFs and Memcpy
-    std::vector<float> cdfValues;
-    for(size_t i = 0; i < alignedSizes.size(); i++)
+void CPUDistGroupPiecewiseConst1D::CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
+                                                         const CudaSystem& system,
+                                                         cudaMemcpyKind copyKind)
+{
+    const CudaGPU& bestGPU = system.BestGPU();
+    CUDA_CHECK(cudaSetDevice(bestGPU.DeviceId()));
+    for(size_t i = 0; i < counts.size(); i++)
     {
         CUDA_CHECK(cudaMemcpy(const_cast<float*>(dPDFs[i]),
-                              functions[i].data(),
+                              functionDataPtrs[i],
                               counts[i] * sizeof(float),
-                              cudaMemcpyHostToDevice));
+                              copyKind));
 
         // Normalize PDF
         TransformArrayGPU(const_cast<float*>(dPDFs[i]), counts[i],
@@ -114,12 +107,48 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
     }
 
     // Construct Objects
-    for(size_t i = 0; i < alignedSizes.size(); i++)
+    for(size_t i = 0; i < counts.size(); i++)
     {
         gpuDistributions.push_back(GPUDistPiecewiseConst1D(dCDFs[i],
                                                            dPDFs[i],
                                                            static_cast<uint32_t>(counts[i])));
     }
+}
+
+CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std::vector<float>>& functions,
+                                                           const CudaSystem& system)
+{
+    // Gen Sizes
+    counts.resize(functions.size());
+    std::transform(functions.cbegin(), functions.cend(), counts.begin(),
+                   [](const std::vector<float>& vec)
+                   {
+                       return vec.size();
+                   });
+
+    // Allocate and Generate Pointers for each function
+    GeneratePointers();
+
+    // Generate pointer array (since below function requires that)
+    std::vector<const float*> functionDataPtrs(functions.size());
+    for(const auto& func : functions)
+    {
+        functionDataPtrs.push_back(func.data());
+    }
+
+    CopyPDFsConstructCDFs(functionDataPtrs, system, cudaMemcpyHostToDevice);
+    // All Done!
+}
+
+CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<const float*>& dFunctions,
+                                                           const std::vector<size_t>& counts,
+                                                           const CudaSystem& system)
+{
+    // Copy Sizes
+    this->counts = counts;
+    // Generate Pointers on the GPU
+    GeneratePointers();
+    CopyPDFsConstructCDFs(dFunctions, system, cudaMemcpyDeviceToDevice);
     // All Done!
 }
 

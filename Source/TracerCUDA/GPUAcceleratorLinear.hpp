@@ -374,3 +374,80 @@ size_t GPUAccLinearGroup<PGroup>::AcceleratorCount() const
 {
     return idLookup.size();
 }
+
+template <class PGroup>
+size_t GPUAccLinearGroup<PGroup>::TotalPrimitiveCount() const
+{
+    return accRanges.back()[1];
+}
+
+template <class PGroup>
+float GPUAccLinearGroup<PGroup>::TotalApproximateArea(const CudaGPU&) const
+{
+    return 1.0f;
+}
+
+template <class PGroup>
+void GPUAccLinearGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
+                                                                  Vector3f* dPositions,
+                                                                  Vector3f* dNormals,
+                                                                  // I-O
+                                                                  RNGMemory& rngMemory,
+                                                                  // Inputs
+                                                                  uint32_t surfacePatchCount,
+                                                                  const CudaSystem& system) const
+{
+    const CudaGPU& gpu = system.BestGPU();
+    size_t totalLeafCount = accRanges.back()[1];
+
+    float* dAreas;
+    TransformId* dLeafTransformIds;
+    DeviceMemory areaMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dAreas, dLeafTransformIds),
+                                   areaMemory,
+                                   {totalLeafCount, totalLeafCount});
+
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+    for(const auto& range : accRanges)
+    {
+        size_t localLeafCount = range[1] - range[0];
+
+        // Expand the transform over leafs
+        ExpandValueGPU<TransformId>(dLeafTransformIds,
+                                    dAccTransformIds + range[0],
+                                    localLeafCount);
+    }
+
+    // Generate Area of each primitive
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalLeafCount,
+                       //
+                       KCGenerateAreas<PGroup>,
+                       // Output
+                       dAreas,
+                       // Input
+                       dLeafList,
+                       dLeafTransformIds,
+                       dTransforms,
+                       totalLeafCount);
+
+    // Generate PWC Distribution over area
+    std::vector<const float*> dAreaPtrs = {dAreas};
+    std::vector<size_t> counts = {totalLeafCount};
+    CPUDistGroupPiecewiseConst1D areaDist(dAreaPtrs, counts, system);
+
+    // Now use this to fetch surface patches
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,
+                       //
+                       KCSampleSurfacePatch<PGroup>,
+                       // Inputs
+                       dPositions,
+                       dNormals,
+                       // I-O
+                       rngMemory.RNGData(gpu),
+                       //
+                       dLeafList,
+                       dLeafTransformIds,
+                       dTransforms,
+                       areaDist.DistributionGPU(0),
+                       surfacePatchCount);
+}

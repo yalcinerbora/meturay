@@ -6,13 +6,12 @@
 
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
-
+#include "ParallelSequence.cuh"
+#include "RNGMemory.h"
 #include "GPUPrimitiveP.cuh"
 #include "GPUAcceleratorP.cuh"
-
 #include "GPUAcceleratorCommonKC.cuh"
 #include "GPUOptiXPTX.cuh"
-
 #include "OptixSystem.h"
 #include "OptixCheck.h"
 
@@ -137,6 +136,17 @@ class GPUAccOptiXGroup final
 
         const SurfaceAABBList&  AcceleratorAABBs() const override;
         size_t                  AcceleratorCount() const override;
+                // Arbitrary Position Fetching
+        size_t                  TotalPrimitiveCount() const override;
+        float                   TotalApproximateArea(const CudaGPU&) const override;
+        void                    AcquireAreaWeightedSurfacePathces(// Outs
+                                                                  Vector3f* dPositions,
+                                                                  Vector3f* dNormals,
+                                                                  // I-O
+                                                                  RNGMemory& rngMemory,
+                                                                  // Inputs
+                                                                  uint32_t surfacePatchCount,
+                                                                  const CudaSystem&) const override;
 
         // OptiX Implementation
         // Return the hit record list for each accelerator

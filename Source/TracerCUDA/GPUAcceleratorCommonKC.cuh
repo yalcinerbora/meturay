@@ -2,6 +2,7 @@
 
 #include "RayLib/AABB.h"
 #include "GPUTransformI.h"
+#include "GPUPiecewiseDistribution.cuh"
 
 struct HKList
 {
@@ -342,4 +343,34 @@ static void KCGenAABBs(// O
         PrimitiveId primId = primRange[0] + globalId;
         gAABBs[globalId] = aabbFunc(primId);
     }
+}
+
+template <class PGroup>
+__global__
+static void KCGenerateAreas(// Output
+                            float* dAreas,
+                            // Inputs
+                            const typename PGroup::LeafData* gLeafs,
+                            const TransformId* gTransformIds,
+                            const GPUTransformI** gTransforms,
+                            size_t totalPrimCount)
+{
+
+}
+
+template <class PGroup>
+__global__
+static void KCSampleSurfacePatch(// Output
+                                 Vector3f* dPositions,
+                                 Vector3f* dNormals,
+                                 // I-O
+                                 RNGGMem gMem,
+                                 // Inputs
+                                 const typename PGroup::LeafData* gLeafs,
+                                 const TransformId* gTransformIds,
+                                 const GPUTransformI** gTransforms,
+                                 GPUDistPiecewiseConst1D areaDist,
+                                 size_t totalSampleCount)
+{
+
 }

@@ -92,12 +92,6 @@
       <Filter>System</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\PrimitiveDataTypes.h" />
-    <ClInclude Include="..\..\..\Source\RayLib\Sphere.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\RayLib\Triangle.h">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\RayLib\HitStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
@@ -270,6 +264,15 @@
     <ClInclude Include="..\..\..\Source\RayLib\IntersectionFunctions.h">
       <Filter>Math</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Sphere.h">
+      <Filter>Math\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Triangle.h">
+      <Filter>Math\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\RayLib\Disk.h">
+      <Filter>Math\Primitives</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="FileI-O">
@@ -310,6 +313,9 @@
     </Filter>
     <Filter Include="VisorInput">
       <UniqueIdentifier>{4da330c8-e0d2-404c-8b54-2b3d1e4cf1f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math\Primitives">
+      <UniqueIdentifier>{df0da728-2e83-4e9a-a02c-3138c20d3975}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

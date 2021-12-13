@@ -13,6 +13,11 @@
 #include "GPUPrimitiveP.cuh"
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"
+#include "RNGMemory.h"
+#include "ParallelScan.cuh"
+#include "ParallelSequence.cuh"
+
+#include <numeric>
 
 // Ad-hoc implementation of
 // http://www.sci.utah.edu/~wald/Publications/2011/StackFree/sccg2011.pdf
@@ -77,6 +82,8 @@ class GPUAccBVHGroup final
         std::vector<uint8_t>                bvhDepths;
         std::map<uint32_t, uint32_t>        idLookup;
         std::vector<bool>                   keyExpandOption;
+        std::vector<uint32_t>               surfaceLeafCounts;
+        std::vector<uint32_t>               bvhNodeCounts;
 
         SurfaceAABBList                     surfaceAABBs;
         // GPU Memory
@@ -161,6 +168,17 @@ class GPUAccBVHGroup final
 
         const SurfaceAABBList&  AcceleratorAABBs() const override;
         size_t                  AcceleratorCount() const override;
+        // Arbitrary Position Fetching
+        size_t                  TotalPrimitiveCount() const override;
+        float                   TotalApproximateArea(const CudaGPU&) const override;
+        void                    AcquireAreaWeightedSurfacePathces(// Outs
+                                                                  Vector3f * dPositions,
+                                                                  Vector3f * dNormals,
+                                                                  // I-O
+                                                                  RNGMemory & rngMemory,
+                                                                  // Inputs
+                                                                  uint32_t surfacePatchCount,
+                                                                  const CudaSystem&) const override;
 };
 
 class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI
