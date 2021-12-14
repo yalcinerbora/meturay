@@ -373,6 +373,7 @@ void PPGTracerPathWork(// Output
         float xi = GPUDistribution::Uniform<float>(rng);
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
 
+        bool selectedPDFZero = false;
         float pdfBxDF, pdfTree;
         if(xi < BxDF_DTreeSampleRatio)
         {
@@ -392,6 +393,8 @@ void PPGTracerPathWork(// Output
                                          matIndex,
                                          0);
             pdfTree = dReadTree.Pdf(rayPath.getDirection());
+
+            if(pdfBxDF == 0.0f) selectedPDFZero = true;
         }
         else
         {
@@ -422,13 +425,15 @@ void PPGTracerPathWork(// Output
             // Generate a ray using the values
             rayPath = RayF(direction, position);
             rayPath.AdvanceSelf(MathConstants::Epsilon);
+
+            if(pdfTree == 0.0f) selectedPDFZero = true;
         }
         // Pdf Average
-        pdfPath = BxDF_DTreeSampleRatio          * pdfBxDF +
-                  (1.0f - BxDF_DTreeSampleRatio) * pdfTree;
-
-
-
+        pdfPath = selectedPDFZero ? 0.0f
+                                  : (BxDF_DTreeSampleRatio          * pdfBxDF +
+                                     (1.0f - BxDF_DTreeSampleRatio) * pdfTree);
+        //pdfPath = BxDF_DTreeSampleRatio          * pdfBxDF +
+        //          (1.0f - BxDF_DTreeSampleRatio) * pdfTree;
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))
