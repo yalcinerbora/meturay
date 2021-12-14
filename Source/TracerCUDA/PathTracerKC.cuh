@@ -244,7 +244,7 @@ void PathTracerPathWork(// Output
         // Check if mis ray should be sampled
         shouldLaunchMISRay = (renderState.directLightMIS &&
                               // Check if light can be sampled (meaning it is not a
-                              // dirac delta light (point light spot light etc.)
+                              // Dirac delta light (point light spot light etc.)
                               renderState.gLightList[lightIndex]->CanBeSampled());
 
         float pdfNEE = pdfLight;

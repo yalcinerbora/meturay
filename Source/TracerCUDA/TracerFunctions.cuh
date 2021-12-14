@@ -85,7 +85,7 @@ namespace TracerFunctions
     {
         // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
         // Page 4 it does not include pdf it is included from
-        // https://agraphicsguy.wordpress.com/2015/11/01/sampling-microfacet-brdf/
+        // https://agraphicsguynotes.com/posts/sample_microfacet_brdf/
         // https://www.tobias-franke.eu/log/2014/03/30/notes_on_importance_sampling.html
 
         float xi0 = GPUDistribution::Uniform<float>(rng);
@@ -104,18 +104,21 @@ namespace TracerFunctions
                                               Vector2f(sinTheta, cosTheta));
 
         // Pdf
-        //float ggxResult = GGX(cosTheta, roughness);
-        //pdf = ggxResult * cosTheta;
-        //return ggxResult;
+        float ggxResult = DGGX(cosTheta, roughness);
+        pdf = ggxResult * cosTheta;
+        return ggxResult;
 
-        // Pre-cancel ggx (to avoid NaN's)
-        pdf = cosTheta;
-        return 1.0f;
+        //// Pre-cancel ggx (to avoid NaN's)
+        //pdf = cosTheta;// *sinTheta;
+        //return 1.0f;
     }
 
     __device__ __forceinline__
     float GSchlick(float dot, float roughness)
     {
+        //// "Hotness" removal
+        //roughness = (roughness + 1) * 0.5f;
+
         if(dot == 0.0f) return 0;
         float alpha = roughness * roughness;
 
@@ -123,16 +126,14 @@ namespace TracerFunctions
         // This is much more verbose than 0.125f
         // and it should have same perf
         //static constexpr float denom = 1.0f / 8.0f;
-        //float k = (roughness + 1);
-        //k = k * k;
-        //k *= denom;
-        //return dot / (dot * (1 - k) + k);
-
-        // Straight from the paper
-        // Schlick 1994 [An Inexpensive BRDF Model for Physically - based Rendering]
-        constexpr float PiOvrTwo = MathConstants::Sqrt2 / MathConstants::SqrtPi;
-        float k = alpha * PiOvrTwo;
+        float k = alpha * 0.5f;
         return dot / (dot * (1 - k) + k);
+
+        //// Straight from the paper
+        //// Schlick 1994 [An Inexpensive BRDF Model for Physically - based Rendering]
+        //constexpr float PiOvrTwo = MathConstants::Sqrt2 / MathConstants::SqrtPi;
+        //float k = alpha * PiOvrTwo;
+        //return dot / (dot * (1 - k) + k);
     }
 
     __device__ __forceinline__

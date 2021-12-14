@@ -71,7 +71,6 @@ struct UnrealDeviceFuncs
         // Sample a H (Half Vector)
         Vector3 H;
         float D = TracerFunctions::DGGXSample(H, pdf, roughness, rng);
-
         // Gen L (aka. wo)
         Vector3 L = 2.0f * V.Dot(H) * H - V;
 
@@ -80,7 +79,7 @@ struct UnrealDeviceFuncs
         float NdV = max(N.Dot(V), 0.0f);
         float NdH = max(N.Dot(H), 0.0f);
         float VdH = max(V.Dot(H), 0.0f);
-        float LdH = max(V.Dot(H), 0.0f);
+        float LdH = max(L.Dot(H), 0.0f);
 
         // Edge cases
         if(NdV == 0.0f || LdH == 0.0f)
@@ -114,6 +113,7 @@ struct UnrealDeviceFuncs
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
         // Notice that NdL terms are canceled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
+        specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
 
         // Ray Out
         wo = RayF(woDir, pos);
@@ -162,7 +162,14 @@ struct UnrealDeviceFuncs
         Vector3 H = (L + V).Normalize();
 
         float NdH = max(N.Dot(H), 0.0f);
+        //float sinTheta = sqrt(max(0.0f, 1.0f - NdH * NdH));
         float pdf = TracerFunctions::DGGX(NdH, roughness) * NdH;
+
+        // GGXSample returns sampling of H Vector
+        // convert it to sampling probability of L Vector
+        float LdH = max(L.Dot(H), 0.0f);
+        pdf /= (4.0f * (LdH));
+
         return pdf;
     }
 
@@ -178,14 +185,16 @@ struct UnrealDeviceFuncs
                      const UnrealMatData& matData,
                      const HitKey::Type& matId)
     {
+        // Acquire Parameters
+        // Check if normal mapping is present
+        Vector3 N = ZAxis;
+        if(matData.dNormal[matId])
+            N = (*matData.dNormal[matId])(surface.uv);
         float roughness = (*matData.dRoughness[matId])(surface.uv);
         float metallic = (*matData.dMetallic[matId])(surface.uv);
         float specular = (*matData.dSpecular[matId])(surface.uv);
         Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
 
-        Vector3 N = ZAxis;
-        if(matData.dNormal[matId])
-            N = (*matData.dNormal[matId])(surface.uv);
         Vector3 L = GPUSurface::ToTangent(wo, surface.worldToTangent);
         Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
         Vector3 H = (L + V).Normalize();
@@ -194,7 +203,7 @@ struct UnrealDeviceFuncs
         float NdV = max(N.Dot(V), 0.0f);
         float NdH = max(N.Dot(H), 0.0f);
         float VdH = max(V.Dot(H), 0.0f);
-        float LdH = max(V.Dot(H), 0.0f);
+        float LdH = max(L.Dot(H), 0.0f);
 
         // Edge cases
         if(NdV == 0.0f || LdH == 0.0f)
@@ -202,11 +211,11 @@ struct UnrealDeviceFuncs
             return Zero3;
         }
 
-        // GGX
-        float D = TracerFunctions::DGGX(NdH, roughness);
         // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
-            TracerFunctions::GSchlick(NdV, roughness);
+                  TracerFunctions::GSchlick(NdV, roughness);
+        // GGX
+        float D = TracerFunctions::DGGX(NdH, roughness);
         // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
