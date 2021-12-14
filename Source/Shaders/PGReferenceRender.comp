@@ -16,7 +16,7 @@
 #define T_IN_LUM_TEX layout(binding = 0)
 #define T_IN_GRAD_TEX layout(binding = 1)
 
-#define I_OUT_REF_IMAGE layout(binding = 0) restrict write only
+#define I_OUT_REF_IMAGE layout(binding = 0) restrict writeonly
 
 #define UB_MAX_LUM layout(std140, binding = 0)
 

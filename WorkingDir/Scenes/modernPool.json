@@ -55,11 +55,18 @@
     ],
 
     "Lights":[
+    // {
+    //     "id": 0,
+    //     "type": "SkySphere",
+    //     "radiance" : {"texture": 17, "channels": "rgb"}
+    // },
+    { "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
     {
-        "id": 0,
-        "type": "SkySphere",
-
-        "radiance" : {"texture": 17, "channels": "rgb"}
+        "id": 1,
+        "type": "Primitive",
+        "primitive": 30,
+        "accelerator": 1,
+        "radiance": [200, 200, 200]
     }],
 
     "Mediums":[
@@ -476,6 +483,13 @@
         "name": "../Surfaces/ModernPool/slippers.obj",
         "tag": "assimp_",
         "innerIndex": [0, 1, 2, 3]
+    },
+    {
+        "id": 30,
+        "type": "Triangle",
+        "name": "../Surfaces/ModernPool/light_plane.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
     }],
 
     "Accelerators":
@@ -548,7 +562,7 @@
     }],
 
     // Lights
-    "LightSurfaces": [],
+    "LightSurfaces": [{"light": 1}],
     // Cameras
     "CameraSurfaces": [
         // Overall View
