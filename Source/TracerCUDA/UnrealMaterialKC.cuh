@@ -59,9 +59,6 @@ struct UnrealDeviceFuncs
 
         // Acquire Parameters
         // Check if normal mapping is present
-        Vector3 N = ZAxis;
-        if(matData.dNormal[matId])
-            N = (*matData.dNormal[matId])(surface.uv);
         float roughness = (*matData.dRoughness[matId])(surface.uv);
         float metallic = (*matData.dMetallic[matId])(surface.uv);
         float specular = (*matData.dSpecular[matId])(surface.uv);
@@ -69,10 +66,31 @@ struct UnrealDeviceFuncs
         // Since we using capital terms alias wi as V
         Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
         // Sample a H (Half Vector)
-        Vector3 H;
-        float D = TracerFunctions::DGGXSample(H, pdf, roughness, rng);
+        //Vector3 H;
+        //float D = TracerFunctions::DGGXSample(H, pdf, roughness, rng);
+        float D = 0.0f;
+        // Before continue with H
+        // Apply a rotation to it if there is a normal map
+        // Is involved
+        Vector3 N = ZAxis;
+        if(matData.dNormal[matId])
+        {
+            N = (*matData.dNormal[matId])(surface.uv).Normalize();
+            //QuatF normalRot = Quat::RotationBetweenZAxis(N);
+            //H = normalRot.ApplyRotation(H);
+        }
+        Vector2 xi(GPUDistribution::Uniform<float>(rng),
+                   GPUDistribution::Uniform<float>(rng));
+        Vector3 L = HemiDistribution::HemiCosineCDF(xi, pdf);
+        L.NormalizeSelf();
+        Vector3 H = (L + V).Normalize();
+
+
+        V.NormalizeSelf();
+
+
         // Gen L (aka. wo)
-        Vector3 L = 2.0f * V.Dot(H) * H - V;
+        //Vector3 L = 2.0f * V.Dot(H) * H - V;
 
         // BRDF Calculation
         float NdL = max(N.Dot(L), 0.0f);
@@ -83,14 +101,31 @@ struct UnrealDeviceFuncs
 
         // Edge cases
         if(NdV == 0.0f || LdH == 0.0f)
+        //if(LdH == 0.0f)
         {
-            pdf = 0.0f;
-            return Zero3;
+            if(NdV == 0.0f)
+                printf("NdV[0], N[%f, %f, %f], "
+                       "V[%f, %f, %f], "
+                       "wi[%f, %f, %f]"
+                       "Q[%f, %f, %f, %f]\n",
+                       N[0], N[1], N[2],
+                       V[0], V[1], V[2],
+                       wi[0], wi[1], wi[2],
+                       surface.worldToTangent[0],
+                       surface.worldToTangent[1],
+                       surface.worldToTangent[2],
+                       surface.worldToTangent[3]);
+
+
+
+            pdf = 1.0f;
+            return Vector3f(1.0e30f, 0.0f, 1.0e30);
+            //return Zero3;
         }
 
         // GGXSample returns sampling of H Vector
         // convert it to sampling probability of L Vector
-        pdf /= (4.0f * (LdH));
+        //pdf /= (4.0f * (LdH));
 
         // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
@@ -114,6 +149,8 @@ struct UnrealDeviceFuncs
         // Notice that NdL terms are canceled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
+
+        specularTerm = Vector3f(0.0f);
 
         // Ray Out
         wo = RayF(woDir, pos);
@@ -155,7 +192,7 @@ struct UnrealDeviceFuncs
         float roughness = (*matData.dRoughness[matId])(surface.uv);
         Vector3 N = ZAxis;
         if(matData.dNormal[matId])
-            N = (*matData.dNormal[matId])(surface.uv);
+            N = (*matData.dNormal[matId])(surface.uv).Normalize();
 
         Vector3 L = GPUSurface::ToTangent(wo, surface.worldToTangent);
         Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
@@ -189,7 +226,7 @@ struct UnrealDeviceFuncs
         // Check if normal mapping is present
         Vector3 N = ZAxis;
         if(matData.dNormal[matId])
-            N = (*matData.dNormal[matId])(surface.uv);
+            N = (*matData.dNormal[matId])(surface.uv).Normalize();
         float roughness = (*matData.dRoughness[matId])(surface.uv);
         float metallic = (*matData.dMetallic[matId])(surface.uv);
         float specular = (*matData.dSpecular[matId])(surface.uv);
@@ -224,8 +261,10 @@ struct UnrealDeviceFuncs
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
         // Notice that NdL terms are canceled out
-        Vector3f specularTerm = D * F * G * 0.25f / NdV;
+        Vector3f specularTerm = Vector3f(D) * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
+
+        specularTerm = Vector3f(0.0f);
 
         // DEBUG
         //if(specularTerm.HasNaN())

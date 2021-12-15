@@ -55,12 +55,12 @@
     ],
 
     "Lights":[
-    // {
-    //     "id": 0,
-    //     "type": "SkySphere",
-    //     "radiance" : {"texture": 17, "channels": "rgb"}
-    // },
-    { "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
+    {
+        "id": 0,
+        "type": "SkySphere",
+        "radiance" : {"texture": 17, "channels": "rgb"}
+    },
+    // { "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
     {
         "id": 1,
         "type": "Primitive",
@@ -242,10 +242,12 @@
     {
         // Pool Floor
         "id": 1,
+        //"type": "Unreal",
         "type": "Unreal",
         "albedo": {"texture": 0, "channels": "rgb"},
         "normal": {"texture": 1, "channels": "rgb"},
-        "roughness": {"texture": 2, "channels": "r"},
+        "roughness": 0.7,
+        //"roughness": {"texture": 2, "channels": "r"},
         "specular": {"texture": 3, "channels": "r"},
         "metallic": 0.0
     },
@@ -507,62 +509,73 @@
 	"BaseMedium" : 0,
 
 	"Surfaces": [
-    // Water
-    { "transform": 0, "accelerator": 0, "material": 4, "primitive": 2 },
-    // Perimeter Walls
-    { "transform": 0, "accelerator": 0, "material": 3, "primitive": 9 },
-    //
     {
-        // Pool, Pool Base & Ladder
+        // Pool FLOOR TEST
         "transform": 0, "accelerator": 0,
-        "material": [1, 2, 6],
-        "primitive": [0, 1, 3]
-    },
-    {
-        // Tree Soil & Bricks
-        "transform": 0, "accelerator": 0,
-        "material": [9, 10],
-        "primitive": [4, 5]
-    },
-    {
-        // House
-        "transform": 0, "accelerator": 0,
-        "material": [3, 11, 5],
-        "primitive": [6, 7, 8]
-    },
-    {
-        // Tree
-        "transform": 0, "accelerator": 0,
-        "material": [7, 8],
-        "primitive": [10, 11]
-    },
-    {
-        // Bench
-        "transform": 0, "accelerator": 0,
-        "material": [12, 13],
-        "primitive": [12, 13]
-    },
-    {
-        // Lounge
-        "transform": 0, "accelerator": 0,
-        "material": [14, 6, 11],
-        "primitive": [14, 15, 16]
-    },
-    {
-        // Lounge with Towel
-        "transform": 0, "accelerator": 0,
-        "material": [14, 6, 11, 13],
-        "primitive": [17, 18, 19, 20]
-    },
-    {
-        // Slippers
-        "transform": 0, "accelerator": 0,
-        "material": [15, 16, 15, 16],
-        "primitive": [21, 22, 23, 24]
-    }],
+        "material": 1,
+        "primitive": 0
+    }
+
+
+    // // Water
+    // { "transform": 0, "accelerator": 0, "material": 4, "primitive": 2 },
+    // // Perimeter Walls
+    // { "transform": 0, "accelerator": 0, "material": 3, "primitive": 9 },
+    // //
+    // {
+    //     // Pool, Pool Base & Ladder
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [1, 2, 6],
+    //     "primitive": [0, 1, 3]
+    // },
+    // {
+    //     // Tree Soil & Bricks
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [9, 10],
+    //     "primitive": [4, 5]
+    // },
+    // {
+    //     // House
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [3, 11, 5],
+    //     "primitive": [6, 7, 8]
+    // },
+    // {
+    //     // Tree
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [7, 8],
+    //     "primitive": [10, 11]
+    // },
+    // {
+    //     // Bench
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [12, 13],
+    //     "primitive": [12, 13]
+    // },
+    // {
+    //     // Lounge
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [14, 6, 11],
+    //     "primitive": [14, 15, 16]
+    // },
+    // {
+    //     // Lounge with Towel
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [14, 6, 11, 13],
+    //     "primitive": [17, 18, 19, 20]
+    // },
+    // {
+    //     // Slippers
+    //     "transform": 0, "accelerator": 0,
+    //     "material": [15, 16, 15, 16],
+    //     "primitive": [21, 22, 23, 24]
+    // }
+    ],
 
     // Lights
-    "LightSurfaces": [{"light": 1}],
+    "LightSurfaces": [
+        //{"light": 1}
+    ],
     // Cameras
     "CameraSurfaces": [
         // Overall View
