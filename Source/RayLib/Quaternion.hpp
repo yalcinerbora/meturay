@@ -385,16 +385,16 @@ void TransformGen::Space(Quaternion<T>& q,
                          const Vector<3, T>& y,
                          const Vector<3, T>& z)
 {
+    // Coord Systems should match
+    // both should be right-handed coord system
+    //Vector3 crs = Cross(x, y);
+    //Vector3 diff = crs - z;
+    assert((Cross(x, y) - z).Abs() <= Vector3(0.5));
+
+
     //// Converting a Rotation Matrix to a Quaternion
     //// Mike Day, Insomniac Games (2015)
     //// https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
-
-    //// Coord Systems should match
-    //// both should be right-handed coord system
-    ////Vector3 crs = Cross(x, y);
-    ////Vector3 diff = crs - z;
-    //assert((Cross(x, y) - z).Abs() <= Vector3(0.5));
-
     //T t;
     //if(z[2] < 0)
     //{
@@ -436,14 +436,17 @@ void TransformGen::Space(Quaternion<T>& q,
     //}
     //q *= static_cast<T>(0.5) / sqrt(t);
     //q.NormalizeSelf();
+    //q.ConjugateSelf();
 
+    // Another implementation that i found in stack overflow
+    // https://stackoverflow.com/questions/63734840/how-to-convert-rotation-matrix-to-quaternion
     // Clang min definition is only on std namespace
     // this is a crappy workaround
     #ifndef __CUDA_ARCH__
         using namespace std;
     #endif
 
-    // https://stackoverflow.com/questions/63734840/how-to-convert-rotation-matrix-to-quaternion
+    // Our sign is one (according to the above link)
     static constexpr float sign = 1;
     float t = x[0] + y[1] + z[2];
     float m = max(max(x[0], y[1]), max(z[2], t));

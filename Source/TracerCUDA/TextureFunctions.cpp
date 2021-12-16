@@ -46,6 +46,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
                                                   pf, dim,
                                                   filePath,
                                                   flags);
+
     // Check ImageIOError and convert it to scene error
     if(e != ImageIOError::OK)
         return ConvertImageIOErrorToSceneError(e);

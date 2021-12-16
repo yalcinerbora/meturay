@@ -438,20 +438,6 @@ ImageIOError ImageIO::ReadImage_FreeImage(FreeImgRAII& freeImg,
     if((e = ConvertFreeImgFormat(format, imgType, bpp)) != ImageIOError::OK)
         return ImageIOError(e, filePath);
 
-    //// Allocate
-    ////pixels.resize(dimension[0] * dimension[1] * FormatToPixelSize(format));
-
-    //// Do copy over
-    //BYTE* imgPixels = FreeImage_GetBits(imgCPU);
-    //size_t outPitch = dimension[0] * FormatToPixelSize(format);
-    //
-    //// TODO: Parallelize this
-    //for(uint32_t y = 0; y < dimension[1]; y++)
-    //{
-    //    Byte* outRowPtr = pixels.data() + outPitch * y;
-    //    const Byte* srcRowPtr = imgPixels + pitch * y;
-    //    std::memcpy(outRowPtr, srcRowPtr, outPitch);
-    //}
     // All done!
     return ImageIOError::OK;
 }
