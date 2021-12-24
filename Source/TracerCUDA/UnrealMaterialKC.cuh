@@ -10,6 +10,7 @@
 #include "MaterialFunctions.h"
 #include "TracerFunctions.cuh"
 #include "GPUSurface.h"
+#include "TracerConstants.h"
 #include "MetaMaterialFunctions.cuh"
 
 __device__ __forceinline__
@@ -100,12 +101,24 @@ struct UnrealDeviceFuncs
         // convert it to sampling probability of L Vector
         pdf /= (4.0f * (LdH));
 
+        // If material is nearly perfect specular,
+        // set pdf to 1 (convert this material to a mirror).
+        // Note that this is true only for sampling, evaluate and pdf will return
+        // zero (since you can't find perfect reflection of the view vector by chance)
+        using namespace TracerConstants;
+        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_TRESHOLD);
+        if(isSpecular)
+        {
+            pdf = 1.0f;
+            D = 1.0f;
+        }
+
         // Shadowing Term (Schlick Model)
         float G = TracerFunctions::GSchlick(NdL, roughness) *
                   TracerFunctions::GSchlick(NdV, roughness);
         // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
-        Vector3f F = TracerFunctions::FSchlick(VdH, f0);
+        Vector3f F = (isSpecular) ? f0 : TracerFunctions::FSchlick(VdH, f0);
         // We need to slightly nudge the ray start
         // to prevent self intersection
         // Normal is on tangent space so convert it to world space
@@ -125,22 +138,6 @@ struct UnrealDeviceFuncs
         // Ray Out
         wo = RayF(woDir, pos);
 
-        // DEBUG
-        //if(specularTerm.HasNaN() || woDir.HasNaN() ||
-        //   L.HasNaN() || H.HasNaN() ||
-        //   wo.getDirection().HasNaN())
-        //{
-        //    printf("pdf %f, G %f, D %f \n"
-        //           "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
-        //           "F %f %f %f\n"
-        //           "L: (%f, %f, %f)\n"
-        //           "---\n",
-        //           pdf, G, D,
-        //           NdL, NdV, NdH, VdH, LdH,
-        //           F[0], F[1], F[2],
-        //           L[0], L[1], L[2]);
-        //}
-
         // PDF is already written
         // Finally return Radiance
         // All Done!
@@ -159,6 +156,15 @@ struct UnrealDeviceFuncs
               const UnrealMatData& matData,
               const HitKey::Type& matId)
     {
+        // It is impossible to find exact wo <=> wi
+        // with a chance
+        using namespace TracerConstants;
+        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_TRESHOLD);
+        if(isSpecular)
+        {
+            return 0.0f;
+        }
+
         float roughness = (*matData.dRoughness[matId])(surface.uv);
         Vector3 N = ZAxis;
         if(matData.dNormal[matId])
@@ -192,6 +198,14 @@ struct UnrealDeviceFuncs
                      const UnrealMatData& matData,
                      const HitKey::Type& matId)
     {
+        // It is impossible to evaluate if object is highly specular
+        using namespace TracerConstants;
+        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_TRESHOLD);
+        if(isSpecular)
+        {
+            return Zero3f;
+        }
+
         // Acquire Parameters
         // Check if normal mapping is present
         Vector3 N = ZAxis;
@@ -234,15 +248,6 @@ struct UnrealDeviceFuncs
         Vector3f specularTerm = Vector3f(D) * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
 
-        // DEBUG
-        //if(specularTerm.HasNaN())
-        //    printf("G %f, D %f \n"
-        //           "NdL %f, NdV %f, NdH %f, VdH %f, LdH %f\n"
-        //           "F %f %f %f\n---\n",
-        //           G, D,
-        //           NdL, NdV, NdH, VdH, LdH,
-        //           F[0], F[1], F[2]);
-
         // Blend diffuse term due to metallic
         return diffuseTerm + specularTerm;
     }
@@ -251,4 +256,3 @@ struct UnrealDeviceFuncs
     static constexpr auto& IsEmissive   = IsEmissiveFalse<UnrealMatData>;
     static constexpr auto& Emit         = EmitEmpty<UnrealMatData, UVSurface>;
 };
-

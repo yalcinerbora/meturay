@@ -221,11 +221,6 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     // Use bestGPU for temp data creation
     const CudaGPU& gpu = system.BestGPU();
 
-    uint64_t totalPrimitiveCount = this->primitiveGroup.TotalPrimitiveCount();
-    // Currently optix only supports 32-bit indices
-    if(totalPrimitiveCount >= std::numeric_limits<uint32_t>::max())
-        return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
-
     using LeafData = typename PGroup::LeafData;
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
@@ -265,14 +260,14 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         DeviceTraversables& gpuTraverseData = optixDataPerGPU[deviceIndex];
 
         // IMPORTANT
-        // Optix wants the triangles & Indices to be in a memory
-        // that is allocated with a "cudaMalloc" function
-        // Current METUray manages its memory using "cudaMallocManaged"
+        // Optix wants the triangles & Indices (In this case AABBs)
+        // to be in a memory that is allocated with a "cudaMalloc" function.
+        // Currently, METUray manages its memory using "cudaMallocManaged"
         // for common memory except textures (which uses cudaArray allocation and
         // it is not multi-device capable anyway)
         // We need to copy data to device local memory for construction
         // after that traversable does not refer to these memory so we can
-        // delete
+        // delete it
         size_t surfacePrimCount = 0;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
@@ -282,6 +277,11 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             // Use primitive count as vertex count
             surfacePrimCount += range[1] - range[0];
         }
+
+        // Optix only supports 32-bit amount of data so check if
+        // data fits to the accelerator
+        if(surfacePrimCount >= std::numeric_limits<uint32_t>::max())
+            return TracerError::TRACER_INTERNAL_ERROR;
 
         DeviceLocalMemory aabbTempBuffer(&gpu, sizeof(AABB3f) * surfacePrimCount);
         AABB3f* dPrimAABBs = static_cast<AABB3f*>(aabbTempBuffer);
@@ -293,9 +293,9 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             if(range[0] == std::numeric_limits<uint64_t>::max())
                 break;
 
-            uint32_t primCount = static_cast<uint32_t>(range[1] - range[0]);
+            uint32_t subRangePrimCount = static_cast<uint32_t>(range[1] - range[0]);
              // Generate AABBs
-            optixGPU.GridStrideKC_X(0, 0, primCount,
+            optixGPU.GridStrideKC_X(0, 0, subRangePrimCount,
                                     //
                                     KCGenAABBs<PGroup>,
                                     //
@@ -304,9 +304,9 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                                     range,
                                     //
                                     AABBGen<PGroup>(primData, *transform),
-                                    static_cast<uint32_t>(primCount));
+                                    subRangePrimCount);
 
-            offset += surfacePrimCount;
+            offset += subRangePrimCount;
         }
         assert(offset == surfacePrimCount);
 

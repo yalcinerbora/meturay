@@ -107,10 +107,6 @@ namespace TracerFunctions
         float ggxResult = DGGX(cosTheta, roughness);
         pdf = ggxResult * cosTheta;
         return ggxResult;
-
-        //// Pre-cancel ggx (to avoid NaN's)
-        //pdf = cosTheta;// *sinTheta;
-        //return 1.0f;
     }
 
     __device__ __forceinline__
