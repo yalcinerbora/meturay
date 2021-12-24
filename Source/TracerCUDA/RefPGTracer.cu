@@ -405,6 +405,8 @@ void RefPGTracer::Finalize()
     if(crashed) return;
 
     cudaSystem.SyncAllGPUs();
+    frameTimer.Stop();
+    UpdateFrameAnalytics("paths / sec", options.samplePerIteration * options.samplePerIteration);
     // Increment Sample count
     uint32_t finalizedSampleCount = options.samplePerIteration * options.samplePerIteration;
     currentSampleCount += finalizedSampleCount;

@@ -368,14 +368,14 @@ void PPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_DTreeSampleRatio = 0.5f;
+        constexpr float BxDF_DTreeSampleRatio = 0.0f;
         // Sample a chance
         float xi = GPUDistribution::Uniform<float>(rng);
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
 
         bool selectedPDFZero = false;
         float pdfBxDF, pdfTree;
-        if(xi < BxDF_DTreeSampleRatio)
+        if(xi >= BxDF_DTreeSampleRatio)
         {
             // Sample using BxDF
             reflectance = MGroup::Sample(// Outputs
@@ -429,9 +429,10 @@ void PPGTracerPathWork(// Output
             if(pdfTree == 0.0f) selectedPDFZero = true;
         }
         // Pdf Average
-        pdfPath = selectedPDFZero ? 0.0f
-                                  : (BxDF_DTreeSampleRatio          * pdfBxDF +
-                                     (1.0f - BxDF_DTreeSampleRatio) * pdfTree);
+        pdfPath = pdfBxDF;
+        //pdfPath = selectedPDFZero ? 0.0f
+        //                          : (BxDF_DTreeSampleRatio          * pdfBxDF +
+        //                             (1.0f - BxDF_DTreeSampleRatio) * pdfTree);
         //pdfPath = BxDF_DTreeSampleRatio          * pdfBxDF +
         //          (1.0f - BxDF_DTreeSampleRatio) * pdfTree;
 
