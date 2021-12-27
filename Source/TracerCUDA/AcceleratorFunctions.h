@@ -147,8 +147,8 @@ struct CentroidGen
             , transform(t)
         {}
 
-        __device__ __host__
-        __forceinline__ Vector3 operator()(const PrimitiveId& id) const
+        __device__ __host__ HYBRID_INLINE
+        Vector3 operator()(const PrimitiveId& id) const
         {
             return PrimitiveGroup::Center(transform, id, pData);
         }
@@ -156,9 +156,9 @@ struct CentroidGen
 
 struct AABBUnion
 {
-    __device__ __host__
-    __forceinline__ AABB3f operator()(const AABB3f& a,
-                                      const AABB3f& b) const
+    __device__ __host__ HYBRID_INLINE
+    AABB3f operator()(const AABB3f& a,
+                      const AABB3f& b) const
     {
         return a.Union(b);
     }

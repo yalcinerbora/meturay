@@ -20,6 +20,6 @@ Vector3f Utility::RandomColorRGB(uint32_t index)
 
     static constexpr float SATURATION = 1;
     static constexpr float VALUE = 1;
-        
+
     return HSVToRGB(Vector3(hue, SATURATION, VALUE));
 }

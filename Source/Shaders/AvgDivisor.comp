@@ -11,7 +11,7 @@
 		with the resolution to actually get average lum value
 
 		This kernel should be called with a single thread
-		
+
 */
 
 // Defines

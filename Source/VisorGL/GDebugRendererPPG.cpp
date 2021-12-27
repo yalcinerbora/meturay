@@ -8,10 +8,12 @@
 
 #include "RayLib/FileSystemUtility.h"
 #include "RayLib/Log.h"
+#include "RayLib/RandomColor.h"
 
 #include "TextureGL.h"
 #include "GuideDebugStructs.h"
 #include "GuideDebugGUIFuncs.h"
+#include "GLConversionFunctions.h"
 
 
 static const uint8_t QUAD_INDICES[6] = { 0, 1, 2, 0, 2, 3};
@@ -44,6 +46,7 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     , treeBufferSize(0)
     , vertDTreeRender(ShaderType::VERTEX, u8"Shaders/DTreeRender.vert")
     , fragDTreeRender(ShaderType::FRAGMENT, u8"Shaders/DTreeRender.frag")
+    , compSTreeRender(ShaderType::COMPUTE, u8"Shaders/STreeRender.comp")
 {
     glGenFramebuffers(1, &fbo);
 
@@ -155,9 +158,96 @@ bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
     return true;
 }
 
-void GDebugRendererPPG::RenderSpatial(TextureGL&, uint32_t)
+void GDebugRendererPPG::RenderSpatial(TextureGL& overlayTex, uint32_t depth,
+                                      const std::vector<Vector3f>& worldPositions)
 {
-    // TODO:
+    // GLSL compatible node data
+    struct STreeNodeSSBO
+    {
+        int32_t axisType;
+        uint32_t index;
+        int32_t isLeaf;
+    };
+
+    const SDTree& sdTree = sdTrees[depth];
+    std::vector<Vector4f> colors(sdTree.dTreeNodes.size());
+    std::vector<Vector4f> expWorldPositions(worldPositions.size());
+    std::vector<STreeNodeSSBO> sTreeNodesGL(sdTree.sTreeNodes.size());
+
+    Vector2ui resolution = overlayTex.Size();
+    assert(worldPositions.size() == resolution[0] * resolution[1]);
+
+    int colorId = 0;
+    for(size_t i = 0; i < worldPositions.size(); i++)
+    {
+        // Expand the vec3 to vec4
+        // (std430 SSBO requires vec4 alignment for vec3's)
+        expWorldPositions[i] = Vector4f(worldPositions[i], 0.0f);
+    }
+    for(size_t i = 0; i < sdTree.sTreeNodes.size(); i++)
+    {
+        // Generate glsl capable sTree node
+        sTreeNodesGL[i].axisType = static_cast<int>(sdTree.sTreeNodes[i].splitAxis);
+        sTreeNodesGL[i].index = sdTree.sTreeNodes[i].index;
+        sTreeNodesGL[i].isLeaf = sdTree.sTreeNodes[i].isLeaf ? 1 : 0;
+        // Determine leaf color
+        using Utility::RandomColorRGB;
+        if(sdTree.sTreeNodes[i].isLeaf)
+        {
+            // Also make the color 4 channel because of std430 layout
+            colors[colorId] = Vector4f(RandomColorRGB(colorId), 0.0f);
+            colorId++;
+        }
+    }
+    // Allocate buffers & send to GPU
+    GLuint buffers[3];
+    glGenBuffers(3, buffers);
+    GLuint colorBuffer = buffers[0];
+    glBindBuffer(GL_COPY_WRITE_BUFFER, colorBuffer);
+    glBufferStorage(GL_COPY_WRITE_BUFFER,
+                    sizeof(Vector4f) * colors.size(),
+                    colors.data(), 0);
+    GLuint nodeBuffer = buffers[1];
+    glBindBuffer(GL_COPY_WRITE_BUFFER, nodeBuffer);
+    glBufferStorage(GL_COPY_WRITE_BUFFER,
+                    sizeof(STreeNodeSSBO)* sTreeNodesGL.size(),
+                    sTreeNodesGL.data(), 0);
+    GLuint worldPosBuffer = buffers[2];
+    glBindBuffer(GL_COPY_WRITE_BUFFER, worldPosBuffer);
+    glBufferStorage(GL_COPY_WRITE_BUFFER,
+                    sizeof(Vector4f)* expWorldPositions.size(),
+                    expWorldPositions.data(), 0);
+
+    compSTreeRender.Bind();
+    // Get Ready to call shader
+    // Bindings
+    // SSBOs
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_LEAF_COL,
+                     colorBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_STREE,
+                     nodeBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_WORLD_POS,
+                     worldPosBuffer);
+    // Uniforms
+    glUniform2i(U_RES, static_cast<int>(resolution[0]),
+                       static_cast<int>(resolution[1]));
+    glUniform3f(U_AABB_MIN, sdTree.extents.Min()[0],
+                sdTree.extents.Min()[1], sdTree.extents.Min()[2]);
+    glUniform3f(U_AABB_MAX, sdTree.extents.Max()[0],
+                sdTree.extents.Max()[1], sdTree.extents.Max()[2]);
+    glUniform1ui(U_NODE_COUNT,
+                 static_cast<uint32_t>(sdTree.sTreeNodes.size()));
+    // Images
+    glBindImageTexture(I_OUT_IMAGE, overlayTex.TexId(),
+                       0, false, 0, GL_WRITE_ONLY,
+                       PixelFormatToSizedGL(overlayTex.Format()));
+
+    // Call the Kernel
+    GLuint gridX = (resolution[0] + 16 - 1) / 16;
+    GLuint gridY = (resolution[1] + 16 - 1) / 16;
+    glDispatchCompute(gridX, gridY, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
+                    GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
 void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
@@ -395,13 +485,17 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     // All Done!
 }
 
-bool GDebugRendererPPG::RenderGUI(const ImVec2& windowSize)
+bool GDebugRendererPPG::RenderGUI(bool& overlayCheckboxChanged,
+                                  bool& overlayValue,
+                                  const ImVec2& windowSize)
 {
     bool changed = false;
     using namespace GuideDebugGUIFuncs;
 
     ImGui::BeginChild(("##" + name).c_str(), windowSize, false);
     ImGui::SameLine(0.0f, CenteredTextLocation(name.c_str(), windowSize.x));
+    overlayCheckboxChanged = ImGui::Checkbox("##OverlayCheckbox", &overlayValue);
+    ImGui::SameLine();
     ImGui::Text("%s", name.c_str());
     ImVec2 remainingSize = FindRemainingSize(windowSize);
     remainingSize.x = remainingSize.y;

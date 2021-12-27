@@ -3,6 +3,7 @@
 #include "RayLib/AABB.h"
 #include "GPUTransformI.h"
 #include "GPUPiecewiseDistribution.cuh"
+#include "AcceleratorFunctions.h"
 
 struct HKList
 {
@@ -71,6 +72,14 @@ static HitResult AcceptHit(// Output
         newHit = hitData;
     }
     return HitResult{false, closerHit};
+}
+
+// UnionAABB Reduce Functor
+__device__ __forceinline__
+AABB3f ReduceAABB3f(const AABB3f& aabb0,
+                    const AABB3f& aabb1)
+{
+    return aabb0.Union(aabb1);
 }
 
 template <class PGroup>

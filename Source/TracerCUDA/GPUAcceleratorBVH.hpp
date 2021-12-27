@@ -310,7 +310,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
         primRangeList.fill(Vector2ul(std::numeric_limits<uint64_t>::max()));
         hitKeyList.fill(HitKey::InvalidKey);
 
-        uint32_t totalPrimCountInSurface = 0;
+        size_t totalPrimCountInSurface = 0;
         const IdKeyPairs& pList = surface.second.primIdWorkKeyPairs;
         for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
         {
@@ -323,7 +323,7 @@ SceneError GPUAccBVHGroup<PGroup>::InitializeGroup(// Accelerator Option Node
             totalPrimCountInSurface += primRangeList[i][1] - primRangeList[i][0];
         }
 
-        surfaceLeafCounts.push_back(totalPrimCountInSurface);
+        surfaceLeafCounts.push_back(static_cast<uint32_t>(totalPrimCountInSurface));
         hTransformIndices.push_back(surface.second.globalTransformIndex);
         primitiveRanges.push_back(primRangeList);
         primitiveMaterialKeys.push_back(hitKeyList);
@@ -623,7 +623,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     // Add to the list which will be delegated to the base accelerator
     surfaceAABBs.emplace(surface, accAABB);
     // Set node count of this accelerator
-    bvhNodeCounts.push_back(bvhNodes.size());
+    bvhNodeCounts.push_back(static_cast<uint32_t>(bvhNodes.size()));
 
     CUDA_CHECK(cudaMemcpy(bvhMemories[innerIndex],
                           bvhNodes.data(),
@@ -815,7 +815,7 @@ void GPUAccBVHGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
                                                                const CudaSystem& system) const
 {
     const CudaGPU& gpu = system.BestGPU();
-    uint32_t totalLeafCount = TotalPrimitiveCount();
+    uint32_t totalLeafCount = static_cast<uint32_t>(TotalPrimitiveCount());
 
     // Linearize the leafs and transform ids for all accelerators
     // In this group

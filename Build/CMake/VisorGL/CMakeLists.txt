@@ -41,7 +41,9 @@ set(SRC_SHADERS
     ${SHADER_SOURCE_DIR}/PProcessGeneric.frag
     ${SHADER_SOURCE_DIR}/PProcessGeneric.vert
     ${SHADER_SOURCE_DIR}/TextureMaxReduction.comp
-    ${SHADER_SOURCE_DIR}/TonemapAndGamma.comp)
+    ${SHADER_SOURCE_DIR}/TonemapAndGamma.comp
+    ${SHADER_SOURCE_DIR}/STreeRender.comp
+    ${SHADER_SOURCE_DIR}/AlphaBlend.comp)
 
 set(GUIDE_DEBUG
     ${CURRENT_SOURCE_DIR}/GuideDebugGL.cpp

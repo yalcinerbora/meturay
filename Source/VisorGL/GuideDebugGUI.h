@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "TextureGL.h"
+#include "ShaderGL.h"
 #include "GuideDebugTypeGen.h"
 
 struct ImVec2;
@@ -22,6 +23,16 @@ class GuideDebugGUI
         static constexpr uint32_t       MAX_PG_IMAGE = 4;
         static constexpr uint32_t       PG_TEXTURE_SIZE = 1024;
 
+        // GLSL Bindings
+        // Textures
+        static constexpr GLenum         T_IN_0 = 0;
+        static constexpr GLenum         T_IN_1 = 1;
+        // Images
+        static constexpr GLenum         I_OUT = 0;
+        // Uniforms
+        static constexpr GLenum         U_RES = 0;
+        static constexpr GLenum         U_BLEND = 1;
+
     private:
         // Main Window
         GLFWwindow*                             window;
@@ -30,6 +41,9 @@ class GuideDebugGUI
         bool                                    fullscreenShow;
         // Main texture that shows the scene
         TextureGL                               refTexture;
+        TextureGL                               overlayTex;
+        TextureGL                               refOutTex;
+        TextureGL*                              currentRefTex;
         // Debug Renderers
         const std::vector<DebugRendererPtr>&    debugRenderers;
         GDebugRendererRef&                      debugReference;
@@ -40,21 +54,26 @@ class GuideDebugGUI
         uint32_t                        currentDepth;
         // Generic Options
         bool                            doLogScale;
-
+        float                           spatialBlendRatio;
         // Selected Pixel Location Related
         bool                            pixelSelected;
         Vector2f                        selectedPixel;
+        // Alpha Blend Shader
+        ShaderGL                        compAlphaBlend;
+        std::vector<Byte>               overlayCheckboxValues;
 
-        bool            IncrementDepth();
-        bool            DecrementDepth();
+        bool                IncrementDepth();
+        bool                DecrementDepth();
 
-        static void     CalculateImageSizes(float& paddingY,
-                                            ImVec2& paddingX,
-                                            ImVec2& optionsSize,
-                                            ImVec2& refImgSize,
-                                            ImVec2& refPGImgSize,
-                                            ImVec2& pgImgSize,
-                                            const ImVec2& viewportSize);
+        static void         CalculateImageSizes(float& paddingY,
+                                                ImVec2& paddingX,
+                                                ImVec2& optionsSize,
+                                                ImVec2& refImgSize,
+                                                ImVec2& refPGImgSize,
+                                                ImVec2& pgImgSize,
+                                                const ImVec2& viewportSize);
+
+        void                AlphaBlendRefWithOverlay();
 
     protected:
     public:

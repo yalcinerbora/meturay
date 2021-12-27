@@ -1,0 +1,123 @@
+#version 430
+/*
+	**STree Colorize Shader**
+
+	File Name	: STreeRender.comp
+	Author		: Bora Yalciner
+	Description	:
+
+	This shader gets world positions for each pixels
+	and renders an unique color to the found leaf on the STree
+
+*/
+
+// Defines
+#define U_RES layout(location = 0)
+#define U_AABB_MIN layout(location = 1)
+#define U_AABB_MAX layout(location = 2)
+#define U_NODE_COUNT layout(location = 3)
+
+#define SSB_STREE layout(std430, binding = 0) readonly
+#define SSB_LEAF_COL layout(std430, binding = 1) readonly
+#define SSB_WORLD_POS layout(std430, binding = 2) readonly
+
+#define I_OUT_IMAGE layout(binding = 0) restrict writeonly
+
+struct STreeNode
+{
+	int		axisType;
+	uint		index;
+	int		isLeaf;
+};
+
+// SSBOs
+SSB_STREE buffer STreeNodes
+{
+	STreeNode nodes[];
+};
+
+SSB_LEAF_COL buffer LeafColors
+{
+	vec3 leafColorList[];
+};
+
+SSB_WORLD_POS buffer WorldPositions
+{
+	vec4 worldPositions[];
+};
+
+// Uniforms
+U_RES uniform ivec2 resolution;
+U_AABB_MIN uniform vec3 aabbMin;
+U_AABB_MAX uniform vec3 aabbMax;
+U_NODE_COUNT uniform uint nodeCount;
+
+// Images
+uniform I_OUT_IMAGE image2D iOut;
+
+// Functions
+bool DetermineChild(in vec3 normalizedCoords, in int splitAxis)
+{
+
+    return normalizedCoords[splitAxis] >= 0.5f;
+}
+
+vec3 NormalizeCoordsForChild(in bool leftRight,
+							 in int axis,
+							 in vec3 parentNormalizedCoords)
+{
+    vec3 result = parentNormalizedCoords;
+    if(leftRight) result[axis] -= 0.5;
+    result[axis] *= 2.0f;
+    return result;
+}
+
+vec3 AssignColorFromSTree(in vec3 worldPos)
+{
+    if(nodeCount == 0) return vec3(0.0f);
+
+    // Convert to Normalized Tree Space
+    vec3 normalizedCoords = worldPos - aabbMin;
+    normalizedCoords /= (aabbMax - aabbMin);
+
+    uint nodeIndex = 0;
+    while(true)
+    {
+		STreeNode currentNode = nodes[nodeIndex];
+
+        if(currentNode.isLeaf == 1)
+        {
+            return leafColorList[currentNode.index];
+        }
+        else
+        {
+            bool leftRight = DetermineChild(normalizedCoords,
+											currentNode.axisType);
+            normalizedCoords = NormalizeCoordsForChild(leftRight,
+													   currentNode.axisType,
+			                                           normalizedCoords);
+            // Traverse...
+            nodeIndex = currentNode.index + ((leftRight) ? 0 : 1);
+        }
+    }
+    return vec3(0.0f);
+}
+
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+void main(void)
+{
+	// Still do this check just to be sure
+	uvec2 globalId = gl_GlobalInvocationID.xy;
+	ivec2 pixelId = ivec2(globalId);
+
+	// Skip out of image threads
+	if(any(greaterThanEqual(globalId, resolution))) return;
+
+	// Fetch world position from array
+	uint linearIndex = resolution.x * globalId.y + globalId.x;
+	vec3 worldPos = worldPositions[linearIndex].xyz;
+
+	vec3 color = AssignColorFromSTree(worldPos);
+
+	imageStore(iOut, pixelId, vec4(color, 0.0f));
+}

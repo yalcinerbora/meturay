@@ -133,13 +133,17 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<Opt
                                                const std::vector<uint32_t>& hGlobalSBTOffsets,
                                                const std::vector<bool>& hDoCullOnAccel,
                                                const TransformId* dAllTransformIds,
-                                               const GPUTransformI** dGlobalTransformArray)
+                                               const GPUTransformI** dGlobalTransformArray,
+                                               AABB3f sceneAABB)
 {
     Utility::CPUTimer t;
     t.Start();
 
     assert(hTransformTypes.size() == idLookup.size());
     assert(idLookup.size() == gpuTraversables.front().size());
+
+    // Set Scene AABB
+    this->sceneAABB = sceneAABB;
 
     DeviceMemory transformTempMemory;
     PrimTransformType* dTransformTypes;
@@ -319,6 +323,63 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
                                  this->identityTransformIndex,
                                  system.BestGPU());
     }
+
+    // Before Construction
+    // Generate AABB for this surface
+    size_t maxSubsurfacePrimCount = std::numeric_limits<size_t>::min();
+    // Get Max prim count
+    for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+    {
+        const auto& range = primRangeList[i];
+        if(range[0] == std::numeric_limits<uint64_t>::max())
+            break;
+        size_t primCount = range[1] - range[0];
+        maxSubsurfacePrimCount = std::max(maxSubsurfacePrimCount, primCount);
+    }
+    DeviceMemory aabbMemory(sizeof(AABB3f) * maxSubsurfacePrimCount);
+    AABB3f* dAABBs = static_cast<AABB3f*>(aabbMemory);
+
+    const CudaGPU& gpu = system.BestGPU();
+    std::array<AABB3f, SceneConstants::MaxPrimitivePerSurface> localAABBs;
+    for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+    {
+        const auto& range = primRangeList[i];
+        if(range[0] == std::numeric_limits<uint64_t>::max())
+            break;
+        size_t primCount = range[1] - range[0];
+        gpu.GridStrideKC_X
+        (
+            0, (cudaStream_t)0, primCount,
+            //
+            KCGenAABBs<GPUPrimitiveTriangle>,
+            //
+            dAABBs,
+            primRangeList[i],
+            AABBGen<GPUPrimitiveTriangle>(primData, *transform),
+            static_cast<uint32_t>(primCount)
+        );
+        // Immediately Reduce
+        ReduceArrayGPU<AABB3f, ReduceAABB3f, cudaMemcpyDeviceToHost>
+        (
+            localAABBs[i],
+            dAABBs,
+            primCount,
+            NegativeAABB3f,
+            (cudaStream_t)0
+        );
+
+    }
+    gpu.WaitMainStream();
+    aabbMemory = DeviceMemory();
+
+    AABB3f surfaceAABB = NegativeAABB3f;
+    for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
+    {
+        if(primRangeList[i][0] == std::numeric_limits<uint64_t>::max())
+            break;
+        surfaceAABB.UnionSelf(localAABBs[i]);
+    }
+    surfaceAABBs.emplace(surface, surfaceAABB);
 
     //===============================//
     //  ACTUAL TRAVERSAL GENERATION  //

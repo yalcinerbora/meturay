@@ -315,6 +315,8 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     hPrimTransformTypes.reserve(accelBatches.size());
     hfNames.reserve(accelBatches.size());
     hCullFlags.reserve(totalAcceleratorCount);
+    // Entire scene aabb
+    AABB3f sceneAABB = NegativeAABB3f;
     // Attach Transform gpu pointer to the Accelerator Batches
     // Set the OptixSystem
     // Get optix required data from the accelerator groups
@@ -387,6 +389,14 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
         if(!pGroup.IsTriangle())
             std::get<INTS_INDEX>(names) = INTERSECT_FUNC_PREFIX + primType;
         hfNames.push_back(names);
+
+        // Get the aabb
+        std::for_each(acc->AcceleratorAABBs().cbegin(),
+                      acc->AcceleratorAABBs().cend(),
+                      [&](const std::pair<uint32_t, AABB3f>& aabb)
+                      {
+                          sceneAABB.UnionSelf(aabb.second);
+                      });
     }
     assert(offset == totalAcceleratorCount);
 
@@ -409,7 +419,8 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     // Construct Base accelerator using the fetched data
     if((e = baseAccOptiX.Construct(traversables, hPrimTransformTypes,
                                    hGlobalSBTOffsets, hCullFlags,
-                                   dAllTransformIds, dTransforms)) != TracerError::OK)
+                                   dAllTransformIds, dTransforms,
+                                   sceneAABB)) != TracerError::OK)
         return e;
 
     // Get the traversable handles

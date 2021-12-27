@@ -14,6 +14,7 @@
 #include "GPUOptiXPTX.cuh"
 #include "OptixSystem.h"
 #include "OptixCheck.h"
+#include "ParallelReduction.cuh"
 
 class GPUAccGroupOptiXI
 {
@@ -136,7 +137,7 @@ class GPUAccOptiXGroup final
 
         const SurfaceAABBList&  AcceleratorAABBs() const override;
         size_t                  AcceleratorCount() const override;
-                // Arbitrary Position Fetching
+        // Arbitrary Position Fetching
         size_t                  TotalPrimitiveCount() const override;
         float                   TotalApproximateArea(const CudaGPU&) const override;
         void                    AcquireAreaWeightedSurfacePathces(// Outs
@@ -232,7 +233,8 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
                                               const std::vector<uint32_t>& hGlobalSBTOffsets,
                                               const std::vector<bool>& hDoCullOnAccel,
                                               const TransformId* dAllTransformIds,
-                                              const GPUTransformI** dTransforms);
+                                              const GPUTransformI** dTransforms,
+                                              AABB3f sceneAABB);
 };
 
 #include "GPUAcceleratorOptiX.hpp"

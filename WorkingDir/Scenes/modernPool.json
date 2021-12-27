@@ -230,17 +230,12 @@
 
     "Materials":[
     {
-        // Light Boundary Material
-        "id": 0,
-        "type": "BSkySphere",
-        "radiance" : {"texture": 17, "channels": "rgb"}
-    },
-    {
         // Pool Floor
         "id": 1,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
         "albedo": {"texture": 0, "channels": "rgb"},
-        "normal": {"texture": 1, "channels": "rgb"},
+        //"normal": {"texture": 1, "channels": "rgb"},
         "roughness": {"texture": 2, "channels": "r"},
         "specular": 0.5,
         "metallic": 0.0

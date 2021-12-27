@@ -117,6 +117,16 @@ class GDebugRendererPPG : public GDebugRendererI
         static constexpr GLenum     U_MAX_DEPTH = 3;
         static constexpr GLenum     U_LOG_ON = 4;
 
+        static constexpr GLenum     U_RES = 0;
+        static constexpr GLenum     U_AABB_MIN = 1;
+        static constexpr GLenum     U_AABB_MAX = 2;
+        static constexpr GLenum     U_NODE_COUNT = 3;
+        // Shader Storage Buffers
+        static constexpr GLenum     SSB_STREE = 0;
+        static constexpr GLenum     SSB_LEAF_COL = 1;
+        static constexpr GLenum     SSB_WORLD_POS = 2;
+        // Images
+        static constexpr GLenum     I_OUT_IMAGE = 0;
         // Textures
         static constexpr GLenum     T_IN_GRADIENT = 0;
         // FBO Outputs
@@ -155,6 +165,7 @@ class GDebugRendererPPG : public GDebugRendererI
 
         ShaderGL                vertDTreeRender;
         ShaderGL                fragDTreeRender;
+        ShaderGL                compSTreeRender;
 
         static bool             LoadSDTree(SDTree&,
                                            const nlohmann::json& config,
@@ -174,10 +185,13 @@ class GDebugRendererPPG : public GDebugRendererI
                             ~GDebugRendererPPG();
 
         // Interface
-        void                RenderSpatial(TextureGL&, uint32_t depth) override;
+        void                RenderSpatial(TextureGL&, uint32_t depth,
+                                          const std::vector<Vector3f>& worldPositions) override;
         void                UpdateDirectional(const Vector3f& worldPos,
                                               bool doLogScale,
                                               uint32_t depth) override;
 
-        bool                RenderGUI(const ImVec2& windowSize) override;
+        bool                RenderGUI(bool& overlayCheckboxChanged,
+                                      bool& overlayValue,
+                                      const ImVec2& windowSize) override;
 };

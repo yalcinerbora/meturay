@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include "RayLib/Types.h"
 
-inline GLenum PixelFormatToGL(PixelFormat f)
+static GLenum PixelFormatToGL(PixelFormat f)
 {
     static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
     {
@@ -99,7 +99,7 @@ static GLenum PixelFormatToSizedGL(PixelFormat f)
     return TypeList[static_cast<int>(f)];
 }
 
-inline GLenum PixelFormatToTypeGL(PixelFormat f)
+static GLenum PixelFormatToTypeGL(PixelFormat f)
 {
     static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
     {
@@ -134,4 +134,19 @@ inline GLenum PixelFormatToTypeGL(PixelFormat f)
         GL_FLOAT
     };
     return TypeList[static_cast<int>(f)];
+}
+
+static PixelFormat PixelFormatTo4ChannelPF(PixelFormat f)
+{
+    static constexpr PixelFormat INVALID_PF = PixelFormat::END;
+    switch(f)
+    {
+        case PixelFormat::RGB8_UNORM: return PixelFormat::RGBA8_UNORM;
+        case PixelFormat::RGB8_SNORM: return PixelFormat::RGBA8_SNORM;
+        case PixelFormat::RGB16_UNORM: return PixelFormat::RGBA16_UNORM;
+        case PixelFormat::RGB16_SNORM: return PixelFormat::RGBA16_SNORM;
+        case PixelFormat::RGB_HALF: return PixelFormat::RGBA_HALF;
+        case PixelFormat::RGB_FLOAT: return PixelFormat::RGBA_FLOAT;
+        default: return INVALID_PF;
+    }
 }

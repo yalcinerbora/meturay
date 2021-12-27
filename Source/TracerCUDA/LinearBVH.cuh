@@ -14,6 +14,7 @@
 #include "ParallelSequence.cuh"
 #include "ParallelRadixSort.cuh"
 #include "LinearBVHKC.cuh"
+#include "GPUAcceleratorCommonKC.cuh"
 
 template <class Leaf>
 using AABBGenFunc = AABB3f(&)(const Leaf&);

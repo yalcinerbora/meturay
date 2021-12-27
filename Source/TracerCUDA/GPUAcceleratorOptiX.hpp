@@ -1,7 +1,5 @@
 #pragma once
 
-#include "TracerDebug.h"
-
 template <class PGroup>
 GPUAccOptiXGroup<PGroup>::GPUAccOptiXGroup(const GPUPrimitiveGroupI& pGroup)
     : GPUAcceleratorGroup<PGroup>(pGroup)
@@ -310,6 +308,19 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         }
         assert(offset == surfacePrimCount);
 
+        // Reduce the aabb of each primitive to surface aabb
+        AABB3f surfaceAABB;
+        if(deviceIndex == 0)
+        {
+            ReduceArrayGPU<AABB3f, ReduceAABB3f, cudaMemcpyDeviceToHost>
+            (
+                surfaceAABB,
+                dPrimAABBs,
+                surfacePrimCount,
+                NegativeAABB3f,
+                (cudaStream_t)0
+            );
+        }
         // Generate Build Params
         offset = 0;
         uint32_t buildInputCount = 0;
@@ -417,6 +428,9 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         // (temp vertex buffer & buildBuffer(if traversal is compacted))
         gpu.WaitMainStream();
 
+        // Push aabb to the aabbList only first time
+        if(deviceIndex == 0)
+            surfaceAABBs.emplace(surface, surfaceAABB);
     }
     t.Stop();
     METU_LOG("Surface{:d} OptiX GAS generated in {:f} seconds.",

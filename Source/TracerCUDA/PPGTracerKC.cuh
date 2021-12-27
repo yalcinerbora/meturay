@@ -368,7 +368,7 @@ void PPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_DTreeSampleRatio = 0.0f;
+        constexpr float BxDF_DTreeSampleRatio = 0.5f;
         // Sample a chance
         float xi = GPUDistribution::Uniform<float>(rng);
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
@@ -429,27 +429,27 @@ void PPGTracerPathWork(// Output
             if(pdfTree == 0.0f) selectedPDFZero = true;
         }
         // Pdf Average
-        pdfPath = pdfBxDF;
-        //pdfPath = selectedPDFZero ? 0.0f
-        //                          : (BxDF_DTreeSampleRatio          * pdfBxDF +
-        //                             (1.0f - BxDF_DTreeSampleRatio) * pdfTree);
-        //pdfPath = BxDF_DTreeSampleRatio          * pdfBxDF +
-        //          (1.0f - BxDF_DTreeSampleRatio) * pdfTree;
+        //pdfPath = pdfBxDF;
+        pdfPath = selectedPDFZero ? 0.0f
+                                  : (BxDF_DTreeSampleRatio          * pdfTree +
+                                     (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF);
+        //pdfPath = BxDF_DTreeSampleRatio          * pdfTree +
+        //          (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF;
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))
             printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
-                   (xi < BxDF_DTreeSampleRatio) ? "BxDF": "Tree",
+                   (xi >= BxDF_DTreeSampleRatio) ? "BxDF": "Tree",
                    pdfPath, pdfBxDF, pdfTree, BxDF_DTreeSampleRatio);
         if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
             printf("[%s] NAN DIR %f, %f, %f\n",
-                    (xi < BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
+                    (xi >= BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
                     rayPath.getDirection()[0],
                     rayPath.getDirection()[1],
                     rayPath.getDirection()[2]);
         if(reflectance.HasNaN())
             printf("[%s] NAN REFL %f %f %f\n",
-                   (xi < BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
+                   (xi >= BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
                    reflectance[0],
                    reflectance[1],
                    reflectance[2]);

@@ -14,7 +14,7 @@
 
 #include "GDebugRendererReference.h"
 #include "GuideDebugGUIFuncs.h"
-
+#include "GLConversionFunctions.h"
 
 void GuideDebugGUI::CalculateImageSizes(float& paddingY,
                                         ImVec2& paddingX,
@@ -51,6 +51,31 @@ void GuideDebugGUI::CalculateImageSizes(float& paddingY,
     paddingX.x *= (1.0f / 4.0f);
 }
 
+void GuideDebugGUI::AlphaBlendRefWithOverlay()
+{
+    compAlphaBlend.Bind();
+    // Get ready for shader call
+    // Uniforms
+    glUniform2i(U_RES, static_cast<int>(refTexture.Size()[0]),
+                       static_cast<int>(refTexture.Size()[1]));
+    glUniform1f(U_BLEND, spatialBlendRatio);
+    // Textures
+    refTexture.Bind(T_IN_1);
+    overlayTex.Bind(T_IN_0);
+    // Images
+    glBindImageTexture(I_OUT, refOutTex.TexId(),
+                        0, false, 0,
+                        GL_WRITE_ONLY,
+                        PixelFormatToSizedGL(refOutTex.Format()));
+
+    // Call the Kernel (Shader)
+    GLuint gridX = (refTexture.Size()[0] + 16 - 1) / 16;
+    GLuint gridY = (refTexture.Size()[1] + 16 - 1) / 16;
+    glDispatchCompute(gridX, gridY, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
+                    GL_TEXTURE_FETCH_BARRIER_BIT);
+}
+
 bool GuideDebugGUI::IncrementDepth()
 {
     bool doInc = currentDepth < (MaxDepth - 1);
@@ -76,18 +101,25 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
     , sceneName(sceneName)
     , fullscreenShow(true)
     , refTexture(refFileName)
+    , overlayTex(refTexture.Size(),
+                 PixelFormatTo4ChannelPF(refTexture.Format()))
+    , refOutTex(refTexture.Size(),
+                PixelFormatTo4ChannelPF(refTexture.Format()))
+    , currentRefTex(&refTexture)
     , debugRenderers(dRenderers)
     , debugReference(dRef)
     , MaxDepth(maxDepth)
     , currentDepth(0)
     , doLogScale(false)
+    , spatialBlendRatio(0.5f)
     , pixelSelected(false)
+    , compAlphaBlend(ShaderType::COMPUTE, u8"Shaders/AlphaBlend.comp")
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     // ImGUI Dark
     ImGui::StyleColorsDark();
-    ImGuiTexInspect::ImplOpenGL3_Init();
+    ImGuiTexInspect::ImplOpenGL3_Init("#version 430");
     ImGuiTexInspect::Init();
     ImGuiTexInspect::CreateContext();
 
@@ -135,6 +167,8 @@ GuideDebugGUI::GuideDebugGUI(GLFWwindow* w,
         std::memcpy(reinterpret_cast<Byte*>(worldPositions.data()),
                     wpByte.data(), wpByte.size());
     }
+
+    overlayCheckboxValues.resize(dRenderers.size());
 }
 
 GuideDebugGUI::~GuideDebugGUI()
@@ -152,19 +186,22 @@ void GuideDebugGUI::Render()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    bool updateSpatialTexture = false;
+
     // TODO: Properly do this no platform/lib dependent enums etc.
     // Check Input operation if left or right arrows are pressed to change the depth
-
     bool updateDirectionalTextures = false;
     if(ImGui::IsKeyReleased(GLFW_KEY_LEFT) &&
        DecrementDepth())
     {
         updateDirectionalTextures = true;
+        updateSpatialTexture = true;
     }
     if(ImGui::IsKeyReleased(GLFW_KEY_RIGHT) &&
        IncrementDepth())
     {
         updateDirectionalTextures = true;
+        updateSpatialTexture = true;
     }
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -203,6 +240,8 @@ void GuideDebugGUI::Render()
     ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(OPTIONS_TEXT, optionsSize.x));
     ImGui::Text(OPTIONS_TEXT);
     updateDirectionalTextures |= ImGui::Checkbox("Log Scale", &doLogScale);
+    updateSpatialTexture |= ImGui::SliderFloat("OverlayBlend", &spatialBlendRatio,
+                                               0.0f, 1.0f);
     ImGui::EndChild();
 
     // Reference Image Texture
@@ -220,7 +259,7 @@ void GuideDebugGUI::Render()
         // Scope is here to use namespace since with structured bindings etc.
         // Statement become too long
         using namespace GuideDebugGUIFuncs;
-        auto [pixChanged, newTexel] = RenderImageWithZoomTooltip(refTexture,
+        auto [pixChanged, newTexel] = RenderImageWithZoomTooltip(*currentRefTex,
                                                                  worldPositions,
                                                                  remainingSize,
                                                                  pixelSelected,
@@ -262,20 +301,49 @@ void GuideDebugGUI::Render()
     ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, (paddingY - ImGui::GetFontSize()) * 0.95f)));
 
     ImGui::SameLine(0.0f, paddingX.y);
+    int i = 0;
     for(const auto& renderer : debugRenderers)
     {
-        if(renderer->RenderGUI(pgImgSize) && pixelSelected)
+        bool overlayChanged = false;
+        if(renderer->RenderGUI(overlayChanged,
+                               reinterpret_cast<bool&>(overlayCheckboxValues[i]),
+                               pgImgSize) && pixelSelected)
         {
             uint32_t linearIndex = (static_cast<uint32_t>(selectedPixel[1]) * refTexture.Size()[0] +
                                     static_cast<uint32_t>(selectedPixel[0]));
             Vector3f worldPos = worldPositions[linearIndex];
             renderer->UpdateDirectional(worldPos, doLogScale, currentDepth);
         }
+        if(overlayChanged)
+        {
+            for(size_t j = 0; j < overlayCheckboxValues.size(); j++)
+            {
+                if(j != i) overlayCheckboxValues[j] = false;
+            }
+            updateSpatialTexture = true;
+        }
         ImGui::SameLine(0.0f, paddingX.y);
+        i++;
     }
+
+    // Update Spatial Texture if requested
+    if(updateSpatialTexture)
+    {
+        bool allFalse = true;
+        for(size_t i = 0; i < overlayCheckboxValues.size(); i++)
+        {
+            if(!overlayCheckboxValues[i]) continue;
+
+            allFalse = false;
+            debugRenderers[i]->RenderSpatial(overlayTex, currentDepth,
+                                             worldPositions);
+            AlphaBlendRefWithOverlay();
+        }
+        currentRefTex = (allFalse) ? &refTexture : &refOutTex;
+    }
+
     // Finish Window
     ImGui::End();
-
     // Render the GUI
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

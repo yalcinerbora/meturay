@@ -1,12 +1,5 @@
 
 __device__ __forceinline__
-AABB3f ReduceABB3f(const AABB3f& aabb0,
-                   const AABB3f& aabb1)
-{
-    return aabb0.Union(aabb1);
-}
-
-__device__ __forceinline__
 uint32_t Delta(uint32_t nodeIndex,
                const uint64_t* gMortonCodes)
 {
@@ -247,10 +240,10 @@ TracerError LinearBVHCPU<Leaf, AF, DF>::Construct(const Leaf* dLeafList,
 
     // Find Extent of the leaf cloud
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
-    ReduceArrayGPU<AABB3f, ReduceABB3f>(*dExtent,
-                                        dLeafAABBs,
-                                        leafCount,
-                                        NegativeAABB3f);
+    ReduceArrayGPU<AABB3f, ReduceAABB3f>(*dExtent,
+                                         dLeafAABBs,
+                                         leafCount,
+                                         NegativeAABB3f);
     // Generate morton code of the AABBs
     AABB3f hExtent;
     CUDA_CHECK(cudaMemcpy(&hExtent, dExtent, sizeof(AABB3f),
