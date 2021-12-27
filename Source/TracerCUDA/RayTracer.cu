@@ -36,7 +36,7 @@ void RayTracer::UpdateFrameAnalytics(const std::string& throughputSuffix,
     totalSamplePerPixel += spp;
 
     float iterationTime = static_cast<float>(frameTimer.Elapsed<CPUTimeMillis>());
-    double throughput = pixCount / iterationTime / 1'000.0;
+    double throughput = pixCount * spp / iterationTime / 1'000.0;
 
     double totalMemMiB = static_cast<double>(cudaSystem.TotalMemory()) / 1024.0 / 1024.0;
     double usedMemMiB = static_cast<double>(TotalGPUMemoryUsed()) / 1024.0 / 1024.0;

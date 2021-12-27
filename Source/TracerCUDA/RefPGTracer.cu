@@ -427,6 +427,9 @@ void RefPGTracer::Finalize()
     // Send the img memory as pixel
     SendPixel();
 
+    if(callbacks)
+        callbacks->SendAnalyticData(frameAnalytics);
+
     // Now we can reset the image
     imgMemory.Reset(cudaSystem);
 
