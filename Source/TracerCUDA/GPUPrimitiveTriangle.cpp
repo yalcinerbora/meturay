@@ -62,7 +62,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         }
         catch(SceneException const& e)
         {
-            if(e.what()[0] != '\0') METU_ERROR_LOG(e.what());
+            if(e.what()[0] != '\0') METU_ERROR_LOG("{:s}", std::string(e.what()));
             return e;
         }
         // Check alpha maps

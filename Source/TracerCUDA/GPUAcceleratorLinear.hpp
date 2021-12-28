@@ -427,7 +427,7 @@ void GPUAccLinearGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
                        // Input
                        dLeafList,
                        dLeafTransformIds,
-                       dTransforms,
+                       this->dTransforms,
                        totalLeafCount);
 
     // Generate PWC Distribution over area
@@ -447,7 +447,7 @@ void GPUAccLinearGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
                        //
                        dLeafList,
                        dLeafTransformIds,
-                       dTransforms,
+                       this->dTransforms,
                        areaDist.DistributionGPU(0),
                        surfacePatchCount);
 }

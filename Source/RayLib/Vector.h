@@ -295,42 +295,42 @@ struct IsVectorType
         std::is_same<T, Vector4us>::value;
 };
 
-// Vector Extern
-// Float Type
-extern template class Vector<2, float>;
-extern template class Vector<3, float>;
-extern template class Vector<4, float>;
-// Double Type
-extern template class Vector<2, double>;
-extern template class Vector<3, double>;
-extern template class Vector<4, double>;
-// Integer Type
-extern template class Vector<2, int32_t>;
-extern template class Vector<3, int32_t>;
-extern template class Vector<4, int32_t>;
-// Unsigned Integer Type
-// IMPORTANT: This (and the non extern brother in the Vector.cu)
-// Breaks the at the __cudaRegisterFatbinary() when you load VisorGL.so.
-// I don't know why...
-// extern template class Vector<2, uint32_t>;
-// extern template class Vector<3, uint32_t>;
-// extern template class Vector<4, uint32_t>;
-// Long Types
-extern template class Vector<2, int64_t>;
-extern template class Vector<2, uint64_t>;
-// Short Type
-extern template class Vector<2, int16_t>;
-extern template class Vector<3, int16_t>;
-extern template class Vector<4, int16_t>;
-// Unsigned Short Type
-extern template class Vector<2, uint16_t>;
-extern template class Vector<3, uint16_t>;
-extern template class Vector<4, uint16_t>;
-// Byte Type
-extern template class Vector<2, int8_t>;
-extern template class Vector<3, int8_t>;
-extern template class Vector<4, int8_t>;
-// Unsigned Byte Type
-extern template class Vector<2, uint8_t>;
-extern template class Vector<3, uint8_t>;
-extern template class Vector<4, uint8_t>;
+// // Vector Extern
+// // Float Type
+// extern template class Vector<2, float>;
+// extern template class Vector<3, float>;
+// extern template class Vector<4, float>;
+// // Double Type
+// extern template class Vector<2, double>;
+// extern template class Vector<3, double>;
+// extern template class Vector<4, double>;
+// // Integer Type
+// extern template class Vector<2, int32_t>;
+// extern template class Vector<3, int32_t>;
+// extern template class Vector<4, int32_t>;
+// // Unsigned Integer Type
+// // IMPORTANT: This (and the non extern brother in the Vector.cu)
+// // Breaks the at the __cudaRegisterFatbinary() when you load VisorGL.so.
+// // I don't know why...
+// // extern template class Vector<2, uint32_t>;
+// // extern template class Vector<3, uint32_t>;
+// // extern template class Vector<4, uint32_t>;
+// // Long Types
+// extern template class Vector<2, int64_t>;
+// extern template class Vector<2, uint64_t>;
+// // Short Type
+// extern template class Vector<2, int16_t>;
+// extern template class Vector<3, int16_t>;
+// extern template class Vector<4, int16_t>;
+// // Unsigned Short Type
+// extern template class Vector<2, uint16_t>;
+// extern template class Vector<3, uint16_t>;
+// extern template class Vector<4, uint16_t>;
+// // Byte Type
+// extern template class Vector<2, int8_t>;
+// extern template class Vector<3, int8_t>;
+// extern template class Vector<4, int8_t>;
+// // Unsigned Byte Type
+// extern template class Vector<2, uint8_t>;
+// extern template class Vector<3, uint8_t>;
+// extern template class Vector<4, uint8_t>;

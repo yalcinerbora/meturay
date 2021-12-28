@@ -81,7 +81,7 @@ ImageIOError PixelFormatFromEXR(Imf::FrameBuffer& fb,
     // with specific channels
 
     // Get Pixel Type & Channel Count
-    Imf::PixelType consistentType;
+    Imf::PixelType consistentType = Imf::PixelType::NUM_PIXELTYPES;
     for(auto c = channels.begin(); c != channels.end(); c++)
     {
         channelCount++;

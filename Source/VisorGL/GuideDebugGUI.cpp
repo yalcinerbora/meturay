@@ -301,7 +301,7 @@ void GuideDebugGUI::Render()
     ImGui::Dummy(ImVec2(0.0f, std::max(0.0f, (paddingY - ImGui::GetFontSize()) * 0.95f)));
 
     ImGui::SameLine(0.0f, paddingX.y);
-    int i = 0;
+    size_t i = 0;
     for(const auto& renderer : debugRenderers)
     {
         bool overlayChanged = false;

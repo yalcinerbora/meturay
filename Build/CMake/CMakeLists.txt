@@ -119,7 +119,7 @@ if(MSVC)
                         # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4324>
                         # # '__cudaUnregisterBinaryUtil': unreferenced function with internal linkage has been removed
                         # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4505>)
-    add_link_options($<$<COMPILE_LANGUAGE:CXX>:/DEBUG>)
+                        add_link_options($<$<COMPILE_LANGUAGE:CXX>:/DEBUG>)
 else()
     # Clang / GCC both use same syntax
     # Warnings

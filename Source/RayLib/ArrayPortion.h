@@ -6,6 +6,7 @@ Sub-space of the array with a unique id
 */
 
 #include <vector>
+#include <cstdint>
 
 template<class T>
 struct ArrayPortion

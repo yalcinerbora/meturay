@@ -4,15 +4,12 @@
 Ray struct for convenient usability.
 
 */
-
 #include "Matrix.h"
 #include "Vector.h"
 #include "Quaternion.h"
 #include "HybridFunctions.h"
-
 template<class T, typename = ArithmeticEnable<T>>
 class Ray;
-
 template<class T>
 class Ray<T>
 {
@@ -105,6 +102,6 @@ static_assert(sizeof(RayF) == sizeof(float) * 6, "Ray<float> size is not 24 byte
 static constexpr RayF InvalidRayF = RayF(Zero3f, Zero3f);
 static constexpr RayD InvalidRayD = RayD(Zero3d, Zero3d);
 
-// Ray Extern
-extern template class Ray<float>;
-extern template class Ray<double>;
+// // Ray Extern
+// extern template class Ray<float>;
+// extern template class Ray<double>;

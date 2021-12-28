@@ -1,5 +1,6 @@
 #include "BitManipulation.h"
 #include <bit>
+#include "System.h"
 
 template<class T>
 int Utility::BitCount(T val)

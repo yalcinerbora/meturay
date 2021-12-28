@@ -314,18 +314,18 @@ struct IsMatrixType
         std::is_same<T, Matrix4x4ui>::value;
 };
 
-// Matrix Extern
-extern template class Matrix<2, float>;
-extern template class Matrix<2, double>;
-extern template class Matrix<2, int>;
-extern template class Matrix<2, unsigned int>;
+// // Matrix Extern
+// extern template class Matrix<2, float>;
+// extern template class Matrix<2, double>;
+// extern template class Matrix<2, int>;
+// extern template class Matrix<2, unsigned int>;
 
-extern template class Matrix<3, float>;
-extern template class Matrix<3, double>;
-extern template class Matrix<3, int>;
-extern template class Matrix<3, unsigned int>;
+// extern template class Matrix<3, float>;
+// extern template class Matrix<3, double>;
+// extern template class Matrix<3, int>;
+// extern template class Matrix<3, unsigned int>;
 
-extern template class Matrix<4, float>;
-extern template class Matrix<4, double>;
-extern template class Matrix<4, int>;
-extern template class Matrix<4, unsigned int>;
+// extern template class Matrix<4, float>;
+// extern template class Matrix<4, double>;
+// extern template class Matrix<4, int>;
+// extern template class Matrix<4, unsigned int>;

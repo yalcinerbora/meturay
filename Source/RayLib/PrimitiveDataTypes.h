@@ -3,6 +3,8 @@
 
 */
 
+#include <cstdint>
+
 enum class PrimitiveDataType
 {
     POSITION,

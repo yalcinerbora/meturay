@@ -7,6 +7,7 @@ Can be attached to a Visor to capture window actions
 
 */
 
+#include <cstdint>
 #include <functional>
 #include "VisorInputStructs.h"
 
