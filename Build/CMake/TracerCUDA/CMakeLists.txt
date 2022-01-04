@@ -289,6 +289,18 @@ set(SRC_PPG_TRACER_AUX_CLASSES
     ${CURRENT_SOURCE_DIR}/STree.cuh
     ${CURRENT_SOURCE_DIR}/STreeKC.cuh)
 
+set(SRC_RL_TRACER
+    ${CURRENT_SOURCE_DIR}/RLTracer.cu
+    ${CURRENT_SOURCE_DIR}/RLTracer.h
+    ${CURRENT_SOURCE_DIR}/RLTracerKC.cuh
+    ${CURRENT_SOURCE_DIR}/RLTracerWorks.cu
+    ${CURRENT_SOURCE_DIR}/RLTracerWorks.cuh)
+
+set(SRC_RL_TRACER_AUX_CLASSES
+    ${CURRENT_SOURCE_DIR}/Dense2DArray.cu
+    ${CURRENT_SOURCE_DIR}/Dense2DArray.cuh)
+
+
 set(SRC_REF_PG_TRACER
     ${CURRENT_SOURCE_DIR}/RefPGTracer.cu
     ${CURRENT_SOURCE_DIR}/RefPGTracer.h
@@ -352,7 +364,9 @@ set(SRC_ALL
     ${SRC_COMMON}
     ${SRC_RC}
     ${SRC_RC_OPTIX}
-    ${SRC_RNG})
+    ${SRC_RNG}
+    ${SRC_RL_TRACER}
+    ${SRC_RL_TRACER_AUX_CLASSES})
 
 # IDE Filters
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
@@ -398,6 +412,8 @@ source_group("Tracers/DirectTracer" FILES ${SRC_DIRECT_TRACER})
 source_group("Tracers/PathTracer" FILES ${SRC_PATH_TRACER})
 source_group("Tracers/PPGTracer" FILES ${SRC_PPG_TRACER})
 source_group("Tracers/PPGTracer/Aux Classes" FILES ${SRC_PPG_TRACER_AUX_CLASSES})
+source_group("Tracers/RLTracer" FILES ${SRC_RL_TRACER})
+source_group("Tracers/RLTracer/Aux Classes" FILES ${SRC_RL_TRACER_AUX_CLASSES})
 source_group("Tracers/RefPGTracer" FILES ${SRC_REF_PG_TRACER})
 source_group("Tracers/Data Structures" FILES ${SRC_DATA_STRUCTURES})
 

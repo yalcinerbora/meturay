@@ -23,7 +23,7 @@ struct FetchTreeIdFunctor
     __device__ __host__ __forceinline__
     uint32_t operator()(const PathGuidingNode& node) const
     {
-        return node.nearestDTreeIndex;
+        return node.dataStructIndex;
     }
 };
 
@@ -330,7 +330,7 @@ static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTrees,
         const uint32_t pathStartIndex = nodeIndex / maxPathNodePerRay * maxPathNodePerRay;
 
         PathGuidingNode gPathNode = gPathNodes[nodeIndex];
-        const uint32_t treeIndex = gPathNode.nearestDTreeIndex;
+        const uint32_t treeIndex = gPathNode.dataStructIndex;
 
         // Skip if invalid tree
         if(treeIndex == UINT32_MAX) continue;

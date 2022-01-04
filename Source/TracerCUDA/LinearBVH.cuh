@@ -53,7 +53,7 @@ struct LinearBVHGPU
     uint32_t                nodeCount;
     uint32_t                leafCount;
 
-    __device__ uint32_t     FindNearestPoint(const Vector3f& worldPos);
+    __device__ uint32_t     FindNearestPoint(const Vector3f& worldPos) const;
 };
 
 template <class Leaf,
@@ -96,7 +96,7 @@ class LinearBVHCPU
 
 template <class Leaf, DistanceBetween<Leaf> DistFunc>
 __device__ __forceinline__
-uint32_t LinearBVHGPU<Leaf, DistFunc>::FindNearestPoint(const Vector3f& worldPos)
+uint32_t LinearBVHGPU<Leaf, DistFunc>::FindNearestPoint(const Vector3f& worldPos) const
 {
     using namespace IntersectionFunctions;
     // Helper Variables

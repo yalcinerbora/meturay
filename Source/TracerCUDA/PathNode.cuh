@@ -84,7 +84,7 @@ bool PathNode::HasNext()
 struct PathGuidingNode : public PathNode
 {
     Vector3f            radFactor;          // A.k.a path throughput
-    uint32_t            nearestDTreeIndex;
+    uint32_t            dataStructIndex;    // Index of an arbitrary data structure
     Vector3f            totalRadiance;      // Total Radiance
 
     // Accumulate the generated radiance to the path
@@ -132,5 +132,23 @@ void PathGuidingNode::AccumRadianceUpChain(const Vector3f& endPointRadiance,
     {
         gLocalChain[i].AccumRadiance(endPointRadiance);
         i = gLocalChain[i].prevNext[1];
+    }
+}
+
+__global__
+static void KCInitializePaths(PathGuidingNode* gPathNodes,
+                              uint32_t totalNodeCount)
+{
+    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    if(globalId < totalNodeCount)
+    {
+        PathGuidingNode node;
+        node.dataStructIndex = UINT32_MAX;
+        node.radFactor = Vector3f(1.0f);
+        node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
+        node.totalRadiance = Zero3;
+        node.worldPosition = Zero3;
+
+        gPathNodes[globalId] = node;
     }
 }

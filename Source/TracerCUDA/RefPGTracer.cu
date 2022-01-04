@@ -19,6 +19,9 @@
 
 #include "ImageIO/EntryPoint.h"
 
+#include "RayLib/TracerOptions.h"
+#include "RayLib/TracerCallbacksI.h"
+
 #include <iomanip>
 
 #include "TracerDebug.h"
@@ -531,4 +534,15 @@ size_t RefPGTracer::TotalGPUMemoryUsed() const
     return (RayTracer::TotalGPUMemoryUsed() +
             accumulationBuffer.UsedGPUMemory() +
             lsMemory.Size() + camMemory.Size());
+}
+
+void RefPGTracer::AskOptions()
+{
+    // Generate Tracer Object
+    VariableList list;
+    list.emplace(SAMPLE_NAME, OptionVariable(options.samplePerIteration));
+    list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
+    list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
+
+    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }

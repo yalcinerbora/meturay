@@ -8,6 +8,9 @@
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/VisorTransform.h"
 
+#include "RayLib/TracerOptions.h"
+#include "RayLib/TracerCallbacksI.h"
+
 //#include "TracerLib/TracerDebug.h"
 //std::ostream& operator<<(std::ostream& stream, const RayAuxBasic& v)
 //{
@@ -303,4 +306,15 @@ void DirectTracer::GenerateWork(const GPUCameraI& dCam)
         RayAuxInitBasic(InitialBasicAux),
         true, antiAlias
     );
+}
+
+void DirectTracer::AskOptions()
+{
+    // Generate Tracer Object
+    VariableList list;
+    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+    std::string renderTypeString = RenderTypeToString(options.renderType);
+    list.emplace(RENDER_TYPE_NAME, OptionVariable(renderTypeString));
+
+    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }

@@ -3,13 +3,14 @@
 #include "RayTracer.h"
 #include "WorkPool.h"
 #include "GPULightI.h"
-#include "STree.cuh"
+#include "ScenePositionTree.cuh"
+#include "Dense2DArray.cuh"
 #include "Tracers.h"
 
 class GPUDirectLightSamplerI;
 struct PathGuidingNode;
 
-class PPGTracer final : public RayTracer
+class RLTracer final : public RayTracer
 {
     public:
         static constexpr const char* TypeName() { return "PPGTracer"; }
@@ -23,11 +24,10 @@ class PPGTracer final : public RayTracer
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
 
         static constexpr const char* RAW_PG_NAME                = "RawPathGuiding";
-        static constexpr const char* ALWAYS_SEND_NAME           = "AlwaysSendSamples";
-        static constexpr const char* D_TREE_MAX_DEPTH_NAME      = "DTreeMaximumDepth";
-        static constexpr const char* D_TREE_FLUX_RATIO_NAME     = "DTreeFluxRatio";
-        static constexpr const char* S_TREE_SAMPLE_SPLIT_NAME   = "STreeMaxSamples";
-        static constexpr const char* SD_TREE_PATH_NAME          = "SDTreePath";
+        static constexpr const char* DIRECTONAL_RES_NAME        = "DirectionalResolution";
+        static constexpr const char* SPATIAL_SAMPLE_NAME        = "SpatialSampleCount";
+        static constexpr const char* ALPHA_NAME                 = "Alpha";
+
         static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
 
         struct Options
@@ -40,23 +40,17 @@ class PPGTracer final : public RayTracer
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
 
             // Paper Related
-            uint32_t            maxDTreeDepth       = 32;
-            uint32_t            maxSDTreeSizeMB     = 512;
-            uint32_t            sTreeSplitThreshold = 12000;
-            float               dTreeSplitThreshold = 0.01f;
-
-            // Initial Tree
-            std::string         sdTreePath          = "";
+            Vector2i            directionalRes      = Vector2i(16, 16);
+            uint32_t            spatialSamples      = 2048;
+            float               alpha               = 0.5f;
 
             // Misc
-            bool                alwaysSendSamples   = false;
             bool                rawPathGuiding      = true;
 
             bool                nextEventEstimation = true;
             bool                directLightMIS      = false;
 
             bool                dumpDebugData       = false;
-
         };
 
     private:
@@ -72,8 +66,10 @@ class PPGTracer final : public RayTracer
         // Path Memory
         DeviceMemory                    pathMemory;
         PathGuidingNode*                dPathNodes;
-        // Global STree
-        std::unique_ptr<STree>          sTree;
+        // Global Data Structure
+        DeviceMemory                    memory;
+        ScenePositionTree               posTree;
+        Dense2DArrayCPU                 denseArray;
         // Internal State
         uint32_t                        currentTreeIteration;
         uint32_t                        nextTreeSwap;
@@ -85,10 +81,10 @@ class PPGTracer final : public RayTracer
     protected:
     public:
         // Constructors & Destructor
-                                PPGTracer(const CudaSystem&,
+                                RLTracer(const CudaSystem&,
                                            const GPUSceneI&,
                                            const TracerParameters&);
-                                ~PPGTracer() = default;
+                                ~RLTracer() = default;
 
         TracerError             Initialize() override;
         TracerError             SetOptions(const TracerOptionsI&) override;
@@ -103,5 +99,5 @@ class PPGTracer final : public RayTracer
         size_t                  TotalGPUMemoryUsed() const override;
 };
 
-static_assert(IsTracerClass<PPGTracer>::value,
-              "PPGTracer is not a Tracer Class.");
+static_assert(IsTracerClass<RLTracer>::value,
+              "RLTracer is not a Tracer Class.");

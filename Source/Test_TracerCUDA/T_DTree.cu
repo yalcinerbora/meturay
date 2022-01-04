@@ -274,31 +274,31 @@ TEST(PPG_DTree, AddThenSwap)
     camNode.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     camNode.prevNext = Vector<2, PathNode::IndexType>(PathNode::InvalidIndex, 1);
     camNode.radFactor = Zero3;
-    camNode.nearestDTreeIndex = 0;
+    camNode.dataStructIndex = 0;
     camNode.totalRadiance = RADIANCE;
     PathGuidingNode midNode0;
     midNode0.worldPosition = Vector3f{10.0f, 10.0f, 0.0f};
     midNode0.prevNext = Vector<2, PathNode::IndexType>(0, 2);
     midNode0.radFactor = Zero3;
-    midNode0.nearestDTreeIndex = 0;
+    midNode0.dataStructIndex = 0;
     midNode0.totalRadiance = RADIANCE;
     PathGuidingNode midNode1;
     midNode1.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     midNode1.prevNext = Vector<2, PathNode::IndexType>(1, 3);
     midNode1.radFactor = Zero3;
-    midNode1.nearestDTreeIndex = 0;
+    midNode1.dataStructIndex = 0;
     midNode1.totalRadiance = RADIANCE;
     PathGuidingNode midNode2;
     midNode2.worldPosition = Vector3f{-10.0f, 10.0f, 0.0f};
     midNode2.prevNext = Vector<2, PathNode::IndexType>(2, 4);
     midNode2.radFactor = Zero3;
-    midNode2.nearestDTreeIndex = 0;
+    midNode2.dataStructIndex = 0;
     midNode2.totalRadiance = RADIANCE;
     PathGuidingNode endNode;
     endNode.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     endNode.prevNext = Vector<2, PathNode::IndexType>(3, PathNode::InvalidIndex);
     endNode.radFactor = Zero3;
-    endNode.nearestDTreeIndex = 0;
+    endNode.dataStructIndex = 0;
     endNode.totalRadiance = RADIANCE;
 
     std::vector<PathGuidingNode> pathNodes =
@@ -485,7 +485,7 @@ TEST(PPG_DTree, SwapStress)
             p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
             p.totalRadiance = radianceUniform * MAX_TOTAL_RADIANCE;
             // Unnecessary Data for this operation
-            p.nearestDTreeIndex = DTREE_ID;
+            p.dataStructIndex = DTREE_ID;
             p.radFactor = Zero3;
             paths[i] = p;
         }
@@ -647,7 +647,7 @@ TEST(PPG_DTree, LargeToSmall)
             p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
             p.totalRadiance = radiance;
             // Unnecessary Data for this operation
-            p.nearestDTreeIndex = DTREE_ID;
+            p.dataStructIndex = DTREE_ID;
             p.radFactor = Zero3;
             paths[i] = p;
         }
@@ -682,7 +682,7 @@ TEST(PPG_DTree, LargeToSmall)
         p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
         p.totalRadiance = Zero3;
         // Unnecessary Data for this operation
-        p.nearestDTreeIndex = DTREE_ID;
+        p.dataStructIndex = DTREE_ID;
         p.radFactor = Zero3;
         paths[i] = p;
     }
@@ -865,7 +865,7 @@ TEST(PPG_DTree, SampleDeep)
             p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
             p.totalRadiance = radiance;
             // Unnecessary Data for this operation
-            p.nearestDTreeIndex = DTREE_ID;
+            p.dataStructIndex = DTREE_ID;
             p.radFactor = Zero3;
             paths[i] = p;
         }

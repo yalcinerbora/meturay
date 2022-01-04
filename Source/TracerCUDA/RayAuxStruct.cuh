@@ -55,6 +55,8 @@ struct RayAuxPPG
     uint32_t        pathIndex;      // Global path node index
 };
 
+using RayAuxRL = RayAuxPPG;
+
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 {
     UINT32_MAX
@@ -84,6 +86,8 @@ static const RayAuxPPG InitialPPGAux = RayAuxPPG
     NAN,
     UINT32_MAX
 };
+
+static const RayAuxRL InitialRLAux = InitialPPGAux;
 
 class RayAuxInitBasic
 {
@@ -221,3 +225,5 @@ class RayAuxInitPPG
             gOutPPG = init;
         }
 };
+
+using RayAuxInitRL = RayAuxInitPPG;

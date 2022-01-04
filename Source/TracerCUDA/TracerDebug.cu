@@ -195,7 +195,7 @@ std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
       << n.totalRadiance[1] << ", "
       << n.totalRadiance[2] << "} "
       << "DT: "
-      << n.nearestDTreeIndex;
+      << n.dataStructIndex;
     return s;
 }
 

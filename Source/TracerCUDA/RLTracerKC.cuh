@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RayAuxStruct.cuh"
 
@@ -15,10 +15,10 @@
 
 #include "RayLib/RandomColor.h"
 
-#include "STreeKC.cuh"
-#include "DTreeKC.cuh"
+#include "ScenePositionTree.cuh"
+#include "Dense2DArray.cuh"
 
-struct PPGTracerGlobalState
+struct RLTracerGlobalState
 {
     // Output Image
     ImageGMem<Vector4>              gImage;
@@ -30,9 +30,8 @@ struct PPGTracerGlobalState
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
     // SDTree Related
-    const STreeGPU*                 gStree;
-    const DTreeGPU*                 gReadDTrees;
-    DTreeGPU*                       gWriteDTrees;
+    LBVHPointGPU                    gPosTree;
+    Dense2DArrayGPU                 gSpatialData;
     // Path Related
     PathGuidingNode*                gPathNodes;
     uint32_t                        maximumPathNodePerRay;
@@ -46,9 +45,9 @@ struct PPGTracerGlobalState
     int                             rrStart;
 };
 
-struct PPGTracerLocalState
+struct RLTracerLocalState
 {
-    bool    emptyPrimitive;
+    bool emptyPrimitive;
 };
 
 __device__ __forceinline__
@@ -59,19 +58,19 @@ uint8_t DeterminePathIndex(uint8_t depth)
 
 template <class EGroup>
 __device__ __forceinline__
-void PPGTracerBoundaryWork(// Output
+void RLTracerBoundaryWork(// Output
                            HitKey* gOutBoundKeys,
                            RayGMem* gOutRays,
-                           RayAuxPPG* gOutRayAux,
+                           RayAuxRL* gOutRayAux,
                            const uint32_t maxOutRay,
                            // Input as registers
                            const RayReg& ray,
-                           const RayAuxPPG& aux,
+                           const RayAuxRL& aux,
                            const typename EGroup::Surface& surface,
                            const RayId rayId,
                            // I-O
-                           PPGTracerLocalState& localState,
-                           PPGTracerGlobalState& renderState,
+                           RLTracerLocalState& localState,
+                           RLTracerGlobalState& renderState,
                            RNGeneratorGPUI& rng,
                            // Constants
                            const typename EGroup::GPUType& gLight)
@@ -173,34 +172,32 @@ void PPGTracerBoundaryWork(// Output
     if(aux.type == RayType::PATH_RAY ||
        aux.type == RayType::SPECULAR_PATH_RAY)
     {
-        uint32_t dTreeIndex = gLocalPathNodes[pathIndex].dataStructIndex;
-        DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
+        //uint32_t dTreeIndex = gLocalPathNodes[pathIndex].dataStructIndex;
+        //DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
 
-        dWriteTree.AddRadianceToLeaf(r.getDirection(),
-                                     Utility::RGBToLuminance(emission),
-                                     true);
+        ///
     }
 }
 
 template <class MGroup>
 __device__ __forceinline__
-void PPGTracerPathWork(// Output
-                       HitKey* gOutBoundKeys,
-                       RayGMem* gOutRays,
-                       RayAuxPPG* gOutRayAux,
-                       const uint32_t maxOutRay,
-                       // Input as registers
-                       const RayReg& ray,
-                       const RayAuxPPG& aux,
-                       const typename MGroup::Surface& surface,
-                       const RayId rayId,
-                       // I-O
-                       PPGTracerLocalState& localState,
-                       PPGTracerGlobalState& renderState,
-                       RNGeneratorGPUI& rng,
-                       // Constants
-                       const typename MGroup::Data& gMatData,
-                       const HitKey::Type matIndex)
+void RLTracerPathWork(// Output
+                      HitKey* gOutBoundKeys,
+                      RayGMem* gOutRays,
+                      RayAuxRL* gOutRayAux,
+                      const uint32_t maxOutRay,
+                      // Input as registers
+                      const RayReg& ray,
+                      const RayAuxRL& aux,
+                      const typename MGroup::Surface& surface,
+                      const RayId rayId,
+                      // I-O
+                      RLTracerLocalState& localState,
+                      RLTracerGlobalState& renderState,
+                      RNGeneratorGPUI& rng,
+                      // Constants
+                      const typename MGroup::Data& gMatData,
+                      const HitKey::Type matIndex)
 {
     static constexpr Vector3 ZERO_3 = Zero3;
 
@@ -212,10 +209,10 @@ void PPGTracerPathWork(// Output
     static constexpr int PATH_RAY_INDEX = 0;
     static constexpr int NEE_RAY_INDEX  = 1;
     // Helper Class for better code readability
-    OutputWriter<RayAuxPPG> outputWriter(gOutBoundKeys,
-                                         gOutRays,
-                                         gOutRayAux,
-                                         maxOutRay);
+    OutputWriter<RayAuxRL> outputWriter(gOutBoundKeys,
+                                        gOutRays,
+                                        gOutRayAux,
+                                        maxOutRay);
 
     // Inputs
     // Current Ray
@@ -229,10 +226,8 @@ void PPGTracerPathWork(// Output
 
     // Nearest DTree
     // Find nearest DTree
-    uint32_t dTreeIndex = UINT32_MAX;
-    //dTreeIndex = 0;
-    renderState.gStree->AcquireNearestDTree(dTreeIndex, position);
-    assert(dTreeIndex != UINT32_MAX);
+    uint32_t spatialIndex = renderState.gPosTree.FindNearestPoint(position);
+    assert(spatialIndex != UINT32_MAX);
 
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
@@ -349,7 +344,7 @@ void PPGTracerPathWork(// Output
             rayOut.tMin = 0.0f;
             rayOut.tMax = lDistance;
             // Aux
-            RayAuxPPG auxOut = aux;
+            RayAuxRL auxOut = aux;
             auxOut.radianceFactor = neeRadianceFactor;
             auxOut.endpointIndex = lightIndex;
             auxOut.type = RayType::NEE_RAY;
@@ -371,7 +366,7 @@ void PPGTracerPathWork(// Output
         constexpr float BxDF_DTreeSampleRatio = 0.5f;
         // Sample a chance
         float xi = rng.Uniform();
-        const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
+        //const DTreeGPU& dReadTree = renderState.gSpatialData.[dTreeIndex];
 
         bool selectedPDFZero = false;
         float pdfBxDF, pdfTree;
@@ -392,14 +387,14 @@ void PPGTracerPathWork(// Output
                                          gMatData,
                                          matIndex,
                                          0);
-            pdfTree = dReadTree.Pdf(rayPath.getDirection());
+            //pdfTree = dReadTree.Pdf(rayPath.getDirection());
 
             if(pdfBxDF == 0.0f) selectedPDFZero = true;
         }
         else
         {
             // Sample a path using SDTree
-            Vector3f direction = dReadTree.Sample(pdfTree, rng);
+            Vector3f direction;// = RLFunctions::Sample(pdfTree, rng); dReadTree.Sample(pdfTree, rng);
             direction.NormalizeSelf();
             // Calculate BxDF
             reflectance = MGroup::Evaluate(// Input
@@ -505,7 +500,7 @@ void PPGTracerPathWork(// Output
         rayOut.tMin = 0.0f;
         rayOut.tMax = FLT_MAX;
         // Aux
-        RayAuxPPG auxOut = aux;
+        RayAuxRL auxOut = aux;
         auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
         auxOut.radianceFactor = pathRadianceFactor;
         auxOut.type = (isSpecularMat) ? RayType::SPECULAR_PATH_RAY : RayType::PATH_RAY;
@@ -534,7 +529,7 @@ void PPGTracerPathWork(// Output
     node.prevNext[1] = PathGuidingNode::InvalidIndex;
     node.prevNext[0] = prevPathIndex;
     node.worldPosition = position;
-    node.dataStructIndex = dTreeIndex;
+    node.dataStructIndex = spatialIndex;
     node.radFactor = pathRadianceFactor;
     node.totalRadiance = Zero3;
     gLocalPathNodes[curPathIndex] = node;

@@ -136,7 +136,7 @@ TEST(PPG_STree, Split)
             p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
             p.totalRadiance = radianceUniform * MAX_TOTAL_RADIANCE;
             // Unnecessary Data for this operation
-            p.nearestDTreeIndex = treeCountDist(rng);
+            p.dataStructIndex = treeCountDist(rng);
             p.radFactor = Zero3;
             paths[i] = p;
         }

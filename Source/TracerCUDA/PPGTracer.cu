@@ -13,6 +13,9 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
+#include "RayLib/TracerOptions.h"
+#include "RayLib/TracerCallbacksI.h"
+
 #include "TracerDebug.h"
 
 std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
@@ -39,24 +42,6 @@ std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
             stream << "PATH_RAY";
     }
     return stream;
-}
-
-__global__
-static void KCInitializePaths(PathGuidingNode* gPathNodes,
-                              uint32_t totalNodeCount)
-{
-    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
-    if(globalId < totalNodeCount)
-    {
-        PathGuidingNode node;
-        node.nearestDTreeIndex = DTreeGroup::InvalidDTreeIndex;
-        node.radFactor = Vector3f(1.0f);
-        node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
-        node.totalRadiance = Zero3;
-        node.worldPosition = Zero3;// Vector3f(99.0f, 99.0f, 99.0f);
-
-        gPathNodes[globalId] = node;
-    }
 }
 
 void PPGTracer::ResizeAndInitPathMemory()
@@ -508,4 +493,15 @@ size_t PPGTracer::TotalGPUMemoryUsed() const
     return (RayTracer::TotalGPUMemoryUsed() +
             sTree->UsedGPUMemory() +
             lightSamplerMemory.Size() + pathMemory.Size());
+}
+
+void PPGTracer::AskOptions()
+{
+    // Generate Tracer Object
+    VariableList list;
+    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+    list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
+    list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
+
+    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }

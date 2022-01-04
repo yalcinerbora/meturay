@@ -7,6 +7,9 @@
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/VisorTransform.h"
 
+#include "RayLib/TracerOptions.h"
+#include "RayLib/TracerCallbacksI.h"
+
 #include "AOTracerWork.cuh"
 
 AOTracer::AOTracer(const CudaSystem& sys,
@@ -200,4 +203,13 @@ void AOTracer::Finalize()
     UpdateFrameAnalytics("rays / sec", options.sampleCount * options.sampleCount);
 
     GPUTracer::Finalize();
+}
+
+void AOTracer::AskOptions()
+{
+    // Generate Tracer Object
+    VariableList list;
+    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+
+    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }

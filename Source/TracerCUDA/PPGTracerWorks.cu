@@ -1,5 +1,5 @@
 ﻿#include "PPGTracerWorks.cuh"
-// Path Tracer Work Batches
+// PPG Tracer Work Batches
 // ===================================================
 // Boundary
 template class PPGBoundaryWork<CPULightGroupNull>;

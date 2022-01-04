@@ -1,56 +1,63 @@
-#include "PathTracer.h"
+#include "RLTracer.h"
 #include "RayTracer.hpp"
 
 #include "RayLib/GPUSceneI.h"
 #include "RayLib/TracerCallbacksI.h"
+#include "RayLib/BitManipulation.h"
+#include "RayLib/FileUtility.h"
 #include "RayLib/VisorTransform.h"
 
-#include "PathTracerWorks.cuh"
+#include "RLTracerWorks.cuh"
+#include "GPULightSamplerUniform.cuh"
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
+#include "GPUAcceleratorI.h"
 
 #include "RayLib/TracerOptions.h"
 #include "RayLib/TracerCallbacksI.h"
 
-//#include "TracerDebug.h"
-//std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
-//{
-//    stream << std::setw(0)
-//        << v.pixelIndex << ", "
-//        << "{" << v.radianceFactor[0]
-//        << "," << v.radianceFactor[1]
-//        << "," << v.radianceFactor[2] << "} "
-//        << v.endPointIndex << ", "
-//        << v.mediumIndex << " ";
-//    switch(v.type)
-//    {
-//        case RayType::CAMERA_RAY:
-//            stream << "CAMERA_RAY";
-//            break;
-//        case RayType::NEE_RAY:
-//            stream << "NEE_RAY";
-//            break;
-//        case RayType::SPECULAR_PATH_RAY:
-//            stream << "SPEC_PATH_RAY";
-//            break;
-//        case RayType::PATH_RAY:
-//            stream << "PATH_RAY";
-//    }
-//    return stream;
-//}
-
-PathTracer::PathTracer(const CudaSystem& s,
-                       const GPUSceneI& scene,
-                       const TracerParameters& p)
-    : RayTracer(s, scene, p)
-    , currentDepth(0)
+void RLTracer::ResizeAndInitPathMemory()
 {
-    // Append Work Types for generation
-    boundaryWorkPool.AppendGenerators(PTBoundaryWorkerList{});
-    pathWorkPool.AppendGenerators(PTPathWorkerList{});
+    size_t totalPathNodeCount = TotalPathNodeCount();
+    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
+    dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
+
+    // Initialize Paths
+    const CudaGPU& bestGPU = cudaSystem.BestGPU();
+    if(totalPathNodeCount > 0)
+        bestGPU.KC_X(0, 0, totalPathNodeCount,
+                     //
+                     KCInitializePaths,
+                     //
+                     dPathNodes,
+                     static_cast<uint32_t>(totalPathNodeCount));
 }
 
-TracerError PathTracer::Initialize()
+uint32_t RLTracer::TotalPathNodeCount() const
+{
+    return (imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1] *
+            options.sampleCount * options.sampleCount) * MaximumPathNodePerPath();
+}
+
+uint32_t RLTracer::MaximumPathNodePerPath() const
+{
+    return (options.maximumDepth == 0) ? 0 : (options.maximumDepth + 1);
+}
+
+RLTracer::RLTracer(const CudaSystem& s,
+                   const GPUSceneI& scene,
+                   const TracerParameters& p)
+    : RayTracer(s, scene, p)
+    , currentDepth(0)
+    , currentTreeIteration(0)
+    , nextTreeSwap(1)
+{
+    // Append Work Types for generation
+    boundaryWorkPool.AppendGenerators(RLBoundaryWorkerList{});
+    pathWorkPool.AppendGenerators(RLPathWorkerList{});
+}
+
+TracerError RLTracer::Initialize()
 {
     TracerError err = TracerError::OK;
     if((err = RayTracer::Initialize()) != TracerError::OK)
@@ -74,6 +81,7 @@ TracerError PathTracer::Initialize()
         const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
         const GPUMaterialGroupI& mg = *std::get<2>(wInfo);
 
+        // Generic Path work
         WorkPool<bool, bool>& wpCombo = pathWorkPool;
         GPUWorkBatchI* batch = nullptr;
         if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
@@ -84,7 +92,6 @@ TracerError PathTracer::Initialize()
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
-
     const auto& boundaryInfoList = scene.BoundarWorkBatchInfo();
     for(const auto& wInfo : boundaryInfoList)
     {
@@ -98,30 +105,26 @@ TracerError PathTracer::Initialize()
         WorkBatchArray workBatchList;
         BoundaryWorkPool<bool, bool>& wp = boundaryWorkPool;
         GPUWorkBatchI* batch = nullptr;
-        if((err = wp.GenerateWorkBatch(batch, eg,
-                                       dTransforms,
+        if((err = wp.GenerateWorkBatch(batch, eg, dTransforms,
                                        options.nextEventEstimation,
                                        options.directLightMIS)) != TracerError::OK)
             return err;
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
+
     }
 
     return TracerError::OK;
 }
 
-TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
+TracerError RLTracer::SetOptions(const TracerOptionsI& opts)
 {
     TracerError err = TracerError::OK;
-    if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
-        return err;
     if((err = opts.GetUInt(options.maximumDepth, MAX_DEPTH_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
+    if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
         return err;
 
     std::string lightSamplerTypeString;
@@ -129,10 +132,25 @@ TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = LightSamplerCommon::StringToLightSamplerType(options.lightSamplerType, lightSamplerTypeString)) != TracerError::OK)
         return err;
+
+    if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
+        return err;
+
+    if((err = opts.GetBool(options.rawPathGuiding, RAW_PG_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetVector2i(options.directionalRes, DIRECTONAL_RES_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetUInt(options.spatialSamples, SPATIAL_SAMPLE_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetFloat(options.alpha, ALPHA_NAME)) != TracerError::OK)
+        return err;
+
     return TracerError::OK;
 }
 
-bool PathTracer::Render()
+bool RLTracer::Render()
 {
     // Check tracer termination conditions
     // Either there is no ray left for iteration or maximum depth is exceeded
@@ -142,30 +160,27 @@ bool PathTracer::Render()
 
     const auto partitions = rayCaster->HitAndPartitionRays();
 
-    //Debug::DumpMemToFile("auxIn",
-    //                     static_cast<const RayAuxPath*>(*dAuxIn),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("rayIn",
-    //                     rayMemory.Rays(),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("rayIdIn", rayMemory.CurrentIds(),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("primIds", rayMemory.PrimitiveIds(),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("hitKeys", rayMemory.CurrentKeys(),
-    //                     currentRayCount);
-
     // Generate Global Data Struct
-    PathTracerGlobalState globalData;
+    RLTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
+    globalData.gLightSampler = dLightSampler;
+    //
     globalData.mediumList = dMediums;
     globalData.totalMediumCount = mediumCount;
+    //
+    // Set Positional Tree
+    globalData.gPosTree = posTree.TreeGPU();
+    globalData.gSpatialData = denseArray.ArrayGPU();
+    //
+    globalData.gPathNodes = dPathNodes;
+    globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
+
+    globalData.rawPathGuiding = options.rawPathGuiding;
     globalData.nee = options.nextEventEstimation;
-    globalData.rrStart = options.rrStart;
     globalData.directLightMIS = options.directLightMIS;
-    globalData.gLightSampler = dLightSampler;
+    globalData.rrStart = options.rrStart;
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
@@ -175,7 +190,7 @@ bool PathTracer::Render()
 
     // Allocate new auxiliary buffer
     // to fit all potential ray outputs
-    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
+    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxRL);
     GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
@@ -189,12 +204,12 @@ bool PathTracer::Render()
         if(loc == workMap.end()) continue;
 
         // Set pointers
-        const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
-        using WorkData = GPUWorkBatchD<PathTracerGlobalState, RayAuxPath>;
+        const RayAuxRL* dAuxInLocal = static_cast<const RayAuxRL*>(*dAuxIn);
+        using WorkData = GPUWorkBatchD<RLTracerGlobalState, RayAuxRL>;
         int i = 0;
         for(auto& work : loc->second)
         {
-            RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offsets[i];
+            RayAuxRL* dAuxOutLocal = static_cast<RayAuxRL*>(*dAuxOut) + p.offsets[i];
 
             auto& wData = static_cast<WorkData&>(*work);
             wData.SetGlobalData(globalData);
@@ -205,92 +220,97 @@ bool PathTracer::Render()
 
     // Launch Kernels
     rayCaster->WorkRays(workMap, outPartitions,
-                        partitions,
-                        *rngCPU.get(),
+                        partitions, *rngCPU.get(),
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
-
-    //Debug::DumpMemToFile("auxOut",
-    //                     static_cast<const RayAuxPath*>(*dAuxOut),
-    //                     totalOutRayCount);
-    //// Work rays swapped the ray buffer so read input rays
-    //Debug::DumpMemToFile("rayOut", rayMemory.Rays(),
-    //                     totalOutRayCount);
-    //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
-    //                     totalOutRayCount);
 
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
-    // Increase Depth
     currentDepth++;
     return true;
 }
 
-void PathTracer::Finalize()
+void RLTracer::Finalize()
 {
+    cudaSystem.SyncAllGPUs();
+
+    uint32_t totalPathNodeCount = TotalPathNodeCount();
+    // Accumulate the finished radiances to the STree
+    //posTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
+    //                             MaximumPathNodePerPath(), cudaSystem);
+    // We iterated once
+    currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
+
+
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
-
+    // Base class finalize directly sends the image
     GPUTracer::Finalize();
 }
 
-void PathTracer::GenerateWork(uint32_t cameraIndex)
+void RLTracer::GenerateWork(uint32_t cameraIndex)
 {
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU>
     (
         cameraIndex,
         options.sampleCount,
-        RayAuxInitPath(InitialPathAux),
+        RayAuxInitRL(InitialRLAux,
+                     options.sampleCount *
+                     options.sampleCount),
         true
     );
+
+    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
-void PathTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
+void RLTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU>
     (
         t, cameraIndex, options.sampleCount,
-        RayAuxInitPath(InitialPathAux),
+        RayAuxInitRL(InitialRLAux,
+                     options.sampleCount *
+                     options.sampleCount),
         true
     );
+    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
-void PathTracer::GenerateWork(const GPUCameraI& dCam)
+void RLTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU>
     (
         dCam, options.sampleCount,
-        RayAuxInitPath(InitialPathAux),
+        RayAuxInitRL(InitialRLAux,
+                     options.sampleCount *
+                     options.sampleCount),
         true
     );
+    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
-size_t PathTracer::TotalGPUMemoryUsed() const
+size_t RLTracer::TotalGPUMemoryUsed() const
 {
     return (RayTracer::TotalGPUMemoryUsed() +
-            lightSamplerMemory.Size());
+            posTree.UsedGPUMemory() +
+            lightSamplerMemory.Size() + pathMemory.Size());
 }
 
-void PathTracer::AskOptions()
+void RLTracer::AskOptions()
 {
     // Generate Tracer Object
     VariableList list;
     list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
     list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
-    list.emplace(DIRECT_LIGHT_MIS_NAME, OptionVariable(options.directLightMIS));
-    list.emplace(RR_START_NAME, OptionVariable(options.rrStart));
-
-    std::string lightSamplerTypeString = LightSamplerCommon::LightSamplerTypeToString(options.lightSamplerType);
-    list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(lightSamplerTypeString));
 
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
 }
