@@ -2,7 +2,7 @@
 
 #include "TracerCUDA/GPUPiecewiseDistribution.cuh"
 #include "RayLib/Log.h"
-#include "TracerCUDA/RNGMemory.h"
+#include "TracerCUDA/RNGIndependent.cuh"
 
 //__global__
 //void KCSamplePWCDistributions1D(float* locations,

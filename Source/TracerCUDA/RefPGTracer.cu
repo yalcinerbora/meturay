@@ -336,7 +336,7 @@ bool RefPGTracer::Render()
     // Launch Kernels
     rayCaster->WorkRays(workMap, outPartitions,
                         partitions,
-                        rngMemory,
+                        *rngCPU.get(),
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
 
@@ -394,9 +394,12 @@ void RefPGTracer::GenerateWork(uint32_t cameraIndex)
     }
 
     // Generate Work for current Camera
-    GenerateRays<RayAuxPath, RayAuxInitRefPG>(*dPixelCamera, options.samplePerIteration,
-                                              RayAuxInitRefPG(InitialPathAux),
-                                              false);
+    GenerateRays<RayAuxPath, RayAuxInitRefPG, RNGIndependentGPU>
+    (
+        *dPixelCamera, options.samplePerIteration,
+        RayAuxInitRefPG(InitialPathAux),
+        false
+    );
     currentDepth = 0;
 }
 

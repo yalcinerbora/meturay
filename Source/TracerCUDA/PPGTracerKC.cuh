@@ -72,7 +72,7 @@ void PPGTracerBoundaryWork(// Output
                            // I-O
                            PPGTracerLocalState& localState,
                            PPGTracerGlobalState& renderState,
-                           RandomGPU& rng,
+                           RNGeneratorGPUI& rng,
                            // Constants
                            const typename EGroup::GPUType& gLight)
 {
@@ -197,7 +197,7 @@ void PPGTracerPathWork(// Output
                        // I-O
                        PPGTracerLocalState& localState,
                        PPGTracerGlobalState& renderState,
-                       RandomGPU& rng,
+                       RNGeneratorGPUI& rng,
                        // Constants
                        const typename MGroup::Data& gMatData,
                        const HitKey::Type matIndex)
@@ -370,7 +370,7 @@ void PPGTracerPathWork(// Output
     {
         constexpr float BxDF_DTreeSampleRatio = 0.5f;
         // Sample a chance
-        float xi = GPUDistribution::Uniform<float>(rng);
+        float xi = rng.Uniform();
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
 
         bool selectedPDFZero = false;

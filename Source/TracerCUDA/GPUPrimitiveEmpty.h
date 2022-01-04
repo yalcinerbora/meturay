@@ -20,7 +20,7 @@ All of them should be provided
 #include "DefaultLeaf.h"
 #include "GPUPrimitiveP.cuh"
 #include "TypeTraits.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "GPUSurface.h"
 
 struct EmptyData {};

@@ -13,7 +13,7 @@ using PrimitiveIdList = std::array<uint32_t, SceneConstants::MaxPrimitivePerSurf
 using HitResult = Vector<2, bool>;
 
 class GPUTransformI;
-class RandomGPU;
+class RNGeneratorGPUI;
 
 // This is Leaf of Base Accelerator
 // It points to another accelerator pair
@@ -53,7 +53,7 @@ using SamplePosFunction = Vector3(*)(Vector3& normal,
                                      PrimitiveId primitiveId,
                                      const PrimitiveData&,
                                      // I-O
-                                     RandomGPU& rng);
+                                     RNGeneratorGPUI& rng);
 
 // PDF function for calculating a PDF function for hitting from such
 // position/direction
@@ -200,7 +200,7 @@ Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
                          PrimitiveId,
                          const PrimitiveData&,
                          // I-O
-                         RandomGPU&)
+                         RNGeneratorGPUI&)
 {
     normal = Vector3f(INFINITY);
     pdf = 0.0f;

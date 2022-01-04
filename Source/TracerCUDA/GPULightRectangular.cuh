@@ -2,7 +2,7 @@
 
 #include "GPULightP.cuh"
 #include "GPUTransformI.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "TypeTraits.h"
 #include "MangledNames.h"
 
@@ -35,7 +35,7 @@ class GPULightRectangular final : public GPULightP
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
-                                       RandomGPU&) const override;
+                                       RNGeneratorGPUI&) const override;
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
@@ -43,7 +43,7 @@ class GPULightRectangular final : public GPULightP
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&,
+                                            RNGeneratorGPUI&,
                                             // Options
                                             bool antiAliasOn = true) const override;
 
@@ -122,11 +122,11 @@ inline void GPULightRectangular::Sample(// Output
                                         // Input
                                         const Vector3& worldLoc,
                                         // I-O
-                                        RandomGPU& rng) const
+                                        RNGeneratorGPUI& rng) const
 {
     // Sample in the lights local space
-    float x = GPUDistribution::Uniform<float>(rng);
-    float y = GPUDistribution::Uniform<float>(rng);
+    float x = rng.Uniform();
+    float y = rng.Uniform();
     Vector3 position = topLeft + right * x + down * y;
 
     // Calculate PDF on the local space (it is same on
@@ -153,7 +153,7 @@ inline GPULightRectangular::GenerateRay(// Output
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
                                         // I-O
-                                        RandomGPU&,
+                                        RNGeneratorGPUI&,
                                         // Options
                                         bool antiAliasOn) const
 {

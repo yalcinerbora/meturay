@@ -4,8 +4,7 @@
 #include "RayLib/HitStructs.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Quaternion.h"
-
-#include "Random.cuh"
+#include "RNGenerator.h"
 
 class GPUDirectLightSamplerI
 {
@@ -29,7 +28,7 @@ class GPUDirectLightSamplerI
                                  // World location of the current shading point
                                  const Vector3& position,
                                  //
-                                 RandomGPU& rng) const = 0;
+                                 RNGeneratorGPUI& rng) const = 0;
 
         // Probability density of sampling a particular light
         // (indicated by lightIndex) towards a position and direction

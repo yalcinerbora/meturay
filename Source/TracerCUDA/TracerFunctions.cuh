@@ -81,15 +81,15 @@ namespace TracerFunctions
     float DGGXSample(Vector3& H,
                      float& pdf,
                      float roughness,
-                     RandomGPU& rng)
+                     RNGeneratorGPUI& rng)
     {
         // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
         // Page 4 it does not include pdf it is included from
         // https://agraphicsguynotes.com/posts/sample_microfacet_brdf/
         // https://www.tobias-franke.eu/log/2014/03/30/notes_on_importance_sampling.html
 
-        float xi0 = GPUDistribution::Uniform<float>(rng);
-        float xi1 = GPUDistribution::Uniform<float>(rng);
+        float xi0 = rng.Uniform();
+        float xi1 = rng.Uniform();
 
         float a = roughness * roughness;
         float aSqr = a * a;
@@ -187,11 +187,11 @@ namespace TracerFunctions
     // Basic Russian Roulette
     __device__ __forceinline__
     bool RussianRoulette(Vector3& irradianceFactor,
-                         float probFactor, RandomGPU& rng)
+                         float probFactor, RNGeneratorGPUI& rng)
     {
         // Basic Russian Roulette
         probFactor = HybridFuncs::Clamp(probFactor, 0.005f, 1.0f);
-        if(GPUDistribution::Uniform<float>(rng) >= probFactor)
+        if(rng.Uniform() >= probFactor)
             return true;
         else irradianceFactor *= (1.0f / probFactor);
         return false;

@@ -1,5 +1,6 @@
 ﻿#include "DTree.cuh"
 #include "DTreeKC.cuh"
+#include "CudaSystem.h"
 #include "CudaSystem.hpp"
 #include "ParallelPartition.cuh"
 #include "ParallelReduction.cuh"

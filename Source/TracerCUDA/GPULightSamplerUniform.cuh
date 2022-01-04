@@ -34,7 +34,7 @@ class GPULightSamplerUniform : public GPUDirectLightSamplerI
                                         // World location of the current shading point
                                         const Vector3& position,
                                         //
-                                        RandomGPU& rng) const override;
+                                        RNGeneratorGPUI& rng) const override;
 
         // Probability density of sampling a particular light
         // (indicated by lightIndex) towards a position and direction
@@ -95,17 +95,17 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
                                                 // World location of the current shading point
                                                 const Vector3& position,
                                                 //
-                                                RandomGPU& rng) const
+                                                RNGeneratorGPUI& rng) const
 {
     if(lightCount == 0) return false;
 
     // Randomly Select Light
-    float r1 = GPUDistribution::Uniform<float>(rng);
+    float r1 = rng.Uniform();
     r1 *= static_cast<float>(lightCount);
     uint32_t index = static_cast<uint32_t>(r1);
 
     // Extremely rarely index becomes the light count
-    // although GPUDistribution::Uniform should return [0, 1)
+    // although Uniform should return [0, 1)
     // it still happens due to fp error i guess?
     // if it happens just return the last light on the list
     if(index == lightCount) index--;

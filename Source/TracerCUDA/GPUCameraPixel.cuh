@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GPUCameraI.h"
+#include "RNGenerator.h"
 #include "RayLib/VisorTransform.h"
 
 class GPUCameraPixel final : public GPUCameraI
@@ -41,7 +42,7 @@ class GPUCameraPixel final : public GPUCameraI
                                    // Input
                                    const Vector3& position,
                                    // I-O
-                                   RandomGPU&) const override;
+                                   RNGeneratorGPUI&) const override;
 
         __device__ void     GenerateRay(// Output
                                         RayReg&,
@@ -49,7 +50,7 @@ class GPUCameraPixel final : public GPUCameraI
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
                                         // I-O
-                                        RandomGPU&,
+                                        RNGeneratorGPUI&,
                                         // Options
                                         bool antiAliasOn) const override;
         __device__ float    Pdf(const Vector3& direction,
@@ -106,7 +107,7 @@ inline void GPUCameraPixel::Sample(// Output
                                    // Input
                                    const Vector3& sampleLoc,
                                    // I-O
-                                   RandomGPU& rng) const
+                                   RNGeneratorGPUI& rng) const
 {
     // One
     direction = sampleLoc - position;
@@ -122,7 +123,7 @@ inline void GPUCameraPixel::GenerateRay(// Output
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
                                         // I-O
-                                        RandomGPU& rng,
+                                        RNGeneratorGPUI& rng,
                                         // Options
                                         bool antiAliasOn) const
 {
@@ -132,8 +133,7 @@ inline void GPUCameraPixel::GenerateRay(// Output
 
     // Create random location over sample rectangle
     Vector2 randomOffset = (antiAliasOn)
-                            ? Vector2(GPUDistribution::Uniform<float>(rng),
-                                      GPUDistribution::Uniform<float>(rng))
+                            ? Vector2(rng.Uniform(), rng.Uniform())
                             : Vector2(0.5f);
 
     Vector2 sampleDistance = Vector2(static_cast<float>(sampleId[0]),

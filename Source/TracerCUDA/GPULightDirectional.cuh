@@ -29,7 +29,7 @@ class GPULightDirectional final : public GPULightP
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
-                                       RandomGPU&) const override;
+                                       RNGeneratorGPUI&) const override;
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
@@ -37,7 +37,7 @@ class GPULightDirectional final : public GPULightP
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&,
+                                            RNGeneratorGPUI&,
                                             // Options
                                             bool antiAliasOn = true) const override;
 
@@ -103,7 +103,7 @@ inline void GPULightDirectional::Sample(// Output
                                         // Input
                                         const Vector3&,
                                         // I-O
-                                        RandomGPU&) const
+                                        RNGeneratorGPUI&) const
 {
     dir = -direction;
     distance = FLT_MAX;
@@ -117,7 +117,7 @@ inline void GPULightDirectional::GenerateRay(// Output
                                              const Vector2i&,
                                              const Vector2i&,
                                              // I-O
-                                             RandomGPU&,
+                                             RNGeneratorGPUI&,
                                              // Options
                                              bool) const
 {

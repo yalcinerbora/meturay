@@ -34,7 +34,7 @@ class GPULightSpot final  : public GPULightP
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
-                                       RandomGPU&) const override;
+                                       RNGeneratorGPUI&) const override;
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
@@ -42,7 +42,7 @@ class GPULightSpot final  : public GPULightP
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&,
+                                            RNGeneratorGPUI&,
                                             // Options
                                             bool antiAliasOn = true) const override;
 
@@ -118,7 +118,7 @@ inline void GPULightSpot::Sample(// Output
                                  // Input
                                  const Vector3& worldLoc,
                                  // I-O
-                                 RandomGPU&) const
+                                 RNGeneratorGPUI&) const
 {
     dir = -direction;
     distance = (position - worldLoc).Length();
@@ -134,7 +134,7 @@ inline void GPULightSpot::GenerateRay(// Output
                                       const Vector2i& sampleId,
                                       const Vector2i& sampleMax,
                                       // I-O
-                                      RandomGPU&,
+                                      RNGeneratorGPUI&,
                                       // Options
                                       bool antiAliasOn) const
 {

@@ -1,24 +1,27 @@
-#include "RNGMemory.h"
+#include "RNGIndependent.cuh"
 #include "CudaSystem.h"
 #include "CudaSystem.hpp"
 
 #include <random>
-#include <curand_kernel.h>
 #include <execution>
 
-__global__ void KCInitRNGStates(const uint32_t* gSeeds, curandStateMRG32k3a_t* gStates,
+__global__ void KCInitRNGStates(RNGIndependentGPU* dGenerators,
+                                RNGeneratorGPUI** dGenPtrs,
+                                const uint32_t* gSeeds,
                                 uint32_t totalCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        curand_init(gSeeds[threadId], threadId, 0, &gStates[threadId]);
+        new (dGenerators + threadId) RNGIndependentGPU(gSeeds[threadId],
+                                                       threadId);
+        dGenPtrs[threadId] = dGenerators + threadId;
     }
 }
 
-RNGMemory::RNGMemory(uint32_t seed,
-                     const CudaSystem& system)
+RNGIndependentCPU::RNGIndependentCPU(uint32_t seed,
+                                     const CudaSystem& system)
 {
     assert(system.SystemGPUs().size() > 0);
 
@@ -50,15 +53,17 @@ RNGMemory::RNGMemory(uint32_t seed,
     const uint32_t* d_seeds = static_cast<const uint32_t*>(seeds);
 
     // Actual Allocation
-    size_t totalSize = totalCount * sizeof(curandStateMRG32k3a_t);
-    memRandom = std::move(DeviceMemory(totalSize));
-    curandStateMRG32k3a_t* d_ptr = static_cast<curandStateMRG32k3a_t*>(memRandom);
+    RNGIndependentGPU* dGenerators;
+    RNGeneratorGPUI** dGenPtrs;
+    GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
+                                   memRandom,
+                                   {totalCount, totalCount});
 
     size_t totalOffset = 0;
     for(const auto& gpu : system.SystemGPUs())
     {
         uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
-        randomStacks.emplace(&gpu, RNGGMem{d_ptr + totalOffset, gpuRNGStateCount});
+        deviceGenerators.emplace(&gpu, dGenPtrs + totalOffset);
         totalOffset += gpuRNGStateCount;
     }
     assert(totalCount == totalOffset);
@@ -70,16 +75,19 @@ RNGMemory::RNGMemory(uint32_t seed,
         uint32_t localCount = static_cast<uint32_t>(offsetAndCounts[i][1]);
 
         gpu.GridStrideKC_X(0, 0, localCount,
+                           //
                            KCInitRNGStates,
+                           //
+                           dGenerators + offsetAndCounts[i][0],
+                           dGenPtrs + offsetAndCounts[i][0],
                            d_seeds + offsetAndCounts[i][0],
-                           d_ptr + offsetAndCounts[i][0],
                            localCount);
         i++;
     }
 }
 
-RNGMemory::RNGMemory(uint32_t seed,
-                     const CudaGPU& gpu)
+RNGIndependentCPU::RNGIndependentCPU(uint32_t seed,
+                                     const CudaGPU& gpu)
 {
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
 
@@ -100,13 +108,15 @@ RNGMemory::RNGMemory(uint32_t seed,
     const uint32_t* d_seeds = static_cast<const uint32_t*>(seeds);
 
     // Actual Allocation
-    size_t totalSize = count * sizeof(curandStateMRG32k3a_t);
-    memRandom = std::move(DeviceMemory(totalSize));
-    curandStateMRG32k3a_t* d_ptr = static_cast<curandStateMRG32k3a_t*>(memRandom);
+    RNGIndependentGPU* dGenerators;
+    RNGeneratorGPUI** dGenPtrs;
+    GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
+                                   memRandom,
+                                   {count, count});
 
     size_t totalOffset = 0;
     uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
-    randomStacks.emplace(&gpu, RNGGMem{d_ptr + totalOffset, gpuRNGStateCount});
+    deviceGenerators.emplace(&gpu, dGenPtrs + totalOffset);
     totalOffset += gpuRNGStateCount;
     assert(count == static_cast<uint32_t>(totalOffset));
 
@@ -115,12 +125,14 @@ RNGMemory::RNGMemory(uint32_t seed,
                        //
                        KCInitRNGStates,
                        //
+                       dGenerators + offset,
+                       dGenPtrs + offset,
                        d_seeds + offset,
-                       d_ptr + offset,
                        count);
 }
 
-RNGGMem RNGMemory::RNGData(const CudaGPU& gpu)
+RNGeneratorGPUI** RNGIndependentCPU::GetGPUGenerators(const CudaGPU& gpu)
 {
-    return randomStacks.at(&gpu);
+    return deviceGenerators.at(&gpu);
 }
+

@@ -6,8 +6,8 @@
 #include "RayLib/Ray.h"
 
 class GPUMediumI;
-class RandomGPU;
 struct TexCoords;
+class RNGeneratorGPUI;
 
 template <class Data>
 __device__ __forceinline__
@@ -53,7 +53,7 @@ Vector3 SampleEmpty(// Sampled Output
                     //
                     const Surface&,
                     // I-O
-                    RandomGPU&,
+                    RNGeneratorGPUI&,
                     // Constants
                     const Data&,
                     const HitKey::Type&,

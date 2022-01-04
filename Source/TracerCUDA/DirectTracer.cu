@@ -237,7 +237,7 @@ bool DirectTracer::Render()
     rayCaster->WorkRays(workMap,
                         outPartitions,
                         partitions,
-                        rngMemory,
+                        *rngCPU.get(),
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
     // Swap auxiliary buffers since output rays are now input rays
@@ -266,10 +266,13 @@ void DirectTracer::GenerateWork(uint32_t cameraIndex)
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     // Generate Rays
-    GenerateRays<RayAuxBasic, RayAuxInitBasic>(cameraIndex,
-                                               options.sampleCount,
-                                               RayAuxInitBasic(InitialBasicAux),
-                                               true, antiAlias);
+    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU>
+    (
+        cameraIndex,
+        options.sampleCount,
+        RayAuxInitBasic(InitialBasicAux),
+        true, antiAlias
+    );
 }
 
 void DirectTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
@@ -278,9 +281,12 @@ void DirectTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
     currentCameraId = 0;
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
-    GenerateRays<RayAuxBasic, RayAuxInitBasic>(t, cameraIndex, options.sampleCount,
-                                               RayAuxInitBasic(InitialBasicAux),
-                                               true, antiAlias);
+    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU>
+    (
+        t, cameraIndex, options.sampleCount,
+        RayAuxInitBasic(InitialBasicAux),
+        true, antiAlias
+    );
 }
 
 void DirectTracer::GenerateWork(const GPUCameraI& dCam)
@@ -290,8 +296,11 @@ void DirectTracer::GenerateWork(const GPUCameraI& dCam)
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     // Generate Rays
-    GenerateRays<RayAuxBasic, RayAuxInitBasic>(dCam,
-                                               options.sampleCount,
-                                               RayAuxInitBasic(InitialBasicAux),
-                                               true, antiAlias);
+    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU>
+    (
+        dCam,
+        options.sampleCount,
+        RayAuxInitBasic(InitialBasicAux),
+        true, antiAlias
+    );
 }

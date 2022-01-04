@@ -306,7 +306,7 @@ bool PPGTracer::Render()
 
     // Launch Kernels
     rayCaster->WorkRays(workMap, outPartitions,
-                        partitions, rngMemory,
+                        partitions, *rngCPU.get(),
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
 
@@ -461,12 +461,15 @@ void PPGTracer::GenerateWork(uint32_t cameraIndex)
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxPPG, RayAuxInitPPG>(cameraIndex,
-                                           options.sampleCount,
-                                           RayAuxInitPPG(InitialPPGAux,
-                                                         options.sampleCount *
-                                                         options.sampleCount),
-                                           true);
+    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU>
+    (
+        cameraIndex,
+        options.sampleCount,
+        RayAuxInitPPG(InitialPPGAux,
+                        options.sampleCount *
+                        options.sampleCount),
+        true
+    );
 
     ResizeAndInitPathMemory();
     currentDepth = 0;
@@ -474,22 +477,28 @@ void PPGTracer::GenerateWork(uint32_t cameraIndex)
 
 void PPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxPPG, RayAuxInitPPG>(t, cameraIndex, options.sampleCount,
-                                           RayAuxInitPPG(InitialPPGAux,
-                                                         options.sampleCount *
-                                                         options.sampleCount),
-                                           true);
+    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU>
+    (
+        t, cameraIndex, options.sampleCount,
+        RayAuxInitPPG(InitialPPGAux,
+                        options.sampleCount *
+                        options.sampleCount),
+        true
+    );
     ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
 void PPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    GenerateRays<RayAuxPPG, RayAuxInitPPG>(dCam, options.sampleCount,
-                                           RayAuxInitPPG(InitialPPGAux,
-                                                         options.sampleCount *
-                                                         options.sampleCount),
-                                           true);
+    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU>
+    (
+        dCam, options.sampleCount,
+        RayAuxInitPPG(InitialPPGAux,
+                        options.sampleCount *
+                        options.sampleCount),
+        true
+    );
     ResizeAndInitPathMemory();
     currentDepth = 0;
 }

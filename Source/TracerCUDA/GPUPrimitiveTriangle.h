@@ -20,7 +20,7 @@ All of them should be provided
 #include "RayLib/Vector.h"
 #include "RayLib/Triangle.h"
 
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "GPUPrimitiveP.cuh"
 #include "BinarySearch.cuh"
 
@@ -66,10 +66,10 @@ struct TriFunctions
                                    PrimitiveId primitiveId,
                                    const TriData& primData,
                                    // I-O
-                                   RandomGPU& rng)
+                                   RNGeneratorGPUI& rng)
     {
-        float r1 = sqrt(GPUDistribution::Uniform<float>(rng));
-        float r2 = GPUDistribution::Uniform<float>(rng);
+        float r1 = sqrt(rng.Uniform());
+        float r2 = rng.Uniform();
         // Generate Random Barycentrics
         // Osada 2002
         // http://graphics.stanford.edu/courses/cs468-08-fall/pdf/osada.pdf

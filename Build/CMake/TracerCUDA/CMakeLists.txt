@@ -72,8 +72,7 @@ set(SRC_GPU_ALGORITHMS_COMMON
     ${CURRENT_SOURCE_DIR}/ParallelScan.cuh
     ${CURRENT_SOURCE_DIR}/ParallelSequence.cuh
     ${CURRENT_SOURCE_DIR}/ParallelTransform.cuh
-    ${CURRENT_SOURCE_DIR}/ParallelRadixSort.cuh
-    ${CURRENT_SOURCE_DIR}/Random.cuh)
+    ${CURRENT_SOURCE_DIR}/ParallelRadixSort.cuh)
 
 set(SRC_GPU_ALGORITHMS_FUNCTIONS
     ${CURRENT_SOURCE_DIR}/ComparisonFunctions.cuh
@@ -172,11 +171,16 @@ set(SRC_MEMORY
     ${CURRENT_SOURCE_DIR}/ImageMemory.h
     ${CURRENT_SOURCE_DIR}/RayMemory.cu
     ${CURRENT_SOURCE_DIR}/RayMemory.h
-    ${CURRENT_SOURCE_DIR}/RNGMemory.cu
-    ${CURRENT_SOURCE_DIR}/RNGMemory.h
     ${CURRENT_SOURCE_DIR}/Texture.cpp
     ${CURRENT_SOURCE_DIR}/Texture.cuh
     ${CURRENT_SOURCE_DIR}/Texture.hpp)
+
+set(SRC_RNG
+    ${CURRENT_SOURCE_DIR}/RNGenerator.h
+    ${CURRENT_SOURCE_DIR}/RNGIndependent.cu
+    ${CURRENT_SOURCE_DIR}/RNGIndependent.cuh
+    ${CURRENT_SOURCE_DIR}/RNGSobol.cu
+    ${CURRENT_SOURCE_DIR}/RNGSobol.cuh)
 
 set(SRC_PARTIAL_IMPLEMENTATIONS
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorP.cuh
@@ -216,8 +220,7 @@ set(SRC_SHARED_LIB
 
 set(SRC_STRUCTS
     ${CURRENT_SOURCE_DIR}/ImageStructs.h
-    ${CURRENT_SOURCE_DIR}/RayStructs.h
-    ${CURRENT_SOURCE_DIR}/RNGStructs.h)
+    ${CURRENT_SOURCE_DIR}/RayStructs.h)
 
 set(SRC_TEXTURES
     ${CURRENT_SOURCE_DIR}/TextureFunctions.cpp
@@ -348,7 +351,8 @@ set(SRC_ALL
     ${SRC_WORK}
     ${SRC_COMMON}
     ${SRC_RC}
-    ${SRC_RC_OPTIX})
+    ${SRC_RC_OPTIX}
+    ${SRC_RNG})
 
 # IDE Filters
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
@@ -372,6 +376,7 @@ source_group("Light Samplers" FILES ${SRC_LIGHT_SAMPLERS})
 source_group("Materials" FILES ${SRC_MATERIALS})
 source_group("Mediums" FILES ${SRC_MEDIUMS})
 source_group("Memory" FILES ${SRC_MEMORY})
+source_group("RNG" FILES ${SRC_RNG})
 source_group("Partial Implementations" FILES ${SRC_PARTIAL_IMPLEMENTATIONS})
 source_group("Primitives" FILES ${SRC_PRIMITIVES})
 source_group("Scene" FILES ${SRC_SCENE})
@@ -451,6 +456,7 @@ set_target_properties(TracerCUDA PROPERTIES
 target_link_libraries(TracerCUDA
                       RayLib
                       ImageIO
+                      curand
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Object Group for testing
@@ -480,4 +486,5 @@ set_target_properties(TracerCUDA_Static PROPERTIES
 target_link_libraries(TracerCUDA_Static
                       RayLib
                       ImageIO
+                      curand
                       ${PLATFORM_SPEC_LIBRARIES})

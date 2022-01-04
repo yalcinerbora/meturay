@@ -51,7 +51,7 @@ void PathTracerBoundaryWork(// Output
                             // I-O
                             PathTracerLocalState& localState,
                             PathTracerGlobalState& renderState,
-                            RandomGPU& rng,
+                            RNGeneratorGPUI& rng,
                             // Constants
                             const typename EGroup::GPUType& gLight)
 {
@@ -144,7 +144,7 @@ void PathTracerPathWork(// Output
                         // I-O
                         PathTracerLocalState& localState,
                         PathTracerGlobalState& renderState,
-                        RandomGPU& rng,
+                        RNGeneratorGPUI& rng,
                         // Constants
                         const typename MGroup::Data& gMatData,
                         const HitKey::Type matIndex)

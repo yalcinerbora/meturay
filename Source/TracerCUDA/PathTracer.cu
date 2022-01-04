@@ -203,7 +203,7 @@ bool PathTracer::Render()
     // Launch Kernels
     rayCaster->WorkRays(workMap, outPartitions,
                         partitions,
-                        rngMemory,
+                        *rngCPU.get(),
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
 
@@ -238,26 +238,35 @@ void PathTracer::GenerateWork(uint32_t cameraIndex)
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxPath, RayAuxInitPath>(cameraIndex,
-                                             options.sampleCount,
-                                             RayAuxInitPath(InitialPathAux),
-                                             true);
+    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    (
+        cameraIndex,
+        options.sampleCount,
+        RayAuxInitPath(InitialPathAux),
+        true
+    );
     currentDepth = 0;
 }
 
 void PathTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath>(t, cameraIndex, options.sampleCount,
-                                             RayAuxInitPath(InitialPathAux),
-                                             true);
+    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    (
+        t, cameraIndex, options.sampleCount,
+        RayAuxInitPath(InitialPathAux),
+        true
+    );
     currentDepth = 0;
 }
 
 void PathTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath>(dCam, options.sampleCount,
-                                             RayAuxInitPath(InitialPathAux),
-                                             true);
+    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    (
+        dCam, options.sampleCount,
+        RayAuxInitPath(InitialPathAux),
+        true
+    );
     currentDepth = 0;
 }
 

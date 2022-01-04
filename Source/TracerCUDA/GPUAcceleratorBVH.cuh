@@ -13,9 +13,9 @@
 #include "GPUPrimitiveP.cuh"
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorBVHKC.cuh"
-#include "RNGMemory.h"
 #include "ParallelScan.cuh"
 #include "ParallelSequence.cuh"
+#include "RNGSobol.cuh"
 
 #include <numeric>
 
@@ -170,15 +170,15 @@ class GPUAccBVHGroup final
         size_t                  AcceleratorCount() const override;
         // Arbitrary Position Fetching
         size_t                  TotalPrimitiveCount() const override;
-        float                   TotalApproximateArea(const CudaGPU&) const override;
-        void                    AcquireAreaWeightedSurfacePathces(// Outs
-                                                                  Vector3f * dPositions,
-                                                                  Vector3f * dNormals,
-                                                                  // I-O
-                                                                  RNGMemory & rngMemory,
-                                                                  // Inputs
-                                                                  uint32_t surfacePatchCount,
-                                                                  const CudaSystem&) const override;
+        float                   TotalApproximateArea(const CudaSystem&) const override;
+        void                    SampleAreaWeightedPoints(// Outs
+                                                         Vector3f * dPositions,
+                                                         Vector3f * dNormals,
+                                                         // I-O
+                                                         RNGSobolCPU& rngCPU,
+                                                         // Inputs
+                                                         uint32_t surfacePatchCount,
+                                                         const CudaSystem&) const override;
 };
 
 class GPUBaseAcceleratorBVH final : public GPUBaseAcceleratorI

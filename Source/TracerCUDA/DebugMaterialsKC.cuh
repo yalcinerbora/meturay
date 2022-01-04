@@ -6,7 +6,7 @@
 
 #include "GPUSurface.h"
 
-class RandomGPU;
+class RNGeneratorGPUI;
 
 struct BaryMatFuncs
 {
@@ -22,7 +22,7 @@ struct BaryMatFuncs
                    //
                    const BarySurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const NullData& matData,
                    const HitKey::Type& matId,
@@ -71,7 +71,7 @@ struct SphericalMatFuncs
                    //
                    const SphrSurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const NullData& matData,
                    const HitKey::Type& matId,
@@ -124,7 +124,7 @@ struct NormalRenderMatFuncs
                    //
                    const BasicSurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const NullData& matData,
                    const HitKey::Type& matId,

@@ -19,6 +19,7 @@
 #include "GPUTransformI.h"
 #include "GPULightI.h"
 #include "GPUCameraI.h"
+#include "RNGIndependent.cuh"
 
 #include "RayCaster.h"
 #ifdef MRAY_OPTIX
@@ -248,7 +249,9 @@ TracerError GPUTracer::Initialize()
 
     // Init RNGs for each block
     TracerError e = TracerError::OK;
-    rngMemory = RNGMemory(params.seed, cudaSystem);
+    // TODO: change this with an user variable
+    // And generate kernels for each rng
+    rngCPU = std::make_unique<RNGIndependentCPU>(params.seed, cudaSystem);
 
     std::vector<const GPUTransformI*> dGPUTransforms;
     std::vector<const GPUMediumI*> dGPUMediums;
@@ -408,7 +411,8 @@ const GPUCameraI* GPUTracer::GenerateCameraWithTransform(const VisorTransform& t
 void GPUTracer::SetParameters(const TracerParameters& p)
 {
     if(params.seed != p.seed)
-        rngMemory = std::move(RNGMemory(p.seed, cudaSystem));
+        rngCPU = std::make_unique<RNGIndependentCPU>(p.seed,
+                                                     cudaSystem);
     params = p;
 }
 
@@ -512,7 +516,7 @@ size_t GPUTracer::TotalGPUMemoryUsed() const
         mem += c.second->UsedGPUMemory();
     mem += tempTransformedCam.Size();
     mem += commonTypeMemory.Size();
-    mem += rngMemory.UsedGPUMemory();
+    mem += rngCPU->UsedGPUMemory();
     mem += imgMemory.UsedGPUMemory();
     mem += rayCaster->UsedGPUMemory();
     return mem;

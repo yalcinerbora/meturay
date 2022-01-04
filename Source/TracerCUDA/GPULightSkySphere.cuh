@@ -31,7 +31,7 @@ class GPULightSkySphere final : public GPULightP
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
-                                       RandomGPU&) const override;
+                                       RNGeneratorGPUI&) const override;
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
@@ -39,7 +39,7 @@ class GPULightSkySphere final : public GPULightP
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&,
+                                            RNGeneratorGPUI&,
                                             // Options
                                             bool antiAliasOn = true) const override;
         __device__ float        Pdf(const Vector3& direction,
@@ -114,7 +114,7 @@ inline void GPULightSkySphere::Sample(// Output
                                       // Input
                                       const Vector3& worldLoc,
                                       // I-O
-                                      RandomGPU& rng) const
+                                      RNGeneratorGPUI& rng) const
 {
     Vector2f index;
     Vector2f uv = distribution.Sample(pdf, index, rng);
@@ -145,7 +145,7 @@ inline void GPULightSkySphere::GenerateRay(// Output
                                            const Vector2i& sampleId,
                                            const Vector2i& sampleMax,
                                            // I-O
-                                           RandomGPU& rng,
+                                           RNGeneratorGPUI& rng,
                                            // Options
                                            bool antiAliasOn) const
 {

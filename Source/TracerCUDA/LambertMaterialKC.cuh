@@ -4,7 +4,7 @@
 
 #include "RayLib/HemiDistribution.h"
 
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "MaterialFunctions.h"
 #include "GPUSurface.h"
 #include "MetaMaterialFunctions.cuh"
@@ -23,7 +23,7 @@ struct LambertMatFuncs
                    //
                    const UVSurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const LambertMatData& matData,
                    const HitKey::Type& matId,
@@ -40,8 +40,7 @@ struct LambertMatFuncs
             normal = (*matData.dNormal[matId])(surface.uv).Normalize();
 
         // Generate New Ray Direction
-        Vector2 xi(GPUDistribution::Uniform<float>(rng),
-                   GPUDistribution::Uniform<float>(rng));
+        Vector2 xi(rng.Uniform(), rng.Uniform());
         Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
         direction.NormalizeSelf();
 

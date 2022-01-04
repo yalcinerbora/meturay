@@ -3,7 +3,7 @@
 #include "GPULightP.cuh"
 #include "GPUTransformI.h"
 #include "RayStructs.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "MangledNames.h"
 
 #include "RayLib/HemiDistribution.h"
@@ -47,7 +47,7 @@ class GPULight final : public GPULightP
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
-                                       RandomGPU&) const override;
+                                       RNGeneratorGPUI&) const override;
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
@@ -55,7 +55,7 @@ class GPULight final : public GPULightP
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&,
+                                            RNGeneratorGPUI&,
                                             // Options
                                             bool antiAliasOn = true) const override;
 
@@ -131,7 +131,7 @@ __device__ void GPULight<PGroup>::Sample(// Output
                                          // Input
                                          const Vector3& worldLoc,
                                          // I-O
-                                         RandomGPU& rng) const
+                                         RNGeneratorGPUI& rng) const
 {
     Vector3 normal;
     Vector3 position = PrimSamplePos(normal,
@@ -161,7 +161,7 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
                                                const Vector2i& sampleId,
                                                const Vector2i& sampleMax,
                                                // I-O
-                                               RandomGPU& rng,
+                                               RNGeneratorGPUI& rng,
                                                // Options
                                                bool antiAliasOn) const
 {
@@ -175,8 +175,7 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
                                      gPData,
                                      rng);
 
-    Vector2 xi(GPUDistribution::Uniform<float>(rng),
-               GPUDistribution::Uniform<float>(rng));
+    Vector2 xi(rng.Uniform(), rng.Uniform());
     Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
     direction.NormalizeSelf();
 

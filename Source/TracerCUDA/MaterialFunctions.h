@@ -3,7 +3,7 @@
 #include "RayLib/Ray.h"
 #include "GPUMediumI.h"
 
-class RandomGPU;
+class RNGeneratorGPUI;
 
 // IsEmissive function is used to check if this mat has a non zero Le(wo,p) part
 template <class Data>
@@ -38,7 +38,7 @@ using SampleFunc = Vector3(*)(// Sampled Output
                               //
                               const Surface& surface,           // Surface info (normals uvs etc.)
                               // I-O
-                              RandomGPU& rng,
+                              RNGeneratorGPUI& rng,
                               // Constants
                               const Data&,
                               const HitKey::Type& matId,

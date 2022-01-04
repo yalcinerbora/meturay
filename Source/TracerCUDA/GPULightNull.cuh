@@ -22,7 +22,7 @@ class GPULightNull : public GPULightI
                                    // Input
                                    const Vector3& position,
                                    // I-O
-                                   RandomGPU&) const  override {}
+                                   RNGeneratorGPUI&) const  override {}
     // Generate a Ray from this endpoint
     __device__ void         GenerateRay(// Output
                                         RayReg&,
@@ -30,7 +30,7 @@ class GPULightNull : public GPULightI
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
                                         // I-O
-                                        RandomGPU&,
+                                        RNGeneratorGPUI&,
                                         // Options
                                         bool antiAliasOn = true) const override {}
     __device__ float        Pdf(const Vector3& direction,

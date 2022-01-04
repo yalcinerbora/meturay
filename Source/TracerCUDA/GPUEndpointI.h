@@ -13,8 +13,8 @@ class GPUBoundaryMaterialGroupI;
 class GPUEndpointI;
 class GPUTransformI;
 class CudaSystem;
+class RNGeneratorGPUI;
 
-class RandomGPU;
 struct RayReg;
 
 using GPUEndpointList = std::vector<const GPUEndpointI*>;
@@ -54,7 +54,7 @@ class GPUEndpointI
                                            // Input
                                            const Vector3& position,
                                            // I-O
-                                           RandomGPU&) const = 0;
+                                           RNGeneratorGPUI&) const = 0;
         // Generate a Ray from this endpoint
         virtual __device__ void     GenerateRay(// Output
                                                 RayReg&,
@@ -62,7 +62,7 @@ class GPUEndpointI
                                                 const Vector2i& sampleId,
                                                 const Vector2i& sampleMax,
                                                 // I-O
-                                                RandomGPU&,
+                                                RNGeneratorGPUI&,
                                                 // Options
                                                 bool antiAliasOn = true) const = 0;
         virtual __device__ float    Pdf(const Vector3& direction,

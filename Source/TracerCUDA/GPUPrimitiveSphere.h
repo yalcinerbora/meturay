@@ -15,7 +15,7 @@ All of them should be provided
 #include <cuda_fp16.h>
 
 #include "DefaultLeaf.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "GPUPrimitiveP.cuh"
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
@@ -45,15 +45,15 @@ struct SphrFunctions
                                    PrimitiveId primitiveId,
                                    const SphereData& primData,
                                    // I-O
-                                   RandomGPU& rng)
+                                   RNGeneratorGPUI& rng)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         Vector3f center = data;
         float radius = data[3];
 
         // http://mathworld.wolfram.com/SpherePointPicking.html
-        float xi1 = GPUDistribution::Uniform<float>(rng);
-        float xi2 = GPUDistribution::Uniform<float>(rng);
+        float xi1 = rng.Uniform();
+        float xi2 = rng.Uniform();
 
         float theta = 2.0f * MathConstants::Pi * xi1;
         float cosPhi = 2.0f * xi2 - 1.0f;
@@ -62,8 +62,8 @@ struct SphrFunctions
         Vector3f unitPos = Utility::SphericalToCartesianUnit(Vector2f(sin(theta), cos(theta)),
                                                              Vector2f(sinPhi, cosPhi));
 
-        ////float x1 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
-        ////float x2 = GPUDistribution::Uniform<float>(rng) * 2.0f - 1.0f;
+        ////float x1 = rng.Uniform() * 2.0f - 1.0f;
+        ////float x2 = rng.Uniform() * 2.0f - 1.0f;
         //float x1Sqr = x1 * x1;
         //float x2Sqr = x2 * x2;
         //float coeff = sqrt(1 - x1Sqr - x2Sqr);

@@ -4,9 +4,9 @@
 
 #include "RayLib/Log.h"
 
-#include "TracerCUDA/RNGMemory.h"
-#include "TracerCUDA/Random.cuh"
+#include "TracerCUDA/RNGIndependent.cuh"
 #include "TracerCUDA/DeviceMemory.h"
+#include "TracerCUDA/CudaSystem.h"
 #include "TracerCUDA/CudaSystem.hpp"
 
 __global__ void KInitRandStates(uint32_t seed,
@@ -15,17 +15,17 @@ __global__ void KInitRandStates(uint32_t seed,
     curand_init(seed, threadIdx.x, 0, states);
 }
 
-__global__ void KCRandomNumbers(RNGGMem gRNGStates,
+__global__ void KCRandomNumbers(RNGeneratorGPUI** gRNGs,
                                 uint32_t* randomNumbers,
                                 size_t totalNumberCount)
 {
-    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+    auto& rng = RNGAccessor::Acquire<RNGIndependentGPU>(gRNGs, LINEAR_GLOBAL_ID);
 
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < totalNumberCount; globalId += blockDim.x * gridDim.x)
     {
-        uint32_t r = rng.Generate();
+        uint32_t r = rng.Uniform();
         randomNumbers[globalId] = r;
     }
 }
@@ -41,7 +41,7 @@ TEST(RandomGPU, All)
     ASSERT_EQ(CudaError::OK, system.Initialize());
     const CudaGPU& gpu = system.BestGPU();
 
-    RNGMemory rngMem(Seed, system);
+    RNGIndependentCPU rngCPU(Seed, system);
 
     // Kernel Call
     uint32_t* h_data = static_cast<uint32_t*>(numbers);
@@ -49,7 +49,7 @@ TEST(RandomGPU, All)
                        //
                        KCRandomNumbers,
                        //
-                       rngMem.RNGData(gpu),
+                       rngCPU.GetGPUGenerators(gpu),
                        h_data,
                        static_cast<uint32_t>(NumberCount));
     CUDA_KERNEL_CHECK();

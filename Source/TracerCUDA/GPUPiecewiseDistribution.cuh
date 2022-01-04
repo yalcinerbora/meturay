@@ -10,8 +10,10 @@
 #include "RayLib/CudaCheck.h"
 
 #include "DeviceMemory.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "BinarySearch.cuh"
+
+class CudaSystem;
 
 class GPUDistPiecewiseConst1D
 {
@@ -34,7 +36,7 @@ class GPUDistPiecewiseConst1D
                                     ~GPUDistPiecewiseConst1D() = default;
 
         __device__
-        float                   Sample(float& pdf, float& index, RandomGPU& rng) const;
+        float                   Sample(float& pdf, float& index, RNGeneratorGPUI& rng) const;
         __device__
         float                   Pdf(float index) const;
         __host__ __device__
@@ -65,7 +67,7 @@ class GPUDistPiecewiseConst2D
 
         // Interface
         __device__
-        Vector2f                Sample(float& pdf, Vector2f& index, RandomGPU& rng) const;
+        Vector2f                Sample(float& pdf, Vector2f& index, RNGeneratorGPUI& rng) const;
         __device__
         float                   Pdf(const Vector2f& index) const;
         __host__ __device__
@@ -173,15 +175,15 @@ GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
 {}
 
 __device__ __forceinline__
-float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RandomGPU& rng) const
+float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RNGeneratorGPUI& rng) const
 {
-    float xi = GPUDistribution::Uniform<float>(rng);
+    float xi = rng.Uniform();
 
     GPUFunctions::BinarySearchInBetween<float>(index, xi, gCDF, count);
     uint32_t indexInt = static_cast<uint32_t>(index);
 
     // Extremely rarely index becomes the light count
-    // although GPUDistribution::Uniform should return [0, 1)
+    // although Uniform should return [0, 1)
     // it still happens due to fp error i guess?
     // if it happens just return the last light on the list
     if(indexInt == count)
@@ -213,7 +215,7 @@ GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D d
 {}
 
 __device__ __forceinline__
-Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RandomGPU& rng) const
+Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RNGeneratorGPUI& rng) const
 {
     // Fist select a row using Y distribution
     float pdfY, indexY;

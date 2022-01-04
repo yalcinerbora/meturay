@@ -1,29 +1,3 @@
-//#include "TracerDebug.h"
-//#include "DefaultLeaf.h"
-//
-//template<class T>
-//inline std::ostream& operator<<(std::ostream& stream, const BVHNode<T>& v)
-//{
-//    stream << std::setw(0);
-//    if(v.isLeaf)
-//    {
-//        stream << "leaf - " << v.leaf;
-//    }
-//    else
-//    {
-//        stream << "[ " << v.left << ", " << v.right << ", " << v.parent << " ]";
-//        stream << AABB3(v.aabbMin, v.aabbMax);
-//    }
-//    return stream;
-//}
-//
-//inline std::ostream& operator<<(std::ostream& stream, const BaseLeaf& l)
-//{
-//    stream << "[ " << l.accKey << ", " << l.transformId << " ]";
-//    stream << AABB3(l.aabbMin, l.aabbMax);
-//    return stream;
-//}
-
 template <class PGroup>
 GPUAccBVHGroup<PGroup>::GPUAccBVHGroup(const GPUPrimitiveGroupI& pGroup)
     : GPUAcceleratorGroup<PGroup>(pGroup)
@@ -796,7 +770,7 @@ size_t GPUAccBVHGroup<PGroup>::TotalPrimitiveCount() const
 }
 
 template <class PGroup>
-float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaGPU& gpu) const
+float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaSystem& gpu) const
 {
     // It is quite expensive to get exact area estimate
     // Utilize the root AABB surface areas for an approximation
@@ -805,14 +779,14 @@ float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaGPU& gpu) const
 }
 
 template <class PGroup>
-void GPUAccBVHGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
-                                                               Vector3f* dPositions,
-                                                               Vector3f* dNormals,
-                                                               // I-O
-                                                               RNGMemory& rngMemory,
-                                                               // Inputs
-                                                               uint32_t surfacePatchCount,
-                                                               const CudaSystem& system) const
+void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
+                                                      Vector3f* dPositions,
+                                                      Vector3f* dNormals,
+                                                      // I-O
+                                                      RNGSobolCPU& rngCPU,
+                                                      // Inputs
+                                                      uint32_t surfacePatchCount,
+                                                      const CudaSystem& system) const
 {
     const CudaGPU& gpu = system.BestGPU();
     uint32_t totalLeafCount = static_cast<uint32_t>(TotalPrimitiveCount());
@@ -902,12 +876,12 @@ void GPUAccBVHGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
     // Now use this to fetch surface patches
     gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,
                        //
-                       KCSampleSurfacePatch<PGroup>,
+                       KCSampleSurfacePatch<PGroup, RNGSobolGPU>,
                        // Inputs
                        dPositions,
                        dNormals,
                        // I-O
-                       rngMemory.RNGData(gpu),
+                       rngCPU.GetGPUGenerators(gpu),
                        //
                        dLinearLeafData,
                        dLeafTransformIds,

@@ -382,20 +382,20 @@ size_t GPUAccLinearGroup<PGroup>::TotalPrimitiveCount() const
 }
 
 template <class PGroup>
-float GPUAccLinearGroup<PGroup>::TotalApproximateArea(const CudaGPU&) const
+float GPUAccLinearGroup<PGroup>::TotalApproximateArea(const CudaSystem&) const
 {
     return 1.0f;
 }
 
 template <class PGroup>
-void GPUAccLinearGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
-                                                                  Vector3f* dPositions,
-                                                                  Vector3f* dNormals,
-                                                                  // I-O
-                                                                  RNGMemory& rngMemory,
-                                                                  // Inputs
-                                                                  uint32_t surfacePatchCount,
-                                                                  const CudaSystem& system) const
+void GPUAccLinearGroup<PGroup>::SampleAreaWeightedPoints(// Outs
+                                                         Vector3f* dPositions,
+                                                         Vector3f* dNormals,
+                                                         // I-O
+                                                         RNGSobolCPU& rngCPU,
+                                                         // Inputs
+                                                         uint32_t surfacePatchCount,
+                                                         const CudaSystem& system) const
 {
     const CudaGPU& gpu = system.BestGPU();
     size_t totalLeafCount = accRanges.back()[1];
@@ -438,12 +438,12 @@ void GPUAccLinearGroup<PGroup>::AcquireAreaWeightedSurfacePathces(// Outs
     // Now use this to fetch surface patches
     gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,
                        //
-                       KCSampleSurfacePatch<PGroup>,
+                       KCSampleSurfacePatch<PGroup, RNGSobolGPU>,
                        // Inputs
                        dPositions,
                        dNormals,
                        // I-O
-                       rngMemory.RNGData(gpu),
+                       rngCPU.GetGPUGenerators(gpu),
                        //
                        dLeafList,
                        dLeafTransformIds,

@@ -3,7 +3,7 @@
 #include "RayAuxStruct.cuh"
 #include "RayStructs.h"
 #include "ImageStructs.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 
 #include "ImageFunctions.cuh"
 
@@ -36,7 +36,7 @@ inline void AOMissWork(// Output
                        // I-O
                        AmbientOcclusionLocalState& localState,
                        AmbientOcclusionGlobalState& renderState,
-                       RandomGPU& rng,
+                       RNGeneratorGPUI& rng,
                        // Constants
                        const typename MGroup::Data& gMatData,
                        const HitKey::Type matIndex)
@@ -62,7 +62,7 @@ inline void AOWork(// Output
                    // I-O
                    AmbientOcclusionLocalState& localState,
                    AmbientOcclusionGlobalState& renderState,
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const typename MGroup::Data& gMatData,
                    const HitKey::Type matIndex)
@@ -91,8 +91,7 @@ inline void AOWork(// Output
         float pdf;
         // We are at generation phase generate a ray
         Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
-        Vector2 xi(GPUDistribution::Uniform<float>(rng),
-                   GPUDistribution::Uniform<float>(rng));
+        Vector2 xi(rng.Uniform(), rng.Uniform());
         Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
         QuatF q = Quat::RotationBetweenZAxis(normal);
         direction = q.ApplyRotation(direction);

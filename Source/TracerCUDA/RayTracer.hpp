@@ -4,7 +4,7 @@
 #include "RayTracer.h"
 #include "RayLib/GPUSceneI.h"
 
-template <class AuxStruct, class AuxInitFunctor>
+template <class AuxStruct, class AuxInitFunctor, class RNG>
 void RayTracer::GenerateRays(uint32_t cameraIndex,
                              int32_t sampleCount,
                              const AuxInitFunctor& initFunctor,
@@ -33,7 +33,8 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                           reinterpret_cast<void*>(&KCGenCameraRaysFromArrayGPU<AuxStruct, AuxInitFunctor>));
+                                                           reinterpret_cast<void*>(&KCGenCameraRaysFromArrayGPU<AuxStruct, AuxInitFunctor,
+                                                                                                                RNGIndependentGPU>));
 
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
@@ -60,7 +61,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
         RayGMem* gRays = rayCaster->RaysOut();
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
-        RNGGMem rngData = rngMemory.RNGData(gpu);
+        RNGeneratorGPUI** dRNGs = rngCPU->GetGPUGenerators(gpu);
         ImageGMem<Vector4f> gImgData = imgMemory.GMem<Vector4f>();
 
         cudaSystem.SyncAllGPUs();
@@ -69,14 +70,14 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
         gpu.AsyncGridStrideKC_X
         (
             0, localWorkCount,
-            KCGenCameraRaysFromArrayGPU<AuxStruct, AuxInitFunctor>,
+            KCGenCameraRaysFromArrayGPU<AuxStruct, AuxInitFunctor, RNG>,
             // Args
             // Inputs
             gRays,
             gAuxiliary,
             gImgData,
             // I-O
-            rngData,
+            dRNGs,
             // Input
             dCameras,
             cameraIndex,
@@ -101,7 +102,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     rayCaster->SwapRays();
 }
 
-template <class AuxStruct, class AuxInitFunctor>
+template <class AuxStruct, class AuxInitFunctor, class RNG>
 void RayTracer::GenerateRays(const GPUCameraI& dCamera,
                              int32_t sampleCount,
                              const AuxInitFunctor& initFunctor,
@@ -133,7 +134,8 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     const uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
-                                                           reinterpret_cast<void*>(&KCGenCameraRaysFromObjectGPU<AuxStruct, AuxInitFunctor>));
+                                                           reinterpret_cast<void*>(&KCGenCameraRaysFromObjectGPU<AuxStruct, AuxInitFunctor,
+                                                                                                                 RNGIndependentGPU>));
 
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
@@ -160,7 +162,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
         RayGMem* gRays = rayCaster->RaysOut();
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
-        RNGGMem rngData = rngMemory.RNGData(gpu);
+        RNGeneratorGPUI** dRNGs = rngCPU->GetGPUGenerators(gpu);
         ImageGMem<Vector4f> gImgData = imgMemory.GMem<Vector4f>();
 
         cudaSystem.SyncAllGPUs();
@@ -169,14 +171,14 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
         gpu.AsyncGridStrideKC_X
         (
             0, localWorkCount,
-            KCGenCameraRaysFromObjectGPU<AuxStruct, AuxInitFunctor>,
+            KCGenCameraRaysFromObjectGPU<AuxStruct, AuxInitFunctor, RNG>,
             // Args
             // Inputs
             gRays,
             gAuxiliary,
             gImgData,
             // I-O
-            rngData,
+            dRNGs,
             // Input
             dCamera,
             sampleCount,
@@ -200,7 +202,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     rayCaster->SwapRays();
 }
 
-template <class AuxStruct, class AuxInitFunctor>
+template <class AuxStruct, class AuxInitFunctor, class RNG>
 void RayTracer::GenerateRays(const VisorTransform& t, uint32_t cameraIndex,
                              int32_t sampleCount,
                              const AuxInitFunctor& initFunctor,
@@ -208,9 +210,9 @@ void RayTracer::GenerateRays(const VisorTransform& t, uint32_t cameraIndex,
                              bool antiAliasOn)
 {
     const GPUCameraI* dCamera = GenerateCameraWithTransform(t, cameraIndex);
-    GenerateRays<AuxStruct, AuxInitFunctor>(*dCamera,
-                                            sampleCount,
-                                            initFunctor,
-                                            incSampleCount,
-                                            antiAliasOn);
+    GenerateRays<AuxStruct, AuxInitFunctor, RNG>(*dCamera,
+                                                 sampleCount,
+                                                 initFunctor,
+                                                 incSampleCount,
+                                                 antiAliasOn);
 }

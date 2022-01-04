@@ -6,13 +6,11 @@
 #include "RayLib/SceneStructs.h"
 
 #include "CudaSystem.h"
-#include "Random.cuh"
 #include "RayStructs.h"
 #include "NodeListing.h"
 
 struct VisorTransform;
 class GPUTransformI;
-class RandomGPU;
 class GPUCameraI;
 class GPUCameraPixel;
 class DeviceMemory;

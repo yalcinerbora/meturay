@@ -1,6 +1,6 @@
 #include "ScenePositionTree.cuh"
 #include "GPUAcceleratorI.h"
-#include "RNGMemory.h"
+#include "RNGSobol.cuh"
 
 #include <cub/cub.cuh>
 
@@ -16,7 +16,7 @@ TracerError ScenePositionTree::Construct(const AcceleratorBatchMap& sceneAcceler
     const CudaGPU& gpu = cudaSystem.BestGPU();
     // Generate A temp RNG for this gpu
     // TODO: implement a low-discrepancy sampler and use it here
-    RNGMemory rngMem(0, gpu);
+    RNGSobolCPU rngSobol(0, cudaSystem);
 
     // Get Area, Center & Normal for each primitive
     DeviceMemory tempMemory;
@@ -33,7 +33,7 @@ TracerError ScenePositionTree::Construct(const AcceleratorBatchMap& sceneAcceler
     // Ask accelerators to generate data
     for(const auto& [id, acc] : sceneAccelerators)
     {
-        acceleratorAreas.push_back(acc->TotalApproximateArea(gpu));
+        acceleratorAreas.push_back(acc->TotalApproximateArea(cudaSystem));
     }
 
     // Divide the samples according to the area measures
@@ -45,11 +45,11 @@ TracerError ScenePositionTree::Construct(const AcceleratorBatchMap& sceneAcceler
     for(const auto& [id, acc] : sceneAccelerators)
     {
         uint32_t localSampleCount = samplePerAcceleratorGroup[i];
-        acc->AcquireAreaWeightedSurfacePathces(dPositions + offset,
-                                               dNormals,
-                                               rngMem,
-                                               localSampleCount,
-                                               cudaSystem);
+        acc->SampleAreaWeightedPoints(dPositions + offset,
+                                      dNormals,
+                                      rngSobol,
+                                      localSampleCount,
+                                      cudaSystem);
 
         offset += localSampleCount;
         i++;

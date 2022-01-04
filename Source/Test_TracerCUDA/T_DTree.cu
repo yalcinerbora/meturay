@@ -11,8 +11,7 @@
 #include "TracerCUDA/CudaSystem.h"
 #include "TracerCUDA/CudaSystem.hpp"
 #include "TracerCUDA/DTreeKC.cuh"
-#include "TracerCUDA/RNGMemory.h"
-#include "TracerCUDA/Random.cuh"
+#include "TracerCUDA/RNGIndependent.cuh"
 #include "TracerCUDA/ParallelReduction.cuh"
 #include "TracerCUDA/TracerDebug.h"
 
@@ -52,11 +51,12 @@ static void KCSampleTree(Vector3f* gDirections,
                          float* gPdfs,
                          //
                          const DTreeGPU* gDTree,
-                         RNGGMem gRNGStates,
+                         RNGeneratorGPUI** gRNGs,
 
                          uint32_t sampleCount)
 {
-    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+    auto& rng = RNGAccessor::Acquire<RNGIndependentGPU>(gRNGs,
+                                                        LINEAR_GLOBAL_ID);
 
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -109,13 +109,14 @@ __global__
 static void KCFurnaceDTree(// Output
                            Vector3d* gValues,
                            // I-O
-                           RNGGMem gRNGStates,
+                           RNGeneratorGPUI** gRNGs,
                            // Input
                            const DTreeGPU* gDTree,
                            // Constants
                            uint32_t sampleCount)
 {
-    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+    auto& rng = RNGAccessor::Acquire<RNGIndependentGPU>(gRNGs,
+                                                        LINEAR_GLOBAL_ID);
 
     // Only there is a single tree
     const DTreeGPU& gFirstTree = gDTree[0];
@@ -128,9 +129,9 @@ static void KCFurnaceDTree(// Output
         Vector3f direction = gFirstTree.Sample(pdf, rng);
         // Write Samples
         //pdf = 1.0f;
-        //Vector3f direction((GPUDistribution::Uniform<float>(rng) - 0.5f) * 2.0f,
-        //                   (GPUDistribution::Uniform<float>(rng) - 0.5f) * 2.0f,
-        //                   (GPUDistribution::Uniform<float>(rng) - 0.5f) * 2.0f);
+        //Vector3f direction((rng.Uniform() - 0.5f) * 2.0f,
+        //                   (rng.Uniform() - 0.5f) * 2.0f,
+        //                   (rng.Uniform() - 0.5f) * 2.0f);
         //direction.NormalizeSelf();
 
         direction = (pdf != 0.0f) ? (direction / pdf) : Zero3f;
@@ -767,7 +768,7 @@ TEST(PPG_DTree, SampleEmpty)
     //
     constexpr uint32_t SAMPLE_COUNT = 2'500'000;
     constexpr uint32_t SEED = 0;
-    RNGMemory rngMem(SEED, system);
+    RNGIndependentCPU rngCPU(SEED, system);
 
     DTreeGroup testTree;
     testTree.AllocateDefaultTrees(1, system);
@@ -786,7 +787,7 @@ TEST(PPG_DTree, SampleEmpty)
                        static_cast<float*>(pdfMemory),
                        //
                        testTree.ReadTrees(),
-                       rngMem.RNGData(gpu),
+                       rngCPU.GetGPUGenerators(gpu),
                        SAMPLE_COUNT);
     // Divide by pdf
     gpu.GridStrideKC_X(0, 0, SAMPLE_COUNT,
@@ -820,7 +821,7 @@ TEST(PPG_DTree, SampleDeep)
     //
     constexpr uint32_t SAMPLE_COUNT = 20'500'000;
     constexpr uint32_t SEED = 0;
-    RNGMemory rngMem(SEED, system);
+    RNGIndependentCPU rngCPU(SEED, system);
 
     constexpr int ADD_ITERATION_COUNT = 50;
     constexpr int PATH_PER_ITERATION = 5000;
@@ -901,7 +902,7 @@ TEST(PPG_DTree, SampleDeep)
                        static_cast<float*>(pdfMemory),
                        //
                        testTree.ReadTrees(),
-                       rngMem.RNGData(gpu),
+                       rngCPU.GetGPUGenerators(gpu),
                        SAMPLE_COUNT);
 
     std::vector<Vector3f> dirCPU(SAMPLE_COUNT);
@@ -1033,7 +1034,7 @@ TEST(PPG_DTree, SampleImg)
     // CUDA Stuff
     DeviceMemory dDirections(SAMPLE_PER_ITERATION * sizeof(Vector3d));
     CUDA_CHECK(cudaMemset(dDirections, 0x00, dDirections.Size()));
-    RNGMemory rngMem(SEED, system);
+    RNGIndependentCPU rngCPU(SEED, system);
 
     const auto& gpu = system.BestGPU();
 
@@ -1047,7 +1048,7 @@ TEST(PPG_DTree, SampleImg)
                            KCFurnaceDTree,
                            //
                            static_cast<Vector3d*>(dDirections),
-                           rngMem.RNGData(gpu),
+                           rngCPU.GetGPUGenerators(gpu),
                            dTree.ReadTrees(),
                            SAMPLE_PER_ITERATION);
         sampleCount += SAMPLE_PER_ITERATION;

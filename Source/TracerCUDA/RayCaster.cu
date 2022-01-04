@@ -1,5 +1,4 @@
 #include "RayCaster.h"
-#include "RNGMemory.h"
 #include "CudaSystem.h"
 
 #include "RayLib/GPUSceneI.h"
@@ -197,7 +196,7 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
 void RayCaster::WorkRays(const WorkBatchMap& workMap,
                          const RayPartitionsMulti<uint32_t>& outPortions,
                          const RayPartitions<uint32_t>& inPartitions,
-                         RNGMemory& rngMemory,
+                         RNGeneratorCPUI& rngCPU,
                          uint32_t totalRayOut,
                          HitKey baseBoundMatKey)
 {
@@ -259,7 +258,7 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
                             dRayIdStart,
                             //
                             static_cast<uint32_t>(p.count),
-                            rngMemory);
+                            rngCPU);
 
             i++;
         }

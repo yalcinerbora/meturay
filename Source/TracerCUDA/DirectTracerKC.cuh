@@ -54,7 +54,7 @@ void DirectBoundaryWork(// Output
                         // I-O
                         DirectTracerLocalState& localState,
                         DirectTracerGlobalState& renderState,
-                        RandomGPU& rng,
+                        RNGeneratorGPUI& rng,
                         // Constants
                         const typename EGroup::GPUType& gLight)
 {
@@ -85,7 +85,7 @@ inline void DirectFurnaceWork(// Output
                               // I-O
                               DirectTracerLocalState& localState,
                               DirectTracerGlobalState& renderState,
-                              RandomGPU& rng,
+                              RNGeneratorGPUI& rng,
                               // Constants
                               const typename MGroup::Data& gMatData,
                               const HitKey::Type matIndex)
@@ -144,7 +144,7 @@ inline void DirectPositionWork(// Output
                                // I-O
                                DirectTracerLocalState& localState,
                                DirectTracerPositionGlobalState& renderState,
-                               RandomGPU& rng,
+                               RNGeneratorGPUI& rng,
                                // Constants
                                const typename EmptyMat<EmptySurface>::Data& gMatData,
                                const HitKey::Type matIndex)
@@ -197,7 +197,7 @@ inline void DirectNormalWork(// Output
                              // I-O
                              DirectTracerLocalState& localState,
                              DirectTracerGlobalState& renderState,
-                             RandomGPU& rng,
+                             RNGeneratorGPUI& rng,
                              // Constants
                              const typename NormalRenderMat::Data& gMatData,
                              const HitKey::Type matIndex)

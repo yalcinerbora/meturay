@@ -5,7 +5,7 @@
 #include "RayLib/Constants.h"
 #include "RayLib/HemiDistribution.h"
 
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "ImageFunctions.cuh"
 #include "MaterialFunctions.h"
 #include "TracerFunctions.cuh"
@@ -49,7 +49,7 @@ struct UnrealDeviceFuncs
                    //
                    const UVSurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const UnrealMatData& matData,
                    const HitKey::Type& matId,

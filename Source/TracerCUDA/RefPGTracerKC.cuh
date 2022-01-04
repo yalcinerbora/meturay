@@ -80,7 +80,7 @@ void RPGTracerBoundaryWork(// Output
                            // I-O
                            RPGTracerLocalState& localState,
                            RPGTracerGlobalState& renderState,
-                           RandomGPU& rng,
+                           RNGeneratorGPUI& rng,
                           // Constants
                            const typename EGroup::GPUType& gLight)
 {
@@ -177,7 +177,7 @@ void RPGTracerPathWork(// Output
                        // I-O
                        RPGTracerLocalState& localState,
                        RPGTracerGlobalState& renderState,
-                       RandomGPU& rng,
+                       RNGeneratorGPUI& rng,
                        // Constants
                        const typename MGroup::Data& gMatData,
                        const HitKey::Type matIndex)

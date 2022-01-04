@@ -1,10 +1,9 @@
 ﻿#include "STree.cuh"
 #include "PathNode.cuh"
+#include "STreeKC.cuh"
+#include "TracerDebug.h"
 #include "CudaSystem.h"
 #include "CudaSystem.hpp"
-#include "STreeKC.cuh"
-
-#include "TracerDebug.h"
 
 #include "RayLib/MemoryAlignment.h"
 

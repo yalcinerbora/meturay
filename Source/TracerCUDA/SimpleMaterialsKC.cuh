@@ -6,7 +6,7 @@
 #include "RayLib/HemiDistribution.h"
 #include "RayLib/CudaCheck.h"
 
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "ImageFunctions.cuh"
 #include "MaterialFunctions.h"
 #include "MetaMaterialFunctions.cuh"
@@ -27,7 +27,7 @@ struct LambertConstFuncs
                    //
                    const BasicSurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const AlbedoMatData& matData,
                    const HitKey::Type& matId,
@@ -39,8 +39,7 @@ struct LambertConstFuncs
         const Vector3& position = pos;
         const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
         // Generate New Ray Direction
-        Vector2 xi(GPUDistribution::Uniform<float>(rng),
-                   GPUDistribution::Uniform<float>(rng));
+        Vector2 xi(rng.Uniform(), rng.Uniform());
         Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
         direction.NormalizeSelf();
 
@@ -113,7 +112,7 @@ struct ReflectMatFuncs
                    //
                    const BasicSurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const ReflectMatData& matData,
                    const HitKey::Type& matId,
@@ -181,7 +180,7 @@ struct RefractMatFuncs
                    //
                    const BasicSurface& surface,
                    // I-O
-                   RandomGPU& rng,
+                   RNGeneratorGPUI& rng,
                    // Constants
                    const RefractMatData& matData,
                    const HitKey::Type& matId,
@@ -212,7 +211,7 @@ struct RefractMatFuncs
         float f = TracerFunctions::FrenelDielectric(abs(nDotI), fromMedium, toMedium);
 
         // Sample ray according to the Fresnel term
-        float xi = GPUDistribution::Uniform<float>(rng);
+        float xi = rng.Uniform();
         if(xi < f)
         {
             // RNG choose to sample Reflection case

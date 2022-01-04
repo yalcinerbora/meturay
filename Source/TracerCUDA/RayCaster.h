@@ -41,7 +41,7 @@ class RayCaster : public RayCasterI
         void                        WorkRays(const WorkBatchMap& workMap,
                                              const RayPartitionsMulti<uint32_t>& outPortions,
                                              const RayPartitions<uint32_t>& inPartitions,
-                                             RNGMemory& rngMemory,
+                                             RNGeneratorCPUI& rngCPU,
                                              uint32_t totalRayOut,
                                              HitKey baseBoundMatKey) override;
 

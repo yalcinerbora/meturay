@@ -39,7 +39,7 @@ class GPUCameraSpherical final : public GPUCameraI
                                    // Input
                                    const Vector3& position,
                                    // I-O
-                                   RandomGPU&) const override;
+                                   RNGeneratorGPUI&) const override;
 
         __device__ void     GenerateRay(// Output
                                         RayReg&,
@@ -47,7 +47,7 @@ class GPUCameraSpherical final : public GPUCameraI
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
                                         // I-O
-                                        RandomGPU&,
+                                        RNGeneratorGPUI&,
                                         // Options
                                         bool antiAliasOn) const override;
         __device__ float    Pdf(const Vector3& direction,
@@ -152,7 +152,7 @@ inline void GPUCameraSpherical::Sample(// Output
                                        // Input
                                        const Vector3& sampleLoc,
                                        // I-O
-                                       RandomGPU&) const
+                                       RNGeneratorGPUI&) const
 {
     // One
     dirOut = sampleLoc - position;
@@ -168,14 +168,13 @@ inline void GPUCameraSpherical::GenerateRay(// Output
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU& rng,
+                                            RNGeneratorGPUI& rng,
                                             // Options
                                             bool antiAliasOn) const
 {
     // Create random location over sample pixel
     Vector2 randomOffset = (antiAliasOn)
-                                ? Vector2(GPUDistribution::Uniform<float>(rng),
-                                          GPUDistribution::Uniform<float>(rng))
+                                ? Vector2(rng.Uniform(), rng.Uniform())
                                 : Vector2(0.5f);
 
     // Normalize Coordinates X & Y = [0, 1]

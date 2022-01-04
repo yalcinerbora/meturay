@@ -7,7 +7,7 @@
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
 #include "ParallelSequence.cuh"
-#include "RNGMemory.h"
+#include "RNGSobol.cuh"
 #include "GPUPrimitiveP.cuh"
 #include "GPUAcceleratorP.cuh"
 #include "GPUAcceleratorCommonKC.cuh"
@@ -139,15 +139,15 @@ class GPUAccOptiXGroup final
         size_t                  AcceleratorCount() const override;
         // Arbitrary Position Fetching
         size_t                  TotalPrimitiveCount() const override;
-        float                   TotalApproximateArea(const CudaGPU&) const override;
-        void                    AcquireAreaWeightedSurfacePathces(// Outs
-                                                                  Vector3f* dPositions,
-                                                                  Vector3f* dNormals,
-                                                                  // I-O
-                                                                  RNGMemory& rngMemory,
-                                                                  // Inputs
-                                                                  uint32_t surfacePatchCount,
-                                                                  const CudaSystem&) const override;
+        float                   TotalApproximateArea(const CudaSystem&) const override;
+        void                    SampleAreaWeightedPoints(// Outs
+                                                         Vector3f* dPositions,
+                                                         Vector3f* dNormals,
+                                                         // I-O
+                                                         RNGSobolCPU& rngCPU,
+                                                         // Inputs
+                                                         uint32_t surfacePatchCount,
+                                                         const CudaSystem&) const override;
 
         // OptiX Implementation
         // Return the hit record list for each accelerator

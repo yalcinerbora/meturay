@@ -367,13 +367,13 @@ static void KCGenerateAreas(// Output
 
 }
 
-template <class PGroup>
+template <class PGroup, class RNG>
 __global__
 static void KCSampleSurfacePatch(// Output
                                  Vector3f* dPositions,
                                  Vector3f* dNormals,
                                  // I-O
-                                 RNGGMem gMem,
+                                 RNGeneratorGPUI** gGenerators,
                                  // Inputs
                                  const typename PGroup::LeafData* gLeafs,
                                  const TransformId* gTransformIds,

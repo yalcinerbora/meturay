@@ -5,7 +5,7 @@
 #include "RayLib/Constants.h"
 #include "RayLib/ColorConversion.h"
 
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "PathNode.cuh"
 
 struct DTreeNode
@@ -44,7 +44,7 @@ struct DTreeGPU
     static __device__ Vector2f  WorldDirToTreeCoords(float& pdf, const Vector3f& worldDir);
     static __device__ Vector3f  TreeCoordsToWorldDir(float& pdf, const Vector2f& discreteCoords);
 
-    __device__ Vector3f         Sample(float& pdf, RandomGPU& rng) const;
+    __device__ Vector3f         Sample(float& pdf, RNGeneratorGPUI& rng) const;
     __device__ float            Pdf(const Vector3f& worldDir) const;
     __device__ void             AddRadianceToLeaf(const Vector3f& worldDir,
                                                   float radiance,
@@ -201,10 +201,9 @@ Vector3f DTreeGPU::TreeCoordsToWorldDir(float& pdf, const Vector2f& discreteCoor
 }
 
 __device__ __forceinline__
-Vector3f DTreeGPU::Sample(float& pdf, RandomGPU& rng) const
+Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
 {
-    Vector2f xi = Vector2f(GPUDistribution::Uniform<float>(rng),
-                           GPUDistribution::Uniform<float>(rng));
+    Vector2f xi = Vector2f(rng.Uniform(), rng.Uniform());
     // First we need to find the sphr coords from the tree
     Vector2f discreteCoords = Zero2f;
     // Use double here for higher numeric precision for deep trees

@@ -600,7 +600,7 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
 void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
                               const RayPartitionsMulti<uint32_t>& outPortions,
                               const RayPartitions<uint32_t>& inPartitions,
-                              RNGMemory& rngMemory,
+                              RNGeneratorCPUI& rngCPU,
                               uint32_t totalRayOut,
                               HitKey baseBoundMatKey)
 {
@@ -672,7 +672,7 @@ void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
                             dRayIdStart,
                             //
                             static_cast<uint32_t>(p.count),
-                            rngMemory);
+                            rngCPU);
 
             i++;
         }

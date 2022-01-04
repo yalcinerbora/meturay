@@ -8,7 +8,7 @@
 struct RayGMem;
 struct SceneError;
 
-class RNGMemory;
+class RNGeneratorCPUI;
 class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
 class CPUEndpointGroupI;
@@ -43,7 +43,7 @@ class GPUWorkBatchI
                                      const RayId* dRayIds,
                                      //
                                      const uint32_t rayCount,
-                                     RNGMemory& rngMem) = 0;
+                                     RNGeneratorCPUI& rngCPU) = 0;
 
         virtual uint8_t         OutRayCount() const = 0;
 };

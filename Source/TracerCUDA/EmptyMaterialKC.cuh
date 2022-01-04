@@ -4,8 +4,6 @@
 #include "MetaMaterialFunctions.cuh"
 #include "GPUSurface.h"
 
-class RandomGPU;
-
 template <class Surface>
 struct EmptyMatFuncs
 {

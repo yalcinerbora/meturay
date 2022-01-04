@@ -2,7 +2,7 @@
 
 #include "RayLib/HitStructs.h"
 #include "RayStructs.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "ImageStructs.h"
 #include "GPUPrimitiveP.cuh"
 #include "CudaSystem.hpp"
@@ -34,7 +34,7 @@ using WorkFunc = void(*)(// Output
                          // I-O
                          LocalState& localState,
                          GlobalState& renderState,
-                         RandomGPU& rng,
+                         RNGeneratorGPUI& rng,
                          // Constants
                          const typename MGroup::Data& gMatData,
                          const HitKey::Type matIndex);
@@ -56,13 +56,14 @@ using BoundaryWorkFunc = void(*)(// Output
                                  // I-O
                                  LocalState& localState,
                                  GlobalState& renderState,
-                                 RandomGPU& rng,
+                                 RNGeneratorGPUI& rng,
                                  // Constants
                                  const typename EGroup::GPUType& gEndpoint);
 
 // Meta Kernel for dividing work.
 template<class GlobalState, class LocalState,
          class RayAuxiliary, class PGroup, class MGroup,
+         class RNG,
          WorkFunc<GlobalState, LocalState, RayAuxiliary, MGroup> WFunc,
          SurfaceFunc<typename MGroup::Surface,
                      typename PGroup::HitData,
@@ -85,7 +86,7 @@ void KCWork(// Output
             // I-O
             LocalState localState,
             GlobalState renderState,
-            RNGGMem gRNGStates,
+            RNGeneratorGPUI** gRNGs,
             // Constants
             const uint32_t rayCount,
             const typename MGroup::Data matData,
@@ -98,7 +99,7 @@ void KCWork(// Output
 
     // Pre-grid stride initialization
     // RNG is allocated for each SM (not for each ray)
-    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
 
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -155,6 +156,7 @@ void KCWork(// Output
 // Meta Kernel for dividing work.
 template<class GlobalState, class LocalState,
          class RayAuxiliary, class EGroup,
+         class RNG,
          BoundaryWorkFunc<GlobalState, LocalState, RayAuxiliary, EGroup> BWFunc,
          SurfaceFunc<typename EGroup::Surface,
                      typename EGroup::HitData,
@@ -177,7 +179,7 @@ void KCBoundaryWork(// Output
                     // I-O
                     LocalState localState,
                     GlobalState renderState,
-                    RNGGMem gRNGStates,
+                    RNGeneratorGPUI** gRNGs,
                     // Constants
                     const uint32_t rayCount,
                     const typename EGroup::GPUType* gEndpoints,
@@ -191,7 +193,7 @@ void KCBoundaryWork(// Output
 
     // Pre-grid stride initialization
     // RNG is allocated for each SM (not for each ray)
-    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
 
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;

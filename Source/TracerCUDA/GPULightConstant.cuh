@@ -24,7 +24,7 @@ class GPULightConstant final : public GPULightP
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
-                                       RandomGPU&) const override;
+                                       RNGeneratorGPUI&) const override;
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
@@ -32,7 +32,7 @@ class GPULightConstant final : public GPULightP
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&,
+                                            RNGeneratorGPUI&,
                                             // Options
                                             bool antiAliasOn = true) const override;
 
@@ -90,7 +90,7 @@ inline void GPULightConstant::Sample(// Output
                                      // Input
                                      const Vector3& worldLoc,
                                      // I-O
-                                     RandomGPU&) const
+                                     RNGeneratorGPUI&) const
 {
     distance = FLT_MAX;
     direction = Zero3f;
@@ -104,7 +104,7 @@ inline void GPULightConstant::GenerateRay(// Output
                                           const Vector2i& sampleId,
                                           const Vector2i& sampleMax,
                                           // I-O
-                                          RandomGPU&,
+                                          RNGeneratorGPUI&,
                                           // Options
                                           bool antiAliasOn) const
 {}

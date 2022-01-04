@@ -28,7 +28,7 @@ class GPULightPoint final : public GPULightP
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
-                                       RandomGPU&) const override;
+                                       RNGeneratorGPUI&) const override;
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
@@ -36,7 +36,7 @@ class GPULightPoint final : public GPULightP
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
                                             // I-O
-                                            RandomGPU&,
+                                            RNGeneratorGPUI&,
                                             // Options
                                             bool antiAliasOn = true) const override;
 
@@ -104,7 +104,7 @@ inline void GPULightPoint::Sample(// Output
                                   // Input
                                   const Vector3& worldLoc,
                                   // I-O
-                                  RandomGPU&) const
+                                  RNGeneratorGPUI&) const
 {
     direction = (position - worldLoc);
     distance = direction.Length();
@@ -121,7 +121,7 @@ inline void GPULightPoint::GenerateRay(// Output
                                        const Vector2i& sampleId,
                                        const Vector2i& sampleMax,
                                        // I-O
-                                       RandomGPU&,
+                                       RNGeneratorGPUI&,
                                        // Options
                                        bool antiAliasOn) const
 {

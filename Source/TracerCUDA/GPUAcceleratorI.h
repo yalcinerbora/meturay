@@ -26,7 +26,7 @@ class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
 class SceneNodeI;
 class GPUTransformI;
-class RNGMemory;
+class RNGSobolCPU;
 
 using SceneNodePtr = std::unique_ptr<SceneNodeI>;
 using SurfaceAABBList = std::map<uint32_t, AABB3f>;
@@ -100,15 +100,15 @@ class GPUAcceleratorGroupI
         virtual size_t      AcceleratorCount() const = 0;
         // Arbitrary Position Fetching
         virtual size_t      TotalPrimitiveCount() const = 0;
-        virtual float       TotalApproximateArea(const CudaGPU&) const = 0;
-        virtual void        AcquireAreaWeightedSurfacePathces(// Outs
-                                                              Vector3f* dPositions,
-                                                              Vector3f* dNormals,
-                                                              // I-O
-                                                              RNGMemory& rngMemory,
-                                                              // Inputs
-                                                              uint32_t surfacePathCount,
-                                                              const CudaSystem&) const = 0;
+        virtual float       TotalApproximateArea(const CudaSystem&) const = 0;
+        virtual void        SampleAreaWeightedPoints(// Outs
+                                                     Vector3f* dPositions,
+                                                     Vector3f* dNormals,
+                                                     // I-O
+                                                     RNGSobolCPU& rngCPU,
+                                                     // Inputs
+                                                     uint32_t surfacePathCount,
+                                                     const CudaSystem&) const = 0;
 };
 
 class GPUBaseAcceleratorI

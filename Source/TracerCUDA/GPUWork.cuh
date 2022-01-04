@@ -1,13 +1,13 @@
 #pragma once
 
 #include "GPUWorkI.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "GPUPrimitiveP.cuh"
 #include "GPUMaterialP.cuh"
-#include "RNGMemory.h"
 #include "MangledNames.h"
 #include "WorkKernels.cuh"
 #include "GPULightNull.cuh"
+#include "RNGIndependent.cuh"
 
 #include "RayLib/TracerError.h"
 
@@ -109,7 +109,7 @@ class GPUWorkBatch
                                              const RayId* dRayIds,
                                              //
                                              const uint32_t rayCount,
-                                             RNGMemory& rngMem) override;
+                                             RNGeneratorCPUI& rngCPU) override;
 
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override { return primitiveGroup; }
         const GPUMaterialGroupI&        MaterialGroup() const override { return materialGroup; }
@@ -162,7 +162,7 @@ class GPUBoundaryWorkBatch
                                              const RayId* dRayIds,
                                              //
                                              const uint32_t rayCount,
-                                             RNGMemory& rngMem) override;
+                                             RNGeneratorCPUI& rngCPU) override;
 
         uint8_t                         OutRayCount() const override { return 0; };
         const CPUEndpointGroupI&        EndpointGroup() const override { return endpointGroup; }
@@ -236,7 +236,7 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
                                                      const RayId* dRayIds,
                                                      //
                                                      const uint32_t rayCount,
-                                                     RNGMemory& rngMem)
+                                                     RNGeneratorCPUI& rngCPU)
 {
     // Do Pre-work (initialize local data etc.)
     this->GetReady();
@@ -258,9 +258,10 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
     (
         0,
         rayCount,
-        //
-        KCWork<GlobalData, LocalData, RayData, PGroup,
-               MGroup, WorkF, SurfF>,
+        // TODO: Generic RNG
+        KCWork<GlobalData, LocalData, RayData,
+               PGroup, MGroup, RNGIndependentGPU,
+               WorkF, SurfF>,
         // Args
         // Output
         dBoundMatOut,
@@ -279,7 +280,7 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
         // I-O
         localData,
         this->globalData,
-        rngMem.RNGData(gpu),
+        rngCPU.GetGPUGenerators(gpu),
         // Constants
         rayCount,
         matData,
@@ -332,7 +333,7 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
                                                const RayId* dRayIds,
                                                //
                                                const uint32_t rayCount,
-                                               RNGMemory& rngMem)
+                                               RNGeneratorCPUI& rngCPU)
 {
     // Special Case Skip Null Light
     if constexpr(std::is_same_v<EGroup, CPULightGroupNull>)
@@ -362,9 +363,10 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
     (
         0,
         rayCount,
-        //
+        // TODO: Change This
         KCBoundaryWork<GlobalData, LocalData, RayData,
-                       EGroup, WorkF, SurfF>,
+                       EGroup, RNGIndependentGPU,
+                       WorkF, SurfF>,
         // Args
         // Output
         dBoundMatOut,
@@ -383,7 +385,7 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
         // I-O
         localData,
         this->globalData,
-        rngMem.RNGData(gpu),
+        rngCPU.GetGPUGenerators(gpu),
         // Constants
         rayCount,
         dEndpoints,

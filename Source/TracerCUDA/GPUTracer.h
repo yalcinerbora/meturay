@@ -23,7 +23,7 @@ All Tracers should inherit this class
 #include "RayLib/CPUTimer.h"
 
 #include "RayCasterI.h"
-#include "RNGMemory.h"
+#include "RNGenerator.h"
 #include "RayMemory.h"
 #include "ImageMemory.h"
 
@@ -75,7 +75,7 @@ class GPUTracer : public GPUTracerI
         // Ray Caster
         std::unique_ptr<RayCasterI>         rayCaster;
         // GPU Memory
-        RNGMemory                           rngMemory;
+        std::unique_ptr<RNGeneratorCPUI>    rngCPU;
         ImageMemory                         imgMemory;
         // Linear List of all
         // transforms, mediums, cameras & lights

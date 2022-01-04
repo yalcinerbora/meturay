@@ -91,30 +91,40 @@ void AOTracer::GenerateWork(uint32_t cameraIndex)
 
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO>(cameraIndex,
-                                         options.sampleCount,
-                                         RayAuxInitAO(InitialAOAux),
-                                         true);
+    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU>
+    (
+        cameraIndex,
+        options.sampleCount,
+        RayAuxInitAO(InitialAOAux),
+        true
+    );
 }
 
 void AOTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO>(t, cameraIndex,
-                                         options.sampleCount,
-                                         RayAuxInitAO(InitialAOAux),
-                                         true);
+    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU>
+    (
+        t,
+        cameraIndex,
+        options.sampleCount,
+        RayAuxInitAO(InitialAOAux),
+        true
+    );
 }
 
 void AOTracer::GenerateWork(const GPUCameraI& dCam)
 {
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO>(dCam,
-                                         options.sampleCount,
-                                         RayAuxInitAO(InitialAOAux),
-                                         true);
+    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU>
+    (
+        dCam,
+        options.sampleCount,
+        RayAuxInitAO(InitialAOAux),
+        true
+    );
 }
 
 bool AOTracer::Render()
@@ -167,7 +177,7 @@ bool AOTracer::Render()
     // Launch Kernels
     rayCaster->WorkRays(workMap, outPartitions,
                         partitions,
-                        rngMemory,
+                        *rngCPU.get(),
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
 

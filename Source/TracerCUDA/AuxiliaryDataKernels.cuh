@@ -2,7 +2,7 @@
 
 #include "RayLib/HitStructs.h"
 #include "RayStructs.h"
-#include "Random.cuh"
+#include "RNGenerator.h"
 #include "CudaSystem.hpp"
 
 template <class T, class... Args>
@@ -25,9 +25,10 @@ using RayFinalizeFunc = void(*)(// Output
                                 const RayAuxData&,
                                 const RayReg&,
                                 //
-                                RandomGPU& rng);
+                                RNGeneratorGPUI& rng);
 
-template <class RayAuxData, RayFinalizeFunc<RayAuxData> FinalizeFunc>
+template <class RayAuxData, class RNG,
+          RayFinalizeFunc<RayAuxData> FinalizeFunc >
 __global__ void KCFinalizeRay(// Output
                               Vector4* gImage,
                               // Input
@@ -37,11 +38,11 @@ __global__ void KCFinalizeRay(// Output
                               const RayId* gRayIds,
                               //
                               const uint32_t rayCount,
-                              RNGGMem gRNGStates)
+                              RNGeneratorGPUI** gRNGs)
 {
     // Pre-grid stride loop
     // RNG is allocated for each SM (not for each thread)
-    RandomGPU rng(gRNGStates, LINEAR_GLOBAL_ID);
+    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
 
     // Grid Stride Loop
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
