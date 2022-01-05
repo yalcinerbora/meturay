@@ -237,9 +237,11 @@ inline void AcquireAcceleratorGPUTransform(const GPUTransformI*& transform,
     DeviceMemory tempMem(sizeof(GPUTransformI*));
     // Generate World Space AABB from Local AABB
     gpu.KC_X(0, 0, 1,
+             //
              static_cast<void (*)(const GPUTransformI**, const uint32_t*,
                                   const GPUTransformI**, uint32_t)>
              (KCAcquireTransform),
+             //
              static_cast<const GPUTransformI**>(tempMem),
              dAccTransformIdList,
              dTransformList,
@@ -260,9 +262,11 @@ inline void AcquireIdentityTransform(const GPUTransformI*& transform,
     DeviceMemory tempMem(sizeof(GPUTransformI*));
     // Generate World Space AABB from Local AABB
     gpu.KC_X(0, 0, 1,
+             //
              static_cast<void (*)(const GPUTransformI**, const GPUTransformI**,
                                   uint32_t)>
              (KCAcquireTransform),
+             //
              static_cast<const GPUTransformI**>(tempMem),
              dTransformList,
              identityTransformIndex);
@@ -362,9 +366,29 @@ static void KCGenerateAreas(// Output
                             const typename PGroup::LeafData* gLeafs,
                             const TransformId* gTransformIds,
                             const GPUTransformI** gTransforms,
+                            // Constants
+                            const typename PGroup::PrimitiveData primData,
                             size_t totalPrimCount)
 {
+    static constexpr auto AreaFunc = PGroup::Area;
 
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < totalPrimCount; globalId += blockDim.x * gridDim.x)
+    {
+        float area = AreaFunc(gLeafs[globalId].primitiveId, primData);
+        // Scale the area
+        const GPUTransformI* t = gTransforms[gTransformIds[globalId]];
+        Vector3f scaleFactor = t->ToWorldScale();
+
+        // Assume a scale matrix with this factors
+        // Determinant should give approx scale
+        float det = scaleFactor.Multiply();
+        dAreas[globalId] = area * det;
+
+        //printf("Scale:[%f, %f, %f], = %f, A %f\n",
+        //       scaleFactor[0], scaleFactor[1], scaleFactor[2],
+        //       det, area);
+    }
 }
 
 template <class PGroup, class RNG>
@@ -373,13 +397,37 @@ static void KCSampleSurfacePatch(// Output
                                  Vector3f* dPositions,
                                  Vector3f* dNormals,
                                  // I-O
-                                 RNGeneratorGPUI** gGenerators,
+                                 RNGeneratorGPUI** gRNGs,
                                  // Inputs
                                  const typename PGroup::LeafData* gLeafs,
                                  const TransformId* gTransformIds,
                                  const GPUTransformI** gTransforms,
+                                 // Constants
                                  GPUDistPiecewiseConst1D areaDist,
+                                 const typename PGroup::PrimitiveData primData,
                                  size_t totalSampleCount)
 {
+    static constexpr auto SamplePos = PGroup::SamplePosition;
 
+    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
+
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < totalSampleCount; globalId += blockDim.x * gridDim.x)
+    {
+        float pdf;
+        float index;
+        areaDist.Sample(pdf, index, rng);
+        uint32_t leafIndex = static_cast<uint32_t>(index);
+        PrimitiveId primId = gLeafs[leafIndex].primitiveId;
+
+        Vector3f normal;
+        Vector3f pos = SamplePos(normal, pdf, primId, primData, rng);
+
+        //printf("P:[%f, %f, %f], N[%f, %f, %f]\n",
+        //       pos[0], pos[1], pos[2],
+        //       normal[0], normal[1], normal[2]);
+
+        dPositions[globalId] = pos;
+        dNormals[globalId] = normal;
+    }
 }

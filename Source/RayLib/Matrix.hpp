@@ -862,12 +862,12 @@ template<class T, typename>
 __device__ __host__
 Vector<3, T> TransformGen::ExtractScale(const Matrix<4, T>& m)
 {
-    // This is kinda hacky
-    // First it cannot determine negative scalings,
-    // Second it should fail if transform matrix has shear (didn't tested tho)
-    T sX = Vector<3, T>(m[0], m[1], m[2]).Length();
-    T sY = Vector<3, T>(m[4], m[5], m[6]).Length();
-    T sZ = Vector<3, T>(m[8], m[9], m[10]).Length();
+    // This is not proper!
+    // This should fail if transform matrix has shear
+    // (didn't tested tho)
+    T sX = Vector<3, T>(m[0], m[4], m[8]).Length();
+    T sY = Vector<3, T>(m[1], m[5], m[9]).Length();
+    T sZ = Vector<3, T>(m[2], m[6], m[10]).Length();
     return Vector<3, T>(sX, sY, sZ);
 }
 
@@ -886,9 +886,9 @@ Matrix<4, T> TransformGen::Translate(const Vector<3, T>& v)
     //  0       1       0       ty
     //  0       0       1       tz
     //  0       0       0       1
-    return Matrix<4, T>(1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
+    return Matrix<4, T>(1,    0,    0,    0,
+                        0,    1,    0,    0,
+                        0,    0,    1,    0,
                         v[0], v[1], v[2], 1);
 }
 
@@ -956,7 +956,7 @@ Matrix<4, T> TransformGen::Rotate(T angle, const Vector<3, T>& axis)
     return Matrix<4, T>(m11, m21, m31, 0,
                         m12, m22, m32, 0,
                         m13, m23, m33, 0,
-                        0, 0, 0, 1);
+                        0,   0,   0,   1);
 }
 
 template<class T, typename>

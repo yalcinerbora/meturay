@@ -48,6 +48,15 @@ class GPUTransformSingle : public GPUTransformI
 										const float* weights = nullptr,
 										uint32_t count = 0) const override;
 
+		__device__ __forceinline__
+		Vector3f			ToWorldScale(const uint32_t* indices = nullptr,
+									 const float* weights = nullptr,
+									 uint32_t count = 0) const override;
+		__device__ __forceinline__
+		Vector3f			ToLocalScale(const uint32_t* indices = nullptr,
+								     const float* weights = nullptr,
+								     uint32_t count = 0) const override;
+
 		__device__
 		Matrix4x4		GetLocalToWorldAsMatrix() const override;
 };
@@ -187,6 +196,21 @@ inline QuatF GPUTransformSingle::ToLocalRotation(const uint32_t*, const float*,
 												 uint32_t) const
 {
 	return invRotation;
+}
+
+__device__ __forceinline__
+Vector3f GPUTransformSingle::ToWorldScale(const uint32_t* indices,
+										  const float* weights, uint32_t count) const
+{
+	return TransformGen::ExtractScale(transform);
+}
+
+__device__ __forceinline__
+Vector3f GPUTransformSingle::ToLocalScale(const uint32_t* indices,
+										  const float* weights,
+										  uint32_t count) const
+{
+	return TransformGen::ExtractScale(invTransform);
 }
 
 __device__

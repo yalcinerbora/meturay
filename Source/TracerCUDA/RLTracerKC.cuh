@@ -15,7 +15,7 @@
 
 #include "RayLib/RandomColor.h"
 
-#include "ScenePositionTree.cuh"
+#include "SceneSurfaceTreeKC.cuh"
 #include "Dense2DArray.cuh"
 
 struct RLTracerGlobalState
@@ -30,7 +30,7 @@ struct RLTracerGlobalState
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
     // SDTree Related
-    LBVHPointGPU                    gPosTree;
+    LBVHSurfaceGPU                  gPosTree;
     Dense2DArrayGPU                 gSpatialData;
     // Path Related
     PathGuidingNode*                gPathNodes;
@@ -226,7 +226,8 @@ void RLTracerPathWork(// Output
 
     // Nearest DTree
     // Find nearest DTree
-    uint32_t spatialIndex = renderState.gPosTree.FindNearestPoint(position);
+    uint32_t spatialIndex = 0;
+    //uint32_t spatialIndex = renderState.gPosTree.FindNearestPoint(position);
     assert(spatialIndex != UINT32_MAX);
 
     // Check Material Sample Strategy

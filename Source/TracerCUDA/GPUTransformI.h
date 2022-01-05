@@ -49,6 +49,15 @@ class GPUTransformI
 									    const float* weights = nullptr,
 									    uint32_t count = 0) const = 0;
 
+		__device__
+		virtual Vector3f ToWorldScale(const uint32_t* indices = nullptr,
+									  const float* weights = nullptr,
+									  uint32_t count = 0) const = 0;
+		__device__
+		virtual Vector3f ToLocalScale(const uint32_t* indices = nullptr,
+									  const float* weights = nullptr,
+									  uint32_t count = 0) const = 0;
+
 		// Adding this function for optiX
 		// Optix requires 4x3 row-major matrices for instance accelerators
 		// If this transform cannot be represented by a single matrix

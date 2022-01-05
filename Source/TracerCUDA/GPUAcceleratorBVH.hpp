@@ -772,10 +772,11 @@ size_t GPUAccBVHGroup<PGroup>::TotalPrimitiveCount() const
 template <class PGroup>
 float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaSystem& gpu) const
 {
-    // It is quite expensive to get exact area estimate
-    // Utilize the root AABB surface areas for an approximation
 
-    return 1.0f;
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+    // TODO do an proper area measure
+    return 1.0f * static_cast<float>(leafCount);
 }
 
 template <class PGroup>
@@ -788,6 +789,9 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                                                       uint32_t surfacePatchCount,
                                                       const CudaSystem& system) const
 {
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+
     const CudaGPU& gpu = system.BestGPU();
     uint32_t totalLeafCount = static_cast<uint32_t>(TotalPrimitiveCount());
 
@@ -848,8 +852,8 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                            accId,
                            localNodeCount);
         // Expand the transform over leafs
-        ExpandValueGPU<TransformId>(dLeafTransformIds,
-                                    dAccTransformIds + offset,
+        ExpandValueGPU<TransformId>(dLeafTransformIds + offset,
+                                    dAccTransformIds + accId,
                                     localLeafCount);
 
         offset += surfaceLeafCounts[accId];
@@ -866,6 +870,8 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                        dLinearLeafData,
                        dLeafTransformIds,
                        this->dTransforms,
+                       // Constants
+                       primData,
                        totalLeafCount);
 
     // Generate PWC Distribution over area
@@ -886,7 +892,9 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                        dLinearLeafData,
                        dLeafTransformIds,
                        this->dTransforms,
+                       // Constants
                        areaDist.DistributionGPU(0),
+                       primData,
                        surfacePatchCount);
 
     // All Done!

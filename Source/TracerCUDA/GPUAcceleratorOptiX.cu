@@ -8,7 +8,7 @@
 template <class PGroup>
 __global__
 static void KCCopyPrimPositions(Vector3f* gPositions,
-                                // Iputs
+                                // Inputs
                                 typename PGroup::PrimitiveData pData,
                                 const Vector2ul primRanges)
 {

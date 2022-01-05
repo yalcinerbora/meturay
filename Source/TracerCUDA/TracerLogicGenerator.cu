@@ -28,6 +28,7 @@
 #include "AOTracer.h"
 #include "PPGTracer.h"
 #include "RefPGTracer.h"
+#include "RLTracer.h"
 // Lights
 #include "GPULightNull.cuh"
 #include "GPULightConstant.cuh"
@@ -132,15 +133,6 @@ TracerLogicGenerator::TracerLogicGenerator()
                                                     DefaultDestruct<GPUBaseAcceleratorI>));
     #endif
     // Material Types
-    //matGroupGenerators.emplace(BoundaryMatConstant::TypeName(),
-    //                           GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatConstant>,
-    //                                          DefaultDestruct<GPUMaterialGroupI>));
-    //matGroupGenerators.emplace(BoundaryMatTextured::TypeName(),
-    //                           GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatTextured>,
-    //                                          DefaultDestruct<GPUMaterialGroupI>));
-    //matGroupGenerators.emplace(BoundaryMatSkySphere::TypeName(),
-    //                           GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BoundaryMatSkySphere>,
-    //                           DefaultDestruct<GPUMaterialGroupI>));
     // Debug Materials
     matGroupGenerators.emplace(BarycentricMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, BarycentricMat>,
@@ -239,6 +231,9 @@ TracerLogicGenerator::TracerLogicGenerator()
                                           DefaultDestruct<GPUTracerI>));
     tracerGenerators.emplace(RefPGTracer::TypeName(),
                              GPUTracerGen(TracerLogicConstruct<GPUTracerI, RefPGTracer>,
+                                          DefaultDestruct<GPUTracerI>));
+    tracerGenerators.emplace(RLTracer::TypeName(),
+                             GPUTracerGen(TracerLogicConstruct<GPUTracerI, RLTracer>,
                                           DefaultDestruct<GPUTracerI>));
 }
 

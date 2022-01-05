@@ -638,7 +638,10 @@ size_t GPUAccOptiXGroup<PGroup>::TotalPrimitiveCount() const
 template <class PGroup>
 float GPUAccOptiXGroup<PGroup>::TotalApproximateArea(const CudaSystem&) const
 {
-    return 1.0f;
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+    // TODO do an proper area measure
+    return 1.0f * static_cast<float>(leafCount);
 }
 
 template <class PGroup>
@@ -652,6 +655,9 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                                                         const CudaSystem& system) const
 
 {
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+
     const CudaGPU& gpu = system.BestGPU();
     size_t totalLeafCount = accRanges.back()[1];
 
@@ -662,14 +668,16 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                                    areaMemory,
                                    {totalLeafCount, totalLeafCount});
 
+    uint32_t innerIndex = 0;
     for(const auto& range : accRanges)
     {
         size_t localLeafCount = range[1] - range[0];
 
         // Expand the transform over leafs
-        ExpandValueGPU<TransformId>(dLeafTransformIds,
-                                    dAccTransformIds + range[0],
+        ExpandValueGPU<TransformId>(dLeafTransformIds + range[0],
+                                    dAccTransformIds + innerIndex,
                                     localLeafCount);
+        innerIndex++;
     }
 
     // Generate Area of each primitive
@@ -682,6 +690,8 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                        dLeafList,
                        dLeafTransformIds,
                        this->dTransforms,
+                       // Constants
+                       primData,
                        totalLeafCount);
 
     // Generate PWC Distribution over area
@@ -702,6 +712,8 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                        dLeafList,
                        dLeafTransformIds,
                        this->dTransforms,
+                       // Constants
                        areaDist.DistributionGPU(0),
+                       primData,
                        surfacePatchCount);
 }

@@ -118,6 +118,15 @@
     <Filter Include="Tracers\Data Structures">
       <UniqueIdentifier>{1a755114-28e6-451c-8021-27bbbd5b800d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RNG">
+      <UniqueIdentifier>{077a0941-82a9-40c1-aa72-e7bed7609c94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracers\RLTracer">
+      <UniqueIdentifier>{dcd37ed7-4715-43bd-9390-6a90fb23ecde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracers\RLTracer\Aux Classes">
+      <UniqueIdentifier>{546424e3-bc1d-4094-b3d3-8578ffc2ac66}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\TracerCUDA\GPUPrimitiveSphere.cpp">
@@ -171,9 +180,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayMemory.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\RNGMemory.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUAcceleratorI.h">
       <Filter>GPU Interfaces</Filter>
     </ClInclude>
@@ -183,9 +189,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RayStructs.h">
       <Filter>Structs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\RNGStructs.h">
-      <Filter>Structs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ParallelReduction.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
@@ -193,9 +196,6 @@
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\RadixSort.cuh">
-      <Filter>GPU Algorithms</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\Random.cuh">
       <Filter>GPU Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\ComparisonFunctions.cuh">
@@ -612,6 +612,27 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\LinearBVH.hpp">
       <Filter>Tracers\Data Structures</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RNGenerator.h">
+      <Filter>RNG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RNGIndependent.cuh">
+      <Filter>RNG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RNGSobol.cuh">
+      <Filter>RNG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RLTracer.h">
+      <Filter>Tracers\RLTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RLTracerKC.cuh">
+      <Filter>Tracers\RLTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\RLTracerWorks.cuh">
+      <Filter>Tracers\RLTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\Dense2DArray.cuh">
+      <Filter>Tracers\RLTracer\Aux Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -643,9 +664,6 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\TracerLogicGenerator.cu">
       <Filter>SharedLib</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGMemory.cu">
-      <Filter>Memory</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu">
       <Filter>Memory</Filter>
@@ -772,6 +790,21 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\ScenePositionTree.cu">
       <Filter>Tracers\Data Structures</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGIndependent.cu">
+      <Filter>RNG</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGSobol.cu">
+      <Filter>RNG</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RLTracer.cu">
+      <Filter>Tracers\RLTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\RLTracerWorks.cu">
+      <Filter>Tracers\RLTracer</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\Dense2DArray.cu">
+      <Filter>Tracers\RLTracer\Aux Classes</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

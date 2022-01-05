@@ -42,6 +42,15 @@ class GPUTransformIdentity final : public GPUTransformI
 										uint32_t count = 0) const override;
 
 		__device__ __forceinline__
+		Vector3f			ToWorldScale(const uint32_t* indices = nullptr,
+									 const float* weights = nullptr,
+									 uint32_t count = 0) const override;
+		__device__ __forceinline__
+		Vector3f			ToLocalScale(const uint32_t* indices = nullptr,
+								     const float* weights = nullptr,
+								     uint32_t count = 0) const override;
+
+		__device__ __forceinline__
 		Matrix4x4		GetLocalToWorldAsMatrix() const override;
 };
 
@@ -116,6 +125,21 @@ QuatF GPUTransformIdentity::ToLocalRotation(const uint32_t*, const float*,
 											uint32_t) const
 {
 	return IdentityQuatF;
+}
+
+__device__ __forceinline__
+Vector3f GPUTransformIdentity::ToWorldScale(const uint32_t* indices,
+											const float* weights, uint32_t count) const
+{
+	return Vector3f(1.0f);
+}
+
+__device__ __forceinline__
+Vector3f GPUTransformIdentity::ToLocalScale(const uint32_t* indices,
+										    const float* weights,
+										    uint32_t count) const
+{
+	return Vector3f(1.0f);
 }
 
 __device__ __forceinline__

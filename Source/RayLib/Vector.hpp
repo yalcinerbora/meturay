@@ -453,7 +453,7 @@ template <int N, class T>
 __device__ __host__ HYBRID_INLINE
 T Vector<N, T>::Multiply() const
 {
-    T result = 0;
+    T result = 1;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {

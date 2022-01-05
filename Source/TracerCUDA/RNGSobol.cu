@@ -47,7 +47,7 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
     uint32_t* hScrambleConstants;
     curandDirectionVectors32_t* hDirectionVectors;
     curandStatus_t s = curandGetDirectionVectors32(&hDirectionVectors,
-                                                   CURAND_SCRAMBLED_DIRECTION_VECTORS_64_JOEKUO6);
+                                                   CURAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6);
     if(s != CURAND_STATUS_SUCCESS) assert(false);
     s = curandGetScrambleConstants32(&hScrambleConstants);
     if(s != CURAND_STATUS_SUCCESS) assert(false);

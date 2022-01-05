@@ -246,8 +246,7 @@ set(SRC_DATA_STRUCTURES
     ${CURRENT_SOURCE_DIR}/LinearBVH.cu
     ${CURRENT_SOURCE_DIR}/LinearBVH.hpp
     ${CURRENT_SOURCE_DIR}/LinearBVH.cuh
-    ${CURRENT_SOURCE_DIR}/ScenePositionTree.cuh
-    ${CURRENT_SOURCE_DIR}/ScenePositionTree.cu)
+    ${CURRENT_SOURCE_DIR}/LinearBVHKC.cuh)
 
 set(SRC_TRACERS_STRUCTS
     ${CURRENT_SOURCE_DIR}/PathNode.cuh
@@ -298,7 +297,10 @@ set(SRC_RL_TRACER
 
 set(SRC_RL_TRACER_AUX_CLASSES
     ${CURRENT_SOURCE_DIR}/Dense2DArray.cu
-    ${CURRENT_SOURCE_DIR}/Dense2DArray.cuh)
+    ${CURRENT_SOURCE_DIR}/Dense2DArray.cuh
+    ${CURRENT_SOURCE_DIR}/SceneSurfaceTree.cuh
+    ${CURRENT_SOURCE_DIR}/SceneSurfaceTree.cu
+    ${CURRENT_SOURCE_DIR}/SceneSurfaceTreeKC.cuh)
 
 
 set(SRC_REF_PG_TRACER

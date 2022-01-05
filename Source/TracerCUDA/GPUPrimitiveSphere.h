@@ -181,7 +181,7 @@ struct SphrFunctions
     {
         Vector4f data = primData.centerRadius[primitiveId];
         float radius = data[3];
-        return MathConstants::Pi * radius * radius;
+        return 4.0f * MathConstants::Pi * radius * radius;
     }
 
     __device__ __forceinline__

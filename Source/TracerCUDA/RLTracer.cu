@@ -92,6 +92,7 @@ TracerError RLTracer::Initialize()
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
+
     const auto& boundaryInfoList = scene.BoundarWorkBatchInfo();
     for(const auto& wInfo : boundaryInfoList)
     {
@@ -113,6 +114,13 @@ TracerError RLTracer::Initialize()
         workMap.emplace(batchId, workBatchList);
 
     }
+
+    if((err = surfaceTree.Construct(scene.AcceleratorBatchMappings(),
+                                    options.normalThreshold,
+                                    options.spatialSamples,
+                                    params.seed,
+                                    cudaSystem)) != TracerError::OK)
+        return err;
 
     return TracerError::OK;
 }
@@ -146,6 +154,8 @@ TracerError RLTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetFloat(options.alpha, ALPHA_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetFloat(options.normalThreshold, NORM_THRESHOLD_NAME)) != TracerError::OK)
+        return err;
 
     return TracerError::OK;
 }
@@ -171,7 +181,7 @@ bool RLTracer::Render()
     globalData.totalMediumCount = mediumCount;
     //
     // Set Positional Tree
-    globalData.gPosTree = posTree.TreeGPU();
+    globalData.gPosTree = surfaceTree.TreeGPU();
     globalData.gSpatialData = denseArray.ArrayGPU();
     //
     globalData.gPathNodes = dPathNodes;
@@ -300,7 +310,7 @@ void RLTracer::GenerateWork(const GPUCameraI& dCam)
 size_t RLTracer::TotalGPUMemoryUsed() const
 {
     return (RayTracer::TotalGPUMemoryUsed() +
-            posTree.UsedGPUMemory() +
+            surfaceTree.UsedGPUMemory() +
             lightSamplerMemory.Size() + pathMemory.Size());
 }
 

@@ -3,7 +3,7 @@
 #include "RayTracer.h"
 #include "WorkPool.h"
 #include "GPULightI.h"
-#include "ScenePositionTree.cuh"
+#include "SceneSurfaceTree.cuh"
 #include "Dense2DArray.cuh"
 #include "Tracers.h"
 
@@ -13,7 +13,7 @@ struct PathGuidingNode;
 class RLTracer final : public RayTracer
 {
     public:
-        static constexpr const char* TypeName() { return "PPGTracer"; }
+        static constexpr const char* TypeName() { return "RLTracer"; }
 
         static constexpr const char* MAX_DEPTH_NAME             = "MaxDepth";
         static constexpr const char* SAMPLE_NAME                = "Samples";
@@ -25,6 +25,7 @@ class RLTracer final : public RayTracer
 
         static constexpr const char* RAW_PG_NAME                = "RawPathGuiding";
         static constexpr const char* DIRECTONAL_RES_NAME        = "DirectionalResolution";
+        static constexpr const char* NORM_THRESHOLD_NAME        = "NormalThreshold";
         static constexpr const char* SPATIAL_SAMPLE_NAME        = "SpatialSampleCount";
         static constexpr const char* ALPHA_NAME                 = "Alpha";
 
@@ -43,6 +44,7 @@ class RLTracer final : public RayTracer
             Vector2i            directionalRes      = Vector2i(16, 16);
             uint32_t            spatialSamples      = 2048;
             float               alpha               = 0.5f;
+            float               normalThreshold     = 45.0f; // degrees
 
             // Misc
             bool                rawPathGuiding      = true;
@@ -68,7 +70,7 @@ class RLTracer final : public RayTracer
         PathGuidingNode*                dPathNodes;
         // Global Data Structure
         DeviceMemory                    memory;
-        ScenePositionTree               posTree;
+        SceneSurfaceTree                surfaceTree;
         Dense2DArrayCPU                 denseArray;
         // Internal State
         uint32_t                        currentTreeIteration;

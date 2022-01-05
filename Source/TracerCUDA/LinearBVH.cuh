@@ -19,9 +19,6 @@
 template <class Leaf>
 using AABBGenFunc = AABB3f(&)(const Leaf&);
 
-template <class Leaf>
-using DistanceBetween = float(&)(const Leaf&, const Vector3f& worldPoint);
-
 template<class Leaf>
 struct alignas(16) LBVHNode
 {
@@ -43,29 +40,35 @@ struct alignas(16) LBVHNode
     bool isLeaf;
 };
 
-static constexpr const uint8_t MAX_DEPTH = 64;
+// SFINAE
+template <typename T, typename = Vector3f>
+struct HasPosition : std::false_type {};
 
-template <class Leaf, DistanceBetween<Leaf> DistFunc>
+template <typename T>
+struct HasPosition<T, decltype(T::position)> : std::true_type {};
+
+template <class Leaf, class DistFunctor>
 struct LinearBVHGPU
 {
+    static constexpr const uint8_t MAX_DEPTH = 64;
+
+    DistFunctor             DistanceFunction;
     uint32_t                rootIndex;
     const LBVHNode<Leaf>*   nodes;
     uint32_t                nodeCount;
     uint32_t                leafCount;
 
-    __device__ uint32_t     FindNearestPoint(const Vector3f& worldPos) const;
+    __device__ uint32_t     FindNearestPoint(const Leaf& worldSurface) const;
 };
 
 template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
+          class DistFunctor,
+          AABBGenFunc<Leaf> AF>
 class LinearBVHCPU
 {
     public:
-        using DeviceBVH     = LinearBVHGPU<Leaf, DF>;
-
-        static constexpr auto AABBFunc      = AF;
-        static constexpr auto DistanceFunc  = DF;
+        using DeviceBVH                 = LinearBVHGPU<Leaf, DistFunctor>;
+        static constexpr auto AABBFunc  = AF;
 
     private:
         DeviceBVH           treeGPU;
@@ -82,7 +85,9 @@ class LinearBVHCPU
                             ~LinearBVHCPU() = default;
 
         // Construct using the leaf list gpu data provided
-        TracerError         Construct(const Leaf* dLeafList, uint32_t leafCount,
+        TracerError         Construct(const Leaf* dLeafList,
+                                      uint32_t leafCount,
+                                      DistFunctor df,
                                       const CudaSystem& system);
 
         // Getters
@@ -94,10 +99,13 @@ class LinearBVHCPU
         size_t              UsedCPUMemory() const;
 };
 
-template <class Leaf, DistanceBetween<Leaf> DistFunc>
+template <class Leaf, class DistFunctor>
 __device__ __forceinline__
-uint32_t LinearBVHGPU<Leaf, DistFunc>::FindNearestPoint(const Vector3f& worldPos) const
+uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurface) const
 {
+    static_assert(HasPosition<Leaf>::value,
+                  "This functions requires its leafs to have public \"position\" variable");
+
     using namespace IntersectionFunctions;
     // Helper Variables
     static constexpr uint8_t FIRST_ENTRY = 0b00;
@@ -147,7 +155,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunc>::FindNearestPoint(const Vector3f& worldPos
             // If Leaf, do its custom closest function primitive intersection
             if(currentNode->isLeaf)
             {
-                float distance = DistFunc(currentNode->leaf, worldPos);
+                float distance = DistanceFunction(currentNode->leaf, worldSurface);
                 if(distance < closestDistance)
                 {
                     closestDistance = distance;
@@ -162,7 +170,8 @@ uint32_t LinearBVHGPU<Leaf, DistFunc>::FindNearestPoint(const Vector3f& worldPos
             // intersects with this AABB
             else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
                                          currentNode->body.aabbMax);
-                    AABBIntersectsSphere(aabb, worldPos, closestDistance))
+                    AABBIntersectsSphere(aabb, worldSurface.position,
+                                         closestDistance))
             {
                 // By construction BVH tree has either no or both children
                 // avail. If a node is non-leaf it means that it has both of its children
@@ -203,51 +212,47 @@ uint32_t LinearBVHGPU<Leaf, DistFunc>::FindNearestPoint(const Vector3f& worldPos
     return closestIndex;
 }
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-inline uint32_t LinearBVHCPU<Leaf, AF, DF>::NodeCount() const
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+inline uint32_t LinearBVHCPU<Leaf, DF, AF>::NodeCount() const
 {
     return treeGPU.nodeCount;
 }
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-inline uint32_t LinearBVHCPU<Leaf, AF, DF >::LeafCount() const
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+inline uint32_t LinearBVHCPU<Leaf, DF, AF>::LeafCount() const
 {
     return treeGPU.leafCount;
 }
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-inline const LinearBVHGPU<Leaf, DF>& LinearBVHCPU<Leaf, AF, DF>::TreeGPU() const
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+inline const LinearBVHGPU<Leaf, DF>& LinearBVHCPU<Leaf, DF, AF>::TreeGPU() const
 {
     return treeGPU;
 }
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-inline size_t LinearBVHCPU<Leaf, AF, DF>::UsedGPUMemory() const
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+inline size_t LinearBVHCPU<Leaf, DF, AF>::UsedGPUMemory() const
 {
     return memory.Size();
 }
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-inline size_t LinearBVHCPU<Leaf, AF, DF>::UsedCPUMemory() const
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+inline size_t LinearBVHCPU<Leaf, DF, AF>::UsedCPUMemory() const
 {
     return sizeof(LinearBVHCPU);
 }
 
-extern template struct LBVHNode<Vector3>;
-extern template struct LinearBVHGPU<Vector3f, DistancePoint>;
-extern template class LinearBVHCPU<Vector3, GenPointAABB, DistancePoint>;
+// Basic Definitions for point query in Linear BVH
+extern template struct LBVHNode<PointStruct>;
+extern template struct LinearBVHGPU<PointStruct, PointDistanceFunctor>;
+extern template class LinearBVHCPU<PointStruct, PointDistanceFunctor, GenPointAABB>;
 
-using LBVHPointGPU = struct LinearBVHGPU<Vector3f, DistancePoint>;
-using LBVHPointCPU = LinearBVHCPU<Vector3, GenPointAABB, DistancePoint>;
+using LBVHPointGPU = LinearBVHGPU<PointStruct, PointDistanceFunctor>;
+using LBVHPointCPU = LinearBVHCPU<PointStruct, PointDistanceFunctor, GenPointAABB>;
 
 #include "LinearBVH.hpp"

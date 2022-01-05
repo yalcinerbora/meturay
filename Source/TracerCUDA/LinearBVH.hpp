@@ -181,10 +181,9 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
     }
 }
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-float LinearBVHCPU<Leaf, AF, DF>::FindMortonDelta(const AABB3f& extent)
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+float LinearBVHCPU<Leaf, DF, AF>::FindMortonDelta(const AABB3f& extent)
 {
     // Potentially use the entire bitset of the 64-bit int
     Vector3f size = extent.Span();
@@ -200,18 +199,16 @@ float LinearBVHCPU<Leaf, AF, DF>::FindMortonDelta(const AABB3f& extent)
     return static_cast<float>(std::max({dx, dy, dz}));
 }
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-LinearBVHCPU<Leaf, AF, DF>::LinearBVHCPU()
-    : treeGPU{}
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+LinearBVHCPU<Leaf, DF, AF>::LinearBVHCPU()
 {}
 
-template <class Leaf,
-          AABBGenFunc<Leaf> AF,
-          DistanceBetween<Leaf> DF>
-TracerError LinearBVHCPU<Leaf, AF, DF>::Construct(const Leaf* dLeafList,
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
                                                   uint32_t leafCount,
+                                                  DF df,
                                                   const CudaSystem& system)
 {
     // TempMemory (Leaf AABBs, morton code
@@ -347,6 +344,7 @@ TracerError LinearBVHCPU<Leaf, AF, DF>::Construct(const Leaf* dLeafList,
     treeGPU.nodes = dNodes;
     treeGPU.nodeCount = leafCount + leafCount - 1;
     treeGPU.leafCount = leafCount;
+    treeGPU.DistanceFunction = df;
 
     return TracerError::OK;
 }
