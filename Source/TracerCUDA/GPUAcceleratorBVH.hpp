@@ -776,7 +776,10 @@ float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaSystem& gpu) const
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
     // TODO do an proper area measure
-    return 1.0f * static_cast<float>(leafCount);
+    uint32_t totalLeafCount = std::reduce(surfaceLeafCounts.cbegin(),
+                                          surfaceLeafCounts.cend(),
+                                          0u);
+    return 1.0f * static_cast<float>(totalLeafCount);
 }
 
 template <class PGroup>

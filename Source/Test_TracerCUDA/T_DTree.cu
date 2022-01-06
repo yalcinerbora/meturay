@@ -29,7 +29,7 @@ static void KCDirToCoord(Vector3f* dirs,
         globalId < coordCount; globalId += blockDim.x * gridDim.x)
     {
         float pdf;
-        dirs[globalId] = DTreeGPU::TreeCoordsToWorldDir(pdf, coords[globalId]);
+        dirs[globalId] = GPUDataStructCommon::DiscreteCoordsToDir(pdf, coords[globalId]);
     }
 }
 
@@ -42,7 +42,7 @@ static void KCCoordToDir(Vector2f* coords,
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < coordCount; globalId += blockDim.x * gridDim.x)
     {
-        coords[globalId] = DTreeGPU::WorldDirToTreeCoords(dirs[globalId]);
+        coords[globalId] = GPUDataStructCommon::DirToDiscreteCoords(dirs[globalId]);
     }
 }
 

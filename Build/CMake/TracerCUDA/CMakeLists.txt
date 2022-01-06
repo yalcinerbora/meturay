@@ -296,8 +296,8 @@ set(SRC_RL_TRACER
     ${CURRENT_SOURCE_DIR}/RLTracerWorks.cuh)
 
 set(SRC_RL_TRACER_AUX_CLASSES
-    ${CURRENT_SOURCE_DIR}/Dense2DArray.cu
-    ${CURRENT_SOURCE_DIR}/Dense2DArray.cuh
+    ${CURRENT_SOURCE_DIR}/QFunction.cu
+    ${CURRENT_SOURCE_DIR}/QFunction.cuh
     ${CURRENT_SOURCE_DIR}/SceneSurfaceTree.cuh
     ${CURRENT_SOURCE_DIR}/SceneSurfaceTree.cu
     ${CURRENT_SOURCE_DIR}/SceneSurfaceTreeKC.cuh)

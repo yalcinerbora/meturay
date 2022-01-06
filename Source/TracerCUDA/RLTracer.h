@@ -4,7 +4,7 @@
 #include "WorkPool.h"
 #include "GPULightI.h"
 #include "SceneSurfaceTree.cuh"
-#include "Dense2DArray.cuh"
+#include "QFunction.cuh"
 #include "Tracers.h"
 
 class GPUDirectLightSamplerI;
@@ -71,7 +71,7 @@ class RLTracer final : public RayTracer
         // Global Data Structure
         DeviceMemory                    memory;
         SceneSurfaceTree                surfaceTree;
-        Dense2DArrayCPU                 denseArray;
+        QFunctionCPU                    qFunction;
         // Internal State
         uint32_t                        currentTreeIteration;
         uint32_t                        nextTreeSwap;

@@ -181,8 +181,8 @@ bool RLTracer::Render()
     globalData.totalMediumCount = mediumCount;
     //
     // Set Positional Tree
-    globalData.gPosTree = surfaceTree.TreeGPU();
-    globalData.gSpatialData = denseArray.ArrayGPU();
+    globalData.posTree = surfaceTree.TreeGPU();
+    globalData.qFunction = qFunction.FunctionGPU();
     //
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();

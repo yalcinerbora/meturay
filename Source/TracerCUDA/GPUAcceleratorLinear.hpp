@@ -387,7 +387,7 @@ float GPUAccLinearGroup<PGroup>::TotalApproximateArea(const CudaSystem&) const
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
     // TODO do an proper area measure
-    return 1.0f * static_cast<float>(leafCount);
+    return 1.0f * static_cast<float>(accRanges.back()[1]);
 }
 
 template <class PGroup>

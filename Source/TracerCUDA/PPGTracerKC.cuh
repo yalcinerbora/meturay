@@ -430,11 +430,9 @@ void PPGTracerPathWork(// Output
         }
         // Pdf Average
         //pdfPath = pdfBxDF;
-        pdfPath = selectedPDFZero ? 0.0f
-                                  : (BxDF_DTreeSampleRatio          * pdfTree +
-                                     (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF);
-        //pdfPath = BxDF_DTreeSampleRatio          * pdfTree +
-        //          (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF;
+        pdfPath = BxDF_DTreeSampleRatio          * pdfTree +
+                  (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF;
+        pdfPath = selectedPDFZero ? 0.0f : pdfPath;
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))

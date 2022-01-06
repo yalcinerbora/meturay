@@ -16,7 +16,7 @@
 #include "RayLib/RandomColor.h"
 
 #include "SceneSurfaceTreeKC.cuh"
-#include "Dense2DArray.cuh"
+#include "QFunction.cuh"
 
 struct RLTracerGlobalState
 {
@@ -30,8 +30,8 @@ struct RLTracerGlobalState
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
     // SDTree Related
-    LBVHSurfaceGPU                  gPosTree;
-    Dense2DArrayGPU                 gSpatialData;
+    LBVHSurfaceGPU                  posTree;
+    QFunctionGPU                    qFunction;
     // Path Related
     PathGuidingNode*                gPathNodes;
     uint32_t                        maximumPathNodePerRay;
@@ -54,6 +54,39 @@ __device__ __forceinline__
 uint8_t DeterminePathIndex(uint8_t depth)
 {
     return depth - 1;
+}
+
+template <class MGroup>
+__device__ __forceinline__
+float AccumulateQFunction(const QFunctionGPU& qFunction,
+                          uint32_t spatialIndex)
+{
+    // Accumulate all strata
+    float sum = 0.0f;
+    Vector2ui size = qFunction.DirectionalRes();
+
+    for(uint32_t y = 0; y < size[1]; y++)
+    for(uint32_t x = 0; x < size[0]; x++)
+    {
+        Vector3f wo = qFunction.Direction(Vector2ui(x, y));
+        float value = qFunction.Value(Vector2ui(x, y), spatialIndex);
+        Vector3f reflectance = MGroup::Evaluate(// Input
+                                                wo,
+                                                wi,
+                                                position,
+                                                m,
+                                                //
+                                                surface,
+                                                // Constants
+                                                gMatData,
+                                                matIndex);
+        // TODO: Is this ok? (converting reflectance to luminance)
+        float lumReflectance = Utility::RGBToLuminance(reflectance);
+        sum += lumReflectance * value;
+    }
+    sum /= size.Multiply();
+    sum *= 2.0f * MathConstants::Pi;
+    return sum;
 }
 
 template <class EGroup>
@@ -246,17 +279,18 @@ void RLTracerPathWork(// Output
     Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
     // Sample the emission if avail
+    Vector3 emission = Zero3f;
     if(MGroup::IsEmissive(gMatData, matIndex))
     {
-        Vector3 emission = MGroup::Emit(// Input
-                                        wi,
-                                        position,
-                                        m,
-                                        //
-                                        surface,
-                                        // Constants
-                                        gMatData,
-                                        matIndex);
+        emission = MGroup::Emit(// Input
+                                wi,
+                                position,
+                                m,
+                                //
+                                surface,
+                                // Constants
+                                gMatData,
+                                matIndex);
         Vector3f total = emission * radianceFactor;
         ImageAccumulatePixel(renderState.gImage,
                              aux.pixelIndex,
@@ -355,6 +389,10 @@ void RLTracerPathWork(// Output
         }
     }
 
+    // Before BxDF Acquire the 2D irradiance map
+    SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
+    uint32_t sptaialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
+
     // ==================================== //
     //             BxDF PORTION             //
     // ==================================== //
@@ -364,14 +402,13 @@ void RLTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_DTreeSampleRatio = 0.5f;
+        constexpr float BxDF_PGSampleRatio = 0.5f;
         // Sample a chance
         float xi = rng.Uniform();
-        //const DTreeGPU& dReadTree = renderState.gSpatialData.[dTreeIndex];
 
         bool selectedPDFZero = false;
-        float pdfBxDF, pdfTree;
-        if(xi >= BxDF_DTreeSampleRatio)
+        float pdfBxDF, pdfGuide;
+        if(xi >= BxDF_PGSampleRatio)
         {
             // Sample using BxDF
             reflectance = MGroup::Sample(// Outputs
@@ -388,14 +425,16 @@ void RLTracerPathWork(// Output
                                          gMatData,
                                          matIndex,
                                          0);
-            //pdfTree = dReadTree.Pdf(rayPath.getDirection());
 
+            pdfGuide = renderState.qFunction.Pdf(rayPath.getDirection(),
+                                                 sptaialIndex);
             if(pdfBxDF == 0.0f) selectedPDFZero = true;
         }
         else
         {
             // Sample a path using SDTree
-            Vector3f direction;// = RLFunctions::Sample(pdfTree, rng); dReadTree.Sample(pdfTree, rng);
+            Vector3f direction = renderState.qFunction.Sample(pdfGuide, rng,
+                                                              spatialIndex);
             direction.NormalizeSelf();
             // Calculate BxDF
             reflectance = MGroup::Evaluate(// Input
@@ -422,15 +461,12 @@ void RLTracerPathWork(// Output
             rayPath = RayF(direction, position);
             rayPath.AdvanceSelf(MathConstants::Epsilon);
 
-            if(pdfTree == 0.0f) selectedPDFZero = true;
+            if(pdfGuide == 0.0f) selectedPDFZero = true;
         }
         // Pdf Average
-        //pdfPath = pdfBxDF;
-        pdfPath = selectedPDFZero ? 0.0f
-                                  : (BxDF_DTreeSampleRatio          * pdfTree +
-                                     (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF);
-        //pdfPath = BxDF_DTreeSampleRatio          * pdfTree +
-        //          (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF;
+        pdfPath = BxDF_DTreeSampleRatio          * pdfGuide +
+                  (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF;
+        pdfPath = selectedPDFZero ? 0.0f : pdfPath;
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))
@@ -453,6 +489,19 @@ void RLTracerPathWork(// Output
         //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree) ||
         //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
         //    return;
+
+        // If this ray is not camera ray
+        // Accumulate everything on the current spatial data
+        // and send it to previous spatial data
+        if(aux.type != RayType::CAMERA_RAY)
+        {
+            float sum = AccumulateQFunction<MGroup>(renderState.qFunction,
+                                                    sptaialIndex);
+            // Don't forget to add current emission if available
+            sum += Utility::RGBToLuminance(emission);
+            // Atomically update the value in the previous Q function
+            renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+        }
     }
     else
     {
@@ -472,9 +521,15 @@ void RLTracerPathWork(// Output
                                      matIndex,
                                      0);
 
+        // Since material is a specular material
+        // Only send the found direction value
+        // as if the accumulated value
+        float value = renderState.qFunction.Value(rayPath.getDirection(), spatialIndex);
+        float sum = Utility::RGBToLuminance(reflectance) * value;
+        renderState.qFunction.Update(wi, sum, aux.prevSptaialIndex);
     }
 
-     // Factor the radiance of the surface
+    // Factor the radiance of the surface
     Vector3f pathRadianceFactor = radianceFactor * reflectance;
     // Check singularities
     pathRadianceFactor = (pdfPath == 0.0f) ? Zero3 : (pathRadianceFactor / pdfPath);
