@@ -99,23 +99,48 @@ namespace GPUSurface
     }
 }
 
+// Each Surface should have a member function of WorldNormal()
+// For works to access it
+// SFINAE
+template <typename C, typename = void>
+struct HasGetNormFunc : public std::false_type {};
+
+template <typename C>
+struct HasGetNormFunc <C,
+    typename std::enable_if<std::is_same_v<decltype(&C::WorldNormal),
+                                           Vector3f(C::*)() const>>::type
+> : public std::true_type {};
+
+
 struct EmptySurface
-{};
+{
+    __device__
+    Vector3f WorldNormal() const { return Zero3f; };
+};
 
 struct BarySurface
 {
     Vector3 baryCoords;
+
+    __device__
+    Vector3f WorldNormal() const { return Zero3f; };
 };
 
 struct SphrSurface
 {
     Vector2 sphrCoords;
+
+    __device__
+    Vector3f WorldNormal() const { return Zero3f; };
 };
 
 struct BasicSurface
 {
     // World to tangent space transformation
     QuatF worldToTangent;
+
+    __device__
+    Vector3f WorldNormal() const;
 };
 
 struct UVSurface
@@ -123,8 +148,33 @@ struct UVSurface
     // World to tangent space transformation
     QuatF   worldToTangent;
     Vector2 uv;
+
+    __device__
+    Vector3f WorldNormal() const;
 };
 
+static_assert(HasGetNormFunc<EmptySurface>::value,
+              "EmptySurface do not have WorldNormal Function");
+static_assert(HasGetNormFunc<BarySurface>::value,
+              "BarySurface do not have WorldNormal Function");
+static_assert(HasGetNormFunc<SphrSurface>::value,
+              "SphrSurface do not have WorldNormal Function");
+static_assert(HasGetNormFunc<BasicSurface>::value,
+              "BasicSurface do not have WorldNormal Function");
+static_assert(HasGetNormFunc<UVSurface>::value,
+              "UVSurface do not have WorldNormal Function");
+
+__device__ __forceinline__
+Vector3f BasicSurface::WorldNormal() const
+{
+    return GPUSurface::NormalWorld(worldToTangent);
+}
+
+__device__ __forceinline__
+Vector3f UVSurface::WorldNormal() const
+{
+    return GPUSurface::NormalWorld(worldToTangent);
+}
 
 // Meta Functions
 // (Primitive invariant functions)
@@ -144,7 +194,7 @@ BasicSurface DefaultGenBasicSurface(const HitData&,
                                     const GPUTransformI& t,
                                     PrimitiveId,
                                     const PrimData&)
-{    
+{
     return BasicSurface{t.ToLocalRotation()};
 }
 

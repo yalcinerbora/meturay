@@ -78,7 +78,7 @@ template<int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> AABB<N, T>::Centroid() const
 {
-    return Span() * static_cast<T>(0.5);
+    return min + (Span() * static_cast<T>(0.5));
 }
 
 template<int N, class T>

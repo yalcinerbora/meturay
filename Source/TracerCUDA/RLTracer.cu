@@ -16,45 +16,19 @@
 #include "RayLib/TracerOptions.h"
 #include "RayLib/TracerCallbacksI.h"
 
-void RLTracer::ResizeAndInitPathMemory()
-{
-    size_t totalPathNodeCount = TotalPathNodeCount();
-    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
-    dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
-
-    // Initialize Paths
-    const CudaGPU& bestGPU = cudaSystem.BestGPU();
-    if(totalPathNodeCount > 0)
-        bestGPU.KC_X(0, 0, totalPathNodeCount,
-                     //
-                     KCInitializePaths,
-                     //
-                     dPathNodes,
-                     static_cast<uint32_t>(totalPathNodeCount));
-}
-
-uint32_t RLTracer::TotalPathNodeCount() const
-{
-    return (imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1] *
-            options.sampleCount * options.sampleCount) * MaximumPathNodePerPath();
-}
-
-uint32_t RLTracer::MaximumPathNodePerPath() const
-{
-    return (options.maximumDepth == 0) ? 0 : (options.maximumDepth + 1);
-}
 
 RLTracer::RLTracer(const CudaSystem& s,
                    const GPUSceneI& scene,
                    const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
-    , currentTreeIteration(0)
-    , nextTreeSwap(1)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(RLBoundaryWorkerList{});
     pathWorkPool.AppendGenerators(RLPathWorkerList{});
+
+    debugBoundaryWorkPool.AppendGenerators(RLDebugBoundaryWorkerList{});
+    debugPathWorkPool.AppendGenerators(RLDebugPathWorkerList{});
 }
 
 TracerError RLTracer::Initialize()
@@ -82,13 +56,27 @@ TracerError RLTracer::Initialize()
         const GPUMaterialGroupI& mg = *std::get<2>(wInfo);
 
         // Generic Path work
-        WorkPool<bool, bool>& wpCombo = pathWorkPool;
         GPUWorkBatchI* batch = nullptr;
-        if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
-                                            dTransforms,
-                                            options.nextEventEstimation,
-                                            options.directLightMIS)) != TracerError::OK)
-            return err;
+        if(options.debugRender)
+        {
+            if(options.debugRender)
+            {
+                WorkPool<>& wp = debugPathWorkPool;
+                if((err = wp.GenerateWorkBatch(batch, mg, pg,
+                                               dTransforms)) != TracerError::OK)
+                    return err;
+            }
+        }
+        else
+        {
+            WorkPool<bool, bool>& wpCombo = pathWorkPool;
+            if((err = wpCombo.GenerateWorkBatch(batch, mg, pg,
+                                                dTransforms,
+                                                options.nextEventEstimation,
+                                                options.directLightMIS)) != TracerError::OK)
+                return err;
+        }
+
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
@@ -104,22 +92,36 @@ TracerError RLTracer::Initialize()
         if(et == EndpointType::CAMERA) continue;
 
         WorkBatchArray workBatchList;
-        BoundaryWorkPool<bool, bool>& wp = boundaryWorkPool;
         GPUWorkBatchI* batch = nullptr;
-        if((err = wp.GenerateWorkBatch(batch, eg, dTransforms,
-                                       options.nextEventEstimation,
-                                       options.directLightMIS)) != TracerError::OK)
-            return err;
+        if(options.debugRender)
+        {
+            BoundaryWorkPool<>& wp = debugBoundaryWorkPool;
+            if((err = wp.GenerateWorkBatch(batch, eg,
+                                           dTransforms)) != TracerError::OK)
+                return err;
+        }
+        else
+        {
+            BoundaryWorkPool<bool, bool>& wp = boundaryWorkPool;
+            if((err = wp.GenerateWorkBatch(batch, eg, dTransforms,
+                                           options.nextEventEstimation,
+                                           options.directLightMIS)) != TracerError::OK)
+                return err;
+        }
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
 
     }
 
+    // Construct the Surface Tree
     if((err = surfaceTree.Construct(scene.AcceleratorBatchMappings(),
                                     options.normalThreshold,
                                     options.spatialSamples,
                                     params.seed,
                                     cudaSystem)) != TracerError::OK)
+        return err;
+    // Initialize the QFunction
+    if((err = qFunction.Initialize(cudaSystem)) != TracerError::OK)
         return err;
 
     return TracerError::OK;
@@ -156,6 +158,8 @@ TracerError RLTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetFloat(options.normalThreshold, NORM_THRESHOLD_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.debugRender, DEBUG_RENDER_NAME)) != TracerError::OK)
+        return err;
 
     return TracerError::OK;
 }
@@ -179,14 +183,10 @@ bool RLTracer::Render()
     //
     globalData.mediumList = dMediums;
     globalData.totalMediumCount = mediumCount;
-    //
     // Set Positional Tree
     globalData.posTree = surfaceTree.TreeGPU();
     globalData.qFunction = qFunction.FunctionGPU();
-    //
-    globalData.gPathNodes = dPathNodes;
-    globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
-
+    // Misc
     globalData.rawPathGuiding = options.rawPathGuiding;
     globalData.nee = options.nextEventEstimation;
     globalData.directLightMIS = options.directLightMIS;
@@ -245,13 +245,8 @@ void RLTracer::Finalize()
 {
     cudaSystem.SyncAllGPUs();
 
-    uint32_t totalPathNodeCount = TotalPathNodeCount();
-    // Accumulate the finished radiances to the STree
-    //posTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
-    //                             MaximumPathNodePerPath(), cudaSystem);
-    // We iterated once
-    currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
-
+    // After all paths are calculated recalculate the distributions
+    qFunction.RecalculateDistributions(cudaSystem);
 
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
@@ -274,8 +269,6 @@ void RLTracer::GenerateWork(uint32_t cameraIndex)
                      options.sampleCount),
         true
     );
-
-    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
@@ -289,7 +282,6 @@ void RLTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
                      options.sampleCount),
         true
     );
-    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
@@ -303,7 +295,6 @@ void RLTracer::GenerateWork(const GPUCameraI& dCam)
                      options.sampleCount),
         true
     );
-    ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
@@ -311,7 +302,9 @@ size_t RLTracer::TotalGPUMemoryUsed() const
 {
     return (RayTracer::TotalGPUMemoryUsed() +
             surfaceTree.UsedGPUMemory() +
-            lightSamplerMemory.Size() + pathMemory.Size());
+            lightSamplerMemory.Size() +
+            surfaceTree.UsedGPUMemory() +
+            qFunction.UsedGPUMemory());
 }
 
 void RLTracer::AskOptions()

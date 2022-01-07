@@ -5,6 +5,7 @@
 #include "DTreeKC.cuh"
 #include "STreeKC.cuh"
 #include "PathNode.cuh"
+#include "LinearBVH.cuh"
 
 #include "ImageIO/EntryPoint.h"
 
@@ -77,6 +78,14 @@ void Debug::WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, co
 {
     std::ofstream f(file);
     Detail::OutputHitPairs(f, ids, keys, count);
+}
+
+std::ostream& operator<<(std::ostream& stream, const Vector2ui& v)
+{
+    stream << std::setw(0)
+        << v[0] << ", "
+        << v[1];
+    return stream;
 }
 
 std::ostream& operator<<(std::ostream& stream, const Vector2ul& v)

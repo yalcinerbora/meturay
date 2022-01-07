@@ -49,7 +49,7 @@ RNGIndependentCPU::RNGIndependentCPU(uint32_t seed,
     std::for_each(static_cast<uint32_t*>(seeds),
                   static_cast<uint32_t*>(seeds) + totalCount,
                   [&](uint32_t& t) { t = rng(); });
-
+    system.SyncAllGPUs();
     const uint32_t* d_seeds = static_cast<const uint32_t*>(seeds);
 
     // Actual Allocation

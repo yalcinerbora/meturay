@@ -5,8 +5,13 @@ uint32_t Delta(uint32_t nodeIndex,
 {
     uint64_t left = gMortonCodes[nodeIndex];
     uint64_t right = gMortonCodes[nodeIndex + 1];
-    uint32_t diffBits = left ^ right;
-    return __clzll(diffBits);
+    uint64_t diffBits = left ^ right;
+    uint32_t delta = __clzll(diffBits);
+
+    printf("[%u] LR:[%llx, %llx], XOR[%llx], d[%u]\n",
+           nodeIndex, left, right, diffBits, delta);
+
+    return delta;
 }
 
 template <class Leaf>
@@ -26,16 +31,24 @@ void ChooseParentAndUpdate(// Output
 {
     // Edge Cases
     bool isLeftEdge = (currentNodeRange[0] == 0);
-    bool isRightEdge = (currentNodeRange[1] == totalNodeCount);
+    bool isRightEdge = (currentNodeRange[1] == (totalNodeCount - 1));
 
-    uint32_t rightDelta = Delta(currentNodeRange[1], gMortonCodes);
-    uint32_t leftDelta = Delta(currentNodeRange[0] - 1, gMortonCodes);
+    // Check edge cases here (if edge give min so that other will be selected)
+    uint32_t leftDelta = isLeftEdge ? 0 : Delta(currentNodeRange[0] - 1, gMortonCodes);
+    uint32_t rightDelta = isRightEdge ? 0 : Delta(currentNodeRange[1], gMortonCodes);
     bool parentIsRight = (rightDelta > leftDelta);
+
+    printf("R[%u, %u], D[%u, %u]\n",
+           currentNodeRange[0], currentNodeRange[1],
+           leftDelta, rightDelta);
 
     uint32_t globalCurrentNode = (isLeaf) ? currentNode
                                           : (internalNodeStartOffset + currentNode);
+
+    return;
+
     // Parent is right range
-    if(isLeftEdge || (!isRightEdge && parentIsRight))
+    if(parentIsRight)
     {
         uint32_t parent = currentNodeRange[1];
         uint32_t globalParent = internalNodeStartOffset + parent;
@@ -45,6 +58,7 @@ void ChooseParentAndUpdate(// Output
         // Punch-through the write (don't let it reside on cache only)
         *(reinterpret_cast<volatile uint32_t*>(gRanges + parent) + 0) = currentNodeRange[0];
     }
+    // Parent is left range
     else
     {
         uint32_t parent = currentNodeRange[0] - 1;
@@ -89,7 +103,7 @@ static void KCGenMortonCodes(uint64_t* gMortonCodes,
     {
         uint32_t loc = sizeof(float) * threadIdx.x;
         Byte* sharedLoc = reinterpret_cast<Byte*>(&sExtent) + loc;
-        Byte* globalLoc = reinterpret_cast<Byte*>(&sExtent) + loc;
+        const Byte* globalLoc = reinterpret_cast<const Byte*>(&gExtent) + loc;
         // Memcpy is fine here nvcc should optimize this out
         // also this is the non-UB version of pointer cast that i know of
         memcpy(sharedLoc, globalLoc, sizeof(float));
@@ -110,7 +124,8 @@ static void KCGenMortonCodes(uint64_t* gMortonCodes,
         uint32_t y = static_cast<uint32_t>(floor(relativePos[1] / mortonDelta));
         uint32_t z = static_cast<uint32_t>(floor(relativePos[2] / mortonDelta));
         // 64-bit morton code can only hold 21 bit for each value
-        assert(x + y + z <= 63);
+        assert(x <= (1 << 21) && y <= (1 << 21) &&
+               z <= (1 << 21));
         uint64_t code = MortonCode::Compose<uint64_t>(Vector3ui(x, y, z));
         gMortonCodes[globalId] = code;
     }
@@ -157,6 +172,7 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
         ChooseParentAndUpdate(gNodes, gRanges, myRange, globalId,
                               leafCount, gSortedMortonCodes, leafCount, true);
     }
+    return;
 
     // Do the non-leaf nodes
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -203,6 +219,35 @@ template <class Leaf, class DF,
           AABBGenFunc<Leaf> AF>
 LinearBVHCPU<Leaf, DF, AF>::LinearBVHCPU()
 {}
+
+#include "TracerDebug.h"
+template <class T>
+std::ostream& operator<<(std::ostream& s, const LBVHNode<T>& n)
+{
+    constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
+
+    s << "P[";
+    if(n.parent == UINT32_T_MAX) s << "-";
+    else s << n.parent;
+    s << "]";
+
+    if(n.isLeaf)
+    {
+        s << "LEAF";
+    }
+    else
+    {
+        s << "C[";
+        if(n.body.left == UINT32_T_MAX) s << "-";
+        else s << n.body.left;
+        s << ", ";
+        if(n.body.right == UINT32_T_MAX) s << "-";
+        else s << n.body.right;
+        s << "]";
+        s << "[" << n.body.aabbMin << "] [" << n.body.aabbMax << "]";
+    }
+    return s;
+}
 
 template <class Leaf, class DF,
           AABBGenFunc<Leaf> AF>
@@ -265,7 +310,7 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
     GPUMemFuncs::AllocateMultiData(std::tie(dSortedIndices,
                                             dSortedMortonCodes,
                                             dHaveDupMorton),
-                                   mortonAndIndexMemory,
+                                   sortedMemory,
                                    {leafCount, leafCount, 1});
 
     // Generate index for sort
@@ -303,6 +348,7 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
         METU_ERROR_LOG("Duplicate Morton Code found on LinearBVH Generation");
         return TracerError(TracerError::TRACER_INTERNAL_ERROR);
     }
+
     // Now do the (Apetrei 14) (Karras 12) construction
     // By definition there will be (leafCount - 1) internal nodes
     // in the tree
@@ -319,6 +365,8 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
                                    memory,
                                    {leafCount + leafCount - 1});
 
+    CUDA_CHECK(cudaMemset(dRanges, 0xFF, sizeof(uint32_t) * (leafCount - 1)));
+
     // Single GPU Construction Call
     gpu.GridStrideKC_X(0, (cudaStream_t)0,
                        leafCount,
@@ -333,8 +381,14 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
                        dSortedMortonCodes,
                        leafCount);
 
+    Debug::DumpMemToFile("Ranges", dRanges, leafCount - 1);
+    Debug::DumpMemToFile("LBVHNodes", dNodes, leafCount + leafCount - 1);
+
     // Bottom-up AABB Union Call
     // TODO: Implement
+
+    // Either Do Serial Kernels
+
 
     uint32_t hRootIndex;
     CUDA_CHECK(cudaMemcpy(&hRootIndex, dRootIndex, sizeof(uint32_t),

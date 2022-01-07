@@ -8,7 +8,6 @@
 #include "Tracers.h"
 
 class GPUDirectLightSamplerI;
-struct PathGuidingNode;
 
 class RLTracer final : public RayTracer
 {
@@ -28,6 +27,7 @@ class RLTracer final : public RayTracer
         static constexpr const char* NORM_THRESHOLD_NAME        = "NormalThreshold";
         static constexpr const char* SPATIAL_SAMPLE_NAME        = "SpatialSampleCount";
         static constexpr const char* ALPHA_NAME                 = "Alpha";
+        static constexpr const char* DEBUG_RENDER_NAME          = "DebugRender";
 
         static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
 
@@ -48,6 +48,7 @@ class RLTracer final : public RayTracer
 
             // Misc
             bool                rawPathGuiding      = true;
+            bool                debugRender         = false;
 
             bool                nextEventEstimation = true;
             bool                directLightMIS      = false;
@@ -62,23 +63,16 @@ class RLTracer final : public RayTracer
         // Work Pools
         BoundaryWorkPool<bool, bool>    boundaryWorkPool;
         WorkPool<bool, bool>            pathWorkPool;
+        // Debug Works
+        BoundaryWorkPool<>              debugBoundaryWorkPool;
+        WorkPool<>                      debugPathWorkPool;
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
-        // Path Memory
-        DeviceMemory                    pathMemory;
-        PathGuidingNode*                dPathNodes;
         // Global Data Structure
         DeviceMemory                    memory;
         SceneSurfaceTree                surfaceTree;
         QFunctionCPU                    qFunction;
-        // Internal State
-        uint32_t                        currentTreeIteration;
-        uint32_t                        nextTreeSwap;
-        // Misc
-        void                            ResizeAndInitPathMemory();
-        uint32_t                        TotalPathNodeCount() const;
-        uint32_t                        MaximumPathNodePerPath() const;
 
     protected:
     public:

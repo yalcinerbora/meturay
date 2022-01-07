@@ -26,6 +26,7 @@ class QFunctionGPU
 
     public:
         // Constructors & Destructor
+                        QFunctionGPU();
                         QFunctionGPU(const GPUDistPiecewiseConst2D* gDistributions,
                                      float* gQFunction,
                                      const Vector2ui& dataPerNode,
@@ -80,7 +81,7 @@ class QFunctionCPU
                         ~QFunctionCPU() = default;
 
         // Methods
-        void            Initialize(const CudaSystem&);
+        TracerError     Initialize(const CudaSystem&);
         void            RecalculateDistributions(const CudaSystem&);
         QFunctionGPU    FunctionGPU() const;
 
@@ -96,6 +97,14 @@ float* QFunctionGPU::AcquireData(const Vector2ui& dirIndex,
                          dirIndex[1] * dataPerNode[0] +
                          dirIndex[0]);
 }
+
+inline
+QFunctionGPU::QFunctionGPU()
+    : gDistributions(nullptr)
+    , gQFunction(nullptr)
+    , dataPerNode(Zero2ui)
+    , alpha(0.0f)
+{}
 
 inline
 QFunctionGPU::QFunctionGPU(const GPUDistPiecewiseConst2D* gDistributions,
@@ -181,9 +190,9 @@ Vector3f QFunctionGPU::Update(const Vector3f& worldDir,
     do
     {
         assumed = old;
-        float assumed = __uint_as_float(assumed);
+        float assumedFloat = __uint_as_float(assumed);
         // Actual Operation
-        float result = ((1.0f - alpha) * assumed +
+        float result = ((1.0f - alpha) * assumedFloat +
                         alpha * radiance);
         uint32_t newVal = __float_as_uint(result);
         old = atomicCAS(locUInt, assumed, newVal);
@@ -208,11 +217,13 @@ QFunctionGPU QFunctionCPU::FunctionGPU() const
     return qFuncGPU;
 }
 
+inline
 size_t QFunctionCPU::UsedGPUMemory() const
 {
     return memory.Size() + distributions.UsedGPUMemory();
 }
 
+inline
 size_t QFunctionCPU::UsedCPUMemory() const
 {
     return sizeof(QFunctionCPU);

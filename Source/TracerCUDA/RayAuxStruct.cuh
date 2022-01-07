@@ -55,7 +55,22 @@ struct RayAuxPPG
     uint32_t        pathIndex;      // Global path node index
 };
 
-using RayAuxRL = RayAuxPPG;
+struct RayAuxRL
+{
+    // Path throughput
+    // (a.k.a. total radiance coefficient along the path)
+    Vector3f    radianceFactor;
+
+    uint32_t    pixelIndex;         // Starting pixel index of the ray
+    uint32_t    endpointIndex;      // Destination of the ray if applicable (i.e. NEE Ray)
+    uint16_t    mediumIndex;        // Current Medium of the Ray
+    uint8_t     depth;              // Current path depth
+    RayType     type;               // Ray Type
+    float       prevPDF;            // Previous Intersections BxDF pdf
+                                    // (is used when a path ray hits a light (MIS))
+    uint32_t    prevSpatialIndex;   // Previous Spatial Index (QFunction) in the path chain
+    float       prevLumReflectance; // Previous reflectance factor of the ray.
+};
 
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 {
@@ -87,7 +102,16 @@ static const RayAuxPPG InitialPPGAux = RayAuxPPG
     UINT32_MAX
 };
 
-static const RayAuxRL InitialRLAux = InitialPPGAux;
+static const RayAuxRL InitialRLAux = RayAuxRL
+{
+    Vector3f(1.0f, 1.0f, 1.0f),
+    UINT32_MAX, UINT32_MAX, UINT16_MAX,
+    0,  // Depth
+    RayType::CAMERA_RAY,
+    NAN,
+    UINT32_MAX,
+    NAN
+};
 
 class RayAuxInitBasic
 {
@@ -226,4 +250,32 @@ class RayAuxInitPPG
         }
 };
 
-using RayAuxInitRL = RayAuxInitPPG;
+class RayAuxInitRL
+{
+    private:
+        RayAuxRL    defaultValue;
+        uint32_t    samplePerPixel;
+
+    public:
+        RayAuxInitRL(const RayAuxRL& aux,
+                     uint32_t samplePerPixel)
+            : defaultValue(aux)
+            , samplePerPixel(samplePerPixel)
+        {}
+
+        __device__ __host__ HYBRID_INLINE
+        void operator()(RayAuxRL& gOutPPG,
+                        // Input
+                        const RayReg&,
+                        // Index
+                        uint16_t medumIndex,
+                        const uint32_t localPixelId,
+                        const uint32_t pixelSampleId) const
+        {
+            RayAuxRL init = defaultValue;
+            init.pixelIndex = localPixelId;
+            init.depth = 1;
+            init.mediumIndex = medumIndex;
+            gOutPPG = init;
+        }
+};

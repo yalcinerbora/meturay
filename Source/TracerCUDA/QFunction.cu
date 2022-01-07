@@ -7,7 +7,7 @@ void QFunctionCPU::RecalculateDistributions(const CudaSystem&)
 
 }
 
-void QFunctionCPU::Initialize(const CudaSystem&)
+TracerError QFunctionCPU::Initialize(const CudaSystem&)
 {
-
+    return TracerError::OK;
 }

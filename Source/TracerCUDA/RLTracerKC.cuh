@@ -5,7 +5,6 @@
 #include "GPULightI.h"
 #include "GPUMediumI.h"
 #include "GPUDirectLightSamplerI.h"
-#include "PathNode.cuh"
 #include "RayStructs.h"
 #include "ImageStructs.h"
 #include "WorkOutputWriter.cuh"
@@ -32,9 +31,6 @@ struct RLTracerGlobalState
     // SDTree Related
     LBVHSurfaceGPU                  posTree;
     QFunctionGPU                    qFunction;
-    // Path Related
-    PathGuidingNode*                gPathNodes;
-    uint32_t                        maximumPathNodePerRay;
     // Options
     // Path Guiding
     bool                            rawPathGuiding;
@@ -50,16 +46,54 @@ struct RLTracerLocalState
     bool emptyPrimitive;
 };
 
-__device__ __forceinline__
-uint8_t DeterminePathIndex(uint8_t depth)
-{
-    return depth - 1;
-}
-
 template <class MGroup>
+class MatFunctor
+{
+    using Surface = typename MGroup::Surface;
+    using MatData = typename MGroup::Data;
+    private:
+        const MatData&      gMatData;
+        const Surface&      surface;
+        const Vector3f&     wi;
+        const Vector3f&     position;
+        uint32_t            matIndex;
+        const GPUMediumI&   m;
+
+
+    public:
+        __device__ __forceinline__
+        MatFunctor(const MatData& gMatData,
+                   const Surface& surface,
+                   const Vector3f& wi,
+                   const Vector3f& position,
+                   uint32_t matIndex,
+                   const GPUMediumI& m)
+            : gMatData(gMatData), surface(surface)
+            , wi(wi), position(position)
+            , matIndex(matIndex), m(m)
+        {}
+
+        __device__ __forceinline__
+        Vector3f operator()(const Vector3f& wo) const
+        {
+            return MGroup::Evaluate(// Input
+                                    wo,
+                                    wi,
+                                    position,
+                                    m,
+                                    //
+                                    surface,
+                                    // Constants
+                                    gMatData,
+                                    matIndex);
+        }
+};
+
+template <class MGroup, class MFunctor>
 __device__ __forceinline__
 float AccumulateQFunction(const QFunctionGPU& qFunction,
-                          uint32_t spatialIndex)
+                          uint32_t spatialIndex,
+                          const MFunctor& MatEvaluate)
 {
     // Accumulate all strata
     float sum = 0.0f;
@@ -70,16 +104,7 @@ float AccumulateQFunction(const QFunctionGPU& qFunction,
     {
         Vector3f wo = qFunction.Direction(Vector2ui(x, y));
         float value = qFunction.Value(Vector2ui(x, y), spatialIndex);
-        Vector3f reflectance = MGroup::Evaluate(// Input
-                                                wo,
-                                                wi,
-                                                position,
-                                                m,
-                                                //
-                                                surface,
-                                                // Constants
-                                                gMatData,
-                                                matIndex);
+        Vector3f reflectance = MatEvaluate(wo);
         // TODO: Is this ok? (converting reflectance to luminance)
         float lumReflectance = Utility::RGBToLuminance(reflectance);
         sum += lumReflectance * value;
@@ -109,10 +134,6 @@ void RLTracerBoundaryWork(// Output
                            const typename EGroup::GPUType& gLight)
 {
     using GPUType = typename EGroup::GPUType;
-
-    // Current Path
-    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
@@ -172,10 +193,6 @@ void RLTracerBoundaryWork(// Output
     // else misWeight is 1.0f
     total *= misWeight;
 
-    // Previous Path's index
-    int8_t prevDepth = aux.depth - 1;
-    uint8_t pathIndex = DeterminePathIndex(prevDepth);
-
     // Accumulate the contribution if
     if(isPathRayNEEOff   || // We hit a light with a path ray while NEE is off
        isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
@@ -188,27 +205,14 @@ void RLTracerBoundaryWork(// Output
                              aux.pixelIndex,
                              Vector4f(total, 1.0f));
 
-        // Also back propagate this radiance to the path nodes
-        if(aux.type != RayType::CAMERA_RAY &&
-           // If current path is the first vertex in the chain skip
-           pathIndex != 0)
+        // Also  write this to the previous QFunction
+        // Only do this when there is a "previous" location
+        if(!isCameraRay)
         {
-            // Accumulate Radiance from 2nd vertex (including this vertex) away
-            uint8_t prevPathIndex = pathIndex - 1;
-            gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
+            float reflectance = aux.prevLumReflectance;
+            float sum = reflectance * Utility::RGBToLuminance(emission);
+            renderState.qFunction.Update(r.getDirection(), sum, aux.prevSpatialIndex);
         }
-    }
-
-    // Accumulate to the write tree as well for direct contribution
-    // Do this only if path ray hits the light
-    // regardless of nee is on or off
-    if(aux.type == RayType::PATH_RAY ||
-       aux.type == RayType::SPECULAR_PATH_RAY)
-    {
-        //uint32_t dTreeIndex = gLocalPathNodes[pathIndex].dataStructIndex;
-        //DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
-
-        ///
     }
 }
 
@@ -233,10 +237,6 @@ void RLTracerPathWork(// Output
                       const HitKey::Type matIndex)
 {
     static constexpr Vector3 ZERO_3 = Zero3;
-
-    // Path Memory
-    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
@@ -295,10 +295,6 @@ void RLTracerPathWork(// Output
         ImageAccumulatePixel(renderState.gImage,
                              aux.pixelIndex,
                              Vector4f(total, 1.0f));
-
-        // Accumulate this to the paths as well
-        if(total.HasNaN()) printf("NAN Found emissive!!!\n");
-        gLocalPathNodes[aux.depth].AccumRadianceDownChain(total, gLocalPathNodes);
     }
 
     // If this material does not require to have any samples just quit
@@ -385,6 +381,9 @@ void RLTracerPathWork(// Output
             auxOut.type = RayType::NEE_RAY;
             auxOut.prevPDF = NAN;
             auxOut.depth++;
+            // Save the RL Related Data
+            auxOut.prevSpatialIndex = spatialIndex;
+            auxOut.prevLumReflectance = Utility::RGBToLuminance(neeReflectance);
             outputWriter.Write(NEE_RAY_INDEX, rayOut, auxOut, matLight);
         }
     }
@@ -464,24 +463,24 @@ void RLTracerPathWork(// Output
             if(pdfGuide == 0.0f) selectedPDFZero = true;
         }
         // Pdf Average
-        pdfPath = BxDF_DTreeSampleRatio          * pdfGuide +
-                  (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF;
+        pdfPath = BxDF_PGSampleRatio          * pdfGuide +
+                  (1.0f - BxDF_PGSampleRatio) * pdfBxDF;
         pdfPath = selectedPDFZero ? 0.0f : pdfPath;
 
         // DEBUG
-        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))
+        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
             printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
-                   (xi >= BxDF_DTreeSampleRatio) ? "BxDF": "Tree",
-                   pdfPath, pdfBxDF, pdfTree, BxDF_DTreeSampleRatio);
+                   (xi >= BxDF_PGSampleRatio) ? "BxDF": "Tree",
+                   pdfPath, pdfBxDF, pdfGuide, BxDF_PGSampleRatio);
         if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
             printf("[%s] NAN DIR %f, %f, %f\n",
-                    (xi >= BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
+                    (xi >= BxDF_PGSampleRatio) ? "BxDF" : "Tree",
                     rayPath.getDirection()[0],
                     rayPath.getDirection()[1],
                     rayPath.getDirection()[2]);
         if(reflectance.HasNaN())
             printf("[%s] NAN REFL %f %f %f\n",
-                   (xi >= BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
+                   (xi >= BxDF_PGSampleRatio) ? "BxDF" : "Tree",
                    reflectance[0],
                    reflectance[1],
                    reflectance[2]);
@@ -495,8 +494,13 @@ void RLTracerPathWork(// Output
         // and send it to previous spatial data
         if(aux.type != RayType::CAMERA_RAY)
         {
+            MatFunctor<MGroup> MatEval(gMatData, surface,
+                                       wi, position,
+                                       matIndex, m);
+
             float sum = AccumulateQFunction<MGroup>(renderState.qFunction,
-                                                    sptaialIndex);
+                                                    sptaialIndex,
+                                                    MatEval);
             // Don't forget to add current emission if available
             sum += Utility::RGBToLuminance(emission);
             // Atomically update the value in the previous Q function
@@ -526,7 +530,7 @@ void RLTracerPathWork(// Output
         // as if the accumulated value
         float value = renderState.qFunction.Value(rayPath.getDirection(), spatialIndex);
         float sum = Utility::RGBToLuminance(reflectance) * value;
-        renderState.qFunction.Update(wi, sum, aux.prevSptaialIndex);
+        renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
     }
 
     // Factor the radiance of the surface
@@ -564,34 +568,108 @@ void RLTracerPathWork(// Output
         // When we hit a light we will
         auxOut.prevPDF = pdfPath;
         auxOut.depth++;
+        // Save the RL Related Data
+        auxOut.prevSpatialIndex = spatialIndex;
+        auxOut.prevLumReflectance = Utility::RGBToLuminance(reflectance);
+
         // Write
         outputWriter.Write(PATH_RAY_INDEX, rayOut, auxOut);
     }
-
-    //// Add the sample towards that position on the tree
-    //DTreeGPU& dWriteTree = renderState.gWriteDTrees[dTreeIndex];
-    //dWriteTree.AddSampleToLeaf(rayPath.getDirection());
-
-    // Record this intersection on path chain
-    uint8_t prevPathIndex = DeterminePathIndex(aux.depth - 1);
-    uint8_t curPathIndex = DeterminePathIndex(aux.depth);
-
-    PathGuidingNode node;
-    //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u DT %u\n",
-    //       static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
-    //       position[0], position[1], position[2],
-    //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
-    //       aux.pathIndex, dTreeIndex);
-    node.prevNext[1] = PathGuidingNode::InvalidIndex;
-    node.prevNext[0] = prevPathIndex;
-    node.worldPosition = position;
-    node.dataStructIndex = spatialIndex;
-    node.radFactor = pathRadianceFactor;
-    node.totalRadiance = Zero3;
-    gLocalPathNodes[curPathIndex] = node;
-    // Set Previous Path node's next index
-    if(prevPathIndex != PathGuidingNode::InvalidIndex)
-        gLocalPathNodes[prevPathIndex].prevNext[1] = curPathIndex;
-
     // All Done!
+}
+
+
+template <class EGroup>
+__device__ __forceinline__
+void RLTracerDebugBWork(// Output
+                        HitKey* gOutBoundKeys,
+                        RayGMem* gOutRays,
+                        RayAuxRL* gOutRayAux,
+                        const uint32_t maxOutRay,
+                        // Input as registers
+                        const RayReg& ray,
+                        const RayAuxRL& aux,
+                        const typename EGroup::Surface& surface,
+                        const RayId rayId,
+                        // I-O
+                        RLTracerLocalState& localState,
+                        RLTracerGlobalState& renderState,
+                        RNGeneratorGPUI& rng,
+                        // Constants
+                        const typename EGroup::GPUType& gLight)
+{
+    // Helper Class for better code readability
+    OutputWriter<RayAuxRL> outputWriter(gOutBoundKeys,
+                                        gOutRays,
+                                        gOutRayAux,
+                                        maxOutRay);
+
+    // Only Direct Hits from camera are used
+    // In debugging
+    if(aux.depth != 1) return;
+
+    // Inputs
+    // Current Ray
+    const RayF& r = ray.ray;
+    // Hit Position
+    Vector3 position = r.AdvancedPos(ray.tMax);
+
+    // Acquire Spatial Loc
+    SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
+    uint32_t spatialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
+
+    Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
+
+    // Accumulate the pixel
+    ImageAccumulatePixel(renderState.gImage,
+                         aux.pixelIndex,
+                         Vector4f(locColor, 1.0f));
+}
+
+template <class MGroup>
+__device__ __forceinline__
+void RLTracerDebugWork(// Output
+                       HitKey* gOutBoundKeys,
+                       RayGMem* gOutRays,
+                       RayAuxRL* gOutRayAux,
+                       const uint32_t maxOutRay,
+                       // Input as registers
+                       const RayReg& ray,
+                       const RayAuxRL& aux,
+                       const typename MGroup::Surface& surface,
+                       const RayId rayId,
+                       // I-O
+                       RLTracerLocalState& localState,
+                       RLTracerGlobalState& renderState,
+                       RNGeneratorGPUI& rng,
+                       // Constants
+                       const typename MGroup::Data& gMatData,
+                       const HitKey::Type matIndex)
+{
+    // Helper Class for better code readability
+    OutputWriter<RayAuxRL> outputWriter(gOutBoundKeys,
+                                        gOutRays,
+                                        gOutRayAux,
+                                        maxOutRay);
+
+    // Only Direct Hits from camera are used
+    // In debugging
+    if(aux.depth != 1) return;
+
+    // Inputs
+    // Current Ray
+    const RayF& r = ray.ray;
+    // Hit Position
+    Vector3 position = r.AdvancedPos(ray.tMax);
+
+    // Acquire Spatial Loc
+    SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
+    uint32_t spatialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
+
+    Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
+
+    // Accumulate the pixel
+    ImageAccumulatePixel(renderState.gImage,
+                         aux.pixelIndex,
+                         Vector4f(locColor, 1.0f));
 }
