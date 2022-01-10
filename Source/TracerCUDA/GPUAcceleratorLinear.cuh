@@ -29,6 +29,7 @@ tree construction would provide additional overhead.
 #include "GPUPrimitiveI.h"
 #include "RNGSobol.cuh"
 #include "ParallelSequence.cuh"
+#include "ParallelReduction.cuh"
 
 #include "GPUAcceleratorLinearKC.cuh"
 

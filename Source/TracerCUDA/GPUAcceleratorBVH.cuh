@@ -15,6 +15,7 @@
 #include "GPUAcceleratorBVHKC.cuh"
 #include "ParallelScan.cuh"
 #include "ParallelSequence.cuh"
+#include "ParallelReduction.cuh"
 #include "RNGSobol.cuh"
 
 #include <numeric>

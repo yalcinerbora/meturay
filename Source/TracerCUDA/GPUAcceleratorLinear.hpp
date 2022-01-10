@@ -382,12 +382,60 @@ size_t GPUAccLinearGroup<PGroup>::TotalPrimitiveCount() const
 }
 
 template <class PGroup>
-float GPUAccLinearGroup<PGroup>::TotalApproximateArea(const CudaSystem&) const
+float GPUAccLinearGroup<PGroup>::TotalApproximateArea(const CudaSystem& system) const
 {
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
-    // TODO do an proper area measure
-    return 1.0f * static_cast<float>(accRanges.back()[1]);
+
+    const CudaGPU& gpu = system.BestGPU();
+    size_t totalLeafCount = accRanges.back()[1];
+
+    float* dAreas;
+    TransformId* dLeafTransformIds;
+    DeviceMemory areaMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dAreas, dLeafTransformIds),
+                                   areaMemory,
+                                   {totalLeafCount, totalLeafCount});
+
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+    uint32_t innerIndex = 0;
+    for(const auto& range : accRanges)
+    {
+        size_t localLeafCount = range[1] - range[0];
+
+        // Expand the transform over leafs
+        ExpandValueGPU<TransformId>(dLeafTransformIds + range[0],
+                                    dAccTransformIds + innerIndex,
+                                    localLeafCount);
+        innerIndex++;
+    }
+
+    // Generate Area of each primitive
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalLeafCount,
+                       //
+                       KCGenerateAreas<PGroup>,
+                       // Output
+                       dAreas,
+                       // Input
+                       dLeafList,
+                       dLeafTransformIds,
+                       this->dTransforms,
+                       // Constants
+                       primData,
+                       totalLeafCount);
+
+    // Reduce the areas
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+    float hAreaTotal;
+    ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
+    (
+        hAreaTotal,
+        dAreas,
+        totalLeafCount,
+        0.0f
+    );
+    gpu.WaitMainStream();
+    return hAreaTotal;
 }
 
 template <class PGroup>

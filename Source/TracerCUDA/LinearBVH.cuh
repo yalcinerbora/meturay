@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #include "RayLib/AABB.h"
-#include "RayLib/IntersectionFunctions.h"
 
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
@@ -15,6 +14,8 @@
 #include "ParallelRadixSort.cuh"
 #include "LinearBVHKC.cuh"
 #include "GPUAcceleratorCommonKC.cuh"
+
+#include "TracerDebug.h"
 
 template <class Leaf>
 using AABBGenFunc = AABB3f(&)(const Leaf&);
@@ -106,7 +107,11 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
     static_assert(HasPosition<Leaf>::value,
                   "This functions requires its leafs to have public \"position\" variable");
 
-    using namespace IntersectionFunctions;
+    //printf("FindOp [%f, %f, %f]\n",
+    //       worldSurface.position[0],
+    //       worldSurface.position[1],
+    //       worldSurface.position[2]);
+
     // Helper Variables
     static constexpr uint8_t FIRST_ENTRY = 0b00;
     static constexpr uint8_t U_TURN = 0b01;
@@ -135,7 +140,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
     // Resulting Closest Leaf Index
     // & Closest Hit
     float closestDistance = INFINITY;
-    uint32_t closestIndex = INT32_MAX;
+    uint32_t closestIndex = UINT32_MAX;
     // TODO: There is an optimization here
     // first iteration until leaf is always true
     // initialize closest distance with the radius
@@ -152,12 +157,17 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
         // First time entry check intersection
         if(info == FIRST_ENTRY)
         {
+            //printf("FirstEntry\n");
+
             // If Leaf, do its custom closest function primitive intersection
             if(currentNode->isLeaf)
             {
+                //printf("Leaf, CheckingDistance\n");
                 float distance = DistanceFunction(currentNode->leaf, worldSurface);
                 if(distance < closestDistance)
                 {
+                    //printf("NewDistance %f\n", distance);
+
                     closestDistance = distance;
                     closestIndex = static_cast<uint32_t>(currentNode - nodes);
                 }
@@ -168,25 +178,43 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
             // If not leaf check if there is closer point in this AABB
             // meaning that a sphere defined by "worldPos, closestDistance"
             // intersects with this AABB
-            else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
-                                         currentNode->body.aabbMax);
-                    AABBIntersectsSphere(aabb, worldSurface.position,
-                                         closestDistance))
-            {
-                // By construction BVH tree has either no or both children
-                // avail. If a node is non-leaf it means that it has both of its children
-                // no need to check for left or right index validity
-
-                // Directly go right
-                currentNode = nodes + currentNode->body.left;
-                depth--;
-            }
-            // If we could not be able to hit AABB
-            // just go parent
+            //else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
+            //                             currentNode->body.aabbMax);
+            //        AABBIntersectsSphere(aabb, worldSurface.position,
+            //                             closestDistance))
             else
             {
-                currentNode = nodes + currentNode->parent;
-                Pop(list, depth);
+                AABB3f aabb = AABB3f(currentNode->body.aabbMin,
+                                     currentNode->body.aabbMax);
+
+                //printf("AABB vs Sphere "
+                //       "[%f, %f, %f] [%f, %f, %f] /"
+                //       "%f\n",
+                //       aabb.Min()[0], aabb.Min()[1], aabb.Min()[2],
+                //       aabb.Max()[0], aabb.Max()[1], aabb.Max()[2],
+                //       closestDistance);
+
+                if(aabb.IntersectsSphere(worldSurface.position,
+                                             closestDistance))
+                {
+                    //printf("AABB Hit\n");
+
+                    // By construction BVH tree has either no or both children
+                    // avail. If a node is non-leaf it means that it has both of its children
+                    // no need to check for left or right index validity
+
+                    // Directly go right
+                    currentNode = nodes + currentNode->body.left;
+                    depth--;
+                }
+                // If we could not be able to hit AABB
+                // just go parent
+                else
+                {
+                    //printf("AABB Not Hit\n");
+                    currentNode = nodes + currentNode->parent;
+                    Pop(list, depth);
+                }
             }
         }
         // Doing U turn (left to right)
@@ -194,6 +222,8 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
         // we are at parent
         else if(info == U_TURN)
         {
+            //printf("U Turn\n");
+
             // Go to right child if avail
             MarkAsTraversed(list, depth - 1);
             currentNode = nodes + currentNode->body.right;
@@ -203,12 +233,17 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
         // Just go up
         else
         {
+            //printf("Go Up Turn\n");
             // Wipe out lower bits for incoming iterations
             WipeLowerBits(list, depth);
             currentNode = nodes + currentNode->parent;
             depth++;
         }
     }
+
+    if(closestDistance < 0.2f)
+        return UINT32_MAX;
+
     return closestIndex;
 }
 
@@ -254,5 +289,8 @@ extern template class LinearBVHCPU<PointStruct, PointDistanceFunctor, GenPointAA
 
 using LBVHPointGPU = LinearBVHGPU<PointStruct, PointDistanceFunctor>;
 using LBVHPointCPU = LinearBVHCPU<PointStruct, PointDistanceFunctor, GenPointAABB>;
+
+template <class T>
+std::ostream& operator<<(std::ostream& s, const LBVHNode<T>& n);
 
 #include "LinearBVH.hpp"

@@ -62,6 +62,10 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
         __device__ __host__ AABB&                   UnionSelf(const AABB&);
         __device__ __host__ bool                    IsInside(const Vector<N, T>&);
         __device__ __host__ bool                    IsOutside(const Vector<N, T>&);
+
+        // Intersection
+        __device__ __host__ bool                    IntersectsSphere(const Vector3f& sphrPos,
+                                                                     float sphrRadius);
 };
 
 // Typeless aabbs are defaulted to float

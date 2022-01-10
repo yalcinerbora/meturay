@@ -1,4 +1,32 @@
 
+template <class T>
+std::ostream& operator<<(std::ostream& s, const LBVHNode<T>& n)
+{
+    constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
+
+    s << "P[";
+    if(n.parent == UINT32_T_MAX) s << "-";
+    else s << n.parent;
+    s << "] ";
+
+    if(n.isLeaf)
+    {
+        s << n.leaf;
+    }
+    else
+    {
+        s << "C[";
+        if(n.body.left == UINT32_T_MAX) s << "-";
+        else s << n.body.left;
+        s << ", ";
+        if(n.body.right == UINT32_T_MAX) s << "-";
+        else s << n.body.right;
+        s << "] ";
+        s << "AABB[" << n.body.aabbMin << "] [" << n.body.aabbMax << "]";
+    }
+    return s;
+}
+
 __device__ __forceinline__
 uint32_t Delta(uint32_t nodeIndex,
                const uint64_t* gMortonCodes)
@@ -123,6 +151,12 @@ static void KCGenMortonCodes(uint64_t* gMortonCodes,
         uint32_t x = static_cast<uint32_t>(floor(relativePos[0] / mortonDelta));
         uint32_t y = static_cast<uint32_t>(floor(relativePos[1] / mortonDelta));
         uint32_t z = static_cast<uint32_t>(floor(relativePos[2] / mortonDelta));
+
+        //printf("[%u], P {%f, %f, %f}, D {%u, %u, %u}\n",
+        //       globalId,
+        //       center[0], center[1], center[2],
+        //       x, y, z);
+
         // 64-bit morton code can only hold 21 bit for each value
         assert(x <= (1 << 21) && y <= (1 << 21) &&
                z <= (1 << 21));
@@ -165,8 +199,6 @@ static void KCConstructLBVHLeaf(uint32_t& gRootIndex,
     Vector2ui myRange = Vector2ui(globalId);
     ChooseParentAndUpdate(gNodes, gRanges, myRange, globalId,
                             leafCount, gSortedMortonCodes, leafCount, true);
-    // Just to make use volatile writes goes through
-    __threadfence_system();
 
 }
 
@@ -177,8 +209,6 @@ static void KCConstructLBVHInter(uint32_t& gCounter,
                                  uint32_t& gRootIndex,
                                  LBVHNode<Leaf>* gNodes,
                                  Vector2ui* gRanges,
-                                 const Leaf* gLeafData,
-                                 const uint32_t* gSortedIndices,
                                  const uint64_t* gSortedMortonCodes,
                                  uint32_t leafCount)
 {
@@ -195,7 +225,6 @@ static void KCConstructLBVHInter(uint32_t& gCounter,
        myRange[1] != UINT32_MAX &&
        gFlags[globalId] == 0)
     {
-        //Vector2ui myRange(myRange0, myRange1);
         // Root Work
         if(myRange[0] == 0 && myRange[1] == (leafCount - 1))
         {
@@ -215,7 +244,6 @@ static void KCConstructLBVHInter(uint32_t& gCounter,
         atomicInc(&gCounter, UINT32_MAX);
         gFlags[globalId] = 1;
     }
-    __threadfence_system();
 }
 
 template <class Leaf>
@@ -240,9 +268,7 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
                                                      gLeafData, gSortedIndices,
                                                      gSortedMortonCodes,
                                                      leafCount);
-
     cudaDeviceSynchronize();
-    printf("----Leaf Done----\n");
 
     while(gCounter < (leafCount - 1))
     {
@@ -250,96 +276,11 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
         (
             gCounter, gFlags,
             gRootIndex, gNodes, gRanges,
-            gLeafData, gSortedIndices,
             gSortedMortonCodes,
             leafCount
         );
         cudaDeviceSynchronize();
-        printf("% u\n", gCounter);
     }
-
-    //uint32_t internalNodeCount = leafCount - 1;
-    //LBVHNode<Leaf>* gInternalNodes = gNodes + leafCount;
-    //LBVHNode<Leaf>* gLeafNodes = gNodes;
-
-    //// First do the leaf nodes
-    //// Copy the data
-    //// Grid Stride Loop
-    //for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    //    globalId < leafCount; globalId += blockDim.x * gridDim.x)
-    //{
-    //    gLeafNodes[globalId].isLeaf = true;
-    //    uint32_t leafIndex = gSortedIndices[globalId];
-    //    gLeafNodes[globalId].leaf = gLeafData[leafIndex];
-
-    //    Vector2ui myRange = Vector2ui(globalId);
-    //    ChooseParentAndUpdate(gNodes, gRanges, myRange, globalId,
-    //                          leafCount, gSortedMortonCodes, leafCount, true);
-    //    // Just to make use volatile writes goes through
-    //    __threadfence();
-    //}
-    //if((blockIdx.x * blockDim.x + threadIdx.x) == 0)
-    //    printf("----\n");
-    //// Do the non-leaf nodes
-    //for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    //    globalId < internalNodeCount; globalId += blockDim.x * gridDim.x)
-    //{
-    //    uint32_t* gMyRangeInt = reinterpret_cast<uint32_t*>(gRanges + globalId);
-
-    //    // Since warps are processed in lock-step
-    //    // We can't "spin-lock here".
-    //    // Continue traversing with the active threads
-    //    int q = 0;
-    //    uint32_t myRange0 = UINT32_MAX;
-    //    uint32_t myRange1 = UINT32_MAX;
-    //    while(myRange0 == UINT32_MAX ||
-    //          myRange1 == UINT32_MAX)
-    //    {
-    //        q++;
-    //        // Wait over the range value
-    //        // Try to read the value by checking direct value
-    //        // (Force not read from cache)
-    //        myRange0 = atomicCAS(gMyRangeInt + 0, UINT32_MAX, UINT32_MAX);
-    //        myRange1 = atomicCAS(gMyRangeInt + 1, UINT32_MAX, UINT32_MAX);
-
-    //        //myRange0 = *(reinterpret_cast<volatile uint32_t*>(gMyRangeInt + 0));
-    //        //myRange1 = *(reinterpret_cast<volatile uint32_t*>(gMyRangeInt + 1));
-
-    //        // Skip work if data is not ready
-    //        // Now we can mask threads here
-    //        if(myRange0 != UINT32_MAX &&
-    //           myRange1 != UINT32_MAX)
-    //        {
-    //            Vector2ui myRange(myRange0, myRange1);
-    //            // Root Work
-    //            if(myRange[0] == 0 && myRange[1] == (leafCount - 1))
-    //            {
-    //                gRootIndex = leafCount + globalId;
-    //                gInternalNodes[globalId].parent = UINT32_MAX;
-    //            }
-    //            // Inter-node work
-    //            else ChooseParentAndUpdate(gNodes, gRanges, myRange,
-    //                                       globalId, leafCount,
-    //                                       gSortedMortonCodes, leafCount, false);
-    //        }
-    //        if(q == 100000)
-    //        {
-    //            printf("[%u] N[%u] R[%u, %u] C[%u, %u]\n", globalId,
-    //                   globalId + leafCount,
-    //                   myRange0, myRange1,
-    //                   gInternalNodes[globalId].body.left,
-    //                   gInternalNodes[globalId].body.right);
-    //        }
-
-    //        // Just to make use volatile writes goes through
-    //        __threadfence();
-    //    }
-
-    //    gInternalNodes[globalId].isLeaf = false;
-    //    Vector3f infinity = Vector3f(INFINITY);
-    //    gInternalNodes[globalId].body.aabbMin = infinity;
-    //    gInternalNodes[globalId].body.aabbMax = -infinity;
-    //}
 }
 
 template <class Leaf>
@@ -367,6 +308,7 @@ static void BottomUpAABBInter(uint32_t& gCounter,
                               Vector2ui* gLRFlags,
                               LBVHNode<Leaf>* gNodes,
                               const AABB3f* gLeafAABBs,
+                              const uint32_t* gSortedIndices,
                               uint32_t leafCount)
 {
     uint32_t internalNodeCount = leafCount - 1;
@@ -388,10 +330,10 @@ static void BottomUpAABBInter(uint32_t& gCounter,
         LBVHNode<Leaf>& lNode = gNodes[left];
         LBVHNode<Leaf>& rNode = gNodes[right];
 
-        AABB3f aabbLeft = (lNode.isLeaf) ? gLeafAABBs[left]
+        AABB3f aabbLeft = (lNode.isLeaf) ? gLeafAABBs[gSortedIndices[left]]
                                          : AABB3f(lNode.body.aabbMin,
                                                   lNode.body.aabbMax);
-        AABB3f aabbRight = (rNode.isLeaf) ? gLeafAABBs[right]
+        AABB3f aabbRight = (rNode.isLeaf) ? gLeafAABBs[gSortedIndices[right]]
                                           : AABB3f(rNode.body.aabbMin,
                                                    rNode.body.aabbMax);
 
@@ -423,6 +365,7 @@ static void BottomUpAABBUnion(uint32_t& gCounter,
                               Vector2ui* gLRFlags,
                               LBVHNode<Leaf>* gNodes,
                               const AABB3f* gLeafAABBs,
+                              const uint32_t* gSortedIndices,
                               uint32_t leafCount)
 {
     uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -435,100 +378,18 @@ static void BottomUpAABBUnion(uint32_t& gCounter,
                                                   leafCount);
 
     cudaDeviceSynchronize();
-    printf("----Leaf Done----\n");
-
     while(gCounter < (leafCount - 1))
     {
         BottomUpAABBInter<<<blockCount, threadCount>>>
         (
             gCounter, gFlags, gLRFlags,
             gNodes, gLeafAABBs,
+            gSortedIndices,
             leafCount
         );
         cudaDeviceSynchronize();
-        printf("% u\n", gCounter);
     }
-
-
-    //LBVHNode<Leaf>* gInterNodes = gNodes + leafCount;
-
-    //// Leafs first
-    //for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    //    globalId < leafCount; globalId += blockDim.x * gridDim.x)
-    //{
-    //    const uint32_t parentId = gNodes[globalId].parent;
-    //    const uint32_t parentFlagId = parentId - leafCount;
-
-    //    // Acquire
-    //    while(true)
-    //    {
-    //        bool parentAvail = (atomicXor(gAtomicFlags + parentFlagId, 1u) == 0u);
-    //        if(!parentAvail) continue;
-
-    //        // Union operation
-    //        AABB3f aabb = AABB3f(gNodes[parentId].body.aabbMin,
-    //                             gNodes[parentId].body.aabbMax);
-    //        AABB3f aabbUnion = aabb.Union(gLeafAABBs[globalId]);
-    //        gNodes[parentId].body.aabbMin = aabbUnion.Min();
-    //        gNodes[parentId].body.aabbMax = aabbUnion.Max();
-    //        // Atomic increment parent ready flag once
-    //        // Parent thread will activate when it sees 2.
-    //        atomicInc(gReadyFlags + parentFlagId, UINT32_MAX);
-    //        // Lower the flag
-    //        *(reinterpret_cast<volatile int32_t*>(gAtomicFlags + parentFlagId)) = 0;
-    //        __threadfence();
-    //        break;
-    //    }
-    //}
-    //// Don't let the compiler mix these two loops
-    //__threadfence();
-    //// Now intermediate nodes
-    //for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    //    globalId < (leafCount - 1); globalId += blockDim.x * gridDim.x)
-    //{
-    //    const uint32_t parentId = gInterNodes[globalId].parent;
-    //    const uint32_t parentFlagId = parentId - leafCount;
-    //    const uint32_t myFlagId = globalId;
-
-    //    if(parentId == UINT32_MAX) continue;
-
-    //    // Wait your data
-    //    // But don't mask the thread here just like in construction
-    //    // or kernel will hang
-    //    volatile const int32_t& gMyAABBReady = *(reinterpret_cast<volatile int32_t*>(gReadyFlags + myFlagId));
-
-    //    bool aabbReadyReg = false;
-    //    while(true)
-    //    {
-    //        // Do nothing if my AABB is not ready
-    //        if(!aabbReadyReg && gMyAABBReady != 2) continue;
-    //        // Skip querying global memory once aabb is ready
-    //        aabbReadyReg = true;
-
-    //        // My AABB is ready now do parent union
-    //        bool parentAvail = (atomicXor(gAtomicFlags + parentFlagId, 1u) == 0u);
-    //        if(!parentAvail) continue;
-
-    //        // Union operation
-    //        AABB3f parentAABB = AABB3f(gNodes[parentId].body.aabbMin,
-    //                                   gNodes[parentId].body.aabbMax);
-    //        AABB3f myAABB = AABB3f(gInterNodes[globalId].body.aabbMin,
-    //                               gInterNodes[globalId].body.aabbMax);
-    //        AABB3f unionAABB = myAABB.UnionSelf(parentAABB);
-    //        gNodes[parentId].body.aabbMin = myAABB.Min();
-    //        gNodes[parentId].body.aabbMax = myAABB.Max();
-    //        // Atomic increment parent ready flag once
-    //        // Parent thread will activate when it sees 2.
-    //        atomicInc(gReadyFlags + parentFlagId, UINT32_MAX);
-
-    //        // Lower the flag
-    //        *(reinterpret_cast<volatile int32_t*>(gAtomicFlags + parentFlagId)) = 0;
-    //        __threadfence();
-    //        break;
-    //    }
-    //}
 }
-
 
 template <class Leaf, class DF,
           AABBGenFunc<Leaf> AF>
@@ -552,35 +413,6 @@ template <class Leaf, class DF,
           AABBGenFunc<Leaf> AF>
 LinearBVHCPU<Leaf, DF, AF>::LinearBVHCPU()
 {}
-
-#include "TracerDebug.h"
-template <class T>
-std::ostream& operator<<(std::ostream& s, const LBVHNode<T>& n)
-{
-    constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();
-
-    s << "P[";
-    if(n.parent == UINT32_T_MAX) s << "-";
-    else s << n.parent;
-    s << "] ";
-
-    if(n.isLeaf)
-    {
-        s << "LEAF";
-    }
-    else
-    {
-        s << "C[";
-        if(n.body.left == UINT32_T_MAX) s << "-";
-        else s << n.body.left;
-        s << ", ";
-        if(n.body.right == UINT32_T_MAX) s << "-";
-        else s << n.body.right;
-        s << "] ";
-        s << "AABB[" << n.body.aabbMin << "] [" << n.body.aabbMax << "]";
-    }
-    return s;
-}
 
 template <class Leaf, class DF,
           AABBGenFunc<Leaf> AF>
@@ -645,6 +477,8 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
                                             dHaveDupMorton),
                                    sortedMemory,
                                    {leafCount, leafCount, 1});
+    CUDA_CHECK(cudaMemset(dHaveDupMorton, 0x00, sizeof(bool)));
+
 
     // Generate index for sort
     // We already set the device above so no need to set again
@@ -707,42 +541,26 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
                                    {leafCount + leafCount - 1});
     CUDA_CHECK(cudaMemset(dNodes, 0x00, sizeof(LBVHNode<Leaf>) * (leafCount + leafCount - 1)));
 
-    //// Single GPU Construction Call
-    //gpu.GridStrideKC_X(0, (cudaStream_t)0,
-    //                   leafCount,
-    //                   //
-    //                   KCConstructLinearBVH<Leaf>,
-    //                   //
-    //                   *dRootIndex,
-    //                   dNodes,
-    //                   dRanges,
-    //                   dLeafList,
-    //                   dSortedIndices,
-    //                   dSortedMortonCodes,
-    //                   leafCount);
-
     // Call a single kernel
-    gpu.KC_X(0, (cudaStream_t)0, 1,
-             //
-             KCConstructLinearBVH<Leaf>,
-             //
-             *dRootIndex,
-             *dCounter,
-             dFlags,
-             dNodes,
-             dRanges,
-             dLeafList,
-             dSortedIndices,
-             dSortedMortonCodes,
-             leafCount);
+    // Abuse dynamic parallelism
+    gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                  //
+                  KCConstructLinearBVH<Leaf>,
+                  //
+                  *dRootIndex,
+                  *dCounter,
+                  dFlags,
+                  dNodes,
+                  dRanges,
+                  dLeafList,
+                  dSortedIndices,
+                  dSortedMortonCodes,
+                  leafCount);
 
     // Host copy the root flag
     uint32_t hRootIndex;
     CUDA_CHECK(cudaMemcpy(&hRootIndex, dRootIndex, sizeof(uint32_t),
                           cudaMemcpyDeviceToHost));
-
-    Debug::DumpMemToFile("Ranges", dRanges, leafCount - 1);
-    METU_LOG("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 
     // Bottom-up AABB Union Call
     // Reset Flags
@@ -750,18 +568,19 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
     CUDA_CHECK(cudaMemset(dCounter, 0x00, sizeof(uint32_t)));
     CUDA_CHECK(cudaMemset(dFlags, 0x00, sizeof(uint32_t) * (leafCount - 1)));
 
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, 1,
-                       //
-                       BottomUpAABBUnion<Leaf>,
-                       //
-                       *dCounter,
-                       dFlags,
-                       dRanges,
-                       dNodes,
-                       dLeafAABBs,
-                       leafCount);
-    // DEBUG
-    Debug::DumpMemToFile("LBVHNodes", dNodes, leafCount + leafCount - 1);
+    // Call a single kernel
+    // Abuse dynamic parallelism
+    gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                  //
+                  BottomUpAABBUnion<Leaf>,
+                  //
+                  *dCounter,
+                  dFlags,
+                  dRanges,
+                  dNodes,
+                  dLeafAABBs,
+                  dSortedIndices,
+                  leafCount);
 
     treeGPU.rootIndex = hRootIndex;
     treeGPU.nodes = dNodes;

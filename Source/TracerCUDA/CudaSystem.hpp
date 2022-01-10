@@ -128,3 +128,15 @@ __host__ void CudaGPU::AsyncGridStrideKC_XY(uint32_t sharedMemSize,
     //                            sharedMemSize, stream));
     CUDA_KERNEL_CHECK();
 }
+
+template<class Function, class... Args>
+__host__ void CudaGPU::ExactKC_X(uint32_t sharedMemSize,
+                                 cudaStream_t stream,
+                                 uint32_t blockSize,
+                                 uint32_t gridSize,
+                                 //
+                                 Function&& f, Args&&... args) const
+{
+    // Just call kernel exactly
+    f<<<gridSize, blockSize, sharedMemSize, stream>>>(std::forward<Args>(args)...);
+}

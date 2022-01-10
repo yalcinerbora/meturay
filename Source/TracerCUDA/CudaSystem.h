@@ -209,6 +209,16 @@ class CudaGPU
                                                      size_t workCount,
                                                      //
                                                      Function&&, Args&&...) const;
+
+        // Exact Kernel Calls
+        // You 1-1 specify block and grid dimensions
+        template<class Function, class... Args>
+        __host__ void           ExactKC_X(uint32_t sharedMemSize,
+                                          cudaStream_t stream,
+                                          uint32_t blockSize,
+                                          uint32_t gridSize,
+                                          //
+                                          Function&&, Args&&...) const;
 };
 
 // Verbosity

@@ -116,3 +116,23 @@ bool AABB<N, T>::IsOutside(const Vector<N, T>& point)
 {
     return !IsInside(point);
 }
+
+template<int N, class T>
+__device__ __host__ HYBRID_INLINE
+bool  AABB<N, T>::IntersectsSphere(const Vector3f& sphrPos,
+                                   float sphrRadius)
+{
+    // Graphics Gems 2
+    // http://www.realtimerendering.com/resources/GraphicsGems/gems/BoxSphere.c
+    T dmin = 0;
+    for(int i = 0; i < N; i++)
+    {
+        if(sphrPos[i] < min[i])
+            dmin +=(sphrPos[i] - min[i]) * (sphrPos[i] - min[i]);
+        else if(sphrPos[i] > max[i])
+            dmin += (sphrPos[i] - max[i]) * (sphrPos[i] - max[i]);
+    }
+    if(dmin <= sphrRadius * sphrRadius)
+        return true;
+    return false;
+}

@@ -63,8 +63,7 @@ set(SRC_MATH
     ${CURRENT_SOURCE_DIR}/Ray.hpp
     ${CURRENT_SOURCE_DIR}/Vector.cu
     ${CURRENT_SOURCE_DIR}/Vector.h
-    ${CURRENT_SOURCE_DIR}/Vector.hpp
-    ${CURRENT_SOURCE_DIR}/IntersectionFunctions.h)
+    ${CURRENT_SOURCE_DIR}/Vector.hpp)
 
 set(SRC_PRIMITIVES
     ${CURRENT_SOURCE_DIR}/Sphere.h

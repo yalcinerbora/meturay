@@ -491,8 +491,8 @@ TEST(PPG_DTree, SwapStress)
         }
 
 
-        testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
-        Debug::DumpMemToFile("nodes", nodes.data(), nodes.size());
+        //testTree.GetWriteTreeToCPU(treeGPU, nodes, 0);
+        //Debug::DumpMemToFile("nodes", nodes.data(), nodes.size());
 
         // Copy Vertices to the GPU
         CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),

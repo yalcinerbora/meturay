@@ -618,7 +618,11 @@ void RLTracerDebugBWork(// Output
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
     uint32_t spatialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
 
-    Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
+    Vector3f locColor;
+    if(spatialIndex == UINT32_MAX)
+        locColor = Zero3f;
+    else
+        locColor = Utility::RandomColorRGB(spatialIndex);
 
     // Accumulate the pixel
     ImageAccumulatePixel(renderState.gImage,
@@ -666,7 +670,11 @@ void RLTracerDebugWork(// Output
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
     uint32_t spatialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
 
-    Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
+    Vector3f locColor;
+    if(spatialIndex == UINT32_MAX)
+        locColor = Zero3f;
+    else
+        locColor = Utility::RandomColorRGB(spatialIndex);
 
     // Accumulate the pixel
     ImageAccumulatePixel(renderState.gImage,

@@ -423,7 +423,8 @@ static void KCSampleSurfacePatch(// Output
         Vector3f normal;
         Vector3f pos = SamplePos(normal, pdf, primId, primData, rng);
 
-        //printf("P:[%f, %f, %f], N[%f, %f, %f]\n",
+        //printf("[%u] P:[%f, %f, %f], N[%f, %f, %f]\n",
+        //       leafIndex,
         //       pos[0], pos[1], pos[2],
         //       normal[0], normal[1], normal[2]);
 

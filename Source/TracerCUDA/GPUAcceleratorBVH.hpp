@@ -770,16 +770,104 @@ size_t GPUAccBVHGroup<PGroup>::TotalPrimitiveCount() const
 }
 
 template <class PGroup>
-float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaSystem& gpu) const
+float GPUAccBVHGroup<PGroup>::TotalApproximateArea(const CudaSystem& system) const
 {
-
     using PrimitiveData = typename PGroup::PrimitiveData;
     const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
-    // TODO do an proper area measure
-    uint32_t totalLeafCount = std::reduce(surfaceLeafCounts.cbegin(),
-                                          surfaceLeafCounts.cend(),
-                                          0u);
-    return 1.0f * static_cast<float>(totalLeafCount);
+
+    const CudaGPU& gpu = system.BestGPU();
+    uint32_t totalLeafCount = static_cast<uint32_t>(TotalPrimitiveCount());
+
+    // Linearize the leafs and transform ids for all accelerators
+    // In this group
+    DeviceMemory areaMemory;
+    float* dAreas;
+    LeafData* dLinearLeafData;
+    TransformId* dLeafTransformIds;
+    GPUMemFuncs::AllocateMultiData(std::tie(dAreas, dLinearLeafData,
+                                            dLeafTransformIds),
+                                   areaMemory,
+                                   {totalLeafCount, totalLeafCount,
+                                   totalLeafCount});
+
+    // Populate the leafs
+    uint32_t offset = 0;
+    DeviceMemory offsetMemory;
+    for(uint32_t accId = 0;
+        accId < static_cast<uint32_t>(idLookup.size());
+        accId++)
+    {
+        uint32_t localNodeCount = bvhNodeCounts[accId];
+
+        // Allocate a temp offset array
+        uint32_t* dMarks = nullptr;
+        uint32_t* dOffsets = nullptr;
+        GPUMemFuncs::AllocateMultiData(std::tie(dMarks, dOffsets),
+                                       offsetMemory,
+                                       {localNodeCount, localNodeCount});
+
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, localNodeCount,
+                           //
+                           KCMarkLeafs<LeafData>,
+                           // Output
+                           dMarks,
+                           // Input
+                           dBVHLists,
+                           accId,
+                           localNodeCount);
+
+        // Scan the find the offsets
+        ExclusiveScanArrayGPU<uint32_t, ReduceAdd<uint32_t>>(dOffsets,
+                                                             dMarks,
+                                                             localNodeCount,
+                                                             0u);
+
+        // Write Subset of the
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, localNodeCount,
+                           //
+                           KCCopyLeafs<LeafData>,
+                           // Input
+                           dLinearLeafData + offset,
+                           // Output
+                           dOffsets,
+                           dBVHLists,
+                           accId,
+                           localNodeCount);
+        // Expand the transform over leafs
+        ExpandValueGPU<TransformId>(dLeafTransformIds + offset,
+                                    dAccTransformIds + accId,
+                                    surfaceLeafCounts[accId]);
+
+        offset += surfaceLeafCounts[accId];
+    }
+    assert(offset == totalLeafCount);
+
+    // Generate Area of each primitive
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalLeafCount,
+                       //
+                       KCGenerateAreas<PGroup>,
+                       // Output
+                       dAreas,
+                       // Input
+                       dLinearLeafData,
+                       dLeafTransformIds,
+                       this->dTransforms,
+                       // Constants
+                       primData,
+                       totalLeafCount);
+
+    // Reduce the areas
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+    float hAreaTotal;
+    ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
+    (
+        hAreaTotal,
+        dAreas,
+        totalLeafCount,
+        0.0f
+    );
+    gpu.WaitMainStream();
+    return hAreaTotal;
 }
 
 template <class PGroup>
@@ -817,7 +905,6 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
         accId < static_cast<uint32_t>(idLookup.size());
         accId++)
     {
-        uint32_t localLeafCount = surfaceLeafCounts[accId];
         uint32_t localNodeCount = bvhNodeCounts[accId];
 
         // Allocate a temp offset array
@@ -825,7 +912,7 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
         uint32_t* dOffsets = nullptr;
         GPUMemFuncs::AllocateMultiData(std::tie(dMarks, dOffsets),
                                        offsetMemory,
-                                       {localLeafCount, localLeafCount});
+                                       {localNodeCount, localNodeCount});
 
         gpu.GridStrideKC_X(0, (cudaStream_t)0, localNodeCount,
                            //
@@ -840,7 +927,7 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
         // Scan the find the offsets
         ExclusiveScanArrayGPU<uint32_t, ReduceAdd<uint32_t>>(dOffsets,
                                                              dMarks,
-                                                             localLeafCount,
+                                                             localNodeCount,
                                                              0u);
 
         // Write Subset of the
@@ -857,12 +944,11 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
         // Expand the transform over leafs
         ExpandValueGPU<TransformId>(dLeafTransformIds + offset,
                                     dAccTransformIds + accId,
-                                    localLeafCount);
+                                    surfaceLeafCounts[accId]);
 
         offset += surfaceLeafCounts[accId];
     }
-    // We generated linearized array
-
+    assert(offset == totalLeafCount);
     // Generate Area of each primitive
     gpu.GridStrideKC_X(0, (cudaStream_t)0, totalLeafCount,
                        //

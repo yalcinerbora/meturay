@@ -1,6 +1,7 @@
 #include "SceneSurfaceTree.cuh"
 #include "GPUAcceleratorI.h"
 #include "RNGSobol.cuh"
+#include "RayLib/CPUTimer.h"
 
 #include <cub/cub.cuh>
 #include <numeric>
@@ -25,6 +26,9 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
                                         uint32_t seed,
                                         const CudaSystem& cudaSystem)
 {
+    Utility::CPUTimer timer;
+    timer.Start();
+
     TracerError err = TracerError::OK;
     const CudaGPU& gpu = cudaSystem.BestGPU();
     // Generate A temp RNG for this gpu
@@ -79,8 +83,11 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
     for(const auto& [id, acc] : sceneAccelerators)
     {
         uint32_t localSampleCount = samplePerAcceleratorGroup[i];
+        // Skip if there is not samples for this accel
+        if(localSampleCount == 0) continue;
+
         acc->SampleAreaWeightedPoints(dPositions + offset,
-                                      dNormals,
+                                      dNormals + offset,
                                       rngSobol,
                                       localSampleCount,
                                       cudaSystem);
@@ -114,8 +121,19 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
                                     cudaSystem)) != TracerError::OK)
         return err;
 
+    // Print the generation timer
+    cudaSystem.SyncAllGPUs();
+    timer.Stop();
+    METU_LOG("SurfaceTree generated in {} seconds", timer.Elapsed<CPUTimeSeconds>());
+
     // All Done!
     return TracerError::OK;
+}
+
+std::ostream& operator<<(std::ostream& s, const SurfaceLeaf& l)
+{
+    s << "[" << l.position << "] [" << l.normal << "]";
+    return s;
 }
 
 template struct LBVHNode<SurfaceLeaf>;

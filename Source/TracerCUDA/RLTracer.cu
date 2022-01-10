@@ -234,6 +234,8 @@ bool RLTracer::Render()
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
 
+    METU_LOG("-----------------");
+
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
@@ -252,6 +254,14 @@ void RLTracer::Finalize()
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
     // Base class finalize directly sends the image
+
+    //if(callbacks)
+    //{
+    //    Vector2i start = imgMemory.SegmentOffset();
+    //    Vector2i end = start + imgMemory.SegmentSize();
+    //    callbacks->SendImageSectionReset();
+    //}
+
     GPUTracer::Finalize();
 }
 
@@ -267,7 +277,8 @@ void RLTracer::GenerateWork(uint32_t cameraIndex)
         RayAuxInitRL(InitialRLAux,
                      options.sampleCount *
                      options.sampleCount),
-        true
+        true,
+        options.debugRender ? false : true
     );
     currentDepth = 0;
 }
@@ -280,7 +291,8 @@ void RLTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
         RayAuxInitRL(InitialRLAux,
                      options.sampleCount *
                      options.sampleCount),
-        true
+        true,
+        options.debugRender ? false : true
     );
     currentDepth = 0;
 }
@@ -293,7 +305,8 @@ void RLTracer::GenerateWork(const GPUCameraI& dCam)
         RayAuxInitRL(InitialRLAux,
                      options.sampleCount *
                      options.sampleCount),
-        true
+        true,
+        options.debugRender ? false : true
     );
     currentDepth = 0;
 }

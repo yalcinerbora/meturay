@@ -7,7 +7,6 @@
 
 #include "RayLib/Types.h"
 #include "RayLib/MemoryAlignment.h"
-//#include "TracerDebug.h"
 
 #include <numeric>
 
