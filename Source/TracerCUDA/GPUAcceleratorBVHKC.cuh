@@ -251,7 +251,6 @@ void KCIntersectBVH(// O
     using LeafData = typename PGroup::LeafData;     // LeafStruct is defined by primitive
 
     // Minimal stack to traverse
-    // Kinda heavy on GPU but still it is faster
     uint32_t sLocationStack[MAX_DEPTH];
 
     // Convenience Functions

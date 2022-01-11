@@ -76,6 +76,8 @@ void CPUDistGroupPiecewiseConst1D::GeneratePointers()
     assert(offset == totalSizeLinear);
 }
 
+#include "TracerDebug.h"
+
 void CPUDistGroupPiecewiseConst1D::CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
                                                          const CudaSystem& system,
                                                          cudaMemcpyKind copyKind)
@@ -88,6 +90,8 @@ void CPUDistGroupPiecewiseConst1D::CopyPDFsConstructCDFs(const std::vector<const
                               functionDataPtrs[i],
                               counts[i] * sizeof(float),
                               copyKind));
+        // Zero out the first cdf member
+        //CUDA_CHECK(cudaMemset(const_cast<float*>(dCDFs[i]), 0x00, sizeof(float)));
 
         // Normalize PDF
         TransformArrayGPU(const_cast<float*>(dPDFs[i]), counts[i],
@@ -102,7 +106,7 @@ void CPUDistGroupPiecewiseConst1D::CopyPDFsConstructCDFs(const std::vector<const
                           DeviceDivideFunctor<float>(dCDFs[i][counts[i]]));
 
         // Transform CDF Also
-        TransformArrayGPU(const_cast<float*>(dCDFs[i]), counts[i],
+        TransformArrayGPU(const_cast<float*>(dCDFs[i]), counts[i] + 1,
                           DeviceDivideFunctor<float>(dCDFs[i][counts[i]]));
     }
 
@@ -295,8 +299,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
 
             // Utilize GPU to do Scan Algorithm to find CDF
             ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dRowCDF, dRowPDF,
-                                                           dim[0] + 1u,
-                                                           0.0f);
+                                                           dim[0] + 1, 0.0f);
 
             // Use last element to normalize Function values to PDF
             // Since we used PDF buffer to calculate CDF
@@ -316,7 +319,8 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         TransformArrayGPU(dYPDF, dim[1],
                           HostMultiplyFunctor<float>(1.0f / static_cast<float>(dim[1])));
 
-        ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dYCDF, dYPDF, (dim[1] + 1), 0.0f);
+        ExclusiveScanArrayGPU<float, ReduceAdd<float>>(dYCDF, dYPDF,
+                                                       dim[1] + 1, 0.0f);
         // Use last element to normalize Function values to PDF
         // Since we used PDF buffer to calculate CDF
         // multiply the function with the size as well

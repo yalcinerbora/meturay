@@ -116,7 +116,9 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
     tempMemory = DeviceMemory();
 
     // Compute an LBVH over the location
-    SurfaceDistanceFunctor df(normalAngleThreshold * MathConstants::DegToRadCoef);
+    float nThreshold = normalAngleThreshold * MathConstants::DegToRadCoef;
+    nThreshold = std::cos(nThreshold);
+    SurfaceDistanceFunctor df(nThreshold);
     if((err = lBVHSurface.Construct(dSurfaceLeafs, samplePointCount, df,
                                     cudaSystem)) != TracerError::OK)
         return err;

@@ -107,10 +107,62 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
     static_assert(HasPosition<Leaf>::value,
                   "This functions requires its leafs to have public \"position\" variable");
 
-    //printf("FindOp [%f, %f, %f]\n",
-    //       worldSurface.position[0],
-    //       worldSurface.position[1],
-    //       worldSurface.position[2]);
+    //// Minimal stack to traverse
+    //uint32_t sLocationStack[MAX_DEPTH];
+    //// Convenience Functions
+    //auto Push = [&sLocationStack](uint8_t& depth, uint32_t loc) -> void
+    //{
+    //    uint32_t index = depth;
+    //    sLocationStack[index] = loc;
+    //    depth++;
+    //};
+    //auto ReadTop = [&sLocationStack](uint8_t depth) -> uint32_t
+    //{
+    //    uint32_t index = depth;
+    //    return sLocationStack[index];
+    //};
+    //auto Pop = [&ReadTop](uint8_t& depth) -> uint32_t
+    //{
+    //    depth--;
+    //    return ReadTop(depth);
+    //};
+    //// Resulting Closest Leaf Index
+    //// & Closest Hit
+    //float closestDistance = INFINITY;
+    //uint32_t closestIndex = UINT32_MAX;
+    //// TODO: There is an optimization here
+    //// first iteration until leaf is always true
+    //// initialize closest distance with the radius
+    //uint8_t depth = 0;
+    //Push(depth, 0);
+    //const LBVHNode<Leaf>* currentNode = nullptr;
+    //while(depth > 0)
+    //{
+    //    uint32_t loc = Pop(depth);
+    //    currentNode = nodes + loc;
+
+    //    if(currentNode->isLeaf)
+    //    {
+    //        float distance = DistanceFunction(currentNode->leaf, worldSurface);
+    //        if(distance < closestDistance)
+    //        {
+    //            closestDistance = distance;
+    //            closestIndex = static_cast<uint32_t>(currentNode - nodes);
+    //        }
+    //    }
+    //    else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
+    //                                 currentNode->body.aabbMax);
+    //            aabb.IntersectsSphere(worldSurface.position,
+    //                                  closestDistance))
+    //    {
+    //        // Push to stack
+    //        Push(depth, currentNode->body.right);
+    //        Push(depth, currentNode->body.left);
+    //    }
+    //}
+    //if(closestDistance < 1.2f)
+    //    return UINT32_MAX;
+    //return closestIndex;
 
     // Helper Variables
     static constexpr uint8_t FIRST_ENTRY = 0b00;
@@ -136,7 +188,6 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
         MarkAsTraversed(list, depth);
         depth++;
     };
-
     // Resulting Closest Leaf Index
     // & Closest Hit
     float closestDistance = INFINITY;
@@ -144,7 +195,6 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
     // TODO: There is an optimization here
     // first iteration until leaf is always true
     // initialize closest distance with the radius
-
     // Bit Stack and its pointer
     uint64_t list = 0;
     uint8_t depth = MAX_DEPTH;
@@ -240,10 +290,8 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
             depth++;
         }
     }
-
-    if(closestDistance < 0.2f)
+    if(closestDistance < 0.01f)
         return UINT32_MAX;
-
     return closestIndex;
 }
 

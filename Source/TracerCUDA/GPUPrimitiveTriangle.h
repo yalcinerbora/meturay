@@ -63,6 +63,8 @@ struct TriFunctions
                                    Vector3f& normal,
                                    float& pdf,
                                    // Input
+                                   const GPUTransformI& transform,
+                                   //
                                    PrimitiveId primitiveId,
                                    const TriData& primData,
                                    // I-O
@@ -97,11 +99,16 @@ struct TriFunctions
         QuatF q2 = primData.tbnRotations[index2].Normalize();
         QuatF tbn = Quat::BarySLerp(q0, q1, q2, a, b);
         Vector3 Z_AXIS = ZAxis;
-        normal = tbn.Conjugate().ApplyRotation(Z_AXIS);
 
-        return (position0 * a +
-                position1 * b +
-                position2 * c);
+        normal = tbn.Conjugate().ApplyRotation(Z_AXIS);
+        Vector3 position = (position0 * a +
+                            position1 * b +
+                            position2 * c);
+
+        normal = transform.LocalToWorld(normal, true);
+        position = transform.LocalToWorld(position);
+
+        return position;
     }
 
     __device__ __forceinline__

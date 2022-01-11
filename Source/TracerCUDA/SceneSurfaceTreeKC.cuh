@@ -33,11 +33,13 @@ __device__ __forceinline__
 float SurfaceDistanceFunctor::operator()(const struct SurfaceLeaf& leaf,
                                          const struct SurfaceLeaf& worldSurface) const
 {
-    //if(worldSurface.normal.Dot(leaf.normal) >= normalThreshold)
-    //    return FLT_MAX;
-    //else
-    //    return (worldSurface.position - leaf.position).Length();
-    return (worldSurface.position - leaf.position).Length();
+    float cosTheta = worldSurface.normal.Dot(leaf.normal);
+
+    if(cosTheta < normalThreshold)
+        return FLT_MAX;
+    else
+        return (worldSurface.position - leaf.position).Length();
+   // return (worldSurface.position - leaf.position).Length();
 }
 
 __device__ __forceinline__

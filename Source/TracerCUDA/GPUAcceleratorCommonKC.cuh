@@ -416,13 +416,20 @@ static void KCSampleSurfacePatch(// Output
     {
         float pdf;
         float index;
-        areaDist.Sample(pdf, index, rng);
+        //areaDist.Sample(pdf, index, rng);
+        index = 0.1f;
         uint32_t leafIndex = static_cast<uint32_t>(index);
         PrimitiveId primId = gLeafs[leafIndex].primitiveId;
 
-        Vector3f normal;
-        Vector3f pos = SamplePos(normal, pdf, primId, primData, rng);
+        assert(leafIndex < areaDist.Count());
 
+        const GPUTransformI& transform = *gTransforms[gTransformIds[leafIndex]];
+
+        Vector3f normal;
+        Vector3f pos = SamplePos(normal, pdf, transform,
+                                 primId, primData, rng);
+
+        //printf("TID %u\n", gTransformIds[leafIndex]);
         //printf("[%u] P:[%f, %f, %f], N[%f, %f, %f]\n",
         //       leafIndex,
         //       pos[0], pos[1], pos[2],

@@ -137,12 +137,11 @@ __device__ void GPULight<PGroup>::Sample(// Output
     Vector3 position = PrimSamplePos(normal,
                                      pdf,
                                      //
+                                     gTransform,
+                                     //
                                      primId,
                                      gPData,
                                      rng);
-    // Transform
-    position = gTransform.LocalToWorld(position);
-    normal = gTransform.LocalToWorld(normal, true);
 
     direction = position - worldLoc;
     float distanceSqr = direction.LengthSqr();
@@ -171,6 +170,8 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
     Vector3 position = PrimSamplePos(normal,
                                      pdf,
                                      //
+                                     gTransform,
+                                     //
                                      primId,
                                      gPData,
                                      rng);
@@ -183,10 +184,6 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
     // Convert it to normal oriented hemisphere (world space)
     QuatF q = Quat::RotationBetweenZAxis(normal);
     direction = q.ApplyRotation(direction);
-
-    // Convert Ray to World space
-    position = gTransform.LocalToWorld(position);
-    direction = gTransform.LocalToWorld(direction);
 
     RayF ray = {position, direction};
     rReg = RayReg(ray, 0, INFINITY);

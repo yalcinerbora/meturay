@@ -49,6 +49,8 @@ using CenterGenFunction = Vector3(*)(const GPUTransformI& transform,
 template <class PrimitiveData>
 using SamplePosFunction = Vector3(*)(Vector3& normal,
                                      float& pdf,
+                                     // Inputs,
+                                     const GPUTransformI&,
                                      //
                                      PrimitiveId primitiveId,
                                      const PrimitiveData&,
@@ -197,6 +199,9 @@ Vector3 DefaultCenterGen(const GPUTransformI&,
 template <class PrimitiveData>
 __device__ __forceinline__
 Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
+                         // Input
+                         const GPUTransformI&,
+                         //
                          PrimitiveId,
                          const PrimitiveData&,
                          // I-O

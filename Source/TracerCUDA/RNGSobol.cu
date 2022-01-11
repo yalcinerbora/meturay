@@ -17,7 +17,7 @@ __global__ void KCInitRNGStatesSobol(RNGSobolGPU* dGenerators,
         threadId += (blockDim.x * gridDim.x))
     {
         new (dGenerators + threadId) RNGSobolGPU(gDirectionVectors[threadId],
-                                                 gOffsets[threadId],
+                                                 0,
                                                  gScrambleConsts[threadId]);
         dGenPtrs[threadId] = dGenerators + threadId;
     }

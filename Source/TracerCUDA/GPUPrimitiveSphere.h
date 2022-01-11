@@ -42,6 +42,8 @@ struct SphrFunctions
                                    Vector3f& normal,
                                    float& pdf,
                                    // Input
+                                   const GPUTransformI& transform,
+                                   //
                                    PrimitiveId primitiveId,
                                    const SphereData& primData,
                                    // I-O
@@ -71,8 +73,11 @@ struct SphrFunctions
         pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
 
         Vector3f sphrLoc = center + radius * unitPos;
-
         normal = unitPos;
+
+        sphrLoc = transform.LocalToWorld(sphrLoc);
+        normal = transform.LocalToWorld(normal, true);
+
         return sphrLoc;
     }
 

@@ -234,7 +234,7 @@ bool RLTracer::Render()
                         totalOutRayCount,
                         scene.BaseBoundaryMaterial());
 
-    METU_LOG("-----------------");
+    //METU_LOG("-----------------");
 
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration

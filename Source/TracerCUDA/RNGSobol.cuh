@@ -12,6 +12,7 @@ class RNGSobolGPU final : public RNGeneratorGPUI
 {
     private:
         curandStateScrambledSobol32_t rState;
+        //curandStateSobol32_t rState;
 
     public:
         // Constructor

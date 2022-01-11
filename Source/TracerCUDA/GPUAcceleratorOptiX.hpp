@@ -691,6 +691,10 @@ float GPUAccOptiXGroup<PGroup>::TotalApproximateArea(const CudaSystem& system) c
     return hAreaTotal;
 }
 
+
+#include "RNGIndependent.cuh"
+#include "TracerDebug.h"
+
 template <class PGroup>
 void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                                                         Vector3f* dPositions,
@@ -746,15 +750,20 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
     std::vector<size_t> counts = {totalLeafCount};
     CPUDistGroupPiecewiseConst1D areaDist(dAreaPtrs, counts, system);
 
+
+    RNGIndependentCPU rng(0, system);
+
     // Now use this to fetch surface patches
     gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,
                        //
                        KCSampleSurfacePatch<PGroup, RNGSobolGPU>,
+                       //KCSampleSurfacePatch<PGroup, RNGIndependentGPU>,
                        // Inputs
                        dPositions,
                        dNormals,
                        // I-O
                        rngCPU.GetGPUGenerators(gpu),
+                       //rng.GetGPUGenerators(gpu),
                        //
                        dLeafList,
                        dLeafTransformIds,
