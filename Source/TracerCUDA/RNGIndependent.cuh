@@ -26,6 +26,7 @@ class RNGIndependentGPU : public RNGeneratorGPUI
 
         __device__ float        Uniform() override;
         __device__ float        Uniform(float min, float max) override;
+        __device__ Vector2f     Uniform2D() override;
         __device__ float        Normal() override;
         __device__ float        Normal(float mean, float stdDev) override;
 };
@@ -86,6 +87,12 @@ float RNGIndependentGPU::Uniform(float min, float max)
 {
     float result = Uniform() * (min - max) + min;
     return result;
+}
+
+__device__ __forceinline__
+Vector2f RNGIndependentGPU::Uniform2D()
+{
+    return Vector2f(Uniform(), Uniform());
 }
 
 __device__ __forceinline__

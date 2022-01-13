@@ -11,22 +11,33 @@ class CudaSystem;
 class RNGSobolGPU final : public RNGeneratorGPUI
 {
     private:
-        curandStateScrambledSobol32_t rState;
-        //curandStateSobol32_t rState;
+        curandStateScrambledSobol32_t rStateX;
+        curandStateScrambledSobol32_t rStateY;
+        curandStateScrambledSobol32_t rStateMain;
+
+        __device__ float              UniformInner(curandStateScrambledSobol32_t*);
 
     public:
         // Constructor
+                                RNGSobolGPU() = default;
         __device__              RNGSobolGPU(curandDirectionVectors32_t,
-                                            uint32_t offset,
-                                            uint32_t scrambleConstant);
+                                            curandDirectionVectors32_t,
+                                            curandDirectionVectors32_t,
+                                            uint32_t scrambleConstantX,
+                                            uint32_t scrambleConstantY,
+                                            uint32_t scrambleConstantMain,
+                                            uint32_t offset);
                                 RNGSobolGPU(const RNGSobolGPU&) = delete;
-        RNGSobolGPU&            operator=(const RNGSobolGPU&) = delete;
+        RNGSobolGPU&            operator=(const RNGSobolGPU&) = default;
                                 ~RNGSobolGPU() = default;
 
         __device__ float        Uniform() override;
         __device__ float        Uniform(float min, float max) override;
+        __device__ Vector2f     Uniform2D() override;
         __device__ float        Normal() override;
         __device__ float        Normal(float mean, float stdDev) override;
+
+        __device__ void         Skip(uint32_t skipCount);
 };
 
 class RNGSobolCPU : public RNGeneratorCPUI
@@ -50,6 +61,14 @@ class RNGSobolCPU : public RNGeneratorCPUI
 
         RNGeneratorGPUI**   GetGPUGenerators(const CudaGPU&) override;
         size_t              UsedGPUMemory() const override;
+
+        void                ExpandGenerator(DeviceMemory& genMemory,
+                                            RNGeneratorGPUI**& dOffsetedGenerators,
+                                            uint32_t generatorIndex,
+                                            uint32_t generatorCount,
+                                            uint32_t offsetPerGenerator,
+                                            uint32_t extraOffsetThreshold,
+                                            const CudaGPU&);
 };
 
 inline size_t RNGSobolCPU::UsedGPUMemory() const
@@ -59,28 +78,56 @@ inline size_t RNGSobolCPU::UsedGPUMemory() const
 
 
 __device__ __forceinline__
-RNGSobolGPU::RNGSobolGPU(curandDirectionVectors32_t directionVectors,
-                         uint32_t offset,
-                         uint32_t scrambleConstant)
+RNGSobolGPU::RNGSobolGPU(curandDirectionVectors32_t dirVecX,
+                         curandDirectionVectors32_t dirVecY,
+                         curandDirectionVectors32_t dirVecMain,
+                         uint32_t scrambleConstantX,
+                         uint32_t scrambleConstantY,
+                         uint32_t scrambleConstantMain,
+                         uint32_t offset)
 {
-    curand_init(directionVectors,
+    curand_init(dirVecX,
+                scrambleConstantX,
                 offset,
-                scrambleConstant,
-                &rState);
+                &rStateX);
+
+    curand_init(dirVecY,
+                scrambleConstantY,
+                offset,
+                &rStateY);
+
+    curand_init(dirVecMain,
+                scrambleConstantMain,
+                offset,
+                &rStateMain);
 }
 
 
 __device__ __forceinline__
-float RNGSobolGPU::Uniform()
+float RNGSobolGPU::UniformInner(curandStateScrambledSobol32_t* state)
+//float RNGSobolGPU::UniformInner(curandStateSobol32_t* state)
 {
     // curand returns (0, 1]
     // we need [0, 1) invert it
-    float result = 1 - curand_uniform(&rState);
+    float result = 1 - curand_uniform(state);
     // TODO: curand rarely returns 1.0f anyways
     // (is it a bug?, or "1.0f - x" is causing the bug)
     // Just if it returns 1.0f return nearest float closest to 1.0f
     result = (result == 1) ? nextafter(result, 0.0f) : result;
     return result;
+}
+
+__device__ __forceinline__
+float RNGSobolGPU::Uniform()
+{
+    return UniformInner(&rStateMain);
+}
+
+__device__ __forceinline__
+Vector2f RNGSobolGPU::Uniform2D()
+{
+    return Vector2f(UniformInner(&rStateX),
+                    UniformInner(&rStateY));
 }
 
 __device__ __forceinline__
@@ -93,11 +140,19 @@ float RNGSobolGPU::Uniform(float min, float max)
 __device__ __forceinline__
 float RNGSobolGPU::Normal()
 {
-    return curand_normal(&rState);
+    return curand_normal(&rStateMain);
 }
 
 __device__ __forceinline__
 float RNGSobolGPU::Normal(float mean, float stdDev)
 {
-    return curand_normal(&rState) * stdDev + mean;
+    return curand_normal(&rStateMain) * stdDev + mean;
+}
+
+__device__ __forceinline__
+void RNGSobolGPU::Skip(uint32_t skipCount)
+{
+    skipahead<curandStateScrambledSobol32_t*>(skipCount, &rStateX);
+    skipahead<curandStateScrambledSobol32_t*>(skipCount, &rStateY);
+    skipahead<curandStateScrambledSobol32_t*>(skipCount, &rStateMain);
 }

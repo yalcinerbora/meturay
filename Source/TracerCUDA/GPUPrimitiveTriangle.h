@@ -70,8 +70,9 @@ struct TriFunctions
                                    // I-O
                                    RNGeneratorGPUI& rng)
     {
-        float r1 = sqrt(rng.Uniform());
-        float r2 = rng.Uniform();
+        Vector2f xi = rng.Uniform2D();
+        float r1 = sqrt(xi[0]);
+        float r2 = xi[1];
         // Generate Random Barycentrics
         // Osada 2002
         // http://graphics.stanford.edu/courses/cs468-08-fall/pdf/osada.pdf

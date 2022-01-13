@@ -54,11 +54,11 @@ struct SphrFunctions
         float radius = data[3];
 
         // http://mathworld.wolfram.com/SpherePointPicking.html
-        float xi1 = rng.Uniform();
-        float xi2 = rng.Uniform();
 
-        float theta = 2.0f * MathConstants::Pi * xi1;
-        float cosPhi = 2.0f * xi2 - 1.0f;
+        Vector2f xi = rng.Uniform2D();
+
+        float theta = 2.0f * MathConstants::Pi * xi[0];
+        float cosPhi = 2.0f * xi[1] - 1.0f;
         float sinPhi = sqrtf(fmaxf(0.0f, 1.0f - cosPhi * cosPhi));
 
         Vector3f unitPos = Utility::SphericalToCartesianUnit(Vector2f(sin(theta), cos(theta)),

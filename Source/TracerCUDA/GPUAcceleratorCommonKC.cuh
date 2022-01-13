@@ -411,6 +411,7 @@ static void KCSampleSurfacePatch(// Output
 
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
 
+    uint32_t i = 0;
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < totalSampleCount; globalId += blockDim.x * gridDim.x)
     {
@@ -437,5 +438,8 @@ static void KCSampleSurfacePatch(// Output
 
         dPositions[globalId] = pos;
         dNormals[globalId] = normal;
+        i++;
     }
+    printf("[%u] count %u\n", blockIdx.x * blockDim.x + threadIdx.x,
+           i);
 }

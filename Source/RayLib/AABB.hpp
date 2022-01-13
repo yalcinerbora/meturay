@@ -93,8 +93,8 @@ template<int N, class T>
 __device__ __host__ HYBRID_INLINE
 AABB<N, T>& AABB<N, T>::UnionSelf(const AABB<N, T>& aabb)
 {
-    min = Vector<N, T>::Min(min, aabb.min),
-        max = Vector<N, T>::Max(max, aabb.max);
+    min = Vector<N, T>::Min(min, aabb.min);
+    max = Vector<N, T>::Max(max, aabb.max);
     return *this;
 }
 
@@ -104,9 +104,11 @@ __device__ __host__ HYBRID_INLINE
 bool AABB<N, T>::IsInside(const Vector<N, T>& point)
 {
     bool result = true;
-    result &= (point[0] >= min[0] && point[0] <= max[0]);
-    result &= (point[1] >= min[1] && point[1] <= max[1]);
-    result &= (point[2] >= min[2] && point[2] <= max[2]);
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        result &= (point[i] >= min[i] && point[i] <= max[i]);
+    }
     return result;
 }
 
@@ -125,6 +127,7 @@ bool  AABB<N, T>::IntersectsSphere(const Vector3f& sphrPos,
     // Graphics Gems 2
     // http://www.realtimerendering.com/resources/GraphicsGems/gems/BoxSphere.c
     T dmin = 0;
+    UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
         if(sphrPos[i] < min[i])

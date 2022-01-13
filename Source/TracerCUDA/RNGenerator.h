@@ -9,6 +9,7 @@ Implementation of Warp Std Generator
 */
 
 #include <cuda_runtime.h>
+#include "RayLib/Vector.h"
 
 class CudaGPU;
 
@@ -22,13 +23,15 @@ class RNGeneratorGPUI
     //virtual         ~RandomGPU() = default;
     // Interface
     __device__ __forceinline__
-    virtual float   Uniform() = 0;
+    virtual float       Uniform() = 0;
     __device__ __forceinline__
-    virtual float   Uniform(float min, float max) = 0;
+    virtual float       Uniform(float min, float max) = 0;
     __device__ __forceinline__
-    virtual float   Normal() = 0;
+    virtual Vector2f    Uniform2D() = 0;
     __device__ __forceinline__
-    virtual float   Normal(float mean, float stdDev) = 0;
+    virtual float       Normal() = 0;
+    __device__ __forceinline__
+    virtual float       Normal(float mean, float stdDev) = 0;
 };
 
 class RNGeneratorCPUI

@@ -26,14 +26,14 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
                                         uint32_t seed,
                                         const CudaSystem& cudaSystem)
 {
+    TracerError err = TracerError::OK;
+
     Utility::CPUTimer timer;
     timer.Start();
 
-    TracerError err = TracerError::OK;
     const CudaGPU& gpu = cudaSystem.BestGPU();
     // Generate A temp RNG for this gpu
-    // TODO: implement a low-discrepancy sampler and use it here
-    RNGSobolCPU rngSobol(0, cudaSystem);
+    RNGSobolCPU rngSobol(seed, cudaSystem);
 
     // Get Area, Center & Normal for each primitive
     DeviceMemory tempMemory;
@@ -96,7 +96,6 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
         i++;
     }
     assert(offset == samplePointCount);
-
     //
     DeviceMemory surfaceMemory;
     SurfaceLeaf* dSurfaceLeafs;

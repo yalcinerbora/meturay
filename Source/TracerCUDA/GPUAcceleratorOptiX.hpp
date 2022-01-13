@@ -753,7 +753,27 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
 
     RNGIndependentCPU rng(0, system);
 
-    // Now use this to fetch surface patches
+    // Sobol Sampler works properly only if it called in order
+    // Each thread has its own offset in default case
+    // Duplicate the first sobol sampler with offsets here
+    // Get the block count for this kernel as if it will be launched as
+    // Grid-stride block
+    void* KernelFunc = reinterpret_cast<void*>(&KCSampleSurfacePatch<PGroup, RNGSobolGPU>);
+    uint32_t threadCount = StaticThreadPerBlock1D;
+    uint32_t blockCount = gpu.DetermineGridStrideBlock(0, threadCount,
+                                                       surfacePatchCount, KernelFunc);
+    uint32_t totalThreadCount = blockCount * threadCount;
+    // Determine how many times each generator will be called in this case
+    uint32_t loopCount = surfacePatchCount / totalThreadCount;
+    uint32_t loopRemainder = surfacePatchCount % totalThreadCount;
+
+    DeviceMemory genMemory;
+    RNGeneratorGPUI** dOffsetedGenerators;
+    rngCPU.ExpandGenerator(genMemory, dOffsetedGenerators,
+                           0, totalThreadCount,
+                           loopCount, loopRemainder,
+                           gpu);
+
     gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,
                        //
                        KCSampleSurfacePatch<PGroup, RNGSobolGPU>,
@@ -762,7 +782,8 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                        dPositions,
                        dNormals,
                        // I-O
-                       rngCPU.GetGPUGenerators(gpu),
+                       dOffsetedGenerators,
+                       //rngCPU.GetGPUGenerators(gpu),
                        //rng.GetGPUGenerators(gpu),
                        //
                        dLeafList,
@@ -772,4 +793,24 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
                        areaDist.DistributionGPU(0),
                        primData,
                        surfacePatchCount);
+
+    //// Now use this to fetch surface patches
+    //gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,
+    //                   //
+    //                   KCSampleSurfacePatch<PGroup, RNGSobolGPU>,
+    //                   //KCSampleSurfacePatch<PGroup, RNGIndependentGPU>,
+    //                   // Inputs
+    //                   dPositions,
+    //                   dNormals,
+    //                   // I-O
+    //                   rngCPU.GetGPUGenerators(gpu),
+    //                   //rng.GetGPUGenerators(gpu),
+    //                   //
+    //                   dLeafList,
+    //                   dLeafTransformIds,
+    //                   this->dTransforms,
+    //                   // Constants
+    //                   areaDist.DistributionGPU(0),
+    //                   primData,
+    //                   surfacePatchCount);
 }
