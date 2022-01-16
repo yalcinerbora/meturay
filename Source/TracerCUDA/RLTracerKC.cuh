@@ -236,6 +236,7 @@ void RLTracerPathWork(// Output
                       const typename MGroup::Data& gMatData,
                       const HitKey::Type matIndex)
 {
+    const LBVHSurfaceGPU& posTree = renderState.posTree;
     static constexpr Vector3 ZERO_3 = Zero3;
 
     // TODO: change this currently only first strategy is sampled
@@ -257,11 +258,11 @@ void RLTracerPathWork(// Output
     // Current ray's medium
     const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
 
-    // Nearest DTree
-    // Find nearest DTree
-    uint32_t spatialIndex = 0;
-    //uint32_t spatialIndex = renderState.gPosTree.FindNearestPoint(position);
-    assert(spatialIndex != UINT32_MAX);
+    // Before BxDF Acquire the 2D irradiance map
+    float distance;
+    SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+
 
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
@@ -388,10 +389,6 @@ void RLTracerPathWork(// Output
         }
     }
 
-    // Before BxDF Acquire the 2D irradiance map
-    SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t sptaialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
-
     // ==================================== //
     //             BxDF PORTION             //
     // ==================================== //
@@ -426,7 +423,7 @@ void RLTracerPathWork(// Output
                                          0);
 
             pdfGuide = renderState.qFunction.Pdf(rayPath.getDirection(),
-                                                 sptaialIndex);
+                                                 spatialIndex);
             if(pdfBxDF == 0.0f) selectedPDFZero = true;
         }
         else
@@ -499,7 +496,7 @@ void RLTracerPathWork(// Output
                                        matIndex, m);
 
             float sum = AccumulateQFunction<MGroup>(renderState.qFunction,
-                                                    sptaialIndex,
+                                                    spatialIndex,
                                                     MatEval);
             // Don't forget to add current emission if available
             sum += Utility::RGBToLuminance(emission);
@@ -598,6 +595,8 @@ void RLTracerDebugBWork(// Output
                         // Constants
                         const typename EGroup::GPUType& gLight)
 {
+    const LBVHSurfaceGPU& posTree = renderState.posTree;
+
     // Helper Class for better code readability
     OutputWriter<RayAuxRL> outputWriter(gOutBoundKeys,
                                         gOutRays,
@@ -615,11 +614,12 @@ void RLTracerDebugBWork(// Output
     Vector3 position = r.AdvancedPos(ray.tMax);
 
     // Acquire Spatial Loc
+    float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t spatialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
 
     Vector3f locColor;
-    if(spatialIndex == UINT32_MAX)
+    if(distance <= 0.12f)
         locColor = Zero3f;
     else
         locColor = Utility::RandomColorRGB(spatialIndex);
@@ -650,6 +650,7 @@ void RLTracerDebugWork(// Output
                        const typename MGroup::Data& gMatData,
                        const HitKey::Type matIndex)
 {
+    const LBVHSurfaceGPU& posTree = renderState.posTree;
     // Helper Class for better code readability
     OutputWriter<RayAuxRL> outputWriter(gOutBoundKeys,
                                         gOutRays,
@@ -667,11 +668,12 @@ void RLTracerDebugWork(// Output
     Vector3 position = r.AdvancedPos(ray.tMax);
 
     // Acquire Spatial Loc
+    float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t spatialIndex = renderState.posTree.FindNearestPoint(queryLeaf);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
 
     Vector3f locColor;
-    if(spatialIndex == UINT32_MAX)
+    if(distance <= 0.12f)
         locColor = Zero3f;
     else
         locColor = Utility::RandomColorRGB(spatialIndex);

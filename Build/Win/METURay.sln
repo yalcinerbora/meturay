@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.87
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio Version 17
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RayLib", "RayLib\RayLib.vcxproj", "{DFCD1274-CD37-4E84-A1DC-96F619B04EEA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VisorGL", "VisorGL\VisorGL.vcxproj", "{73E98DC9-D340-4704-9DB7-B3F7156F97D3}"

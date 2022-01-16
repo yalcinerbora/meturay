@@ -62,10 +62,7 @@ KCExpandSobolGenerator(RNGSobolGPU* gGenerators,
         if(threadId < extraOffsetThreshold)
             skipCount += threadId;
 
-        printf("[%u] skip %u\n", threadId, skipCount);
-
         gGenerators[threadId].Skip(skipCount);
-
         dGenPtrs[threadId] = gGenerators + threadId;
     }
 }

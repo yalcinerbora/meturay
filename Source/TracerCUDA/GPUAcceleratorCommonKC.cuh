@@ -417,8 +417,7 @@ static void KCSampleSurfacePatch(// Output
     {
         float pdf;
         float index;
-        //areaDist.Sample(pdf, index, rng);
-        index = 0.1f;
+        areaDist.Sample(pdf, index, rng);
         uint32_t leafIndex = static_cast<uint32_t>(index);
         PrimitiveId primId = gLeafs[leafIndex].primitiveId;
 
@@ -440,6 +439,4 @@ static void KCSampleSurfacePatch(// Output
         dNormals[globalId] = normal;
         i++;
     }
-    printf("[%u] count %u\n", blockIdx.x * blockDim.x + threadIdx.x,
-           i);
 }

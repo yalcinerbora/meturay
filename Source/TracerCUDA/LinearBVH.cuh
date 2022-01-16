@@ -59,7 +59,8 @@ struct LinearBVHGPU
     uint32_t                nodeCount;
     uint32_t                leafCount;
 
-    __device__ uint32_t     FindNearestPoint(const Leaf& worldSurface) const;
+    __device__ uint32_t     FindNearestPoint(float& distance,
+                                             const Leaf& worldSurface) const;
 };
 
 template <class Leaf,
@@ -102,7 +103,7 @@ class LinearBVHCPU
 
 template <class Leaf, class DistFunctor>
 __device__ __forceinline__
-uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurface) const
+uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, const Leaf& worldSurface) const
 {
     static_assert(HasPosition<Leaf>::value,
                   "This functions requires its leafs to have public \"position\" variable");
@@ -160,8 +161,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
     //        Push(depth, currentNode->body.left);
     //    }
     //}
-    //if(closestDistance < 1.2f)
-    //    return UINT32_MAX;
+    //distance = closestDistance;
     //return closestIndex;
 
     // Helper Variables
@@ -290,8 +290,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(const Leaf& worldSurf
             depth++;
         }
     }
-    if(closestDistance < 0.01f)
-        return UINT32_MAX;
+    distance = closestDistance;
     return closestIndex;
 }
 
