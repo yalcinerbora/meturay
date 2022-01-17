@@ -27,6 +27,20 @@
         "position": [-30.7356, 83.3832, 11.0581],
         "up": [0, 1, 0],
         "planes": [10, 2800]
+    },
+    {
+        "id": 2,
+        "type" : "Pinhole",
+
+        // 16:9 FoV
+        //"fov": [97.0672, 54.6003],
+        "fov": [54.6003, 30.7127],
+        // 1:1 FoV
+        //"fov": [54.6003, 54.6003],
+        "gaze": [-15.449, 480.051, -638.426],
+        "position": [-15.4875, 480.609, -639.255],
+        "up": [0, 1, 0],
+        "planes": [10, 2800]
     }],
 
     "Lights":[
@@ -62,15 +76,24 @@
         "id": 0,
         "type": "Identity"
     },
+    // {
+    //     "id":1,
+    //     "type": "Single",
+    //     "layout": "matrix4x4",
+    //     "matrix": [1, 0,  0, 0,
+    //                0, 0, -1, 0,
+    //                0, 1,  0, 0,
+    //                0, 0,  0, 1]
+    // },
     {
         "id":1,
         "type": "Single",
-        "layout": "matrix4x4",
-        "matrix": [1, 0,  0, 0,
-                   0, 0, -1, 0,
-                   0, 1,  0, 0,
-                   0, 0,  0, 1]
-    }],
+        "layout": "trs",
+        "translate": [0, 0, 0],
+        "rotate": [-90, 0, 0],
+        "scale": [1, 1, 1]
+    }
+],
 
     "Textures":[
     {
@@ -333,6 +356,7 @@
 
     // Lights
     "LightSurfaces": [{"light" : 1}],
+    // "LightSurfaces": [],
     // Cameras
-    "CameraSurfaces": [{"camera": 0}, {"camera": 1}]
+    "CameraSurfaces": [{"camera": 0}, {"camera": 1}, {"camera": 2}]
 }

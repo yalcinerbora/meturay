@@ -5,12 +5,12 @@
 #include <random>
 #include <execution>
 
-__global__ void KCInitRNGStatesSobol(RNGSobolGPU* gGenerators,
-                                     RNGeneratorGPUI** gGenPtrs,
-                                     curandDirectionVectors32_t* gDirectionVectors,
-                                     const uint32_t* gScrambleConsts,
-                                     const uint32_t* gOffsets,
-                                     uint32_t totalCount)
+__global__
+void KCInitRNGStatesSobol(RNGSobolGPU* gGenerators,
+                          RNGeneratorGPUI** gGenPtrs,
+                          curandDirectionVectors32_t* gDirectionVectors,
+                          const uint32_t* gOffsets,
+                          uint32_t totalCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < totalCount;
@@ -19,43 +19,63 @@ __global__ void KCInitRNGStatesSobol(RNGSobolGPU* gGenerators,
         new (gGenerators + threadId) RNGSobolGPU(gDirectionVectors[0],
                                                  gDirectionVectors[1],
                                                  gDirectionVectors[2],
-                                                 gScrambleConsts[0],
-                                                 gScrambleConsts[1],
-                                                 gScrambleConsts[2],
-                                                 gOffsets[threadId]
-        );
+                                                 gOffsets[threadId]);
         gGenPtrs[threadId] = gGenerators + threadId;
     }
 }
 
+__global__
+void KCInitRNGStatesScrSobol(RNGScrSobolGPU* gGenerators,
+                             RNGeneratorGPUI** gGenPtrs,
+                             curandDirectionVectors32_t* gDirectionVectors,
+                             const uint32_t* gScrambleConsts,
+                             const uint32_t* gOffsets,
+                             uint32_t totalCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        new (gGenerators + threadId) RNGScrSobolGPU(gDirectionVectors[0],
+                                                    gDirectionVectors[1],
+                                                    gDirectionVectors[2],
+                                                    gScrambleConsts[0],
+                                                    gScrambleConsts[1],
+                                                    gScrambleConsts[2],
+                                                    gOffsets[threadId]);
+        gGenPtrs[threadId] = gGenerators + threadId;
+    }
+}
 
-__global__ void
-KCSkipAheadGenerator(RNGeneratorGPUI** gReferences,
-                     uint32_t gReferenceIndex,
-                     uint32_t skipCount)
+template <class T>
+__global__
+void KCSkipAheadGenerator(RNGeneratorGPUI** gReferences,
+                          uint32_t gReferenceIndex,
+                          uint32_t skipCount)
 {
     if(threadIdx.x != 0) return;
 
-    RNGSobolGPU& generator = *static_cast<RNGSobolGPU*>(gReferences[gReferenceIndex]);
+    T& generator = *static_cast<T*>(gReferences[gReferenceIndex]);
     generator.Skip(skipCount);
 }
 
-__global__ void
-KCExpandSobolGenerator(RNGSobolGPU* gGenerators,
-                       RNGeneratorGPUI** dGenPtrs,
-                       RNGeneratorGPUI** gReferences,
-                       uint32_t gReferenceIndex,
-                       uint32_t offsetPerGenerator,
-                       uint32_t extraOffsetThreshold,
-                       uint32_t generatorCount)
+template <class T>
+__global__
+void KCExpandSobolGenerator(T* gGenerators,
+                            RNGeneratorGPUI** dGenPtrs,
+                            RNGeneratorGPUI** gReferences,
+                            uint32_t gReferenceIndex,
+                            uint32_t offsetPerGenerator,
+                            uint32_t extraOffsetThreshold,
+                            uint32_t generatorCount)
 {
-    RNGSobolGPU& gRefGenerator = *static_cast<RNGSobolGPU*>(gReferences[gReferenceIndex]);
+    T& gRefGenerator = *static_cast<T*>(gReferences[gReferenceIndex]);
 
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < generatorCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        new (gGenerators + threadId) RNGSobolGPU();
+        new (gGenerators + threadId) T();
         gGenerators[threadId] = gRefGenerator;
 
         uint32_t skipCount = offsetPerGenerator * (threadId);
@@ -67,11 +87,194 @@ KCExpandSobolGenerator(RNGSobolGPU* gGenerators,
     }
 }
 
-
-#include "TracerDebug.h"
-
 RNGSobolCPU::RNGSobolCPU(uint32_t seed,
                          const CudaSystem& system)
+{
+    // RNG for seeding each thread in the gpu(s)
+    std::mt19937 rng;
+    rng.seed(seed);
+
+    // Determine GPU Sizes and Offsets
+    size_t totalCount = 0;
+    std::vector<Vector2ul> offsetAndCounts;
+    for(const auto& gpu : system.SystemGPUs())
+    {
+        offsetAndCounts.push_back(Vector2ul(0));
+        offsetAndCounts.back()[0] = totalCount;
+        offsetAndCounts.back()[1] = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
+        totalCount += offsetAndCounts.back()[1];
+    }
+
+    // Get Directions Vectors & Scramble Constants from
+    // CPU API
+    curandDirectionVectors32_t* hDirectionVectors;
+    curandStatus_t s = curandGetDirectionVectors32(&hDirectionVectors,
+                                                   CURAND_DIRECTION_VECTORS_32_JOEKUO6);
+    if(s != CURAND_STATUS_SUCCESS) assert(false);
+
+    // Copy to temp memory
+    uint32_t* dOffsets;
+    curandDirectionVectors32_t* dDirectionVectors;
+    static_assert(sizeof(curandDirectionVectors32_t) == 32 * sizeof(uint32_t),
+                  "Sanity Size Check for curandDirectionVectors32_t");
+
+    DeviceMemory tempMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dOffsets, dDirectionVectors),
+                                   tempMemory,
+                                   {totalCount, 3});
+
+    // Before touching gpu mem from cpu do a sync
+    // since other initialization probably launched a kernel
+    system.SyncAllGPUs();
+    std::for_each(dOffsets, dOffsets + totalCount,
+                  [&](uint32_t& t) { t = rng(); });
+
+    // Rest is copied from host
+    CUDA_CHECK(cudaMemcpy(dDirectionVectors, hDirectionVectors,
+                          3 * sizeof(curandDirectionVectors32_t),
+                          cudaMemcpyHostToDevice));
+
+    // Allocate Actual State Data
+    RNGSobolGPU* dGenerators;
+    RNGeneratorGPUI** dGenPtrs;
+    GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
+                                   memRandom,
+                                   {totalCount, totalCount});
+
+    size_t totalOffset = 0;
+    for(const auto& gpu : system.SystemGPUs())
+    {
+        uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
+        deviceGenerators.emplace(&gpu, dGenPtrs + totalOffset);
+        totalOffset += gpuRNGStateCount;
+    }
+    assert(totalCount == totalOffset);
+
+    // Make all GPU do its own initialization
+    int i = 0;
+    for(const auto& gpu : system.SystemGPUs())
+    {
+        uint32_t localCount = static_cast<uint32_t>(offsetAndCounts[i][1]);
+
+        gpu.GridStrideKC_X(0, 0, localCount,
+                           //
+                           KCInitRNGStatesSobol,
+                           //
+                           dGenerators + offsetAndCounts[i][0],
+                           dGenPtrs + offsetAndCounts[i][0],
+                           dDirectionVectors,
+                           dOffsets + offsetAndCounts[i][0],
+                           localCount);
+        i++;
+    }
+    // All Done!
+}
+
+RNGSobolCPU::RNGSobolCPU(uint32_t seed,
+                         const CudaGPU& gpu)
+{
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+
+    // CPU Mersenne Twister
+    std::mt19937 rng;
+    rng.seed(seed);
+    // Determine GPU
+    size_t offset = 0;
+    uint32_t count = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
+    // Get Directions Vectors & Scramble Constants from
+    // CPU API
+    curandDirectionVectors32_t* hDirectionVectors;
+    curandStatus_t s = curandGetDirectionVectors32(&hDirectionVectors,
+                                                   CURAND_DIRECTION_VECTORS_32_JOEKUO6);
+    if(s != CURAND_STATUS_SUCCESS) assert(false);
+    // Copy to temp memory
+    uint32_t* dOffsets;
+    curandDirectionVectors32_t* dDirectionVectors;
+    DeviceMemory tempMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dOffsets, dDirectionVectors),
+                                   tempMemory,
+                                   {count, 3});
+    // Before touching gpu mem from cpu do a sync
+    // since other initialization probably launched a kernel
+    CUDA_CHECK(cudaDeviceSynchronize());
+    std::for_each(dOffsets, dOffsets + count,
+                  [&](uint32_t& t) { t = rng(); });
+    // Rest is copied from host
+    CUDA_CHECK(cudaMemcpy(dDirectionVectors, hDirectionVectors,
+                          3 * sizeof(curandDirectionVectors32_t),
+                          cudaMemcpyHostToDevice));
+    // Actual Allocation
+    RNGSobolGPU* dGenerators;
+    RNGeneratorGPUI** dGenPtrs;
+    GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
+                                   memRandom,
+                                   {count, count});
+
+    size_t totalOffset = 0;
+    uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
+    deviceGenerators.emplace(&gpu, dGenPtrs + totalOffset);
+    totalOffset += gpuRNGStateCount;
+    assert(count == static_cast<uint32_t>(totalOffset));
+
+    // Initialize the States
+    gpu.GridStrideKC_X(0, 0, count,
+                       //
+                       KCInitRNGStatesSobol,
+                       //
+                       dGenerators + offset,
+                       dGenPtrs + offset,
+                       dDirectionVectors,
+                       dOffsets + offset,
+                       count);
+}
+
+RNGeneratorGPUI** RNGSobolCPU::GetGPUGenerators(const CudaGPU& gpu)
+{
+    return deviceGenerators.at(&gpu);
+}
+
+void RNGSobolCPU::ExpandGenerator(DeviceMemory& genMemory,
+                                  RNGeneratorGPUI**& dOffsetedGenerators,
+                                  uint32_t generatorIndex,
+                                  uint32_t generatorCount,
+                                  uint32_t offsetPerGenerator,
+                                  uint32_t extraOffsetThreshold,
+                                  const CudaGPU& gpu)
+{
+    RNGeneratorGPUI** dRefGenerators = deviceGenerators.at(&gpu);
+    // Allocate
+    RNGSobolGPU* dSobolGPU;
+    GPUMemFuncs::AllocateMultiData(std::tie(dSobolGPU, dOffsetedGenerators),
+                                   genMemory,
+                                   {generatorCount, generatorCount});
+
+
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, generatorCount,
+                       //
+                       KCExpandSobolGenerator<RNGSobolGPU>,
+                       //
+                       dSobolGPU,
+                       dOffsetedGenerators,
+                       dRefGenerators,
+                       generatorIndex,
+                       offsetPerGenerator,
+                       extraOffsetThreshold,
+                       generatorCount);
+
+    uint32_t totalSampleCount = generatorCount * offsetPerGenerator + extraOffsetThreshold;
+
+    gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                  //
+                  KCSkipAheadGenerator<RNGSobolGPU>,
+                  //
+                  dRefGenerators,
+                  generatorIndex,
+                  totalSampleCount);
+
+}
+
+RNGScrSobolCPU::RNGScrSobolCPU(uint32_t seed,
+                               const CudaSystem& system)
 {
     // RNG for seeding each thread in the gpu(s)
     std::mt19937 rng;
@@ -126,7 +329,7 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
                           cudaMemcpyHostToDevice));
 
     // Allocate Actual State Data
-    RNGSobolGPU* dGenerators;
+    RNGScrSobolGPU* dGenerators;
     RNGeneratorGPUI** dGenPtrs;
     GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
                                    memRandom,
@@ -149,7 +352,7 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
 
         gpu.GridStrideKC_X(0, 0, localCount,
                            //
-                           KCInitRNGStatesSobol,
+                           KCInitRNGStatesScrSobol,
                            //
                            dGenerators + offsetAndCounts[i][0],
                            dGenPtrs + offsetAndCounts[i][0],
@@ -162,8 +365,8 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
     // All Done!
 }
 
-RNGSobolCPU::RNGSobolCPU(uint32_t seed,
-                         const CudaGPU& gpu)
+RNGScrSobolCPU::RNGScrSobolCPU(uint32_t seed,
+                               const CudaGPU& gpu)
 {
     CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
     static constexpr uint32_t VECTOR_PER_THREAD = 32;
@@ -179,7 +382,7 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
     uint32_t* hScrambleConstants;
     curandDirectionVectors32_t* hDirectionVectors;
     curandStatus_t s = curandGetDirectionVectors32(&hDirectionVectors,
-                                                   CURAND_SCRAMBLED_DIRECTION_VECTORS_64_JOEKUO6);
+                                                   CURAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6);
     if(s != CURAND_STATUS_SUCCESS) assert(false);
     s = curandGetScrambleConstants32(&hScrambleConstants);
     if(s != CURAND_STATUS_SUCCESS) assert(false);
@@ -206,7 +409,7 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
                           VECTOR_PER_THREAD * count * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
     // Actual Allocation
-    RNGSobolGPU* dGenerators;
+    RNGScrSobolGPU* dGenerators;
     RNGeneratorGPUI** dGenPtrs;
     GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
                                    memRandom,
@@ -221,7 +424,7 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
     // Initialize the States
     gpu.GridStrideKC_X(0, 0, count,
                        //
-                       KCInitRNGStatesSobol,
+                       KCInitRNGStatesScrSobol,
                        //
                        dGenerators + offset,
                        dGenPtrs + offset,
@@ -231,22 +434,22 @@ RNGSobolCPU::RNGSobolCPU(uint32_t seed,
                        count);
 }
 
-RNGeneratorGPUI** RNGSobolCPU::GetGPUGenerators(const CudaGPU& gpu)
+RNGeneratorGPUI** RNGScrSobolCPU::GetGPUGenerators(const CudaGPU& gpu)
 {
     return deviceGenerators.at(&gpu);
 }
 
-void RNGSobolCPU::ExpandGenerator(DeviceMemory& genMemory,
-                                  RNGeneratorGPUI**& dOffsetedGenerators,
-                                  uint32_t generatorIndex,
-                                  uint32_t generatorCount,
-                                  uint32_t offsetPerGenerator,
-                                  uint32_t extraOffsetThreshold,
-                                  const CudaGPU& gpu)
+void RNGScrSobolCPU::ExpandGenerator(DeviceMemory& genMemory,
+                                     RNGeneratorGPUI**& dOffsetedGenerators,
+                                     uint32_t generatorIndex,
+                                     uint32_t generatorCount,
+                                     uint32_t offsetPerGenerator,
+                                     uint32_t extraOffsetThreshold,
+                                     const CudaGPU& gpu)
 {
     RNGeneratorGPUI** dRefGenerators = deviceGenerators.at(&gpu);
     // Allocate
-    RNGSobolGPU* dSobolGPU;
+    RNGScrSobolGPU* dSobolGPU;
     GPUMemFuncs::AllocateMultiData(std::tie(dSobolGPU, dOffsetedGenerators),
                                    genMemory,
                                    {generatorCount, generatorCount});
@@ -254,7 +457,7 @@ void RNGSobolCPU::ExpandGenerator(DeviceMemory& genMemory,
 
     gpu.GridStrideKC_X(0, (cudaStream_t)0, generatorCount,
                        //
-                       KCExpandSobolGenerator,
+                       KCExpandSobolGenerator<RNGScrSobolGPU>,
                        //
                        dSobolGPU,
                        dOffsetedGenerators,
@@ -268,7 +471,7 @@ void RNGSobolCPU::ExpandGenerator(DeviceMemory& genMemory,
 
     gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
                   //
-                  KCSkipAheadGenerator,
+                  KCSkipAheadGenerator<RNGScrSobolGPU>,
                   //
                   dRefGenerators,
                   generatorIndex,

@@ -619,7 +619,7 @@ void RLTracerDebugBWork(// Output
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
 
     Vector3f locColor;
-    if(distance <= 0.12f)
+    if(distance <= 0.22f)
         locColor = Zero3f;
     else
         locColor = Utility::RandomColorRGB(spatialIndex);
@@ -673,7 +673,7 @@ void RLTracerDebugWork(// Output
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
 
     Vector3f locColor;
-    if(distance <= 0.12f)
+    if(distance <= 0.22f)
         locColor = Zero3f;
     else
         locColor = Utility::RandomColorRGB(spatialIndex);

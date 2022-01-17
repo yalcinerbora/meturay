@@ -390,7 +390,6 @@ struct TriangleSurfaceGenerator
                                     baryCoords[0],
                                     baryCoords[1]);
         tbn.NormalizeSelf();
-
         tbn = tbn * transform.ToLocalRotation();
         return BasicSurface{tbn};
     }

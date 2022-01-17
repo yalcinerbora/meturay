@@ -79,9 +79,9 @@ class CPUTransformSingle : public CPUTransformGroupI
 		DeviceMemory						memory;
 		const Matrix4x4*					dTransformMatrices;
 		const Matrix4x4*					dInvTransformMatrices;
-		const GPUTransformSingle*		dGPUTransforms;
+		const GPUTransformSingle*			dGPUTransforms;
 		GPUTransformList					gpuTransformList;
-		uint32_t                        transformCount;
+		uint32_t							transformCount;
 
     protected:
     public:
@@ -122,8 +122,8 @@ inline GPUTransformSingle::GPUTransformSingle(const Matrix4x4& transform,
 	y.NormalizeSelf();
 	z.NormalizeSelf();
 
-	TransformGen::Space(invRotation, x, y, z);
-	rotation = invRotation.Conjugate();
+	TransformGen::Space(rotation, x, y, z);
+	invRotation = rotation.Conjugate();
 }
 
 __device__

@@ -142,6 +142,22 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     Vector<3, T> b1 = Cross(n[1], t1);
     Vector<3, T> b2 = Cross(n[2], t2);
 
+    //printf("T %f, %f, %f - B %f, %f, %f - N %f, %f, %f\n"
+    //       "T %f, %f, %f - B %f, %f, %f - N %f, %f, %f\n"
+    //       "T %f, %f, %f - B %f, %f, %f - N %f, %f, %f\n"
+    //       "====================================\n",
+    //       t0[0], t0[1], t0[2],
+    //       b0[0], b0[1], b0[2],
+    //       n[0][0], n[0][1], n[0][2],
+    //       
+    //       t1[0], t1[1], t1[2],
+    //       b1[0], b1[1], b1[2],
+    //       n[1][0], n[1][1], n[1][2],
+    //       
+    //       t2[0], t2[1], t2[2],
+    //       b2[0], b2[1], b2[2],
+    //       n[2][0], n[2][1], n[2][2]);
+
     TransformGen::Space(q0, t0, b0, n[0]);
     TransformGen::Space(q1, t1, b1, n[1]);
     TransformGen::Space(q2, t2, b2, n[2]);

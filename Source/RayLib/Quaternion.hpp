@@ -81,10 +81,10 @@ template<class T>
 __device__ __host__ HYBRID_INLINE
 Quaternion<T> Quaternion<T>::operator*(const Quaternion& right) const
 {
-    //return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],        // W
-    //                  vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],        // X
-    //                  vec[0] * right[2] + vec[2] * right[0] + vec[3] * right[1] - vec[1] * right[3],        // Y
-    //                  vec[0] * right[3] + vec[3] * right[0] + vec[1] * right[2] - vec[2] * right[1]);       // Z
+    //return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],    // W
+    //                  vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],    // X
+    //                  vec[0] * right[2] + vec[2] * right[0] + vec[3] * right[1] - vec[1] * right[3],    // Y
+    //                  vec[0] * right[3] + vec[3] * right[0] + vec[1] * right[2] - vec[2] * right[1]);   // Z
 
     return Quaternion(vec[0] * right[0] - vec[1] * right[1] - vec[2] * right[2] - vec[3] * right[3],    // W
                       vec[0] * right[1] + vec[1] * right[0] + vec[2] * right[3] - vec[3] * right[2],    // X
@@ -447,11 +447,11 @@ void TransformGen::Space(Quaternion<T>& q,
     #endif
 
     // Our sign is one (according to the above link)
-    static constexpr float sign = 1;
-    float t = x[0] + y[1] + z[2];
-    float m = max(max(x[0], y[1]), max(z[2], t));
-    float qmax = static_cast<T>(0.5) * sqrt(1 - t + 2 * m);
-    float denom = static_cast<T>(0.25) * (1 / qmax);
+    static constexpr T sign = 1;
+    T t = x[0] + y[1] + z[2];
+    T m = max(max(x[0], y[1]), max(z[2], t));
+    T qmax = static_cast<T>(0.5) * sqrt(1 - t + 2 * m);
+    T denom = static_cast<T>(0.25) * (1 / qmax);
     if(m == x[0])
     {
         q[1] = qmax;
