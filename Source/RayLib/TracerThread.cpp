@@ -16,6 +16,7 @@ TracerThread::TracerThread(TracerSystemI& t,
                            const std::string& tracerTypeName)
     : tracerSystem(t)
     , tracer(nullptr, nullptr)
+    , currentScene(nullptr)
     , tracerOptions(opts)
     , tracerParameters(params)
     , tracerTypeName(tracerTypeName)

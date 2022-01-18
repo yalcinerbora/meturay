@@ -29,16 +29,16 @@ struct alignas(16) LBVHNode
         // Non-leaf part
         struct
         {
-            Vector3 aabbMin;
-            uint32_t left;
-            Vector3 aabbMax;
-            uint32_t right;
+            Vector3     aabbMin;
+            uint32_t    left;
+            Vector3     aabbMax;
+            uint32_t    right;
         } body;
         // leaf part
         Leaf leaf;
     };
-    uint32_t parent;
-    bool isLeaf;
+    uint32_t    parent;
+    bool        isLeaf;
 };
 
 // SFINAE
@@ -61,6 +61,8 @@ struct LinearBVHGPU
 
     __device__ uint32_t     FindNearestPoint(float& distance,
                                              const Leaf& worldSurface) const;
+
+    __device__ float        VoronoiCenterSize() const;
 };
 
 template <class Leaf,
@@ -99,14 +101,16 @@ class LinearBVHCPU
 
         size_t              UsedGPUMemory() const;
         size_t              UsedCPUMemory() const;
+
+        void                DumpTreeAsBinary(std::vector<Byte>& data) const;
 };
 
 template <class Leaf, class DistFunctor>
 __device__ __forceinline__
 uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, const Leaf& worldSurface) const
 {
-    static_assert(HasPosition<Leaf>::value,
-                  "This functions requires its leafs to have public \"position\" variable");
+    //static_assert(HasPosition<Leaf>::value,
+    //              "This functions requires its leafs to have public \"position\" variable");
 
     //// Minimal stack to traverse
     //uint32_t sLocationStack[MAX_DEPTH];
@@ -129,13 +133,17 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
     //};
     //// Resulting Closest Leaf Index
     //// & Closest Hit
-    //float closestDistance = INFINITY;
+    //// Arbitrarily set the initial distance 
+    //// to the first leaf(node[0]) distance
+    //assert(nodes[0].isLeaf == true);
+    //float closestDistance = DistanceFunction(nodes[0].leaf,
+    //                                         worldSurface);
     //uint32_t closestIndex = UINT32_MAX;
     //// TODO: There is an optimization here
     //// first iteration until leaf is always true
     //// initialize closest distance with the radius
     //uint8_t depth = 0;
-    //Push(depth, 0);
+    //Push(depth, rootIndex);
     //const LBVHNode<Leaf>* currentNode = nullptr;
     //while(depth > 0)
     //{
@@ -190,7 +198,12 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
     };
     // Resulting Closest Leaf Index
     // & Closest Hit
-    float closestDistance = INFINITY;
+
+    // Arbitrarily set the initial distance 
+    // to the first leaf(node[0]) distance
+    assert(nodes[0].isLeaf == true);
+    float closestDistance = DistanceFunction(nodes[0].leaf,
+                                             worldSurface);
     uint32_t closestIndex = UINT32_MAX;
     // TODO: There is an optimization here
     // first iteration until leaf is always true
@@ -207,8 +220,6 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
         // First time entry check intersection
         if(info == FIRST_ENTRY)
         {
-            //printf("FirstEntry\n");
-
             // If Leaf, do its custom closest function primitive intersection
             if(currentNode->isLeaf)
             {
@@ -216,8 +227,6 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
                 float distance = DistanceFunction(currentNode->leaf, worldSurface);
                 if(distance < closestDistance)
                 {
-                    //printf("NewDistance %f\n", distance);
-
                     closestDistance = distance;
                     closestIndex = static_cast<uint32_t>(currentNode - nodes);
                 }
@@ -228,43 +237,26 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
             // If not leaf check if there is closer point in this AABB
             // meaning that a sphere defined by "worldPos, closestDistance"
             // intersects with this AABB
-            //else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
-            //                             currentNode->body.aabbMax);
-            //        AABBIntersectsSphere(aabb, worldSurface.position,
-            //                             closestDistance))
+            else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
+                                         currentNode->body.aabbMax);
+                    aabb.IntersectsSphere(worldSurface.position,
+                                          closestDistance))
+            {
+                // By construction BVH tree has either no or both children
+                // avail. If a node is non-leaf it means that it has both of its children
+                // no need to check for left or right index validity
+
+                // Directly go right
+                currentNode = nodes + currentNode->body.left;
+                depth--;
+            }
+            // If we could not be able to hit AABB
+            // just go parent
             else
             {
-                AABB3f aabb = AABB3f(currentNode->body.aabbMin,
-                                     currentNode->body.aabbMax);
-
-                //printf("AABB vs Sphere "
-                //       "[%f, %f, %f] [%f, %f, %f] /"
-                //       "%f\n",
-                //       aabb.Min()[0], aabb.Min()[1], aabb.Min()[2],
-                //       aabb.Max()[0], aabb.Max()[1], aabb.Max()[2],
-                //       closestDistance);
-
-                if(aabb.IntersectsSphere(worldSurface.position,
-                                             closestDistance))
-                {
-                    //printf("AABB Hit\n");
-
-                    // By construction BVH tree has either no or both children
-                    // avail. If a node is non-leaf it means that it has both of its children
-                    // no need to check for left or right index validity
-
-                    // Directly go right
-                    currentNode = nodes + currentNode->body.left;
-                    depth--;
-                }
-                // If we could not be able to hit AABB
-                // just go parent
-                else
-                {
-                    //printf("AABB Not Hit\n");
-                    currentNode = nodes + currentNode->parent;
-                    Pop(list, depth);
-                }
+                //printf("AABB Not Hit\n");
+                currentNode = nodes + currentNode->parent;
+                Pop(list, depth);
             }
         }
         // Doing U turn (left to right)
@@ -272,8 +264,6 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
         // we are at parent
         else if(info == U_TURN)
         {
-            //printf("U Turn\n");
-
             // Go to right child if avail
             MarkAsTraversed(list, depth - 1);
             currentNode = nodes + currentNode->body.right;
@@ -283,7 +273,6 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
         // Just go up
         else
         {
-            //printf("Go Up Turn\n");
             // Wipe out lower bits for incoming iterations
             WipeLowerBits(list, depth);
             currentNode = nodes + currentNode->parent;
@@ -292,6 +281,18 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
     }
     distance = closestDistance;
     return closestIndex;
+}
+
+template <class Leaf, class DistFunctor>
+__device__ __forceinline__
+float LinearBVHGPU<Leaf, DistFunctor>::VoronoiCenterSize() const
+{
+    const AABB3f sceneAABB(nodes[rootIndex].body.aabbMin,
+                           nodes[rootIndex].body.aabbMax);
+    Vector3f span = sceneAABB.Span();
+    float sceneSize = span.Length();
+    static constexpr float VORONOI_RATIO = 1.0f / 1'300.0f;
+    return sceneSize * VORONOI_RATIO;
 }
 
 template <class Leaf, class DF,

@@ -166,32 +166,26 @@ const CPUDistGroupPiecewiseConst1D::GPUDistList& CPUDistGroupPiecewiseConst1D::D
     return gpuDistributions;
 }
 
-CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functionValues,
-                                                           const std::vector<Vector2ui>& dimensions,
-                                                           const std::vector<bool>& factorSpherical,
-                                                           const CudaSystem& system)
-    : dimensions(dimensions)
+void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimensions)
 {
-    CUDA_CHECK(cudaSetDevice(system.BestGPU().DeviceId()));
-
     std::vector<std::array<size_t, 5>> alignedSizes(dimensions.size());
     std::transform(dimensions.cbegin(), dimensions.cend(),
                    alignedSizes.begin(),
-                   [](const Vector2ui& vec) -> std::array<size_t, 5>
-                   {
-                       return
-                       {    // Row PDF Align Size
-                            Memory::AlignSize(vec[0] * sizeof(float)),
-                            // Row CDF Align Size
-                            Memory::AlignSize((vec[0] + 1) * sizeof(float)),
-                            // Column PDF Align Size
-                            Memory::AlignSize(vec[1] * sizeof(float)),
-                            // Column CDF Align Size
-                            Memory::AlignSize((vec[1] + 1) * sizeof(float)),
-                            // X Dist1D Align Size
-                            Memory::AlignSize(vec[1] * sizeof(GPUDistPiecewiseConst1D))
-                       };
-                   });
+                   [](const Vector2ui& vec)->std::array<size_t, 5>
+    {
+        return
+        {    // Row PDF Align Size
+             Memory::AlignSize(vec[0] * sizeof(float)),
+             // Row CDF Align Size
+             Memory::AlignSize((vec[0] + 1) * sizeof(float)),
+             // Column PDF Align Size
+             Memory::AlignSize(vec[1] * sizeof(float)),
+             // Column CDF Align Size
+             Memory::AlignSize((vec[1] + 1) * sizeof(float)),
+             // X Dist1D Align Size
+             Memory::AlignSize(vec[1] * sizeof(GPUDistPiecewiseConst1D))
+        };
+    });
     size_t totalSize = 0;
     for(size_t i = 0; i < alignedSizes.size(); i++)
     {
@@ -247,32 +241,81 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
     }
     assert(offset == totalSize);
 
+    for(size_t i = 0; i < alignedSizes.size(); i++)
+    {
+        const DistData2D& distData = distDataList[i];
+        // Construct 2D Dist
+        GPUDistPiecewiseConst2D dist(distData.yDist, distData.dXDists,
+                                     dimensions[i][0], dimensions[i][1]);
+        gpuDistributions.push_back(dist);
+    }
+}
+
+CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<const float*>& dFunctions,
+                                                           const std::vector<Vector2ui>& dimensions,
+                                                           const std::vector<bool>& factorSpherical,
+                                                           const CudaSystem& system)
+{
+    // Allocate
+    Allocate(dimensions);
+    UpdateDistributions(dFunctions, factorSpherical,
+                        system, cudaMemcpyHostToDevice);
+}
+
+CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functionValues,
+                                                           const std::vector<Vector2ui>& dimensions,
+                                                           const std::vector<bool>& factorSpherical,
+                                                           const CudaSystem& system)
+    : dimensions(dimensions)
+{
+
+    std::vector<const float*> functionDataPtrs;
+    functionDataPtrs.reserve(functionValues.size());
+    for(const auto& funcVector : functionValues)
+    {
+        functionDataPtrs.push_back(funcVector.data());
+    }
+    
+    Allocate(dimensions);
+    UpdateDistributions(functionDataPtrs, factorSpherical,
+                        system, cudaMemcpyHostToDevice);
+}
+
+const GPUDistPiecewiseConst2D& CPUDistGroupPiecewiseConst2D::DistributionGPU(uint32_t index) const
+{
+    return gpuDistributions[index];
+}
+
+const CPUDistGroupPiecewiseConst2D::GPUDistList& CPUDistGroupPiecewiseConst2D::DistributionGPU() const
+{
+    return gpuDistributions;
+}
+
+void CPUDistGroupPiecewiseConst2D::UpdateDistributions(const std::vector<const float*>& functionDataPtrs,
+                                                       const std::vector<bool>& factorSpherical,                                                       
+                                                       const CudaSystem& system, cudaMemcpyKind kind)
+{
+    CUDA_CHECK(cudaSetDevice(system.BestGPU().DeviceId()));
+    const CudaGPU& gpu = system.BestGPU();
     // Generate CDFs for each distributions &
     // Construct 2D Distributions
-    for(size_t i = 0; i < alignedSizes.size(); i++)
+    for(size_t i = 0; i < functionDataPtrs.size(); i++)
     {
         const DistData2D& distData = distDataList[i];
         const Vector2ui& dim = dimensions[i];
         bool factorSphr = factorSpherical[i];
 
-        //// Yolo check image
-        //const float* pixels = functionValues[i].data();
-        //float pix0, pix1;
-        //pix0 = pixels[dim[0] * 176 + 2456];
-        //pix1 = pixels[dim[0] * (2048 - 176) + 2456];
-        //METU_LOG("Pix on Dist (%f) (%f)", pix0, pix1);
-
         for(uint32_t y = 0; y < dim[1]; y++)
         {
-            const float* rowFunctionValues = functionValues[i].data() + (y * dim[0]);
+            const float* rowFunctionValues = functionDataPtrs[i] + (y * dim[0]);
             float& rowFunction = const_cast<float&>(distData.dYPDF[y]);
 
             float* dRowPDF = const_cast<float*>(distData.dXPDFs[y]);
             float* dRowCDF = const_cast<float*>(distData.dXCDFs[y]);
 
-            CUDA_CHECK(cudaMemcpy(dRowPDF, rowFunctionValues,
+            CUDA_CHECK(cudaMemcpyAsync(dRowPDF, rowFunctionValues,
                                   dim[0] * sizeof(float),
-                                  cudaMemcpyHostToDevice));
+                                  kind));
 
             // From PBR-Book factoring in the spherical phi term
             if(factorSphr)
@@ -289,7 +332,6 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
             // Currently dRowPDF is the function value
             // Reduce it first to get row weight
             ReduceArrayGPU<float, ReduceAdd<float>>(rowFunction, dRowPDF, dim[0], 0.0f);
-
 
             // Normalize PDF
             HostMultiplyFunctor<float> normLength(1.0f / static_cast<float>(dim[0]));
@@ -330,21 +372,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
         // Normalize CDF with the total accumulation (last element)
         // to perfectly match the [0,1) interval
         TransformArrayGPU(dYCDF, dim[1] + 1, cdfNormFunctor);
-
-        // Construct 2D Dist
-        GPUDistPiecewiseConst2D dist(distData.yDist, distData.dXDists,
-                                     dimensions[i][0], dimensions[i][1]);
-        gpuDistributions.push_back(dist);
-    }
+    }    
     // All Done!
-}
-
-const GPUDistPiecewiseConst2D& CPUDistGroupPiecewiseConst2D::DistributionGPU(uint32_t index) const
-{
-    return gpuDistributions[index];
-}
-
-const CPUDistGroupPiecewiseConst2D::GPUDistList& CPUDistGroupPiecewiseConst2D::DistributionGPU() const
-{
-    return gpuDistributions;
+    gpu.WaitMainStream();
 }

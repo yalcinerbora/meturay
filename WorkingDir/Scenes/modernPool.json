@@ -232,13 +232,13 @@
     {
         // Pool Floor
         "id": 1,
-        //"type": "Unreal",
-        "type": "Lambert",
+        "type": "Unreal",
+        //"type": "Lambert",
         "albedo": {"texture": 0, "channels": "rgb"},
-        //"normal": {"texture": 1, "channels": "rgb"},
+        "normal": {"texture": 1, "channels": "rgb"},
         "roughness": {"texture": 2, "channels": "r"},
-        "specular": 0.5,
-        "metallic": 0.0
+        "specular": 1,
+        "metallic": 0.8
     },
     {
         // Pool Base

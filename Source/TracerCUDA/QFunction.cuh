@@ -68,6 +68,7 @@ class QFunctionCPU
         DeviceMemory                     memory;
         QFunctionGPU                     qFuncGPU;
         CPUDistGroupPiecewiseConst2D     distributions;
+        uint32_t                         spatialCount;
 
     protected:
     public:
@@ -200,10 +201,12 @@ Vector3f QFunctionGPU::Update(const Vector3f& worldDir,
     while(assumed != old);
 }
 
-inline QFunctionCPU::QFunctionCPU(float alpha,
-                                  const Vector2ui& dataPerNode,
-                                  uint32_t spatialCount)
+inline
+QFunctionCPU::QFunctionCPU(float alpha,
+                           const Vector2ui& dataPerNode,
+                           uint32_t spatialCount)
     : qFuncGPU(nullptr, nullptr, dataPerNode, alpha)
+    , spatialCount(spatialCount)
 {
     // Allocate the Data
     GPUMemFuncs::AllocateMultiData(std::tie(qFuncGPU.gQFunction),

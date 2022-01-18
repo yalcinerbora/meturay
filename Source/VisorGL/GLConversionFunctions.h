@@ -147,6 +147,14 @@ inline PixelFormat PixelFormatTo4ChannelPF(PixelFormat f)
         case PixelFormat::RGB16_SNORM: return PixelFormat::RGBA16_SNORM;
         case PixelFormat::RGB_HALF: return PixelFormat::RGBA_HALF;
         case PixelFormat::RGB_FLOAT: return PixelFormat::RGBA_FLOAT;
+        // Relay the 4 channel formats directly
+        case PixelFormat::RGBA8_UNORM:
+        case PixelFormat::RGBA8_SNORM:
+        case PixelFormat::RGBA16_UNORM:
+        case PixelFormat::RGBA16_SNORM:
+        case PixelFormat::RGBA_HALF:
+        case PixelFormat::RGBA_FLOAT:
+            return f;
         default: return INVALID_PF;
     }
 }

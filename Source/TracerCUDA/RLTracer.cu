@@ -123,7 +123,13 @@ TracerError RLTracer::Initialize()
     // Initialize the QFunction
     if((err = qFunction.Initialize(cudaSystem)) != TracerError::OK)
         return err;
-
+    // If requested write out the LBH as a file
+    if(options.dumpDebugData)
+    {
+        std::vector<Byte> lbvhData;
+        surfaceTree.DumpTreeAsBinary(lbvhData);        
+        Utility::DumpStdVectorToFile(lbvhData, "rl_lbvh");
+    }
     return TracerError::OK;
 }
 
@@ -159,6 +165,8 @@ TracerError RLTracer::SetOptions(const TracerOptionsI& opts)
     if((err = opts.GetFloat(options.normalThreshold, NORM_THRESHOLD_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetBool(options.debugRender, DEBUG_RENDER_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
 
     return TracerError::OK;

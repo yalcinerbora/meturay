@@ -270,6 +270,7 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
                                                      leafCount);
     cudaDeviceSynchronize();
 
+    uint32_t depth = 1;
     while(gCounter < (leafCount - 1))
     {
         KCConstructLBVHInter<<<blockCount, threadCount>>>
@@ -280,7 +281,9 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
             leafCount
         );
         cudaDeviceSynchronize();
+        depth++;
     }
+    printf("LBVH Depth %u\n", depth);
 }
 
 template <class Leaf>
@@ -589,4 +592,31 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
     treeGPU.DistanceFunction = df;
 
     return TracerError::OK;
+}
+
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
+void LinearBVHCPU<Leaf, DF, AF>::DumpTreeAsBinary(std::vector<Byte>& data) const
+{
+    size_t bvhSize = sizeof(LBVHNode<Leaf>);
+    // Allocate total size
+    size_t totalSize = (sizeof(uint32_t) + // root index
+                        sizeof(uint32_t) + // node count
+                        sizeof(uint32_t) + // leaf count
+                        treeGPU.nodeCount * bvhSize);
+
+    data.resize(totalSize);
+    Byte* dataPtr = data.data();
+    // Copy
+    std::memcpy(dataPtr, &treeGPU.rootIndex, sizeof(uint32_t));    
+    dataPtr += sizeof(uint32_t);
+    std::memcpy(dataPtr, &treeGPU.nodeCount, sizeof(uint32_t));
+    dataPtr += sizeof(uint32_t);
+    std::memcpy(dataPtr, &treeGPU.leafCount, sizeof(uint32_t));
+    dataPtr += sizeof(uint32_t);
+
+    // Copy the rest from the GPU
+    CUDA_CHECK(cudaMemcpy(dataPtr, treeGPU.nodes,
+                          bvhSize * treeGPU.nodeCount,
+                          cudaMemcpyDeviceToHost));
 }

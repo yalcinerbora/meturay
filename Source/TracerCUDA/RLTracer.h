@@ -78,8 +78,8 @@ class RLTracer final : public RayTracer
     public:
         // Constructors & Destructor
                                 RLTracer(const CudaSystem&,
-                                           const GPUSceneI&,
-                                           const TracerParameters&);
+                                         const GPUSceneI&,
+                                         const TracerParameters&);
                                 ~RLTracer() = default;
 
         TracerError             Initialize() override;

@@ -10,6 +10,7 @@
 
 // Debug Renderers
 #include "GDebugRendererPPG.h"
+#include "GDebugRendererRL.h"
 
 #include <filesystem>
 
@@ -40,9 +41,9 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     gdbGenerators.emplace(GDebugRendererPPG::TypeName,
                           GDBRendererGen(GDBRendererConstruct<GDebugRendererI,
                                                               GDebugRendererPPG>));
-    //gdbGenerators.emplace(GDebugRendererReference::TypeName,
-    //                      GDBRendererGen(GDBRendererConstruct<GDebugRendererI,
-    //                                                          GDebugRendererReference>));
+    gdbGenerators.emplace(GDebugRendererRL::TypeName,
+                          GDBRendererGen(GDBRendererConstruct<GDebugRendererI,
+                                                              GDebugRendererRL>));
 
     bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
     if(!configParsed) throw VisorException(VisorError::WINDOW_GENERATION_ERROR);

@@ -144,10 +144,16 @@ class CPUDistGroupPiecewiseConst2D
         std::vector<const GPUDistPiecewiseConst1D*> dXDistributions;
         std::vector<GPUDistPiecewiseConst2D>        gpuDistributions;
 
+        void                                        Allocate(const std::vector<Vector2ui>& dimensions);
+
     protected:
     public:
         // Constructors & Destructor
                                         CPUDistGroupPiecewiseConst2D() = default;
+                                        CPUDistGroupPiecewiseConst2D(const std::vector<const float*>& dFunctions,
+                                                                     const std::vector<Vector2ui>& dimensions,
+                                                                     const std::vector<bool>& factorSpherical,
+                                                                     const CudaSystem& system);
                                         CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functions,
                                                                      const std::vector<Vector2ui>& dimensions,
                                                                      const std::vector<bool>& factorSpherical,
@@ -160,6 +166,10 @@ class CPUDistGroupPiecewiseConst2D
 
         const GPUDistPiecewiseConst2D&  DistributionGPU(uint32_t index) const;
         const GPUDistList&              DistributionGPU() const;
+
+        void                            UpdateDistributions(const std::vector<const float*>& functionDataPtrs,
+                                                            const std::vector<bool>& factorSpherical,
+                                                            const CudaSystem& system, cudaMemcpyKind kind);
 
         size_t                          UsedCPUMemory() const;
         size_t                          UsedGPUMemory() const;

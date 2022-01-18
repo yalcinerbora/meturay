@@ -116,7 +116,8 @@ bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
     std::string fileName = (*loc)[depth];
     std::string fileMergedPath = Utility::MergeFileFolder(configPath, fileName);
     std::ifstream file(fileMergedPath, std::ios::binary);
-    std::istreambuf_iterator<char>fileIt(file);
+    if(!file.good()) return false;
+
     static_assert(sizeof(char) == sizeof(Byte), "\"Byte\" is not have sizeof(char)");
     // Read STree Start Offset
     uint64_t sTreeOffset;

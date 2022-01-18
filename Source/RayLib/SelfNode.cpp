@@ -121,7 +121,7 @@ void SelfNode::SendImage(const std::vector<Byte> data,
                          PixelFormat f, size_t offset,
                          Vector2i start, Vector2i end)
 {
-    visor.AccumulatePortion(std::move(data), f, offset, start, end);
+    visor.AccumulatePortion(data, f, offset, start, end);
 }
 
 void SelfNode::SendCurrentOptions(TracerOptions tOpts)

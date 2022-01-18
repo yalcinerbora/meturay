@@ -22,11 +22,18 @@ class SceneSurfaceTree
                                           uint32_t seed,
                                           const CudaSystem&);
 
+        void                    DumpTreeAsBinary(std::vector<Byte>&) const;
+
         const LBVHSurfaceGPU&   TreeGPU() const;
 
         size_t                  UsedGPUMemory() const;
         size_t                  UsedCPUMemory() const;
 };
+
+inline void SceneSurfaceTree::DumpTreeAsBinary(std::vector<Byte>& vec) const
+{
+    lBVHSurface.DumpTreeAsBinary(vec);
+}
 
 inline const LBVHSurfaceGPU& SceneSurfaceTree::TreeGPU() const
 {

@@ -35,7 +35,7 @@ void VisorThread::AccumulateImagePortion(const std::vector<Byte> data,
 {
     // Visor itself has thread safe queue for these operations
     // Directly delegate
-    visor.AccumulatePortion(std::move(data), f, offset, start, end);
+    visor.AccumulatePortion(data, f, offset, start, end);
 }
 
 void VisorThread::ProcessInputs()

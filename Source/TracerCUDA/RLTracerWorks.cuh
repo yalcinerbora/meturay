@@ -91,6 +91,7 @@ class RLDebugBoundaryWork
         using Base = GPUBoundaryWorkBatch<RLTracerGlobalState,
                                           RLTracerLocalState, RayAuxRL,
                                           EGroup, RLTracerDebugBWork<EGroup>>;
+
     public:
                             RLDebugBoundaryWork(const CPUEndpointGroupI& eg,
                                                 const GPUTransformI* const* t);
@@ -112,6 +113,7 @@ class RLDebugWork
                                   RLTracerLocalState, RayAuxRL,
                                   MGroup, PGroup, RLTracerDebugWork<MGroup>,
                                   PGroup::GetSurfaceFunction>;
+
     public:
                             RLDebugWork(const GPUMaterialGroupI& mg,
                                         const GPUPrimitiveGroupI& pg,
