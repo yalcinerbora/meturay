@@ -49,25 +49,25 @@ struct DTreeGPU
     __device__ void             AddSampleToLeaf(const Vector3f& worldDir);
 };
 
-__device__ __forceinline__
+__device__ inline
 bool DTreeNode::IsRoot() const
 {
     return parentIndex == UINT32_MAX;
 }
 
-__device__ __forceinline__
+__device__ inline
 bool DTreeNode::IsLeaf(uint8_t childId) const
 {
     return childIndices[childId] == UINT32_MAX;
 }
 
-__device__ __forceinline__
+__device__ inline
 float DTreeNode::IrradianceEst(NodeOrder o) const
 {
     return irradianceEstimates[static_cast<int>(o)];
 }
 
-__device__ __forceinline__
+__device__ inline
 float DTreeNode::LocalPDF(uint8_t childIndex) const
 {
     // Conditional PDF of x and y
@@ -93,7 +93,7 @@ float DTreeNode::LocalPDF(uint8_t childIndex) const
     //return 4.0f * irradianceEstimates[childIndex] / irradianceEstimates.Sum();
 }
 
-__device__ __forceinline__
+__device__ inline
 uint8_t DTreeNode::DetermineChild(const Vector2f& localCoords) const
 {
     //assert(localCoords <= Vector3(1.0f) && localCoords >= Vector3(0.0f));
@@ -109,7 +109,7 @@ uint8_t DTreeNode::DetermineChild(const Vector2f& localCoords) const
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector2f DTreeNode::NormalizeCoordsForChild(uint8_t childIndex, const Vector2f& parentLocalCoords) const
 {
     uint8_t isRight = ((childIndex >> 0) & 0b01) == 0b01;
@@ -123,7 +123,7 @@ Vector2f DTreeNode::NormalizeCoordsForChild(uint8_t childIndex, const Vector2f& 
     return localCoords;
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
 {
     Vector2f xi = Vector2f(rng.Uniform(), rng.Uniform());
@@ -258,7 +258,7 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
     //return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 float DTreeGPU::Pdf(const Vector3f& worldDir) const
 {
     float pdf = 1.0f;
@@ -279,7 +279,7 @@ float DTreeGPU::Pdf(const Vector3f& worldDir) const
     return pdf;
 }
 
-__device__ __forceinline__
+__device__ inline
 void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
                                  bool incrementSampleCount)
 {
@@ -327,7 +327,7 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
     if(incrementSampleCount) atomicAdd(&totalSamples, 1);
 }
 
-__device__ __forceinline__
+__device__ inline
 void DTreeGPU::AddSampleToLeaf(const Vector3f& worldDir)
 {
     Vector2f discreteCoords = GPUDataStructCommon::DirToDiscreteCoords(worldDir);
@@ -352,7 +352,7 @@ void DTreeGPU::AddSampleToLeaf(const Vector3f& worldDir)
     atomicAdd(&totalSamples, 1);
 }
 
-__device__ __forceinline__
+__device__ inline
 uint32_t AtomicAllocateNode(bool& allocated,
                             uint8_t childId,
                             DTreeNode* gParentNode,
@@ -394,7 +394,7 @@ uint32_t AtomicAllocateNode(bool& allocated,
     return old;
 }
 
-__device__ __forceinline__
+__device__ inline
 DTreeNode* PunchThroughNode(uint32_t& gNodeAllocLocation, DTreeGPU& gDTree,
                             const Vector2f& discreteCoords, uint32_t depth)
 {
@@ -430,7 +430,7 @@ DTreeNode* PunchThroughNode(uint32_t& gNodeAllocLocation, DTreeGPU& gDTree,
     return node;
 }
 
-__device__ __forceinline__
+__device__ inline
 void CalculateParentIrradiance(// I-O
                                DTreeGPU& gDTree,
                                // Input
@@ -484,7 +484,7 @@ void CalculateParentIrradiance(// I-O
     atomicAdd(&gDTree.irradiance, sum);
 }
 
-//__device__ __forceinline__
+//__device__ inline
 //void CalculateMaxDepth(// Output
 //                       uint32_t& gMaxDepth,
 //                       // Input
@@ -517,7 +517,7 @@ void CalculateParentIrradiance(// I-O
 //    }
 //}
 //
-//__device__ __forceinline__
+//__device__ inline
 //void NormalizeIrradiances(// I-O
 //                          DTreeGPU& gDTree,
 //                          uint32_t maxDepth,
@@ -540,7 +540,7 @@ void CalculateParentIrradiance(// I-O
 //    gDTree.gRoot[nodeIndex].irradianceEstimates[3] *= factor;
 //}
 
-__device__ __forceinline__
+__device__ inline
 void MarkChildRequest(// Output
                       uint32_t* gRequestedChilds,
                       // Input
@@ -571,7 +571,7 @@ void MarkChildRequest(// Output
     gRequestedChilds[nodeIndex] = requestedChildCount;
 }
 
-__device__ __forceinline__
+__device__ inline
 void ReconstructEmptyTree(// Output
                           DTreeGPU& gDTree,
                           uint32_t& gDTreeAllocator,

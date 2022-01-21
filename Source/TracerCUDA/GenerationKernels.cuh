@@ -25,7 +25,7 @@ Uses stratified sampling
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, class AuxInitFunctor,
          class RNG>
-__device__ __forceinline__
+__device__ inline
 void GenerateCameraRaysGPU(// Output
                            RayGMem* gRays,
                            RayAuxData* gAuxiliary,

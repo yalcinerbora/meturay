@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& s, const LBVHNode<T>& n)
     return s;
 }
 
-__device__ __forceinline__
+__device__ inline
 uint32_t Delta(uint32_t nodeIndex,
                const uint64_t* gMortonCodes)
 {
@@ -39,7 +39,7 @@ uint32_t Delta(uint32_t nodeIndex,
 }
 
 template <class Leaf>
-__device__ __forceinline__
+__device__ inline
 void ChooseParentAndUpdate(// Output
                            LBVHNode<Leaf>* gNodes,
                            // I-O

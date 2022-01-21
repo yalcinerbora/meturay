@@ -10,7 +10,7 @@ class RNGeneratorGPUI;
 
 struct BaryMatFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -36,7 +36,7 @@ struct BaryMatFuncs
         return surface.baryCoords;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,
@@ -59,7 +59,7 @@ struct BaryMatFuncs
 
 struct SphericalMatFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -86,7 +86,7 @@ struct SphericalMatFuncs
                         0.0f);
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,
@@ -112,7 +112,7 @@ struct SphericalMatFuncs
 
 struct NormalRenderMatFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -141,7 +141,7 @@ struct NormalRenderMatFuncs
         return normal;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,

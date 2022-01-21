@@ -13,7 +13,7 @@ static constexpr size_t AlignedOffsetSTreeGPU = Memory::AlignSize(sizeof(STreeGP
 
 struct IsSplittedLeafFunctor
 {
-    __device__ __host__ __forceinline__
+    __device__ __host__ inline
     bool operator()(const uint32_t& index) const
     {
         return (index != INVALID_NODE);

@@ -15,7 +15,7 @@ struct RayPayload
 extern "C" __constant__ OpitXBaseAccelParams params;
 
 template <class HitStruct, class PGroup>
-__device__ __forceinline__
+__device__ inline
 HitStruct ReadHitStructFromAttribs()
 {
     constexpr uint32_t HitStructRegSize = ((sizeof(HitStruct) + sizeof(uint32_t) - 1)
@@ -54,7 +54,7 @@ HitStruct ReadHitStructFromAttribs()
 }
 
 template <class HitStruct>
-__device__ __forceinline__
+__device__ inline
 void ReportIntersection(float newT, unsigned int kind,
                         const HitStruct hs)
 {

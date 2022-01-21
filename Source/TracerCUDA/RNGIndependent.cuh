@@ -62,14 +62,14 @@ inline size_t RNGIndependentCPU::UsedGPUMemory() const
     return memRandom.Size();
 }
 
-__device__ __forceinline__
+__device__ inline
 RNGIndependentGPU::RNGIndependentGPU(uint32_t seed,
                                      uint32_t subsequence)
 {
     curand_init(seed, subsequence, 0, &rState);
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGIndependentGPU::Uniform()
 {
     // curand returns (0, 1]
@@ -82,26 +82,26 @@ float RNGIndependentGPU::Uniform()
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGIndependentGPU::Uniform(float min, float max)
 {
     float result = Uniform() * (min - max) + min;
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector2f RNGIndependentGPU::Uniform2D()
 {
     return Vector2f(Uniform(), Uniform());
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGIndependentGPU::Normal()
 {
     return curand_normal(&rState);
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGIndependentGPU::Normal(float mean, float stdDev)
 {
     return curand_normal(&rState) * stdDev + mean;

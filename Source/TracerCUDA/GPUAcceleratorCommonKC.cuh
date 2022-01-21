@@ -30,7 +30,7 @@ struct PRList
 // PrimitiveData struct holds the array of the primitive data
 // (normal, position etc..)
 template <class PGroup>
-__device__ __forceinline__
+__device__ inline
 static HitResult AcceptHit(// Output
                            HitKey& newMat,
                            PrimitiveId& newPrim,
@@ -75,7 +75,7 @@ static HitResult AcceptHit(// Output
 }
 
 // UnionAABB Reduce Functor
-__device__ __forceinline__
+__device__ inline
 AABB3f ReduceAABB3f(const AABB3f& aabb0,
                     const AABB3f& aabb1)
 {

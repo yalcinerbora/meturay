@@ -20,7 +20,7 @@
 
 struct FetchTreeIdFunctor
 {
-    __device__ __host__ __forceinline__
+    __device__ __host__ inline
     uint32_t operator()(const PathGuidingNode& node) const
     {
         return node.dataStructIndex;

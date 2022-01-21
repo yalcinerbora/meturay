@@ -10,14 +10,14 @@ template<class Type>
 using CompFunc = bool(*)(const Type&, const Type&);
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableRest<T, bool> CompareST(const T& a, const T&b)
 {
     return a < b;
 }
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableRest<T, bool> CompareGT(const T& a, const T&b)
 {
     return a > b;
@@ -25,14 +25,14 @@ EnableRest<T, bool> CompareGT(const T& a, const T&b)
 
 // Dim 1
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV1Type<T, bool> CompareST(const T& a, const T&b)
 {
     return a.x < b.x;
 }
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV1Type<T, bool> CompareGT(const T& a, const T&b)
 {
     return a.x > b.x;
@@ -40,7 +40,7 @@ EnableNV1Type<T, bool> CompareGT(const T& a, const T&b)
 
 // Dim 2
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV2Type<T, bool> ReduceST(const T& a, const T&b)
 {
     return (a.x < b.x &&
@@ -48,7 +48,7 @@ EnableNV2Type<T, bool> ReduceST(const T& a, const T&b)
 }
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV2Type<T, bool> ReduceGT(const T& a, const T&b)
 {
     return (a.x > b.x &&
@@ -57,7 +57,7 @@ EnableNV2Type<T, bool> ReduceGT(const T& a, const T&b)
 
 // Dim 3
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV3Type<T, bool> ReduceST(const T& a, const T&b)
 {
     return (a.x < b.x &&
@@ -66,7 +66,7 @@ EnableNV3Type<T, bool> ReduceST(const T& a, const T&b)
 }
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV3Type<T, bool> ReduceGT(const T& a, const T&b)
 {
     return (a.x > b.x &&
@@ -76,7 +76,7 @@ EnableNV3Type<T, bool> ReduceGT(const T& a, const T&b)
 
 // Dim 4
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV4Type<T, bool> ReduceST(const T& a, const T&b)
 {
     return (a.x < b.x &&
@@ -86,7 +86,7 @@ EnableNV4Type<T, bool> ReduceST(const T& a, const T&b)
 }
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 EnableNV4Type<T, bool> ReduceGT(const T& a, const T&b)
 {
     return (a.x > b.x &&

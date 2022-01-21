@@ -25,7 +25,7 @@ namespace MortonCode
 }
 
 template<>
-__device__ __forceinline__
+__device__ inline
 uint64_t MortonCode::Detail::Expand(uint32_t val)
 {
     // https://stackoverflow.com/questions/18529057/produce-interleaving-bit-patterns-morton-keys-for-32-bit-64-bit-and-128bit
@@ -40,7 +40,7 @@ uint64_t MortonCode::Detail::Expand(uint32_t val)
 }
 
 template<>
-__device__ __forceinline__
+__device__ inline
 uint32_t MortonCode::Detail::Expand(uint32_t val)
 {
     // https://stackoverflow.com/questions/18529057/produce-interleaving-bit-patterns-morton-keys-for-32-bit-64-bit-and-128bit
@@ -53,7 +53,7 @@ uint32_t MortonCode::Detail::Expand(uint32_t val)
 }
 
 template<>
-__device__ __forceinline__
+__device__ inline
 uint32_t MortonCode::Detail::Shrink(uint32_t x)
 {
     x = x & 0x55555555;
@@ -65,7 +65,7 @@ uint32_t MortonCode::Detail::Shrink(uint32_t x)
 }
 
 template<>
-__device__ __forceinline__
+__device__ inline
 uint32_t MortonCode::Detail::Shrink(uint64_t x)
 {
     x = x & 0x5555555555555555;
@@ -78,7 +78,7 @@ uint32_t MortonCode::Detail::Shrink(uint64_t x)
 }
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 T MortonCode::Compose(const Vector3ui& val)
 {
     T x = Detail::Expand<T>(val[0]);
@@ -88,7 +88,7 @@ T MortonCode::Compose(const Vector3ui& val)
 }
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 Vector3ui MortonCode::Decompose(T code)
 {
     T x = Detail::Shrink<T>(code >> 0);

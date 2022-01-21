@@ -18,7 +18,7 @@ static const uint32_t INVALID_LOCATION = std::numeric_limits<uint32_t>::max();
 
 struct ValidSplit
 {
-    __device__ __host__ __forceinline__
+    __device__ __host__ inline
     bool operator()(const uint32_t& ids) const
     {
         return (ids != INVALID_LOCATION);

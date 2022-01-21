@@ -125,7 +125,7 @@ struct AABBGen
         {}
 
         __device__ __host__
-        __forceinline__ AABB3f operator()(const PrimitiveId& id) const
+        inline AABB3f operator()(const PrimitiveId& id) const
         {
             return PrimitiveGroup::AABB(transform, id, pData);
         }
@@ -170,7 +170,7 @@ struct AABBUnion
 // Custom bounding box generation function
 // For primitive
 template <class PrimitiveData>
-__device__ __forceinline__
+__device__ inline
 AABB3f DefaultAABBGen(const GPUTransformI&,
                       PrimitiveId,
                       const PrimitiveData&)
@@ -181,7 +181,7 @@ AABB3f DefaultAABBGen(const GPUTransformI&,
 
 // Surface area generation function for bound hierarchy generation
 template <class PrimitiveData>
-__device__ __forceinline__
+__device__ inline
 float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
 {
     return 0.0f;
@@ -189,7 +189,7 @@ float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
 
 // Center generation function for bound hierarchy generation
 template <class PrimitiveData>
-__device__ __forceinline__
+__device__ inline
 Vector3 DefaultCenterGen(const GPUTransformI&,
                          PrimitiveId, const PrimitiveData&)
 {
@@ -197,7 +197,7 @@ Vector3 DefaultCenterGen(const GPUTransformI&,
 }
 
 template <class PrimitiveData>
-__device__ __forceinline__
+__device__ inline
 Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
                          // Input
                          const GPUTransformI&,
@@ -213,7 +213,7 @@ Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
 }
 
 template <class PrimitiveData>
-__device__ __forceinline__
+__device__ inline
 void DefaultPDFPosRef(// Outputs
                    Vector3f& normal,
                    float& pdf,
@@ -230,7 +230,7 @@ void DefaultPDFPosRef(// Outputs
 }
 
 template <class PrimitiveData>
-__device__ __forceinline__
+__device__ inline
 float DefaultPDFPosHit(// Inputs
                        const Vector3f&,
                        const Vector3f&,
@@ -243,7 +243,7 @@ float DefaultPDFPosHit(// Inputs
 }
 
 template <class PrimitiveData, uint32_t PosCount>
-__device__ __forceinline__
+__device__ inline
 void DefaultAcqPosition(// Output
                          Vector3f positions[PosCount],
                          // Inputs
@@ -254,7 +254,7 @@ void DefaultAcqPosition(// Output
 }
 
 template <class HitData, class PrimitiveData, class LeafData>
-__device__ __forceinline__
+__device__ inline
 bool DefaultAlphaTest(const HitData&,
                            const LeafData&,
                            const PrimitiveData&)
@@ -263,7 +263,7 @@ bool DefaultAlphaTest(const HitData&,
 }
 
 template <class HitData, class PrimitiveData, class LeafData>
-__device__ __forceinline__
+__device__ inline
 bool DefaultIntersects(// Output
                        float&,
                        HitData&,

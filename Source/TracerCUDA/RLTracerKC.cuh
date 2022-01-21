@@ -61,7 +61,7 @@ class MatFunctor
 
 
     public:
-        __device__ __forceinline__
+        __device__ inline
         MatFunctor(const MatData& gMatData,
                    const Surface& surface,
                    const Vector3f& wi,
@@ -73,7 +73,7 @@ class MatFunctor
             , matIndex(matIndex), m(m)
         {}
 
-        __device__ __forceinline__
+        __device__ inline
         Vector3f operator()(const Vector3f& wo) const
         {
             return MGroup::Evaluate(// Input
@@ -90,7 +90,7 @@ class MatFunctor
 };
 
 template <class MGroup, class MFunctor>
-__device__ __forceinline__
+__device__ inline
 float AccumulateQFunction(const QFunctionGPU& qFunction,
                           uint32_t spatialIndex,
                           const MFunctor& MatEvaluate)
@@ -115,7 +115,7 @@ float AccumulateQFunction(const QFunctionGPU& qFunction,
 }
 
 template <class EGroup>
-__device__ __forceinline__
+__device__ inline
 void RLTracerBoundaryWork(// Output
                            HitKey* gOutBoundKeys,
                            RayGMem* gOutRays,
@@ -211,13 +211,13 @@ void RLTracerBoundaryWork(// Output
         {
             float reflectance = aux.prevLumReflectance;
             float sum = reflectance * Utility::RGBToLuminance(emission);
-            renderState.qFunction.Update(r.getDirection(), sum, aux.prevSpatialIndex);
+            //renderState.qFunction.Update(r.getDirection(), sum, aux.prevSpatialIndex);
         }
     }
 }
 
 template <class MGroup>
-__device__ __forceinline__
+__device__ inline
 void RLTracerPathWork(// Output
                       HitKey* gOutBoundKeys,
                       RayGMem* gOutRays,
@@ -263,6 +263,13 @@ void RLTracerPathWork(// Output
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
 
+    if(spatialIndex == UINT32_MAX)
+        spatialIndex = 0;
+    //else if(spatialIndex >= 2)
+    //{
+    //    printf("spatialIndex %u\n", spatialIndex);
+    //    return;
+    //}
 
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
@@ -398,7 +405,7 @@ void RLTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_PGSampleRatio = 0.5f;
+        constexpr float BxDF_PGSampleRatio = 0.0f;
         // Sample a chance
         float xi = rng.Uniform();
 
@@ -422,13 +429,15 @@ void RLTracerPathWork(// Output
                                          matIndex,
                                          0);
 
+            pdfGuide = 0.0f;
             pdfGuide = renderState.qFunction.Pdf(rayPath.getDirection(),
                                                  spatialIndex);
             if(pdfBxDF == 0.0f) selectedPDFZero = true;
         }
         else
         {
-            // Sample a path using SDTree
+            printf("AAAA\n");
+            // Sample a path using Path Guiding
             Vector3f direction = renderState.qFunction.Sample(pdfGuide, rng,
                                                               spatialIndex);
             direction.NormalizeSelf();
@@ -468,7 +477,7 @@ void RLTracerPathWork(// Output
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
             printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
                    (xi >= BxDF_PGSampleRatio) ? "BxDF": "Tree",
-                   pdfPath, pdfBxDF, pdfGuide, BxDF_PGSampleRatio);
+                   pdfPath, pdfGuide, pdfBxDF, BxDF_PGSampleRatio);
         if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
             printf("[%s] NAN DIR %f, %f, %f\n",
                     (xi >= BxDF_PGSampleRatio) ? "BxDF" : "Tree",
@@ -486,23 +495,23 @@ void RLTracerPathWork(// Output
         //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
         //    return;
 
-        // If this ray is not camera ray
-        // Accumulate everything on the current spatial data
-        // and send it to previous spatial data
-        if(aux.type != RayType::CAMERA_RAY)
-        {
-            MatFunctor<MGroup> MatEval(gMatData, surface,
-                                       wi, position,
-                                       matIndex, m);
+        //// If this ray is not camera ray
+        //// Accumulate everything on the current spatial data
+        //// and send it to previous spatial data
+        //if(aux.type != RayType::CAMERA_RAY)
+        //{
+        //    MatFunctor<MGroup> MatEval(gMatData, surface,
+        //                               wi, position,
+        //                               matIndex, m);
 
-            float sum = AccumulateQFunction<MGroup>(renderState.qFunction,
-                                                    spatialIndex,
-                                                    MatEval);
-            // Don't forget to add current emission if available
-            sum += Utility::RGBToLuminance(emission);
-            // Atomically update the value in the previous Q function
-            renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
-        }
+        //    float sum = AccumulateQFunction<MGroup>(renderState.qFunction,
+        //                                            spatialIndex,
+        //                                            MatEval);
+        //    // Don't forget to add current emission if available
+        //    sum += Utility::RGBToLuminance(emission);
+        //    // Atomically update the value in the previous Q function
+        //    //renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+        //}
     }
     else
     {
@@ -527,7 +536,7 @@ void RLTracerPathWork(// Output
         // as if the accumulated value
         float value = renderState.qFunction.Value(rayPath.getDirection(), spatialIndex);
         float sum = Utility::RGBToLuminance(reflectance) * value;
-        renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+        //renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
     }
 
     // Factor the radiance of the surface
@@ -577,7 +586,7 @@ void RLTracerPathWork(// Output
 
 
 template <class EGroup>
-__device__ __forceinline__
+__device__ inline
 void RLTracerDebugBWork(// Output
                         HitKey* gOutBoundKeys,
                         RayGMem* gOutRays,
@@ -628,7 +637,7 @@ void RLTracerDebugBWork(// Output
 }
 
 template <class MGroup>
-__device__ __forceinline__
+__device__ inline
 void RLTracerDebugWork(// Output
                        HitKey* gOutBoundKeys,
                        RayGMem* gOutRays,

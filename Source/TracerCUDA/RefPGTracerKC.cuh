@@ -35,7 +35,7 @@ struct RPGTracerLocalState
     bool    emptyPrimitive;
 };
 
-__device__ __forceinline__
+__device__ inline
 uint32_t CalculateSphericalPixelId(const Vector3& dir,
                                    const Vector2i& resolution)
 {
@@ -66,7 +66,7 @@ uint32_t CalculateSphericalPixelId(const Vector3& dir,
 }
 
 template <class EGroup>
-__device__ __forceinline__
+__device__ inline
 void RPGTracerBoundaryWork(// Output
                            HitKey* gOutBoundKeys,
                            RayGMem* gOutRays,
@@ -163,7 +163,7 @@ void RPGTracerBoundaryWork(// Output
 }
 
 template <class MGroup>
-__device__ __forceinline__
+__device__ inline
 void RPGTracerPathWork(// Output
                        HitKey* gOutBoundKeys,
                        RayGMem* gOutRays,

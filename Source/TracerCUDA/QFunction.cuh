@@ -79,6 +79,7 @@ class QFunctionCPU
                                      uint32_t spatialCount);
                         QFunctionCPU(const QFunctionCPU&) = delete;
         QFunctionCPU&   operator=(const QFunctionCPU&) = delete;
+        QFunctionCPU&   operator=(QFunctionCPU&&) = default;
                         ~QFunctionCPU() = default;
 
         // Methods
@@ -90,7 +91,7 @@ class QFunctionCPU
         size_t          UsedCPUMemory() const;
 };
 
-__device__ __forceinline__
+__device__ inline
 float* QFunctionGPU::AcquireData(const Vector2ui& dirIndex,
                                  uint32_t spatialIndex)
 {
@@ -117,13 +118,13 @@ QFunctionGPU::QFunctionGPU(const GPUDistPiecewiseConst2D* gDistributions,
     , dataPerNode(dataPerNode)
 {}
 
-__device__ __forceinline__
+__device__ inline
 Vector2ui QFunctionGPU::DirectionalRes() const
 {
     return dataPerNode;
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector3f QFunctionGPU::Sample(float& pdf, RNGeneratorGPUI& rng,
                               uint32_t spatialIndex) const
 {
@@ -134,17 +135,30 @@ Vector3f QFunctionGPU::Sample(float& pdf, RNGeneratorGPUI& rng,
     return GPUDataStructCommon::DiscreteCoordsToDir(pdf, index);
 }
 
-__device__ __forceinline__
+__device__ inline
 float QFunctionGPU::Pdf(const Vector3f& worldDir,
                         uint32_t spatialIndex) const
 {
-    float pdf;
+    float pdf = 1.0f;
     Vector2f coords = GPUDataStructCommon::DirToDiscreteCoords(pdf, worldDir);
     coords *= Vector2f(dataPerNode[0], dataPerNode[1]);
+    if(coords[0] >= dataPerNode[0] ||
+       coords[1] >= dataPerNode[1])
+    {
+        printf("OOR [%f, %f]\n", coords[0], coords[1]);
+        return 1.0f;
+    }
+    if(isnan(pdf))
+    {
+        printf("nan pdf on dirToDiscrete (%f, %f, %f)\n",
+               worldDir[0], worldDir[1], worldDir[2]);
+        return 0;
+    }
+
     return pdf * gDistributions[spatialIndex].Pdf(coords);
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector3f QFunctionGPU::Direction(const Vector2ui& dirIndex) const
 {
     Vector2f indexF = Vector2f(dirIndex[0], dirIndex[1]);
@@ -156,21 +170,21 @@ Vector3f QFunctionGPU::Direction(const Vector2ui& dirIndex) const
     return GPUDataStructCommon::DiscreteCoordsToDir(indexF);
 }
 
-__device__ __forceinline__
+__device__ inline
 float QFunctionGPU::Value(const Vector2ui& dirIndex,
                           uint32_t spatialIndex) const
 {
     return 0.0f;
 }
 
-__device__ __forceinline__
+__device__ inline
 float QFunctionGPU::Value(const Vector3f& worldDir,
                           uint32_t spatialIndex) const
 {
     return 0.0f;
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector3f QFunctionGPU::Update(const Vector3f& worldDir,
                               float radiance,
                               uint32_t spatialIndex)
@@ -209,9 +223,11 @@ QFunctionCPU::QFunctionCPU(float alpha,
     , spatialCount(spatialCount)
 {
     // Allocate the Data
-    GPUMemFuncs::AllocateMultiData(std::tie(qFuncGPU.gQFunction),
+    GPUMemFuncs::AllocateMultiData(std::tie(qFuncGPU.gQFunction,
+                                            qFuncGPU.gDistributions),
                                    memory,
-                                   {dataPerNode.Multiply() * spatialCount});
+                                   {dataPerNode.Multiply() * spatialCount,
+                                    spatialCount});
 }
 
 inline

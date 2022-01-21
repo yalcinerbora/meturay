@@ -72,7 +72,7 @@ inline DeviceDivideFunctor<T>::DeviceDivideFunctor(const T& dValue)
 {}
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 T DeviceDivideFunctor<T>::operator()(const T& in)
 {
     return in / gValue;
@@ -84,7 +84,7 @@ inline DeviceMultiplyFunctor<T>::DeviceMultiplyFunctor(const T& dValue)
 {}
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 T DeviceMultiplyFunctor<T>::operator()(const T& in)
 {
     return in * gValue;
@@ -96,7 +96,7 @@ inline HostDivideFunctor<T>::HostDivideFunctor(const T& hValue)
 {}
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 T HostDivideFunctor<T>::operator()(const T& in)
 {
     return in / value;
@@ -108,7 +108,7 @@ inline HostMultiplyFunctor<T>::HostMultiplyFunctor(const T& hValue)
 {}
 
 template <class T>
-__device__ __forceinline__
+__device__ inline
 T HostMultiplyFunctor<T>::operator()(const T& in)
 {
     return in * value;

@@ -15,7 +15,7 @@
 
 struct LambertConstFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -58,7 +58,7 @@ struct LambertConstFuncs
         return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     float Pdf(const Vector3& wo,
               const Vector3& wi,
               const Vector3& pos,
@@ -76,7 +76,7 @@ struct LambertConstFuncs
         return pdf;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,
@@ -100,7 +100,7 @@ struct LambertConstFuncs
 
 struct ReflectMatFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -144,7 +144,7 @@ struct ReflectMatFuncs
         }
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,
@@ -168,7 +168,7 @@ struct ReflectMatFuncs
 
 struct RefractMatFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -266,7 +266,7 @@ struct RefractMatFuncs
         }
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,

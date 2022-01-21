@@ -51,14 +51,14 @@ struct PPGTracerLocalState
     bool    emptyPrimitive;
 };
 
-__device__ __forceinline__
+__device__ inline
 uint8_t DeterminePathIndex(uint8_t depth)
 {
     return depth - 1;
 }
 
 template <class EGroup>
-__device__ __forceinline__
+__device__ inline
 void PPGTracerBoundaryWork(// Output
                            HitKey* gOutBoundKeys,
                            RayGMem* gOutRays,
@@ -183,7 +183,7 @@ void PPGTracerBoundaryWork(// Output
 }
 
 template <class MGroup>
-__device__ __forceinline__
+__device__ inline
 void PPGTracerPathWork(// Output
                        HitKey* gOutBoundKeys,
                        RayGMem* gOutRays,

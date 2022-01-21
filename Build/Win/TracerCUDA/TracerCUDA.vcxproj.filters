@@ -603,9 +603,6 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUTransformEmpty.cuh">
       <Filter>Transforms</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\ScenePositionTree.cuh">
-      <Filter>Tracers\Data Structures</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Source\TracerCUDA\LinearBVH.cuh">
       <Filter>Tracers\Data Structures</Filter>
     </ClInclude>
@@ -630,7 +627,13 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\RLTracerWorks.cuh">
       <Filter>Tracers\RLTracer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Source\TracerCUDA\Dense2DArray.cuh">
+    <ClInclude Include="..\..\..\Source\TracerCUDA\QFunction.cuh">
+      <Filter>Tracers\RLTracer\Aux Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneSurfaceTree.cuh">
+      <Filter>Tracers\RLTracer\Aux Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\SceneSurfaceTreeKC.cuh">
       <Filter>Tracers\RLTracer\Aux Classes</Filter>
     </ClInclude>
   </ItemGroup>
@@ -788,9 +791,6 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LinearBVH.cu">
       <Filter>Tracers\Data Structures</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\ScenePositionTree.cu">
-      <Filter>Tracers\Data Structures</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RNGIndependent.cu">
       <Filter>RNG</Filter>
     </CudaCompile>
@@ -803,7 +803,10 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RLTracerWorks.cu">
       <Filter>Tracers\RLTracer</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\..\Source\TracerCUDA\Dense2DArray.cu">
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\QFunction.cu">
+      <Filter>Tracers\RLTracer\Aux Classes</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\SceneSurfaceTree.cu">
       <Filter>Tracers\RLTracer\Aux Classes</Filter>
     </CudaCompile>
   </ItemGroup>

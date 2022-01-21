@@ -45,14 +45,14 @@ struct STreeGPU
     __device__ void     AcquireNearestDTree(uint32_t& dTreeIndex, const Vector3f& worldPos) const;
 };
 
-__device__ __forceinline__
+__device__ inline
 bool STreeNode::DetermineChild(const Vector3f& normalizedCoords) const
 {
     // Binary tree is always mid split so check half
     return normalizedCoords[static_cast<int>(splitAxis)] >= 0.5f;
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector3f STreeNode::NormalizeCoordsForChild(bool leftRight,
                                             const Vector3f& parentNormalizedCoords) const
 {
@@ -63,14 +63,14 @@ Vector3f STreeNode::NormalizeCoordsForChild(bool leftRight,
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 STreeNode::AxisType STreeNode::NextAxis(STreeNode::AxisType t)
 {
     int nextAxisAsInt = (static_cast<int>(t) + 1) % static_cast<int>(STreeNode::AxisType::END);
     return static_cast<STreeNode::AxisType>(nextAxisAsInt);
 }
 
-__device__ __forceinline__
+__device__ inline
 void STreeGPU::AcquireNearestDTree(uint32_t& dTreeIndex,
                                    const Vector3f& worldPos) const
 {

@@ -121,13 +121,15 @@ TracerError RLTracer::Initialize()
                                     cudaSystem)) != TracerError::OK)
         return err;
     // Initialize the QFunction
+    qFunction = QFunctionCPU(options.alpha, options.directionalRes,
+                             options.spatialSamples);
     if((err = qFunction.Initialize(cudaSystem)) != TracerError::OK)
         return err;
     // If requested write out the LBH as a file
     if(options.dumpDebugData)
     {
         std::vector<Byte> lbvhData;
-        surfaceTree.DumpTreeAsBinary(lbvhData);        
+        surfaceTree.DumpTreeAsBinary(lbvhData);
         Utility::DumpStdVectorToFile(lbvhData, "rl_lbvh");
     }
     return TracerError::OK;
@@ -156,7 +158,7 @@ TracerError RLTracer::SetOptions(const TracerOptionsI& opts)
 
     if((err = opts.GetBool(options.rawPathGuiding, RAW_PG_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetVector2i(options.directionalRes, DIRECTONAL_RES_NAME)) != TracerError::OK)
+    if((err = opts.GetVector2ui(options.directionalRes, DIRECTONAL_RES_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.spatialSamples, SPATIAL_SAMPLE_NAME)) != TracerError::OK)
         return err;

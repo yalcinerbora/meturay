@@ -37,7 +37,7 @@ struct PathTracerLocalState
 
 
 template <class EGroup>
-__device__ __forceinline__
+__device__ inline
 void PathTracerBoundaryWork(// Output
                             HitKey* gOutBoundKeys,
                             RayGMem* gOutRays,
@@ -130,7 +130,7 @@ void PathTracerBoundaryWork(// Output
 }
 
 template <class MGroup>
-__device__ __forceinline__
+__device__ inline
 void PathTracerPathWork(// Output
                         HitKey* gOutBoundKeys,
                         RayGMem* gOutRays,

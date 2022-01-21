@@ -29,18 +29,18 @@ SurfaceDistanceFunctor::SurfaceDistanceFunctor(float normalThreshold)
     : normalThreshold(normalThreshold)
 {}
 
-__device__ __forceinline__
+__device__ inline
 float SurfaceDistanceFunctor::operator()(const SurfaceLeaf& leaf,
                                          const SurfaceLeaf& worldSurface) const
 {
     float cosTheta = worldSurface.normal.Dot(leaf.normal);
     if(cosTheta < normalThreshold)
-        return FLT_MAX;        
+        return FLT_MAX;
     else
-        return (worldSurface.position - leaf.position).Length();    
+        return (worldSurface.position - leaf.position).Length();
 }
 
-__device__ __forceinline__
+__device__ inline
 AABB3f GenSurfaceAABB(const SurfaceLeaf& surface)
 {
     return AABB3f(surface.position, surface.position);

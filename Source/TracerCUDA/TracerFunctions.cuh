@@ -4,7 +4,7 @@
 
 namespace TracerFunctions
 {
-    __device__ __forceinline__
+    __device__ inline
     float FrenelDielectric(float cosIn, float iorIn, float iorOut)
     {
         // Calculate Sin from Snell's Law
@@ -28,7 +28,7 @@ namespace TracerFunctions
         return (parallel + perpendicular) * 0.5f;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     float FrenelConductor(float cosIn, float iorIn, float kIn)
     {
         // https://pbr-book.org/3ed-2018/Reflection_Models/Specular_Reflection_and_Transmission#FrConductor
@@ -62,7 +62,7 @@ namespace TracerFunctions
         return (parallel + perpendicular) * 0.5f;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     float DGGX(float NdH, float roughness)
     {
         float alpha = roughness * roughness;
@@ -77,7 +77,7 @@ namespace TracerFunctions
         return isnan(result) ? 0.0f : result;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     float DGGXSample(Vector3& H,
                      float& pdf,
                      float roughness,
@@ -109,7 +109,7 @@ namespace TracerFunctions
         return ggxResult;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     float GSchlick(float dot, float roughness)
     {
         //// "Hotness" removal
@@ -132,7 +132,7 @@ namespace TracerFunctions
         //return dot / (dot * (1 - k) + k);
     }
 
-    __device__ __forceinline__
+    __device__ inline
     float GeomGGX(float dot, float roughness)
     {
         // Straight from paper
@@ -151,7 +151,7 @@ namespace TracerFunctions
         return 2.0f / denom;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     Vector3f FSchlick(float VdH, const Vector3f& f0)
     {
         // Unreal Version from their course notes
@@ -174,7 +174,7 @@ namespace TracerFunctions
 
     }
 
-    __device__ __forceinline__
+    __device__ inline
     float PowerHeuristic(int n0, float pdf0, int n1, float pdf1)
     {
         // This is power-2 heuristic
@@ -185,7 +185,7 @@ namespace TracerFunctions
     }
 
     // Basic Russian Roulette
-    __device__ __forceinline__
+    __device__ inline
     bool RussianRoulette(Vector3& irradianceFactor,
                          float probFactor, RNGeneratorGPUI& rng)
     {

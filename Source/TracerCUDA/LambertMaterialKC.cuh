@@ -11,7 +11,7 @@
 
 struct LambertMatFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -60,7 +60,7 @@ struct LambertMatFuncs
         return nDotL * albedo * MathConstants::InvPi;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     float Pdf(const Vector3& wo,
               const Vector3& wi,
               const Vector3& pos,
@@ -82,7 +82,7 @@ struct LambertMatFuncs
         return pdf;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,

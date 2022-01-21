@@ -3,9 +3,18 @@
 #include "CudaSystem.hpp"
 #include "ParallelMemset.cuh"
 
-void QFunctionCPU::RecalculateDistributions(const CudaSystem&)
-{
+#include <execution>
 
+void QFunctionCPU::RecalculateDistributions(const CudaSystem& system)
+{
+    std::vector<const float*> dFuncPtrs;
+    dFuncPtrs.resize(spatialCount, nullptr);
+    for(uint32_t i = 0; i < spatialCount; i++)
+    {
+        dFuncPtrs[i] = qFuncGPU.gQFunction + i * qFuncGPU.dataPerNode.Multiply();
+    }
+    distributions.UpdateDistributions(dFuncPtrs, std::vector<bool>(spatialCount, true),
+                                      system, cudaMemcpyDeviceToDevice);
 }
 
 TracerError QFunctionCPU::Initialize(const CudaSystem& system)
@@ -22,9 +31,23 @@ TracerError QFunctionCPU::Initialize(const CudaSystem& system)
                        1.0f,
                        dataCount);
 
-    // Generate Distributions over this
-    //GPUP
+    // Generate Ptrs
+    std::vector<const float*> dFuncPtrs(spatialCount, nullptr);
+    for(uint32_t i = 0; i < spatialCount; i++)
+    {
+        dFuncPtrs[i] = qFuncGPU.gQFunction + i * qFuncGPU.dataPerNode.Multiply();
+    }
 
+    // Generate Distributions over this
+    distributions = CPUDistGroupPiecewiseConst2D(dFuncPtrs,
+                                                 std::vector<Vector2ui>(spatialCount, qFuncGPU.dataPerNode),
+                                                 std::vector<bool>(spatialCount, true),
+                                                 system);
+
+    CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst2D*>(qFuncGPU.gDistributions),
+                          distributions.DistributionGPU().data(),
+                          sizeof(GPUDistPiecewiseConst2D) * spatialCount,
+                          cudaMemcpyHostToDevice));
 
     return TracerError::OK;
 }

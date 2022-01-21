@@ -141,7 +141,7 @@ inline size_t RNGScrSobolCPU::UsedGPUMemory() const
     return memRandom.Size();
 }
 
-__device__ __forceinline__
+__device__ inline
 RNGSobolGPU::RNGSobolGPU(curandDirectionVectors32_t dirVecX,
                          curandDirectionVectors32_t dirVecY,
                          curandDirectionVectors32_t dirVecMain,
@@ -152,7 +152,7 @@ RNGSobolGPU::RNGSobolGPU(curandDirectionVectors32_t dirVecX,
     curand_init(dirVecMain, offset, &rStateMain);
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGSobolGPU::UniformInner(curandStateSobol32_t* state)
 {
     // curand returns (0, 1]
@@ -165,39 +165,39 @@ float RNGSobolGPU::UniformInner(curandStateSobol32_t* state)
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGSobolGPU::Uniform()
 {
     return UniformInner(&rStateMain);
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector2f RNGSobolGPU::Uniform2D()
 {
     return Vector2f(UniformInner(&rStateX),
                     UniformInner(&rStateY));
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGSobolGPU::Uniform(float min, float max)
 {
     float result = Uniform() * (min - max) + min;
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGSobolGPU::Normal()
 {
     return curand_normal(&rStateMain);
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGSobolGPU::Normal(float mean, float stdDev)
 {
     return curand_normal(&rStateMain) * stdDev + mean;
 }
 
-__device__ __forceinline__
+__device__ inline
 void RNGSobolGPU::Skip(uint32_t skipCount)
 {
     skipahead<curandStateSobol32_t*>(skipCount, &rStateX);
@@ -205,7 +205,7 @@ void RNGSobolGPU::Skip(uint32_t skipCount)
     skipahead<curandStateSobol32_t*>(skipCount, &rStateMain);
 }
 
-__device__ __forceinline__
+__device__ inline
 RNGScrSobolGPU::RNGScrSobolGPU(curandDirectionVectors32_t dirVecX,
                                curandDirectionVectors32_t dirVecY,
                                curandDirectionVectors32_t dirVecMain,
@@ -224,7 +224,7 @@ RNGScrSobolGPU::RNGScrSobolGPU(curandDirectionVectors32_t dirVecX,
                 offset, &rStateMain);
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGScrSobolGPU::UniformInner(curandStateScrambledSobol32_t* state)
 {
     // curand returns (0, 1]
@@ -237,39 +237,39 @@ float RNGScrSobolGPU::UniformInner(curandStateScrambledSobol32_t* state)
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGScrSobolGPU::Uniform()
 {
     return UniformInner(&rStateMain);
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector2f RNGScrSobolGPU::Uniform2D()
 {
     return Vector2f(UniformInner(&rStateX),
                     UniformInner(&rStateY));
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGScrSobolGPU::Uniform(float min, float max)
 {
     float result = Uniform() * (min - max) + min;
     return result;
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGScrSobolGPU::Normal()
 {
     return curand_normal(&rStateMain);
 }
 
-__device__ __forceinline__
+__device__ inline
 float RNGScrSobolGPU::Normal(float mean, float stdDev)
 {
     return curand_normal(&rStateMain) * stdDev + mean;
 }
 
-__device__ __forceinline__
+__device__ inline
 void RNGScrSobolGPU::Skip(uint32_t skipCount)
 {
     skipahead<curandStateScrambledSobol32_t*>(skipCount, &rStateX);

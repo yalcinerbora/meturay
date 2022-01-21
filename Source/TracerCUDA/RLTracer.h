@@ -41,7 +41,7 @@ class RLTracer final : public RayTracer
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
 
             // Paper Related
-            Vector2i            directionalRes      = Vector2i(16, 16);
+            Vector2ui           directionalRes      = Vector2ui(16, 16);
             uint32_t            spatialSamples      = 2048;
             float               alpha               = 0.5f;
             float               normalThreshold     = 45.0f; // degrees

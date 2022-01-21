@@ -154,7 +154,7 @@ class GPUPrimitiveGroup
         // Templated Intersects Function
         // This is used by OptiX instead of virtual functions
         template <class GPUTransform>
-        __device__ __forceinline__
+        __device__ inline
         static bool IntersectsT(float&, HitData&, const RayReg&,
                                 const GPUTransform&, const LeafData&,
                                 const PrimitiveData&);
@@ -193,7 +193,7 @@ template <class HitD, class PrimitiveD, class LeafD,
           class SurfaceFuncGenerator, class PrimDeviceFunctions,
           PrimTransformType TType, uint32_t PositionPerPrimitive>
 template <class GPUTransform>
-__device__ __forceinline__
+__device__ inline
 bool GPUPrimitiveGroup<HitD, PrimitiveD, LeafD,
                        SurfaceFuncGenerator,
                        PrimDeviceFunctions,

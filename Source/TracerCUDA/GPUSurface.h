@@ -164,13 +164,13 @@ static_assert(HasGetNormFunc<BasicSurface>::value,
 static_assert(HasGetNormFunc<UVSurface>::value,
               "UVSurface do not have WorldNormal Function");
 
-__device__ __forceinline__
+__device__ inline
 Vector3f BasicSurface::WorldNormal() const
 {
     return GPUSurface::NormalWorld(worldToTangent);
 }
 
-__device__ __forceinline__
+__device__ inline
 Vector3f UVSurface::WorldNormal() const
 {
     return GPUSurface::NormalWorld(worldToTangent);

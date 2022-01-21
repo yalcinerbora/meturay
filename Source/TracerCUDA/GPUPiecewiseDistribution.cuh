@@ -22,6 +22,8 @@ class GPUDistPiecewiseConst1D
         const float*    gCDF    = nullptr;
         uint32_t        count   = 0;
 
+        friend class CPUDistGroupPiecewiseConst2D;
+
     protected:
     public:
         // Constructors & Destructor
@@ -50,6 +52,8 @@ class GPUDistPiecewiseConst2D
         const GPUDistPiecewiseConst1D*  gDistributionsX  = nullptr;
         uint32_t                        width            = 0;
         uint32_t                        height           = 0;
+
+        friend class CPUDistGroupPiecewiseConst2D;
 
     protected:
     public:
@@ -140,8 +144,8 @@ class CPUDistGroupPiecewiseConst2D
         std::vector<Vector2ui>                      dimensions;
         std::vector<DistData2D>                     distDataList;
 
-        std::vector<const float*>                   dCDFs;
-        std::vector<const GPUDistPiecewiseConst1D*> dXDistributions;
+        //std::vector<const float*>                   dCDFs;
+        //std::vector<const GPUDistPiecewiseConst1D*> dXDistributions;
         std::vector<GPUDistPiecewiseConst2D>        gpuDistributions;
 
         void                                        Allocate(const std::vector<Vector2ui>& dimensions);
@@ -184,7 +188,7 @@ GPUDistPiecewiseConst1D::GPUDistPiecewiseConst1D(const float* dCDFList,
     , count(count)
 {}
 
-__device__ __forceinline__
+__device__ inline
 float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RNGeneratorGPUI& rng) const
 {
     float xi = rng.Uniform();
@@ -206,7 +210,7 @@ float GPUDistPiecewiseConst1D::Sample(float& pdf, float& index, RNGeneratorGPUI&
     return index / float(count);
 }
 
-__device__ __forceinline__
+__device__ inline
 float GPUDistPiecewiseConst1D::Pdf(float index) const
 {
     uint32_t indexInt = static_cast<uint32_t>(index);
@@ -224,7 +228,7 @@ GPUDistPiecewiseConst2D::GPUDistPiecewiseConst2D(const GPUDistPiecewiseConst1D d
     , height(countY)
 {}
 
-__device__ __forceinline__
+__device__ inline
 Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RNGeneratorGPUI& rng) const
 {
     // Fist select a row using Y distribution
@@ -243,7 +247,7 @@ Vector2f GPUDistPiecewiseConst2D::Sample(float& pdf, Vector2f& index, RNGenerato
     return Vector2(xiX, xiY);
 }
 
-__device__ __forceinline__
+__device__ inline
 float GPUDistPiecewiseConst2D::Pdf(const Vector2f& index) const
 {
     int indexY = static_cast<uint32_t>(index[1]);
@@ -270,8 +274,8 @@ inline size_t CPUDistGroupPiecewiseConst2D::UsedCPUMemory() const
 {
     return (dimensions.size() * sizeof(Vector2ui) +
             distDataList.size() * sizeof(DistData2D) +
-            dCDFs.size() * sizeof(float*) +
-            dXDistributions.size() * sizeof(GPUDistPiecewiseConst1D*) +
+            //dCDFs.size() * sizeof(float*) +
+            //dXDistributions.size() * sizeof(GPUDistPiecewiseConst1D*) +
             gpuDistributions.size() * sizeof(GPUDistPiecewiseConst2D));
 }
 

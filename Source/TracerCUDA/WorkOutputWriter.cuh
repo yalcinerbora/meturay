@@ -34,7 +34,7 @@ class OutputWriter
 };
 
 template<class AuxType>
-__device__ __forceinline__
+__device__ inline
 OutputWriter<AuxType>::OutputWriter(HitKey* gOutBoundKeys,
                                     RayGMem* gOutRays,
                                     AuxType* gOutAux,
@@ -48,7 +48,7 @@ OutputWriter<AuxType>::OutputWriter(HitKey* gOutBoundKeys,
 {}
 
 template<class AuxType>
-__device__ __forceinline__
+__device__ inline
 OutputWriter<AuxType>::~OutputWriter()
 {
     static constexpr RayReg INV_RAY = EMPTY_RAY_REGISTER;
@@ -62,7 +62,7 @@ OutputWriter<AuxType>::~OutputWriter()
 }
 
 template<class AuxType>
-__device__ __forceinline__
+__device__ inline
 void OutputWriter<AuxType>::Write(uint32_t index,
                                   const RayReg& r,
                                   const AuxType& aux)
@@ -75,7 +75,7 @@ void OutputWriter<AuxType>::Write(uint32_t index,
 }
 
 template<class AuxType>
-__device__ __forceinline__
+__device__ inline
 void OutputWriter<AuxType>::Write(uint32_t index,
                                   const RayReg& r,
                                   const AuxType& aux,

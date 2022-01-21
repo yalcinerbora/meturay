@@ -13,7 +13,7 @@
 #include "TracerConstants.h"
 #include "MetaMaterialFunctions.cuh"
 
-__device__ __forceinline__
+__device__ inline
 Vector3 CalculateF0(const Vector3f& baseAlbedo, float metallic, float specular)
 {
     // https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf
@@ -27,7 +27,7 @@ Vector3 CalculateF0(const Vector3f& baseAlbedo, float metallic, float specular)
 
 struct UnrealDeviceFuncs
 {
-    __device__ __forceinline__ static
+    __device__ inline static
     float Specularity(const UVSurface& surface,
                       const UnrealMatData& matData,
                       const HitKey::Type& matId)
@@ -37,7 +37,7 @@ struct UnrealDeviceFuncs
         return 1.0f - alpha;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -144,7 +144,7 @@ struct UnrealDeviceFuncs
         return diffuseTerm + specularTerm;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     float Pdf(// Input
               const Vector3& wo,
               const Vector3& wi,
@@ -186,7 +186,7 @@ struct UnrealDeviceFuncs
         return pdf;
     }
 
-    __device__ __forceinline__ static
+    __device__ inline static
     Vector3 Evaluate(// Input
                      const Vector3& wo,
                      const Vector3& wi,

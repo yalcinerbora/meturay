@@ -10,6 +10,8 @@
 
 #include <numeric>
 
+#include "TracerDebug.h"
+
 template <class T>
 class DeviceHostMulDivideComboFunctor
 {
@@ -33,7 +35,7 @@ DeviceHostMulDivideComboFunctor<T>::DeviceHostMulDivideComboFunctor(const T& dDi
 {}
 
 template <class T>
-__device__  __forceinline__
+__device__  inline
 T DeviceHostMulDivideComboFunctor<T>::operator()(const T& in) const
 {
     return in * mulValue / gDivValue;
@@ -75,8 +77,6 @@ void CPUDistGroupPiecewiseConst1D::GeneratePointers()
     }
     assert(offset == totalSizeLinear);
 }
-
-#include "TracerDebug.h"
 
 void CPUDistGroupPiecewiseConst1D::CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
                                                          const CudaSystem& system,
@@ -168,6 +168,7 @@ const CPUDistGroupPiecewiseConst1D::GPUDistList& CPUDistGroupPiecewiseConst1D::D
 
 void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimensions)
 {
+    this->dimensions = dimensions;
     std::vector<std::array<size_t, 5>> alignedSizes(dimensions.size());
     std::transform(dimensions.cbegin(), dimensions.cend(),
                    alignedSizes.begin(),
@@ -275,7 +276,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
     {
         functionDataPtrs.push_back(funcVector.data());
     }
-    
+
     Allocate(dimensions);
     UpdateDistributions(functionDataPtrs, factorSpherical,
                         system, cudaMemcpyHostToDevice);
@@ -292,7 +293,7 @@ const CPUDistGroupPiecewiseConst2D::GPUDistList& CPUDistGroupPiecewiseConst2D::D
 }
 
 void CPUDistGroupPiecewiseConst2D::UpdateDistributions(const std::vector<const float*>& functionDataPtrs,
-                                                       const std::vector<bool>& factorSpherical,                                                       
+                                                       const std::vector<bool>& factorSpherical,
                                                        const CudaSystem& system, cudaMemcpyKind kind)
 {
     CUDA_CHECK(cudaSetDevice(system.BestGPU().DeviceId()));
@@ -372,7 +373,26 @@ void CPUDistGroupPiecewiseConst2D::UpdateDistributions(const std::vector<const f
         // Normalize CDF with the total accumulation (last element)
         // to perfectly match the [0,1) interval
         TransformArrayGPU(dYCDF, dim[1] + 1, cdfNormFunctor);
-    }    
+    }
     // All Done!
     gpu.WaitMainStream();
+
+    // DEBUG WRITE TO FILE
+    //uint32_t i = 0;
+    //for(const auto& dist : gpuDistributions)
+    //{
+    //    Vector2ui dim = dimensions[i];
+    //    std::string name = std::to_string(i) + "_dist";
+
+    //    Debug::DumpMemToFile(name, dist.gDistributionY.gPDF, dim[1]);
+    //    Debug::DumpMemToFile(name, dist.gDistributionY.gCDF, dim[1] + 1, true);
+
+    //    for(uint32_t j = 0; j < dim[1]; j++)
+    //    {
+    //        Debug::DumpMemToFile(name, dist.gDistributionsX[j].gPDF, dim[0], true);
+    //        Debug::DumpMemToFile(name, dist.gDistributionsX[j].gCDF, dim[0] + 1, true);
+    //    }
+    //    i++;
+    //}
+
 }

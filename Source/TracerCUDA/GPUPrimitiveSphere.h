@@ -37,7 +37,7 @@ using SphereHit = Vector2f;
 
 struct SphrFunctions
 {
-    __device__ __forceinline__
+    __device__ inline
     static Vector3f SamplePosition(// Output
                                    Vector3f& normal,
                                    float& pdf,
@@ -81,7 +81,7 @@ struct SphrFunctions
         return sphrLoc;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static void PositionPdfFromReference(// Outputs
                                          Vector3f& normal,
                                          float& pdf,
@@ -113,7 +113,7 @@ struct SphrFunctions
         else pdf = 0.0f;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static float PositionPdfFromHit(// Inputs
                                     const Vector3f&,
                                     const Vector3f&,
@@ -126,7 +126,7 @@ struct SphrFunctions
     }
 
     template <class GPUTransform>
-    __device__ __forceinline__
+    __device__ inline
     static bool IntersectsT(// Output
                             float& newT,
                             SphereHit& newHit,
@@ -166,7 +166,7 @@ struct SphrFunctions
     // TODO: Implement Alpha test for Spheres
     static constexpr auto& AlphaTest = DefaultAlphaTest<SphereHit, SphereData, DefaultLeaf>;
 
-    __device__ __forceinline__
+    __device__ inline
     static AABB3f AABB(const GPUTransformI& transform,
                        PrimitiveId primitiveId,
                        const SphereData& primData)
@@ -180,7 +180,7 @@ struct SphrFunctions
         return transform.LocalToWorld(Sphere::BoundingBox(center, radius));
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static float Area(PrimitiveId primitiveId,
                       const SphereData& primData)
     {
@@ -189,7 +189,7 @@ struct SphrFunctions
         return 4.0f * MathConstants::Pi * radius * radius;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static Vector3 Center(const GPUTransformI& transform,
                           PrimitiveId primitiveId,
                           const SphereData& primData)
@@ -201,7 +201,7 @@ struct SphrFunctions
         return transform.LocalToWorld(center);
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static void AcquirePositions(// Output
                                  Vector3f positions[1],
                                  // Inputs
@@ -216,7 +216,7 @@ struct SphrFunctions
 
 struct SphereSurfaceGenerator
 {
-    __device__ __forceinline__
+    __device__ inline
     static BasicSurface GenBasicSurface(const SphereHit& sphrCoords,
                                         const GPUTransformI& transform,
                                         //
@@ -235,7 +235,7 @@ struct SphereSurfaceGenerator
         return BasicSurface{tbn};
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static SphrSurface GenSphrSurface(const SphereHit& sphrCoords,
                                       const GPUTransformI&,
                                       //
@@ -245,7 +245,7 @@ struct SphereSurfaceGenerator
         return SphrSurface{sphrCoords};
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static UVSurface GenUVSurface(const SphereHit& sphrCoords,
                                   const GPUTransformI& transform,
                                   //

@@ -10,7 +10,7 @@ struct TexCoords;
 class RNGeneratorGPUI;
 
 template <class Data>
-__device__ __forceinline__
+__device__ inline
 bool IsEmissiveFalse(const Data&,
                      const HitKey::Type&)
 {
@@ -18,7 +18,7 @@ bool IsEmissiveFalse(const Data&,
 }
 
 template <class Data>
-__device__ __forceinline__
+__device__ inline
 bool IsEmissiveTrue(const Data&,
                     const HitKey::Type&)
 {
@@ -26,7 +26,7 @@ bool IsEmissiveTrue(const Data&,
 }
 
 template <class Data, class Surface>
-__device__ __forceinline__
+__device__ inline
 Vector3 EmitEmpty(// Input
                   const Vector3&,
                   const Vector3&,
@@ -41,7 +41,7 @@ Vector3 EmitEmpty(// Input
 }
 
 template <class Data, class Surface>
-__device__ __forceinline__
+__device__ inline
 Vector3 SampleEmpty(// Sampled Output
                     RayF& wo,
                     float& pdf,
@@ -66,7 +66,7 @@ Vector3 SampleEmpty(// Sampled Output
 }
 
 template<class Data, class Surface>
-__device__ __forceinline__
+__device__ inline
 float PdfZero(const Vector3&,
               const Vector3&,
               const Vector3&,
@@ -81,7 +81,7 @@ float PdfZero(const Vector3&,
 }
 
 template<class Data, class Surface>
-__device__ __forceinline__
+__device__ inline
 float PdfOne(const Vector3&,
              const Vector3&,
              const Vector3&,
@@ -96,7 +96,7 @@ float PdfOne(const Vector3&,
 }
 
 template <class Data, class Surface>
-__device__ __forceinline__
+__device__ inline
 Vector3 EvaluateEmpty(// Input
                       const Vector3&,
                       const Vector3&,
@@ -112,7 +112,7 @@ Vector3 EvaluateEmpty(// Input
 }
 
 template <class Data, class Surface>
-__device__ __forceinline__
+__device__ inline
 float SpecularityPerfect(const Surface&, const Data&,
                          const HitKey::Type&)
 {
@@ -120,7 +120,7 @@ float SpecularityPerfect(const Surface&, const Data&,
 }
 
 template <class Data, class Surface>
-__device__ __forceinline__
+__device__ inline
 float SpecularityDiffuse(const Surface&,
                          const Data&,
                          const HitKey::Type&)

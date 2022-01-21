@@ -106,7 +106,7 @@ class LinearBVHCPU
 };
 
 template <class Leaf, class DistFunctor>
-__device__ __forceinline__
+__device__ inline
 uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, const Leaf& worldSurface) const
 {
     //static_assert(HasPosition<Leaf>::value,
@@ -133,7 +133,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
     //};
     //// Resulting Closest Leaf Index
     //// & Closest Hit
-    //// Arbitrarily set the initial distance 
+    //// Arbitrarily set the initial distance
     //// to the first leaf(node[0]) distance
     //assert(nodes[0].isLeaf == true);
     //float closestDistance = DistanceFunction(nodes[0].leaf,
@@ -199,7 +199,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
     // Resulting Closest Leaf Index
     // & Closest Hit
 
-    // Arbitrarily set the initial distance 
+    // Arbitrarily set the initial distance
     // to the first leaf(node[0]) distance
     assert(nodes[0].isLeaf == true);
     float closestDistance = DistanceFunction(nodes[0].leaf,
@@ -284,7 +284,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
 }
 
 template <class Leaf, class DistFunctor>
-__device__ __forceinline__
+__device__ inline
 float LinearBVHGPU<Leaf, DistFunctor>::VoronoiCenterSize() const
 {
     const AABB3f sceneAABB(nodes[rootIndex].body.aabbMin,

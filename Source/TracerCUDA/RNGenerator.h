@@ -22,15 +22,15 @@ class RNGeneratorGPUI
     public:
     //virtual         ~RandomGPU() = default;
     // Interface
-    __device__ __forceinline__
+    __device__ inline
     virtual float       Uniform() = 0;
-    __device__ __forceinline__
+    __device__ inline
     virtual float       Uniform(float min, float max) = 0;
-    __device__ __forceinline__
+    __device__ inline
     virtual Vector2f    Uniform2D() = 0;
-    __device__ __forceinline__
+    __device__ inline
     virtual float       Normal() = 0;
-    __device__ __forceinline__
+    __device__ inline
     virtual float       Normal(float mean, float stdDev) = 0;
 };
 
@@ -52,7 +52,7 @@ namespace RNGAccessor
 }
 
 template <class GPUGenerator>
-__device__ __forceinline__
+__device__ inline
 GPUGenerator& RNGAccessor::Acquire(RNGeneratorGPUI** gGenerators,
                                    uint32_t index)
 {

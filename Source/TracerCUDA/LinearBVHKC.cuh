@@ -7,7 +7,7 @@ struct PointStruct
     Vector3f position;
 };
 
-__device__ __forceinline__
+__device__ inline
 AABB3f GenPointAABB(const PointStruct& point)
 {
     return AABB3f(point.position, point.position);
@@ -20,7 +20,7 @@ class PointDistanceFunctor
                                        const PointStruct& point) const;
 };
 
-__device__ __forceinline__
+__device__ inline
 float PointDistanceFunctor::operator()(const PointStruct& leaf,
                                        const PointStruct& point) const
 {

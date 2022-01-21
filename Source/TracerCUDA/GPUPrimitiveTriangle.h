@@ -58,7 +58,7 @@ using TriangleHit = Vector2f;
 
 struct TriFunctions
 {
-    __device__ __forceinline__
+    __device__ inline
     static Vector3f SamplePosition(// Output
                                    Vector3f& normal,
                                    float& pdf,
@@ -112,7 +112,7 @@ struct TriFunctions
         return position;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static void PositionPdfFromReference(// Outputs
                                          Vector3f& normal,
                                          float& pdf,
@@ -191,7 +191,7 @@ struct TriFunctions
         else pdf = 0.0f;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static float PositionPdfFromHit(// Inputs
                                     const Vector3f&,
                                     const Vector3f&,
@@ -204,7 +204,7 @@ struct TriFunctions
     }
 
     template <class GPUTransform>
-    __device__ __forceinline__
+    __device__ inline
     static bool IntersectsT(// Output
                             float& newT,
                             TriangleHit& newHit,
@@ -251,7 +251,7 @@ struct TriFunctions
 
     static constexpr auto& Intersects = IntersectsT<GPUTransformI>;
 
-    __device__ __forceinline__
+    __device__ inline
     static bool AlphaTest(// Input
                           const TriangleHit& potentialHit,
                           const DefaultLeaf& leaf,
@@ -285,7 +285,7 @@ struct TriFunctions
         return (*alphaMap)(uv);
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static AABB3f AABB(const GPUTransformI& transform,
                        //
                        PrimitiveId primitiveId,
@@ -307,7 +307,7 @@ struct TriFunctions
         return Triangle::BoundingBox(position0, position1, position2);
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static float Area(PrimitiveId primitiveId, const TriData& primData)
     {
         // Get Position
@@ -326,7 +326,7 @@ struct TriFunctions
         return Cross(vec0, vec1).Length() * 0.5f;
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static Vector3 Center(const GPUTransformI& transform,
                           PrimitiveId primitiveId, const TriData& primData)
     {
@@ -348,7 +348,7 @@ struct TriFunctions
                 position2 * 0.33333f);
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static void AcquirePositions(// Output
                                  Vector3f positions[3],
                                  // Inputs
@@ -370,7 +370,7 @@ class GPUPrimitiveTriangle;
 
 struct TriangleSurfaceGenerator
 {
-    __device__ __forceinline__
+    __device__ inline
     static BasicSurface GenBasicSurface(const TriangleHit& baryCoords,
                                         const GPUTransformI& transform,
                                         //
@@ -394,7 +394,7 @@ struct TriangleSurfaceGenerator
         return BasicSurface{tbn};
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static BarySurface GenBarySurface(const TriangleHit& baryCoords,
                                       const GPUTransformI&,
                                       //
@@ -405,7 +405,7 @@ struct TriangleSurfaceGenerator
         return BarySurface{Vector3(baryCoords[0], baryCoords[1], c)};
     }
 
-    __device__ __forceinline__
+    __device__ inline
     static UVSurface GenUVSurface(const TriangleHit& baryCoords,
                                   const GPUTransformI& transform,
                                   //

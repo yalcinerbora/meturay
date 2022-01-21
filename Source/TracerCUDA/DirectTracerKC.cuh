@@ -40,7 +40,7 @@ struct DirectTracerPositionGlobalState : public DirectTracerGlobalState
 struct DirectTracerLocalState {};
 
 template <class EGroup>
-__device__ __forceinline__
+__device__ inline
 void DirectBoundaryWork(// Output
                         HitKey* gOutBoundKeys,
                         RayGMem* gOutRays,

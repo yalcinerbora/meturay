@@ -46,7 +46,7 @@ struct PathNode
 };
 
 template <class Node>
-__device__ __forceinline__
+__device__ inline
 Vector3f PathNode::Wi(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType next = prevNext[1];
@@ -58,7 +58,7 @@ Vector3f PathNode::Wi(const Node* gNodeList, uint32_t pathStartIndex)
 }
 
 template <class Node>
-__device__ __forceinline__
+__device__ inline
 Vector3f PathNode::Wo(const Node* gNodeList, uint32_t pathStartIndex)
 {
     IndexType prev = prevNext[0];
@@ -69,13 +69,13 @@ Vector3f PathNode::Wo(const Node* gNodeList, uint32_t pathStartIndex)
     return wi.Normalize();
 }
 
-__device__ __forceinline__
+__device__ inline
 bool PathNode::HasPrev()
 {
     return prevNext[0] != InvalidIndex;
 }
 
-__device__ __forceinline__
+__device__ inline
 bool PathNode::HasNext()
 {
     return prevNext[1] != InvalidIndex;
@@ -98,7 +98,7 @@ struct PathGuidingNode : public PathNode
                                              PathGuidingNode* gLocalChain);
 };
 
-__device__ __forceinline__
+__device__ inline
 void PathGuidingNode::AccumRadiance(const Vector3f& endPointRadiance)
 {
     // Radiance Factor shows the energy ratio between the path start point
@@ -108,7 +108,7 @@ void PathGuidingNode::AccumRadiance(const Vector3f& endPointRadiance)
     totalRadiance[2] += (radFactor[2] == 0.0f) ? 0.0f : endPointRadiance[2] / radFactor[2];
 }
 
-__device__ __forceinline__
+__device__ inline
 void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
                                              PathGuidingNode* gLocalChain)
 {
@@ -122,7 +122,7 @@ void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
     }
 }
 
-__device__ __forceinline__
+__device__ inline
 void PathGuidingNode::AccumRadianceUpChain(const Vector3f& endPointRadiance,
                                            PathGuidingNode* gLocalChain)
 {
