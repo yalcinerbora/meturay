@@ -43,6 +43,7 @@
 			"id":1,
 			"type": "Single",
 			"layout": "matrix4x4",
+			"major": "column",
 			"matrix": [1, 0,  0, 0,
 					   0, 0, -1, 0,
 					   0, 1,  0, 0,

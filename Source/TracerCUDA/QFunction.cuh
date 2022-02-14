@@ -15,21 +15,23 @@ class QFunctionGPU
     friend class QFunctionCPU;
 
     private:
-        const GPUDistPiecewiseConst2D*  gDistributions;
-        float*                          gQFunction;
-        Vector2ui                       dataPerNode;
-        float                           alpha;
+        PWCDistStaticGPU2D  gDistributions;
+        float*              gQFunction;
+        Vector2ui           dataPerNode;
+        uint32_t            nodeCount;
+        float               alpha;
 
         __device__
-        float*                          AcquireData(const Vector2ui& dirIndex,
-                                                    uint32_t spatialIndex);
+        float*              AcquireData(const Vector2ui& dirIndex,
+                                        uint32_t spatialIndex);
 
     public:
         // Constructors & Destructor
                         QFunctionGPU();
-                        QFunctionGPU(const GPUDistPiecewiseConst2D* gDistributions,
+                        QFunctionGPU(PWCDistStaticGPU2D gDistributions,
                                      float* gQFunction,
                                      const Vector2ui& dataPerNode,
+                                     uint32_t nodeCount,
                                      float alpha);
                         ~QFunctionGPU() = default;
 
@@ -65,10 +67,10 @@ class QFunctionGPU
 class QFunctionCPU
 {
     private:
-        DeviceMemory                     memory;
-        QFunctionGPU                     qFuncGPU;
-        CPUDistGroupPiecewiseConst2D     distributions;
-        uint32_t                         spatialCount;
+        DeviceMemory        memory;
+        QFunctionGPU        qFuncGPU;
+        PWCDistStaticCPU2D  distributions;
+        uint32_t            spatialCount;
 
     protected:
     public:
@@ -102,20 +104,23 @@ float* QFunctionGPU::AcquireData(const Vector2ui& dirIndex,
 
 inline
 QFunctionGPU::QFunctionGPU()
-    : gDistributions(nullptr)
-    , gQFunction(nullptr)
+    : gQFunction(nullptr)
     , dataPerNode(Zero2ui)
+    , nodeCount(0)
     , alpha(0.0f)
 {}
 
 inline
-QFunctionGPU::QFunctionGPU(const GPUDistPiecewiseConst2D* gDistributions,
+QFunctionGPU::QFunctionGPU(PWCDistStaticGPU2D gDistributions,
                            float* gQFunction,
                            const Vector2ui& dataPerNode,
+                           uint32_t nodeCount,
                            float alpha)
     : gDistributions(gDistributions)
     , gQFunction(gQFunction)
     , dataPerNode(dataPerNode)
+    , nodeCount(nodeCount)
+    , alpha(alpha)
 {}
 
 __device__ inline
@@ -129,7 +134,7 @@ Vector3f QFunctionGPU::Sample(float& pdf, RNGeneratorGPUI& rng,
                               uint32_t spatialIndex) const
 {
     Vector2f index;
-    gDistributions[spatialIndex].Sample(pdf, index, rng);
+    gDistributions.Sample(pdf, index, rng, spatialIndex);
     index /= Vector2f(dataPerNode[0], dataPerNode[1]);
 
     return GPUDataStructCommon::DiscreteCoordsToDir(pdf, index);
@@ -155,7 +160,7 @@ float QFunctionGPU::Pdf(const Vector3f& worldDir,
         return 0;
     }
 
-    return pdf * gDistributions[spatialIndex].Pdf(coords);
+    return pdf * gDistributions.Pdf(coords, spatialIndex);
 }
 
 __device__ inline
@@ -219,15 +224,17 @@ inline
 QFunctionCPU::QFunctionCPU(float alpha,
                            const Vector2ui& dataPerNode,
                            uint32_t spatialCount)
-    : qFuncGPU(nullptr, nullptr, dataPerNode, alpha)
+    : qFuncGPU()
     , spatialCount(spatialCount)
 {
     // Allocate the Data
-    GPUMemFuncs::AllocateMultiData(std::tie(qFuncGPU.gQFunction,
-                                            qFuncGPU.gDistributions),
+    GPUMemFuncs::AllocateMultiData(std::tie(qFuncGPU.gQFunction),
                                    memory,
-                                   {dataPerNode.Multiply() * spatialCount,
-                                    spatialCount});
+                                   {dataPerNode.Multiply() * spatialCount});
+
+    qFuncGPU.dataPerNode = dataPerNode;
+    qFuncGPU.nodeCount = spatialCount;
+    qFuncGPU.alpha = alpha;
 }
 
 inline

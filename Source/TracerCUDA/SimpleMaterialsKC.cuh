@@ -206,9 +206,15 @@ struct RefractMatFuncs
         // Normal also needs to be on the same side of the surface for the funcs
         // to work
         Vector3 refNormal = (entering) ? normal : (-normal);
-
         // Calculate Fresnel Term
         float f = TracerFunctions::FrenelDielectric(abs(nDotI), fromMedium, toMedium);
+
+        //printf("[%s] P:(%f, %f, %f) Wi:(%f, %f, %f) N:(%f, %f, %f) - F %f, From %f, To %f\n",
+        //       entering ? "entering" : "exiting",
+        //       pos[0], pos[1], pos[2],
+        //       wi[0], wi[1], wi[2],
+        //       normal[0], normal[1], normal[2],
+        //       f, fromMedium, toMedium);
 
         // Sample ray according to the Fresnel term
         float xi = rng.Uniform();
@@ -222,6 +228,9 @@ struct RefractMatFuncs
             // We reflected off of surface no medium change
             outMedium = &m;
 
+            //printf("Reflected no medium change Wo[%f, %f, %f]\n",
+            //       wo.getDirection()[0], wo.getDirection()[1], wo.getDirection()[2]);
+
             float nDotL = wo.getDirection().Dot(refNormal);
             return f * albedo;
         }
@@ -232,6 +241,9 @@ struct RefractMatFuncs
             outMedium = matData.dMediums[outMediumIndex];
             // Write pdf
             pdf = 1.0f - f;
+
+            //printf("Refracted new medium IOR %f, Wo[%f, %f, %f]\n", outMedium->IOR(),
+            //       wo.getDirection()[0], wo.getDirection()[1], wo.getDirection()[2]);
 
             // Refraction is chosen
             // Convert wi, refract func needs
@@ -260,7 +272,8 @@ struct RefractMatFuncs
             // Factor in the radiance discrepancy due to refraction
             // Medium change causes rays to be scatter/focus
             // Since we try to calculate radiance towards that ray
-            float radianceChangeFactor = (fromMedium * fromMedium) / (toMedium * toMedium);
+            //float radianceChangeFactor = (fromMedium * fromMedium) / (toMedium * toMedium);
+            float radianceChangeFactor = 1.0f;
             // Final Factor
             return albedo * radianceChangeFactor * (1.0f - f);
         }

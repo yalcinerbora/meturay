@@ -33,6 +33,14 @@ __global__ void KCConstructGPUTransform(GPUTransformSingle* gTransformLocations,
     }
 }
 
+CPUTransformSingle::MatrixLayoutType CPUTransformSingle::StringToMatrixLayout(const std::string& s)
+{
+    if(s == MAJOR_ROW_NAME)
+        return ROW_MAJOR;
+    else
+        return COLUMN_MAJOR;
+}
+
 SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes,
 											   double time,
 											   const std::string&)
@@ -45,7 +53,16 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
         std::vector<Matrix4x4> nodeTransforms;
         if(layoutName == LAYOUT_MATRIX)
         {
+            MatrixLayoutType major = StringToMatrixLayout(node->CommonString(MAJOR, time));
+
             nodeTransforms = node->AccessMatrix4x4(MATRIX, time);
+
+            if(major == ROW_MAJOR)
+                std::for_each(nodeTransforms.begin(), nodeTransforms.end(),
+                              [](Matrix4x4& m)
+                              {
+                                  m.TransposeSelf();
+                              });
         }
         else if(layoutName == LAYOUT_TRS)
         {

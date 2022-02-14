@@ -9,8 +9,184 @@
 #include "RayLib/MemoryAlignment.h"
 
 #include <numeric>
+#include <cub/cub.cuh>
 
 #include "TracerDebug.h"
+
+template <uint32_t DATA_PER_THREAD>
+__device__ __forceinline__
+void MultVector(float(&vector)[DATA_PER_THREAD], float v)
+{
+    #pragma unroll
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
+        vector[i] *= v;
+}
+
+template <uint32_t DATA_PER_THREAD>
+__device__ __forceinline__
+void ZeroVector(float(&vector)[DATA_PER_THREAD])
+{
+    #pragma unroll
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
+        vector[i] = 0.0f;
+}
+
+__global__
+void KCUpdateDistributionsX(float* gXPDFs,
+                            float* gXCDFs,
+                            float* gYPDFs,
+                            Vector2ui dim,
+                            uint32_t distCount,
+                            float factorSpherical)
+{
+    static constexpr uint32_t DATA_PER_THREAD = 4;
+    assert(StaticThreadPerBlock1D * DATA_PER_THREAD >= dim[0]);
+    // Cub Stuff
+    // Cub Block Load Specialize
+    using BlockLoad = cub::BlockLoad<float, StaticThreadPerBlock1D, DATA_PER_THREAD>;
+    using BlockReduce = cub::BlockReduce<float, StaticThreadPerBlock1D>;
+    using BlockScan = cub::BlockScan<float, StaticThreadPerBlock1D>;
+    using BlockStore = cub::BlockStore<float, StaticThreadPerBlock1D, DATA_PER_THREAD>;
+    // Allocate shared memory for BlockLoad
+    __shared__ union
+    {
+        typename BlockLoad::TempStorage      loadTempStorage;
+        typename BlockReduce::TempStorage    reduceTempStorage;
+        typename BlockScan::TempStorage      scanTempStorage;
+        typename BlockStore::TempStorage     storeTempStorage;
+    } sMem;
+
+    // Each block is responsible for one dist
+    uint32_t distId = blockIdx.x;
+    if(distId >= distCount) return;
+
+    // First find the local data pointers
+    float* gXPDFLocal = gXPDFs + dim.Multiply() * distId;
+    float* gXCDFLocal = gXCDFs + (dim.Multiply() + dim[0]) * distId;
+    float* gYPDFLocal = gYPDFs + dim[1] * distId;
+
+    // Local registers
+    float pdfData[DATA_PER_THREAD];
+    float cdfData[DATA_PER_THREAD];
+    // For each row
+    for(uint32_t i = 0; i < dim[1]; i++)
+    {
+        float* gXPDFRow = gXPDFLocal + dim[0] * i;
+        float* gXCDFRow = gXCDFLocal + (dim[0] + 1) * i;
+
+        // Load a segment of consecutive items that are blocked across threads
+        ZeroVector(pdfData);
+        ZeroVector(cdfData);
+        BlockLoad(sMem.loadTempStorage).Load(gXPDFRow, pdfData,
+                                             static_cast<int>(dim[0]));
+        __syncthreads();
+
+        if(factorSpherical)
+        {
+            float v = (static_cast<float>(i) + 0.5f) / static_cast<float>(dim[1]);
+            // V is [0,1] convert it to [0,pi]
+            // so that middle sections will have higher priority
+            float phi = v * MathConstants::Pi;
+            float sinPhi = std::sin(phi);
+            MultVector(pdfData, sinPhi);
+        }
+
+        // Reduce the row
+        float pdfSum = BlockReduce(sMem.reduceTempStorage).Sum(pdfData);
+        __syncthreads();
+
+        // First thread will do the write of the Y Function value of this row
+        if(threadIdx.x == 0)
+            gYPDFLocal[i] = pdfSum;
+
+        // Now normalize the pdf with the dimension
+        MultVector(pdfData, (1.0f / static_cast<float>(dim[1])));
+
+        // Now do scan
+        float totalSum;
+        BlockScan(sMem.scanTempStorage).ExclusiveSum(pdfData, cdfData, totalSum);
+        __syncthreads();
+
+        // Do the normalization for PDF and CDF
+        MultVector(pdfData, (1.0f / totalSum));
+        MultVector(pdfData, static_cast<float>(dim[0]));
+
+        MultVector(cdfData, (1.0f / totalSum));
+
+        // Finally Store both cdf and pdf
+        BlockStore(sMem.storeTempStorage).Store(gXPDFRow, pdfData, dim[0]);
+        __syncthreads();
+        BlockStore(sMem.storeTempStorage).Store(gXCDFRow, cdfData, dim[0]);
+        __syncthreads();
+        // Thread 0 will write the total sum to the end (normalized which is 1)
+        if(threadIdx.x == 0)
+            gXCDFRow[dim[0]] = 1.0f;
+    }
+}
+
+__global__
+void KCUpdateDistributionsY(float* gYPDFs,
+                            float* gYCDFs,
+                            Vector2ui dim,
+                            uint32_t distCount)
+{
+    static constexpr uint32_t DATA_PER_THREAD = 4;
+    assert(StaticThreadPerBlock1D * DATA_PER_THREAD >= dim[1]);
+
+    // Cub Stuff
+    // Cub Block Load Specialize
+    using BlockLoad = cub::BlockLoad<float, StaticThreadPerBlock1D,
+                                     DATA_PER_THREAD, cub::BLOCK_LOAD_VECTORIZE>;
+    using BlockScan = cub::BlockScan<float, StaticThreadPerBlock1D>;
+    using BlockStore = cub::BlockStore<float, StaticThreadPerBlock1D,
+                                       DATA_PER_THREAD, cub::BLOCK_STORE_VECTORIZE>;
+    // Allocate shared memory for BlockLoad
+    __shared__ union
+    {
+        typename BlockLoad::TempStorage      loadTempStorage;
+        typename BlockScan::TempStorage      scanTempStorage;
+        typename BlockStore::TempStorage     storeTempStorage;
+    } sMem;
+
+    // Each block is responsible for one dist
+    uint32_t distId = blockIdx.x;
+    if(distId >= distCount) return;
+
+    // First find the local data pointers
+    float* gYPDFLocal = gYPDFs + dim[1] * distId;
+    float* gYCDFLocal = gYCDFs + (dim[1] + 1) * distId;
+
+    // Registers
+    float pdfData[DATA_PER_THREAD];
+    float cdfData[DATA_PER_THREAD];
+    ZeroVector(pdfData);
+    ZeroVector(cdfData);
+
+    // Load a segment of consecutive items that are blocked across threads
+    BlockLoad(sMem.loadTempStorage).Load(gYPDFLocal, pdfData, dim[1]);
+    __syncthreads();
+
+    // Normalize by dimension
+    MultVector(pdfData, (1.0f / static_cast<float>(dim[1])));
+
+    // Now do scan
+    float totalSum;
+    BlockScan(sMem.scanTempStorage).ExclusiveSum(pdfData, cdfData, totalSum);
+    __syncthreads();
+
+    MultVector(pdfData, (1.0f / totalSum));
+    MultVector(pdfData, static_cast<float>(dim[1]));
+
+    MultVector(cdfData, (1.0f / totalSum));
+
+    BlockStore(sMem.storeTempStorage).Store(gYPDFLocal, pdfData, dim[1]);
+    __syncthreads();
+    BlockStore(sMem.storeTempStorage).Store(gYCDFLocal, cdfData, dim[1]);
+
+    // Thread 0 will write the total sum to the end (normalized which is 1)
+    if(threadIdx.x == 0)
+        gYCDFLocal[dim[1]] = 1.0f;
+}
 
 template <class T>
 class DeviceHostMulDivideComboFunctor
@@ -41,7 +217,7 @@ T DeviceHostMulDivideComboFunctor<T>::operator()(const T& in) const
     return in * mulValue / gDivValue;
 }
 
-void CPUDistGroupPiecewiseConst1D::GeneratePointers()
+void PWCDistributionGroupCPU1D::GeneratePointers()
 {
     std::vector<Vector2ui> alignedSizes(counts.size());
     std::transform(counts.cbegin(), counts.cend(),
@@ -78,7 +254,7 @@ void CPUDistGroupPiecewiseConst1D::GeneratePointers()
     assert(offset == totalSizeLinear);
 }
 
-void CPUDistGroupPiecewiseConst1D::CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
+void PWCDistributionGroupCPU1D::CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
                                                          const CudaSystem& system,
                                                          cudaMemcpyKind copyKind)
 {
@@ -113,13 +289,13 @@ void CPUDistGroupPiecewiseConst1D::CopyPDFsConstructCDFs(const std::vector<const
     // Construct Objects
     for(size_t i = 0; i < counts.size(); i++)
     {
-        gpuDistributions.push_back(GPUDistPiecewiseConst1D(dCDFs[i],
+        gpuDistributions.push_back(PWCDistributionGPU1D(dCDFs[i],
                                                            dPDFs[i],
                                                            static_cast<uint32_t>(counts[i])));
     }
 }
 
-CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std::vector<float>>& functions,
+PWCDistributionGroupCPU1D::PWCDistributionGroupCPU1D(const std::vector<std::vector<float>>& functions,
                                                            const CudaSystem& system)
 {
     // Gen Sizes
@@ -134,7 +310,8 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
     GeneratePointers();
 
     // Generate pointer array (since below function requires that)
-    std::vector<const float*> functionDataPtrs(functions.size());
+    std::vector<const float*> functionDataPtrs;
+    functionDataPtrs.reserve(functions.size());
     for(const auto& func : functions)
     {
         functionDataPtrs.push_back(func.data());
@@ -144,7 +321,7 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<std
     // All Done!
 }
 
-CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<const float*>& dFunctions,
+PWCDistributionGroupCPU1D::PWCDistributionGroupCPU1D(const std::vector<const float*>& dFunctions,
                                                            const std::vector<size_t>& counts,
                                                            const CudaSystem& system)
 {
@@ -156,17 +333,17 @@ CPUDistGroupPiecewiseConst1D::CPUDistGroupPiecewiseConst1D(const std::vector<con
     // All Done!
 }
 
-const GPUDistPiecewiseConst1D& CPUDistGroupPiecewiseConst1D::DistributionGPU(uint32_t index) const
+const PWCDistributionGPU1D& PWCDistributionGroupCPU1D::DistributionGPU(uint32_t index) const
 {
     return gpuDistributions[index];
 }
 
-const CPUDistGroupPiecewiseConst1D::GPUDistList& CPUDistGroupPiecewiseConst1D::DistributionGPU() const
+const PWCDistributionGroupCPU1D::GPUDistList& PWCDistributionGroupCPU1D::DistributionGPU() const
 {
     return gpuDistributions;
 }
 
-void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimensions)
+void PWCDistributionGroupCPU2D::Allocate(const std::vector<Vector2ui>& dimensions)
 {
     this->dimensions = dimensions;
     std::vector<std::array<size_t, 5>> alignedSizes(dimensions.size());
@@ -184,7 +361,7 @@ void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimens
              // Column CDF Align Size
              Memory::AlignSize((vec[1] + 1) * sizeof(float)),
              // X Dist1D Align Size
-             Memory::AlignSize(vec[1] * sizeof(GPUDistPiecewiseConst1D))
+             Memory::AlignSize(vec[1] * sizeof(PWCDistributionGPU1D))
         };
     });
     size_t totalSize = 0;
@@ -205,7 +382,7 @@ void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimens
 
     size_t offset = 0;
     Byte* dPtr = static_cast<Byte*>(memory);
-    std::vector<GPUDistPiecewiseConst1D> hXDists;
+    std::vector<PWCDistributionGPU1D> hXDists;
     for(size_t i = 0; i < alignedSizes.size(); i++)
     {
         DistData2D distData;
@@ -219,7 +396,7 @@ void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimens
             offset += sizes[0];
             distData.dXCDFs.push_back(reinterpret_cast<const float*>(dPtr + offset));
             offset += sizes[1];
-            hXDists[y] = GPUDistPiecewiseConst1D(distData.dXCDFs.back(),
+            hXDists[y] = PWCDistributionGPU1D(distData.dXCDFs.back(),
                                                  distData.dXPDFs.back(),
                                                  dimension[0]);
         }
@@ -228,14 +405,14 @@ void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimens
         offset += sizes[2];
         distData.dYCDF = reinterpret_cast<const float*>(dPtr + offset);
         offset += sizes[3];
-        distData.dXDists = reinterpret_cast<const GPUDistPiecewiseConst1D*>(dPtr + offset);
+        distData.dXDists = reinterpret_cast<const PWCDistributionGPU1D*>(dPtr + offset);
         offset += sizes[4];
-        distData.yDist = GPUDistPiecewiseConst1D(distData.dYCDF, distData.dYPDF,
+        distData.yDist = PWCDistributionGPU1D(distData.dYCDF, distData.dYPDF,
                                                  dimension[1]);
 
         // Memcpy Constructed 1D Distributions
-        CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst1D*>(distData.dXDists),
-                              hXDists.data(), dimension[1] * sizeof(GPUDistPiecewiseConst1D),
+        CUDA_CHECK(cudaMemcpy(const_cast<PWCDistributionGPU1D*>(distData.dXDists),
+                              hXDists.data(), dimension[1] * sizeof(PWCDistributionGPU1D),
                               cudaMemcpyHostToDevice));
 
         distDataList.push_back(distData);
@@ -246,13 +423,13 @@ void CPUDistGroupPiecewiseConst2D::Allocate(const std::vector<Vector2ui>& dimens
     {
         const DistData2D& distData = distDataList[i];
         // Construct 2D Dist
-        GPUDistPiecewiseConst2D dist(distData.yDist, distData.dXDists,
+        PWCDistributionGPU2D dist(distData.yDist, distData.dXDists,
                                      dimensions[i][0], dimensions[i][1]);
         gpuDistributions.push_back(dist);
     }
 }
 
-CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<const float*>& dFunctions,
+PWCDistributionGroupCPU2D::PWCDistributionGroupCPU2D(const std::vector<const float*>& dFunctions,
                                                            const std::vector<Vector2ui>& dimensions,
                                                            const std::vector<bool>& factorSpherical,
                                                            const CudaSystem& system)
@@ -263,7 +440,7 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<con
                         system, cudaMemcpyHostToDevice);
 }
 
-CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std::vector<float>>& functionValues,
+PWCDistributionGroupCPU2D::PWCDistributionGroupCPU2D(const std::vector<std::vector<float>>& functionValues,
                                                            const std::vector<Vector2ui>& dimensions,
                                                            const std::vector<bool>& factorSpherical,
                                                            const CudaSystem& system)
@@ -282,17 +459,17 @@ CPUDistGroupPiecewiseConst2D::CPUDistGroupPiecewiseConst2D(const std::vector<std
                         system, cudaMemcpyHostToDevice);
 }
 
-const GPUDistPiecewiseConst2D& CPUDistGroupPiecewiseConst2D::DistributionGPU(uint32_t index) const
+const PWCDistributionGPU2D& PWCDistributionGroupCPU2D::DistributionGPU(uint32_t index) const
 {
     return gpuDistributions[index];
 }
 
-const CPUDistGroupPiecewiseConst2D::GPUDistList& CPUDistGroupPiecewiseConst2D::DistributionGPU() const
+const PWCDistributionGroupCPU2D::GPUDistList& PWCDistributionGroupCPU2D::DistributionGPU() const
 {
     return gpuDistributions;
 }
 
-void CPUDistGroupPiecewiseConst2D::UpdateDistributions(const std::vector<const float*>& functionDataPtrs,
+void PWCDistributionGroupCPU2D::UpdateDistributions(const std::vector<const float*>& functionDataPtrs,
                                                        const std::vector<bool>& factorSpherical,
                                                        const CudaSystem& system, cudaMemcpyKind kind)
 {
@@ -335,8 +512,8 @@ void CPUDistGroupPiecewiseConst2D::UpdateDistributions(const std::vector<const f
             ReduceArrayGPU<float, ReduceAdd<float>>(rowFunction, dRowPDF, dim[0], 0.0f);
 
             // Normalize PDF
-            HostMultiplyFunctor<float> normLength(1.0f / static_cast<float>(dim[0]));
-            HostMultiplyFunctor<float> length(static_cast<float>(dim[0]));
+            //HostMultiplyFunctor<float> normLength(1.0f / static_cast<float>(dim[0]));
+            //HostMultiplyFunctor<float> length(static_cast<float>(dim[0]));
             TransformArrayGPU(dRowPDF, dim[0],
                               HostMultiplyFunctor<float>(1.0f / static_cast<float>(dim[0])));
 
@@ -394,5 +571,103 @@ void CPUDistGroupPiecewiseConst2D::UpdateDistributions(const std::vector<const f
     //    }
     //    i++;
     //}
+}
 
+void PWCDistStaticCPU2D::Allocate(uint32_t distCount,
+                                   const Vector2ui& dimensions)
+{
+    // Allocate Required Data
+    uint32_t dataPerDist = dimensions.Multiply();
+    uint32_t yPDFCount = dimensions[1] * distCount;
+    uint32_t yCDFCount = (dimensions[1] + 1) * distCount;
+    uint32_t xPDFCount = dataPerDist * distCount;
+    uint32_t xCDFCount = (dataPerDist + dimensions[0]) * distCount;
+
+    GPUMemFuncs::AllocateMultiData(std::tie(gpuDist.gXPDFs,
+                                            gpuDist.gXCDFs,
+                                            gpuDist.gYPDFs,
+                                            gpuDist.gYCDFs),
+                                   memory,
+                                   {xPDFCount, xCDFCount,
+                                    yPDFCount, yCDFCount});
+
+    gpuDist.dim = dimensions;
+    gpuDist.distCount = distCount;
+}
+
+PWCDistStaticCPU2D::PWCDistStaticCPU2D(const float* dFunctions,
+                                         uint32_t distCount,
+                                         Vector2ui dimensions,
+                                         bool factorSpherical,
+                                         const CudaSystem& system)
+{
+    Allocate(distCount, dimensions);
+    UpdateDistributions(dFunctions, factorSpherical, system,
+                        cudaMemcpyDeviceToDevice);
+}
+
+PWCDistStaticCPU2D::PWCDistStaticCPU2D(std::vector<float>& functions,
+                                         uint32_t distCount,
+                                         Vector2ui dimensions,
+                                         bool factorSpherical,
+                                         const CudaSystem& system)
+{
+    Allocate(distCount, dimensions);
+    UpdateDistributions(functions.data(), factorSpherical, system,
+                        cudaMemcpyHostToDevice);
+}
+
+PWCDistStaticGPU2D PWCDistStaticCPU2D::DistributionGPU() const
+{
+    return gpuDist;
+}
+
+void PWCDistStaticCPU2D::UpdateDistributions(const float* functionData,
+                                              bool factorSpherical,
+                                              const CudaSystem& system,
+                                              cudaMemcpyKind kind)
+{
+    // Copy the functions to the GPU
+    uint32_t totalCount = gpuDist.dim.Multiply() * gpuDist.distCount;
+    CUDA_CHECK(cudaMemcpy(const_cast<float*>(gpuDist.gXPDFs), functionData,
+                          totalCount * sizeof(float),
+                          kind));
+
+    // Call a single kernel
+    // 1 block per distribution
+    const CudaGPU& gpu = system.BestGPU();
+
+    gpu.ExactKC_X(0, (cudaStream_t)0,
+                  StaticThreadPerBlock1D, gpuDist.distCount,
+                  //
+                  KCUpdateDistributionsX,
+                  //
+                  const_cast<float*>(gpuDist.gXPDFs),
+                  const_cast<float*>(gpuDist.gXCDFs),
+                  const_cast<float*>(gpuDist.gYPDFs),
+                  gpuDist.dim,
+                  gpuDist.distCount,
+                  factorSpherical);
+
+    // Now do the Y
+    gpu.ExactKC_X(0, (cudaStream_t)0,
+                  StaticThreadPerBlock1D, gpuDist.distCount,
+                  //
+                  KCUpdateDistributionsY,
+                  //
+                  const_cast<float*>(gpuDist.gYPDFs),
+                  const_cast<float*>(gpuDist.gYCDFs),
+                  gpuDist.dim,
+                  gpuDist.distCount);
+
+
+    //uint32_t yPDFCount = gpuDist.dim[1] * gpuDist.distCount;
+    //uint32_t yCDFCount = (gpuDist.dim[1] + 1) * gpuDist.distCount;
+    //uint32_t xPDFCount = gpuDist.dim.Multiply() * gpuDist.distCount;
+    //uint32_t xCDFCount = (gpuDist.dim.Multiply() + gpuDist.dim[0]) * gpuDist.distCount;
+
+    //Debug::DumpMemToFile("yPDFs", gpuDist.gYPDFs, yPDFCount);
+    //Debug::DumpMemToFile("yCDFs", gpuDist.gYCDFs, yCDFCount);
+    //Debug::DumpMemToFile("xPDFs", gpuDist.gXPDFs, xPDFCount);
+    //Debug::DumpMemToFile("xCDFs", gpuDist.gXCDFs, xCDFCount);
 }

@@ -139,4 +139,5 @@ __host__ void CudaGPU::ExactKC_X(uint32_t sharedMemSize,
 {
     // Just call kernel exactly
     f<<<gridSize, blockSize, sharedMemSize, stream>>>(std::forward<Args>(args)...);
+    CUDA_KERNEL_CHECK();
 }

@@ -186,7 +186,7 @@ void RLTracerBoundaryWork(// Output
                                    position,
                                    surface);
 
-    // And accumulate pixel// and add as a sample
+    // And accumulate pixel and add as a sample
     Vector3f total = emission * radianceFactor;
     // Incorporate MIS weight if applicable
     // if path ray hits a light misWeight is calculated
@@ -262,6 +262,7 @@ void RLTracerPathWork(// Output
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+    //uint32_t spatialIndex = 0;
 
     if(spatialIndex == UINT32_MAX)
         spatialIndex = 0;

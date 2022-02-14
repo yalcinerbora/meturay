@@ -11,13 +11,13 @@
 class GPULightSkySphere final : public GPULightP
 {
     private:
-        const GPUDistPiecewiseConst2D&  distribution;
+        const PWCDistributionGPU2D&  distribution;
 
     protected:
     public:
         // Constructors & Destructor
         __device__              GPULightSkySphere(// Per Light Data
-                                                  const GPUDistPiecewiseConst2D&,
+                                                  const PWCDistributionGPU2D&,
                                                   // Endpoint Related Data
                                                   const TextureRefI<2, Vector3f>& gRad,
                                                   uint16_t mediumIndex, HitKey,
@@ -66,10 +66,10 @@ class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
 
     private:
         // CPU Permanent Allocations
-        CPUDistGroupPiecewiseConst2D        hLuminanceDistributions;
+        PWCDistributionGroupCPU2D        hLuminanceDistributions;
 
         DeviceMemory                        gpuDsitributionMem;
-        const GPUDistPiecewiseConst2D*      dGPUDistributions;
+        const PWCDistributionGPU2D*      dGPUDistributions;
 
 
     protected:
@@ -97,7 +97,7 @@ class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
 
 __device__
 inline GPULightSkySphere::GPULightSkySphere(// Per Light Data
-                                            const GPUDistPiecewiseConst2D& dist,
+                                            const PWCDistributionGPU2D& dist,
                                             // Endpoint Related Data
                                             const TextureRefI<2, Vector3f>& gRad,
                                             uint16_t mediumIndex, HitKey hk,

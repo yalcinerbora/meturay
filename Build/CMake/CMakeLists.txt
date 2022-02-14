@@ -134,11 +134,14 @@ endif()
 
 # Cuda Compile Options
 add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
-                    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>)
-
+                    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>
+                    $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
+                    $<$<COMPILE_LANGUAGE:CUDA>:-restrict>
+                    $<$<COMPILE_LANGUAGE:CUDA>:-extra-device-vectorization>)
 # All kernels started to show this warning (when a kernel uses a virtual function)
 # Suppress that warning
 add_link_options($<DEVICE_LINK:--nvlink-options=-suppress-stack-size-warning>)
+#add_link_options($<DEVICE_LINK:--nvlink-options=--verbose>)
 
 # Platform Specific Lib Bin Folders
 set(MRAY_PLATFORM_LIB_DIRECTORY ${MRAY_LIB_DIRECTORY}/${MRAY_PLATFORM_NAME})

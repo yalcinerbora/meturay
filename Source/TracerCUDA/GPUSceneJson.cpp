@@ -1152,6 +1152,9 @@ SceneError GPUSceneJson::FindBoundaryLight(const BoundaryMaterialKeyListing& bMa
 
 SceneError GPUSceneJson::LoadAll(double time)
 {
+    Utility::CPUTimer timer;
+    timer.Start();
+
     SceneError e = SceneError::OK;
     // Group Data
     PrimitiveNodeList primGroupNodes;
@@ -1271,6 +1274,11 @@ SceneError GPUSceneJson::LoadAll(double time)
     // Make them exclusive
     maxAccelIds += Vector2i(1);
     maxMatIds += Vector2i(1);
+
+    timer.Stop();
+    METU_LOG("Scene {:s} loaded in {:f} seconds.",
+             Utility::CopyU8ToString(fileName),
+             timer.Elapsed<CPUTimeSeconds>());
 
     // Everything is generated!
     return SceneError::OK;

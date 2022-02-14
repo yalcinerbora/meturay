@@ -74,6 +74,16 @@ class CPUTransformSingle : public CPUTransformGroupI
 		static constexpr const char*		TRANSLATE		= "translate";
 		static constexpr const char*		ROTATE			= "rotate";
 		static constexpr const char*		SCALE			= "scale";
+		static constexpr const char*		MAJOR			= "major";
+
+		static constexpr const char*		MAJOR_ROW_NAME		= "row";
+		static constexpr const char*		MAJOR_COLUMN_NAME	= "column";
+
+		enum MatrixLayoutType
+		{
+			ROW_MAJOR,
+			COLUMN_MAJOR
+		};
 
     private:
 		DeviceMemory						memory;
@@ -82,6 +92,8 @@ class CPUTransformSingle : public CPUTransformGroupI
 		const GPUTransformSingle*			dGPUTransforms;
 		GPUTransformList					gpuTransformList;
 		uint32_t							transformCount;
+
+		MatrixLayoutType				StringToMatrixLayout(const std::string&);
 
     protected:
     public:

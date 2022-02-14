@@ -966,7 +966,7 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
     // Generate PWC Distribution over area
     std::vector<const float*> dAreaPtrs = {dAreas};
     std::vector<size_t> counts = {totalLeafCount};
-    CPUDistGroupPiecewiseConst1D areaDist(dAreaPtrs, counts, system);
+    PWCDistributionGroupCPU1D areaDist(dAreaPtrs, counts, system);
 
     // Now use this to fetch surface patches
     gpu.GridStrideKC_X(0, (cudaStream_t)0, surfacePatchCount,

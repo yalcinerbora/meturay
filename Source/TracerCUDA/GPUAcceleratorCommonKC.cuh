@@ -403,7 +403,7 @@ static void KCSampleSurfacePatch(// Output
                                  const TransformId* gTransformIds,
                                  const GPUTransformI** gTransforms,
                                  // Constants
-                                 GPUDistPiecewiseConst1D areaDist,
+                                 PWCDistributionGPU1D areaDist,
                                  const typename PGroup::PrimitiveData primData,
                                  size_t totalSampleCount)
 {

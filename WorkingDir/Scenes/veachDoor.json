@@ -80,6 +80,7 @@
     //     "id":1,
     //     "type": "Single",
     //     "layout": "matrix4x4",
+    //     "major": "column",
     //     "matrix": [1, 0,  0, 0,
     //                0, 0, -1, 0,
     //                0, 1,  0, 0,
@@ -93,7 +94,7 @@
         "rotate": [-90, 0, 0],
         "scale": [1, 1, 1]
     }
-],
+    ],
 
     "Textures":[
     {
@@ -305,8 +306,7 @@
         "innerIndex": 0
     }],
 
-    "Accelerators":
-    [
+    "Accelerators":[
         {"id" : 0, "type" : "BasicBVH", "useStack": true},
         {"id" : 1, "type" : "Linear"}
 
@@ -322,7 +322,7 @@
 	"Surfaces": [
         {
             // Table & Table Legs
-            "transform": 0, "accelerator":0,
+            "transform": 0, "accelerator": 0,
             "material": [11, 3, 3, 3, 3],
             "primitive": [0, 1, 2, 3, 4]
         },

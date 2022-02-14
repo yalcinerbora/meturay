@@ -253,24 +253,21 @@ bool RLTracer::Render()
     return true;
 }
 
+#include "RayLib/CPUTimer.h"
+
 void RLTracer::Finalize()
 {
     cudaSystem.SyncAllGPUs();
 
-    // After all paths are calculated recalculate the distributions
-    qFunction.RecalculateDistributions(cudaSystem);
+    // After all paths are calculated,
+    // recalculate the distributions
+    if(!options.debugRender)
+        qFunction.RecalculateDistributions(cudaSystem);
 
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
-    // Base class finalize directly sends the image
 
-    //if(callbacks)
-    //{
-    //    Vector2i start = imgMemory.SegmentOffset();
-    //    Vector2i end = start + imgMemory.SegmentSize();
-    //    callbacks->SendImageSectionReset();
-    //}
 
     GPUTracer::Finalize();
 }

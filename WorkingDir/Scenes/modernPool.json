@@ -55,19 +55,21 @@
     ],
 
     "Lights":[
-    // {
-    //     "id": 0,
-    //     "type": "SkySphere",
-    //     "radiance" : {"texture": 17, "channels": "rgb"}
-    // },
-    { "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
     {
-        "id": 1,
-        "type": "Primitive",
-        "primitive": 30,
-        "accelerator": 1,
-        "radiance": [200, 200, 200]
-    }],
+        "id": 0,
+        "type": "SkySphere",
+        "radiance" : {"texture": 17, "channels": "rgb"}
+    }
+    //,
+    // { "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
+    // {
+    //     "id": 1,
+    //     "type": "Primitive",
+    //     "primitive": 30,
+    //     "accelerator": 1,
+    //     "radiance": [200, 200, 200]
+    // }
+    ],
 
     "Mediums":[
     {
@@ -498,12 +500,6 @@
 	"BaseMedium" : 0,
 
 	"Surfaces": [
-    // {
-    //     // Pool FLOOR TEST
-    //     "transform": 0, "accelerator": 0,
-    //     "material": 1,
-    //     "primitive": 0
-    // }
     // Water
     { "transform": 0, "accelerator": 0, "material": 4, "primitive": 2 },
     // Perimeter Walls
@@ -560,9 +556,11 @@
     ],
 
     // Lights
-    "LightSurfaces": [
-        {"light": 1}
-    ],
+    "LightSurfaces": [],
+    // "LightSurfaces": [
+    //     {"light": 1}
+    // ],
+
     // Cameras
     "CameraSurfaces": [
         // Overall View

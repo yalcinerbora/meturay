@@ -189,6 +189,11 @@ bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
                             const Vector<3, T>& aabbMax,
                             const Vector<2, T>& tMinMax) const
 {
+    // CPU code max/min is on std namespace but CUDA has its global namespace
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector<3, T> invD = Vector<3, T>(1) / direction;
     Vector<3, T> t0 = (aabbMin - position) * invD;
     Vector<3, T> t1 = (aabbMax - position) * invD;
@@ -197,13 +202,13 @@ bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
     T tMax = tMinMax[1];
 
     UNROLL_LOOP
-        for(int i = 0; i < 3; i++)
-        {
-            if(invD[i] < 0) HybridFuncs::Swap(t0[i], t1[i]);
+    for(int i = 0; i < 3; i++)
+    {
+        if(invD[i] < 0) HybridFuncs::Swap(t0[i], t1[i]);
 
-            tMin = max(tMin, min(t0[i], t1[i]));
-            tMax = min(tMax, max(t0[i], t1[i]));
-        }
+        tMin = max(tMin, min(t0[i], t1[i]));
+        tMax = min(tMax, max(t0[i], t1[i]));
+    }
     return tMax >= tMin;
 }
 
@@ -388,23 +393,23 @@ template<class T>
 __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Transform(const Quaternion<T>& q) const
 {
-    return Ray<T>((q.ApplyRotation(direction)).Normalize(),
-                  (q.ApplyRotation(position)));
+    return Ray<T>(q.ApplyRotation(direction),
+                  q.ApplyRotation(position));
 }
 
 template<class T>
 __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Transform(const Matrix<3, T>& mat) const
 {
-    return Ray<T>((mat * direction).Normalize(),
-                  (mat * position));
+    return Ray<T>(mat * direction,
+                  mat * position);
 }
 
 template<class T>
 __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 {
-    return Ray<T>((mat * Vector<4, T>(direction, static_cast<T>(0.0))).Normalize(),
+    return Ray<T>(mat * Vector<4, T>(direction, static_cast<T>(0.0)),
                   mat * Vector<4, T>(position, static_cast<T>(1.0)));
 }
 

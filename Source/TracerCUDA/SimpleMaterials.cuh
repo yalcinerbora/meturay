@@ -96,7 +96,7 @@ class ReflectMat final
 // Delta distribution refract material
 class RefractMat final
     : public GPUMaterialGroup<RefractMatData, BasicSurface,
-                              RefractMatFuncs>                             
+                              RefractMatFuncs>
 {
     public:
         static const char*      TypeName() { return "Refract"; }

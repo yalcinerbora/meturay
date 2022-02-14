@@ -219,6 +219,8 @@ bool PathTracer::Render()
     //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
     //                     totalOutRayCount);
 
+    //METU_LOG("--");
+
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();
@@ -229,6 +231,8 @@ bool PathTracer::Render()
 
 void PathTracer::Finalize()
 {
+    //METU_LOG("==");
+
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

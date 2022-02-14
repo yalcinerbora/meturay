@@ -6,7 +6,7 @@
 
 __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
                                              //
-                                             const GPUDistPiecewiseConst2D* gLuminanceDistributions,
+                                             const PWCDistributionGPU2D* gLuminanceDistributions,
                                              //
                                              const TextureRefI<2, Vector3f>** gRads,
                                              const uint16_t* gMediumIndices,
@@ -74,8 +74,8 @@ SceneError CPULightGroupSkySphere::InitializeGroup(const EndpointGroupDataList& 
 
     // Allocate Distribution Memory
     GPUMemFuncs::EnlargeBuffer(gpuDsitributionMem,
-                               sizeof(GPUDistPiecewiseConst2D) * lightCount);
-    dGPUDistributions = static_cast<GPUDistPiecewiseConst2D*>(gpuDsitributionMem);
+                               sizeof(PWCDistributionGPU2D) * lightCount);
+    dGPUDistributions = static_cast<PWCDistributionGPU2D*>(gpuDsitributionMem);
 
     return SceneError::OK;
 }
@@ -142,13 +142,13 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
 
     // Construct Distribution Data
     std::vector<bool> factorInSpherical(hLuminances.size(), true);
-    hLuminanceDistributions = CPUDistGroupPiecewiseConst2D(hLuminances, hLuminanceSizes,
+    hLuminanceDistributions = PWCDistributionGroupCPU2D(hLuminances, hLuminanceSizes,
                                                            factorInSpherical, system);
 
     // As a mad lad directly copy the CPU residing GPU class to the GPU memory
-    CUDA_CHECK(cudaMemcpy(const_cast<GPUDistPiecewiseConst2D*>(dGPUDistributions),
+    CUDA_CHECK(cudaMemcpy(const_cast<PWCDistributionGPU2D*>(dGPUDistributions),
                           hLuminanceDistributions.DistributionGPU().data(),
-                          sizeof(GPUDistPiecewiseConst2D) * lightCount,
+                          sizeof(PWCDistributionGPU2D) * lightCount,
                           cudaMemcpyHostToDevice));
 
     // Gen Temporary Memory

@@ -1,0 +1,236 @@
+{
+	"Cameras": [
+    {
+		"id": 0,
+		"type" : "Pinhole",
+		// 16:9 FoV
+		"fov": [34.666, 19.5],
+		// 1:1 FoV
+		//"fov": [19.5,  19.5],
+		"planes": [0.05, 30.0],
+
+        "gaze": [0.0, 0.990944, 0.0],
+		"position": [0.0, 0.990944, 6.83879],
+		"up": [0.0, 1.0, 0.0]
+	}
+	],
+
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null"},
+		// Ceiling Light
+		{
+			"id" : 1,
+			"type" : "Primitive",
+			"primitive": 0,
+			"accelerator": 0,
+			//"radiance": [5.41127, 3.81972, 1.27324]
+            "radiance": [541127, 381972, 127324]
+		}
+	],
+
+    "Mediums": [
+    {
+        "id" : 0,
+        "type" : "Vacuum"
+    },
+    {
+        "id": 1,
+        "type" : "Homogeneous",
+
+        "absorption": [0, 0, 0],
+        "scattering": [0, 0, 0],
+        "ior": 1.8,
+        "phase": 0
+    }],
+
+	"Transforms":[
+        {"id": 0, "type": "Identity"},
+        {
+            "id":[1, 2, 3, 4, 5, 7, 8, 9],
+            "type": "Single",
+            "layout": "matrix4x4",
+            "major": "row",
+            "matrix": [
+                // Floor
+                [
+                    2, 0,  0, 0,
+                    0, 0,  2, 0,
+                    0, -2, 0, 0,
+                    0, 0,  0, 1
+                ],
+                // Ceiling
+                [
+                    2,  0,  0, 0,
+                    0,  0, -2, 2,
+                    0,  2,  0, 0,
+                    0,  0,  0, 1
+                ],
+                // Left
+                [
+                     0, 0, 2, -1,
+                     0, 2, 0,  1,
+                    -2, 0, 0,  0,
+                     0, 0, 0,  1
+                ],
+                // Right
+                [
+                    0, 0, -2, 1,
+                    0, 2,  0, 1,
+                    2, 0,  0, 0,
+                    0, 0,  0, 1
+                ],
+                // Back
+                [
+                    2, 0, 0,  0,
+                    0, 2, 0,  1,
+                    0, 0, 2, -1,
+                    0, 0, 0,  1
+                ],
+                // Tall Cube
+                [
+                    0.160273, 0.064934, 1.30874e-015, -0.528405,
+                    -2.88371e-009, 6.89559e-009, -0.342479, 0.335942,
+                    -0.0659716, 0.157753, 1.49702e-008, -0.291415,
+                    0, 0, 0, 1
+                ],
+                // Short Cube
+                [
+                    0.146195, -0.0660334, 7.05432e-009, 0.5132,
+                    6.3904e-009, -2.88641e-009, -0.161384, 0.15215,
+                    0.0649865, 0.148551, 3.08354e-016, 0.44471,
+                    0, 0, 0, 1
+                ],
+                // Water
+                [
+                    1, 0, 0, 0,
+                    0, 1.5, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1
+                ]
+            ]
+        },
+        {
+            "id": 6,
+            "type": "Single",
+            "layout": "trs",
+            "translate": [-0.005, 1.98, -0.03],
+            "rotate": [0, 0, 180],
+            "scale": [0.005, 1, 0.004]
+        }
+    ],
+
+	"Materials":[
+	{
+		// Diffuse Materials
+		"id": [0, 1, 2],
+		"type": "LambertC",
+		"albedo" : [
+            [0.6300, 0.0650, 0.0500],
+            [0.14, 0.45, 0.091],
+            [0.725, 0.71, 0.68]
+        ]
+    },
+    // Water
+    {
+        "id": 3,
+		"type": "Refract",
+        "albedo" : [1, 1, 1],
+        "medium" : 1
+    }],
+
+	"Primitives":[
+	{
+		// Unit Plane
+		"id": 0,
+		"type": "Triangle",
+		"name": ".nodeTriangleIndexed",
+        "cullFace" : true,
+		"position": [[-0.5, -0.5, 0],
+                     [ 0.5, -0.5, 0],
+                     [ 0.5,  0.5, 0],
+                     [-0.5,  0.5, 0]],
+		"normal": [[0, 0, 1],
+				   [0, 0, 1],
+                   [0, 0, 1],
+				   [0, 0, 1]],
+		"uv": [[0, 0],
+			   [1, 0],
+			   [1, 1],
+               [0, 1]],
+        "index": [0, 1, 2, 0, 2, 3]
+    },
+    {
+		// Unit Cube
+		"id": 1,
+		"type": "Triangle",
+        "name": "../Surfaces/unit_cube.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+    },
+    {
+		// Water 1
+		"id": 2,
+		"type": "Triangle",
+        "name": "../Surfaces/CornellCaustic/Mesh000.obj",
+		"tag": "assimp_",
+        "cullFace" : false,
+		"innerIndex": 0
+	},
+	{
+		// Water 2
+		"id": 3,
+		"type": "Triangle",
+        "name": "../Surfaces/CornellCaustic/Mesh001.obj",
+		"tag": "assimp_",
+        "cullFace" : false,
+		"innerIndex": 0
+	},
+    {
+		// Tiny Light
+		"id": 4,
+		"type": "Triangle",
+        "name": "../Surfaces/CornellCaustic/tiny_light.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	}
+],
+
+	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryLight": 0,
+    "BaseMedium" : 0,
+
+	"Surfaces":
+    [
+        // Floor
+        { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0},
+        // Ceiling
+        { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
+        // Back Wall
+        { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
+        // Left Wall
+        { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
+        // Right Wall
+        { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
+        // Tall Box
+        { "transform": 7, "accelerator": 0, "material": 2, "primitive": 1},
+        // Short Box
+        { "transform": 8, "accelerator": 0, "material": 2, "primitive": 1},
+        // Water 1
+        { "transform": 9, "accelerator": 0, "material": 3, "primitive": 2},
+        // Water 2
+        { "transform": 9, "accelerator": 0, "material": 3, "primitive": 3}
+	],
+
+	"LightSurfaces":
+    [
+        {"light": 1, "transform": 5}
+    ],
+
+    "CameraSurfaces": [{"camera": 0}]
+}
