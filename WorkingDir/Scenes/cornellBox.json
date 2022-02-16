@@ -1,0 +1,174 @@
+{
+    "Cameras": [
+    {
+		"id": 0,
+		"type" : "Pinhole",
+		// 16:9 FoV
+		"fov": [34.666, 19.5],
+		// 1:1 FoV
+		//"fov": [19.5,  19.5],
+		"planes": [0.05, 30.0],
+
+        "gaze": [0.0, 1, 0.0],
+		"position": [0, 1, 6.8],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+    "Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null"},
+		// Ceiling Light
+		{
+			"id" : 1,
+			"type" : "Primitive",
+			"primitive": 0,
+			"accelerator": 0,
+			"radiance": [17, 12, 4]
+		}
+	],
+
+    "Mediums": [{"id" : 0, "type" : "Vacuum"}],
+
+    "Transforms": [
+        {"id": 0, "type": "Identity"},
+        {
+            "id":[1, 2, 3, 4, 5, 9, 10],
+            "type": "Single",
+            "layout": "matrix4x4",
+            "major": "row",
+            "matrix": [
+                // Floor
+                [
+                    2, 0,  0, 0,
+                    0, 0,  2, 0,
+                    0, -2, 0, 0,
+                    0, 0,  0, 1
+                ],
+                // Ceiling
+                [
+                    2,  0,  0, 0,
+                    0,  0, -2, 2,
+                    0,  2,  0, 0,
+                    0,  0,  0, 1
+                ],
+                // Left
+                [
+                     0, 0, 2, -1,
+                     0, 2, 0,  1,
+                    -2, 0, 0,  0,
+                     0, 0, 0,  1
+                ],
+                // Right
+                [
+                    0, 0, -2, 1,
+                    0, 2,  0, 1,
+                    2, 0,  0, 0,
+                    0, 0,  0, 1
+                ],
+                // Back
+                [
+                    2, 0, 0,  0,
+                    0, 2, 0,  1,
+                    0, 0, 2, -1,
+                    0, 0, 0,  1
+                ],
+                // Tall Box
+                [
+                    0.286776, 0.098229, 0, -0.335439,
+                    0, 0, -0.6, 0.6,
+                    -0.0997984, 0.282266, 0, -0.291415,
+                    0, 0, 0, 1
+                ],
+                // Short Box
+                [
+                    0.0851643, 0.289542, 0, 0.328631,
+                    0, 0, -0.3, 0.3,
+                    -0.284951, 0.0865363, 0, 0.374592,
+                    0, 0, 0, 1
+                ]
+            ]
+        },
+        {
+            // Light, ShortBox, TallBox
+            "id": 6,
+            "type": "Single",
+            "layout": "trs",
+            "translate": [-0.005, 1.98, -0.03],
+            "rotate": [90, 0, 0],
+            "scale": [0.47, 1, 0.38]
+        }
+    ],
+
+    "Materials": [
+	{
+		// Diffuse Materials
+		"id": [0, 1, 2],
+		"type": "LambertC",
+		"albedo" : [
+            [0.6300, 0.0650, 0.0500],
+            [0.14, 0.45, 0.091],
+            [0.725, 0.71, 0.68]
+        ]
+    }],
+
+    "Primitives": [
+    {
+        // Unit Plane
+        "id": 0,
+        "type": "Triangle",
+        "name": ".nodeTriangleIndexed",
+        "cullFace" : true,
+        "position": [[-0.5, -0.5, 0],
+                        [ 0.5, -0.5, 0],
+                        [ 0.5,  0.5, 0],
+                        [-0.5,  0.5, 0]],
+        "normal": [[0, 0, 1],
+                    [0, 0, 1],
+                    [0, 0, 1],
+                    [0, 0, 1]],
+        "uv": [[0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1]],
+        "index": [0, 1, 2, 0, 2, 3]
+    },
+    {
+        // Unit Cube
+        "id": 1,
+        "type": "Triangle",
+        "name": "../Surfaces/unit_cube.obj",
+        "tag": "assimp_",
+        "innerIndex": 0
+    }],
+
+    "Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryLight": 0,
+    "BaseMedium" : 0,
+
+	"Surfaces":
+    [
+        // Floor
+        { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0},
+        // Ceiling
+        { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
+        // Back Wall
+        { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
+        // Left Wall
+        { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
+        // Right Wall
+        { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
+        // Tall Box
+        { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
+        // Short Box
+        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1}
+	],
+
+	"LightSurfaces": [{"light": 1, "transform": 6}],
+
+    "CameraSurfaces":[{"camera": 0}]
+}

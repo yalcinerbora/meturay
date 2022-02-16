@@ -58,7 +58,7 @@ Vector3f STreeNode::NormalizeCoordsForChild(bool leftRight,
 {
     Vector3f result = parentNormalizedCoords;
     int axis = static_cast<int>(splitAxis);
-    if(leftRight) result[axis] -= 0.5;
+    if(leftRight) result[axis] -= 0.5f;
     result[axis] *= 2.0f;
     return result;
 }

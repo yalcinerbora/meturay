@@ -76,6 +76,7 @@ using PDFPosHitFunction = float(*)(// Inputs
                                    const Vector3f& hitPosition,
                                    const Vector3f& hitDirection,
                                    const QuatF& tbnRotation,
+                                   const GPUTransformI& transform,
                                    //
                                    const PrimitiveId primitiveId,
                                    const PrimitiveData& primData);
@@ -235,6 +236,7 @@ float DefaultPDFPosHit(// Inputs
                        const Vector3f&,
                        const Vector3f&,
                        const QuatF&,
+                       const GPUTransformI&,
                        //
                        const PrimitiveId,
                        const PrimitiveData&)

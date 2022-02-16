@@ -368,6 +368,14 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
             (cudaStream_t)0
         );
 
+        // If transform is constant local
+        // Prim AABBs are in local space
+        if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
+        {
+            // Transform this AABB to world space
+            // since base Accelerator works on world space
+            TransformLocalAABBToWorld(localAABBs[i], *worldTransform, gpu);
+        }
     }
     gpu.WaitMainStream();
     aabbMemory = DeviceMemory();

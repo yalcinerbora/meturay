@@ -12,6 +12,19 @@
         "gaze": [0.0, 0.990944, 0.0],
 		"position": [0.0, 0.990944, 6.83879],
 		"up": [0.0, 1.0, 0.0]
+	},
+    {
+		"id": 1,
+		"type" : "Pinhole",
+		// 16:9 FoV
+		"fov": [90, 50.625],
+		// 1:1 FoV
+		//"fov": [50.625,  50.625],
+		"planes": [0.05, 30.0],
+
+        "gaze": [-0.155449, 0.921277, 0.0829589],
+        "position": [-0.606167, 0.279716, 0.703632],
+		"up": [0.0, 1.0, 0.0]
 	}
 	],
 
@@ -25,6 +38,14 @@
 			"primitive": 0,
 			"accelerator": 0,
 			//"radiance": [5.41127, 3.81972, 1.27324]
+            "radiance": [541127, 381972, 127324]
+		},
+        // Ceiling Light Pre-Transformed
+		{
+			"id" : 2,
+			"type" : "Primitive",
+			"primitive": 4,
+			"accelerator": 0,
             "radiance": [541127, 381972, 127324]
 		}
 	],
@@ -115,7 +136,7 @@
             "type": "Single",
             "layout": "trs",
             "translate": [-0.005, 1.98, -0.03],
-            "rotate": [0, 0, 180],
+            "rotate": [90, 0, 0],
             "scale": [0.005, 1, 0.004]
         }
     ],
@@ -229,8 +250,13 @@
 
 	"LightSurfaces":
     [
-        {"light": 1, "transform": 5}
+        {"light": 1, "transform": 6}
+        //{"light": 2, "transform": 0}
     ],
 
-    "CameraSurfaces": [{"camera": 0}]
+    "CameraSurfaces":
+    [
+        {"camera": 1, "medium": 1},
+        {"camera": 0}
+    ]
 }

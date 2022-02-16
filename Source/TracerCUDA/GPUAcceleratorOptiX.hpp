@@ -309,9 +309,11 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
         assert(offset == surfacePrimCount);
 
         // Reduce the aabb of each primitive to surface aabb
-        AABB3f surfaceAABB;
+        AABB3f surfaceAABB = NegativeAABB3f;
         if(deviceIndex == 0)
         {
+            // Rays are going to be transformed
+            // Reduce the local space AABBs then transform it
             ReduceArrayGPU<AABB3f, ReduceAABB3f, cudaMemcpyDeviceToHost>
             (
                 surfaceAABB,
@@ -320,6 +322,15 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                 NegativeAABB3f,
                 (cudaStream_t)0
             );
+
+            // If transform is constant local
+            // Prim AABBs are in local space
+            if(tType == PrimTransformType::CONSTANT_LOCAL_TRANSFORM)
+            {
+                // Transform this AABB to world space
+                // since base Accelerator works on world space
+                TransformLocalAABBToWorld(surfaceAABB, *worldTransform, gpu);
+            }
         }
         // Generate Build Params
         offset = 0;

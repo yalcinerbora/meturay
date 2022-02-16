@@ -64,13 +64,11 @@ struct SphrFunctions
         Vector3f unitPos = Utility::SphericalToCartesianUnit(Vector2f(sin(theta), cos(theta)),
                                                              Vector2f(sinPhi, cosPhi));
 
-        ////float x1 = rng.Uniform() * 2.0f - 1.0f;
-        ////float x2 = rng.Uniform() * 2.0f - 1.0f;
-        //float x1Sqr = x1 * x1;
-        //float x2Sqr = x2 * x2;
-        //float coeff = sqrt(1 - x1Sqr - x2Sqr);
-
-        pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
+        // Calculate PDF
+        // Approximate the area with the determinant
+        float area = SphrFunctions::Area(primitiveId, primData);
+        float det = transform.ToWorldScale().Multiply();
+        pdf = 1.0f / (area * det);
 
         Vector3f sphrLoc = center + radius * unitPos;
         normal = unitPos;
@@ -109,7 +107,12 @@ struct SphrFunctions
 
         // Return non zero if it intersected
         if(intersects)
-            pdf = 1.0f / SphrFunctions::Area(primitiveId, primData);
+        {
+            // Approximate the area with the determinant
+            float area = SphrFunctions::Area(primitiveId, primData);
+            float det = transform.ToWorldScale().Multiply();
+            pdf = 1.0f / (area * det);
+        }
         else pdf = 0.0f;
     }
 
@@ -118,11 +121,15 @@ struct SphrFunctions
                                     const Vector3f&,
                                     const Vector3f&,
                                     const QuatF&,
+                                    const GPUTransformI& transform,
                                     //
                                     const PrimitiveId primitiveId,
                                     const SphereData& primData)
     {
-        return 1.0f / SphrFunctions::Area(primitiveId, primData);
+        // Approximate the area with the determinant
+        float area = SphrFunctions::Area(primitiveId, primData);
+        float det = transform.ToWorldScale().Multiply();
+        return 1.0f / (area * det);
     }
 
     template <class GPUTransform>

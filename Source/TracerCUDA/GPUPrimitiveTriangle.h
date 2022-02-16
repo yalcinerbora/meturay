@@ -88,13 +88,14 @@ struct TriFunctions
         Vector3 position1 = primData.positions[index1];
         Vector3 position2 = primData.positions[index2];
 
-        pdf = 1.0f / TriFunctions::Area(primitiveId, primData);
+        // Calculate PDF
+        // Approximate the area with the determinant
+        float area = TriFunctions::Area(primitiveId, primData);
+        float det = transform.ToWorldScale().Multiply();
+        pdf = 1.0f / (area * det);
 
         // Calculate Normal
         // CCW
-        //Vector3 vec0 = position1 - position0;
-        //Vector3 vec1 = position2 - position0;
-        //normal = Cross(vec0, vec1).Normalize();
         QuatF q0 = primData.tbnRotations[index0].Normalize();
         QuatF q1 = primData.tbnRotations[index1].Normalize();
         QuatF q2 = primData.tbnRotations[index2].Normalize();
@@ -187,7 +188,12 @@ struct TriFunctions
         // fix it later since it is not common to lights having alpha mapped primitive
 
         if(intersects)
-            pdf = 1.0f / TriFunctions::Area(primitiveId, primData);
+        {
+            // Approximate the area with the determinant
+            float area = TriFunctions::Area(primitiveId, primData);
+            float det = transform.ToWorldScale().Multiply();
+            pdf = 1.0f / (area * det);
+        }
         else pdf = 0.0f;
     }
 
@@ -196,11 +202,15 @@ struct TriFunctions
                                     const Vector3f&,
                                     const Vector3f&,
                                     const QuatF&,
+                                    const GPUTransformI& transform,
                                     //
                                     const PrimitiveId primitiveId,
                                     const TriData& primData)
     {
-        return 1.0f / TriFunctions::Area(primitiveId, primData);
+        // Approximate the area with the determinant
+        float area = TriFunctions::Area(primitiveId, primData);
+        float det = transform.ToWorldScale().Multiply();
+        return 1.0f / (area * det);
     }
 
     template <class GPUTransform>
