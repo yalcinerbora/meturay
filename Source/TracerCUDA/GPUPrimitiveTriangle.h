@@ -90,9 +90,8 @@ struct TriFunctions
 
         // Calculate PDF
         // Approximate the area with the determinant
-        float area = TriFunctions::Area(primitiveId, primData);
-        float det = transform.ToWorldScale().Multiply();
-        pdf = 1.0f / (area * det);
+        float area = TriFunctions::Area(transform, primitiveId, primData);
+        pdf = 1.0f / area;
 
         // Calculate Normal
         // CCW
@@ -190,9 +189,8 @@ struct TriFunctions
         if(intersects)
         {
             // Approximate the area with the determinant
-            float area = TriFunctions::Area(primitiveId, primData);
-            float det = transform.ToWorldScale().Multiply();
-            pdf = 1.0f / (area * det);
+            float area = TriFunctions::Area(transform, primitiveId, primData);
+            pdf = 1.0f / area;
         }
         else pdf = 0.0f;
     }
@@ -208,9 +206,8 @@ struct TriFunctions
                                     const TriData& primData)
     {
         // Approximate the area with the determinant
-        float area = TriFunctions::Area(primitiveId, primData);
-        float det = transform.ToWorldScale().Multiply();
-        return 1.0f / (area * det);
+        float area = TriFunctions::Area(transform, primitiveId, primData);
+        return 1.0f / area;
     }
 
     template <class GPUTransform>
@@ -318,7 +315,9 @@ struct TriFunctions
     }
 
     __device__ inline
-    static float Area(PrimitiveId primitiveId, const TriData& primData)
+    static float Area(const GPUTransformI& transform,
+                      PrimitiveId primitiveId,
+                      const TriData& primData)
     {
         // Get Position
         uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
@@ -328,6 +327,10 @@ struct TriFunctions
         Vector3 position0 = primData.positions[index0];
         Vector3 position1 = primData.positions[index1];
         Vector3 position2 = primData.positions[index2];
+
+        position0 = transform.LocalToWorld(position0);
+        position1 = transform.LocalToWorld(position1);
+        position2 = transform.LocalToWorld(position2);
 
         // CCW
         Vector3 vec0 = position1 - position0;

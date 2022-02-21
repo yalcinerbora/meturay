@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TracerDebug.h"
+
 template <class PGroup>
 GPUAccOptiXGroup<PGroup>::GPUAccOptiXGroup(const GPUPrimitiveGroupI& pGroup)
     : GPUAcceleratorGroup<PGroup>(pGroup)

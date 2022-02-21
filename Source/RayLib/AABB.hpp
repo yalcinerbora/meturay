@@ -101,7 +101,7 @@ AABB<N, T>& AABB<N, T>::UnionSelf(const AABB<N, T>& aabb)
 
 template<int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool AABB<N, T>::IsInside(const Vector<N, T>& point)
+bool AABB<N, T>::IsInside(const Vector<N, T>& point) const
 {
     bool result = true;
     UNROLL_LOOP
@@ -114,9 +114,24 @@ bool AABB<N, T>::IsInside(const Vector<N, T>& point)
 
 template<int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool AABB<N, T>::IsOutside(const Vector<N, T>& point)
+bool AABB<N, T>::IsOutside(const Vector<N, T>& point) const
 {
     return !IsInside(point);
+}
+
+template<int N, class T>
+__device__ __host__ HYBRID_INLINE
+Vector<N, T> AABB<N, T>::FurthestCorner(const Vector<N, T>& point) const
+{
+    Vector<N, T> result;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        T minDist = abs(point[i] - min[i]);
+        T maxDist = abs(point[i] - max[i]);
+        result[i] = (minDist > maxDist) ? min[i] : max[i];
+    }
+    return result;
 }
 
 template<int N, class T>

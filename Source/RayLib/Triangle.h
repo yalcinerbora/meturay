@@ -41,6 +41,10 @@ namespace Triangle
                        Quaternion<T>&,
                        const Vector<3, T>* normals,
                        const Vector<3, T>* tangents);
+
+    template <class T>
+    __device__ __host__ HYBRID_INLINE
+    T Area(const Vector<3, T>* positions);
 }
 
 template <class T>
@@ -161,4 +165,14 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     TransformGen::Space(q0, t0, b0, n[0]);
     TransformGen::Space(q1, t1, b1, n[1]);
     TransformGen::Space(q2, t2, b2, n[2]);
+}
+
+template <class T>
+__device__ __host__ HYBRID_INLINE
+T Triangle::Area(const Vector<3, T>* positions)
+{
+    Vector<3, T> e0 = positions[1] - positions[0];
+    Vector<3, T> e1 = positions[2] - positions[0];
+
+    return Cross(e0, e1).Length() * static_cast<T>(0.5);
 }

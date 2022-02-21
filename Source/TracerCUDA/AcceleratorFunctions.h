@@ -38,7 +38,8 @@ using BoxGenFunction = AABB3f(*)(const GPUTransformI&,
 
 // Surface area generation function for bound hierarchy generation
 template <class PrimitiveData>
-using AreaGenFunction = float(*)(PrimitiveId primitiveId, const PrimitiveData&);
+using AreaGenFunction = float(*)(const GPUTransformI& transform,
+                                 PrimitiveId primitiveId, const PrimitiveData&);
 
 // Center generation function for bound hierarchy generation
 template <class PrimitiveData>
@@ -183,7 +184,7 @@ AABB3f DefaultAABBGen(const GPUTransformI&,
 // Surface area generation function for bound hierarchy generation
 template <class PrimitiveData>
 __device__ inline
-float DefaultAreaGen(PrimitiveId, const PrimitiveData&)
+float DefaultAreaGen(const GPUTransformI&, PrimitiveId, const PrimitiveData&)
 {
     return 0.0f;
 }
