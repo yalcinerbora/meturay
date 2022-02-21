@@ -60,8 +60,9 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
         __device__ __host__ Vector<N, T>            Centroid() const;
         __device__ __host__ AABB                    Union(const AABB&) const;
         __device__ __host__ AABB&                   UnionSelf(const AABB&);
-        __device__ __host__ bool                    IsInside(const Vector<N, T>&);
-        __device__ __host__ bool                    IsOutside(const Vector<N, T>&);
+        __device__ __host__ bool                    IsInside(const Vector<N, T>&) const;
+        __device__ __host__ bool                    IsOutside(const Vector<N, T>&) const;
+        __device__ __host__ Vector<N,T>             FurthestCorner(const Vector<N, T>&) const;
 
         // Intersection
         __device__ __host__ bool                    IntersectsSphere(const Vector3f& sphrPos,

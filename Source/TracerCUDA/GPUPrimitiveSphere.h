@@ -66,9 +66,8 @@ struct SphrFunctions
 
         // Calculate PDF
         // Approximate the area with the determinant
-        float area = SphrFunctions::Area(primitiveId, primData);
-        float det = transform.ToWorldScale().Multiply();
-        pdf = 1.0f / (area * det);
+        float area = SphrFunctions::Area(transform, primitiveId, primData);
+        pdf = 1.0f / area;
 
         Vector3f sphrLoc = center + radius * unitPos;
         normal = unitPos;
@@ -109,9 +108,8 @@ struct SphrFunctions
         if(intersects)
         {
             // Approximate the area with the determinant
-            float area = SphrFunctions::Area(primitiveId, primData);
-            float det = transform.ToWorldScale().Multiply();
-            pdf = 1.0f / (area * det);
+            float area = SphrFunctions::Area(transform, primitiveId, primData);
+            pdf = 1.0f / area;
         }
         else pdf = 0.0f;
     }
@@ -127,9 +125,8 @@ struct SphrFunctions
                                     const SphereData& primData)
     {
         // Approximate the area with the determinant
-        float area = SphrFunctions::Area(primitiveId, primData);
-        float det = transform.ToWorldScale().Multiply();
-        return 1.0f / (area * det);
+        float area = SphrFunctions::Area(transform, primitiveId, primData);
+        return 1.0f / area;
     }
 
     template <class GPUTransform>
@@ -188,12 +185,25 @@ struct SphrFunctions
     }
 
     __device__ inline
-    static float Area(PrimitiveId primitiveId,
+    static float Area(const GPUTransformI& transform,
+                      PrimitiveId primitiveId,
                       const SphereData& primData)
     {
         Vector4f data = primData.centerRadius[primitiveId];
         float radius = data[3];
-        return 4.0f * MathConstants::Pi * radius * radius;
+
+        // https://math.stackexchange.com/questions/942561/surface-area-of-transformed-sphere
+        static constexpr float p = 8.0f / 5.0f;
+        static constexpr float pRecip = 1.0f / p;
+
+        Vector3f semiAxes = radius * transform.ToWorldScale();
+        float approxArea = pow(semiAxes[1] * semiAxes[2], p);
+        approxArea += pow(semiAxes[2] * semiAxes[0], p);
+        approxArea += pow(semiAxes[0] * semiAxes[1], p);
+        approxArea *= 0.3333f;
+        approxArea = pow(approxArea, pRecip);
+        approxArea *= 4.0f * MathConstants::Pi;
+        return approxArea;
     }
 
     __device__ inline

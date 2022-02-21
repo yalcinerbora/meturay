@@ -40,7 +40,7 @@ float SurfaceDistanceFunctor::operator()(const SurfaceLeaf& leaf,
         return (worldSurface.position - leaf.position).Length();
 }
 
-__device__ inline
+__device__ __host__ HYBRID_INLINE
 AABB3f GenSurfaceAABB(const SurfaceLeaf& surface)
 {
     return AABB3f(surface.position, surface.position);

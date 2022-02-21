@@ -130,6 +130,9 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         // Reduction
         __device__ __host__ T                           Sum() const;
         __device__ __host__ T                           Multiply() const;
+        // Max Min Reduction functions are selections instead
+        // since it sometimes useful to fetch the which index
+        // (axis) is maximum so that you can do other stuff wrt. it.
         __device__ __host__ int                         Max() const;
         __device__ __host__ int                         Min() const;
 

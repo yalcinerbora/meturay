@@ -596,6 +596,233 @@ TracerError LinearBVHCPU<Leaf, DF, AF>::Construct(const Leaf* dLeafList,
 
 template <class Leaf, class DF,
           AABBGenFunc<Leaf> AF>
+TracerError LinearBVHCPU<Leaf, DF, AF>::ConstructNonLinear(const Leaf* dLeafList,
+                                                           uint32_t leafCount,
+                                                           DF df,
+                                                           const CudaSystem& system)
+{
+    static constexpr uint32_t MAX_BASE_DEPTH = 64;
+    enum SplitAxis
+    {
+        X,
+        Y,
+        Z,
+        END
+    };
+
+    // Partition Function
+    auto GenBVHNode = [](// Output
+                         LBVHNode<Leaf>& node,
+                         size_t& splitLoc,
+                         // I-O
+                         std::vector<Leaf>& leafs,
+                         std::vector<AABB3f>& aabbs,
+                         // Args
+                         uint32_t parentIndex,
+                         SplitAxis axis,
+                         size_t start, size_t end)
+    {
+        int axisIndex = static_cast<int>(axis);
+
+        // Populate Node
+        node.parent = parentIndex;
+        node.isLeaf = false;
+
+        // Base Case
+        if(end - start == 1)
+        {
+            node.isLeaf = true;
+            node.leaf = leafs[start];
+            splitLoc = std::numeric_limits<size_t>::max();
+        }
+        else
+        {
+            AABB3f aabbUnion = NegativeAABB3;
+            Vector3 center = Zero3;
+            for(size_t j = start; j < end; j++)
+            {
+                AABB3f aabb = aabbs[j];
+                aabbUnion.UnionSelf(aabb);
+            }
+            center = aabbUnion.Centroid();
+
+            splitLoc = 0;
+            constexpr int TOTAL_AXES = 3;
+            for(int i = 0; i < TOTAL_AXES; i++)
+            {
+                int testAxis = axisIndex + i % TOTAL_AXES;
+                // Partition wrt. avg center
+                int64_t splitStart = static_cast<int64_t>(start - 1);
+                int64_t splitEnd = static_cast<int64_t>(end);
+                while(splitStart < splitEnd)
+                {
+                    // Hoare Like Partition
+                    float leftTriAxisCenter;
+                    do
+                    {
+                        if(splitStart >= static_cast<int64_t>(end - 1)) break;
+                        splitStart++;
+                        leftTriAxisCenter = aabbs[splitStart].Centroid()[testAxis];
+                    }
+                    while(leftTriAxisCenter >= center[testAxis]);
+                    float rightTriAxisCenter;
+                    do
+                    {
+                        if(splitEnd <= static_cast<int64_t>(start + 1)) break;
+                        splitEnd--;
+                        rightTriAxisCenter = aabbs[splitEnd].Centroid()[testAxis];
+                    }
+                    while(rightTriAxisCenter <= center[testAxis]);
+
+                    if(splitStart < splitEnd)
+                    {
+                        std::swap(aabbs[splitEnd], aabbs[splitStart]);
+                        std::swap(leafs[splitEnd], leafs[splitStart]);
+                    }
+                }
+
+                // Test this split
+                if(splitStart != static_cast<int64_t>(start) ||
+                   splitStart != static_cast<int64_t>(end))
+                {
+                    // This is a good split save and break
+                    splitLoc = splitStart;
+                    break;
+                }
+            }
+            // If cant find any proper split
+            // Just cut in half
+            if(splitLoc == 0) splitLoc = (end - start) / 2;
+
+            // Sanity Check
+            assert(splitLoc != start);
+            assert(splitLoc != end);
+
+            // Save AABB
+            node.body.aabbMin = aabbUnion.Min();
+            node.body.aabbMax = aabbUnion.Max();
+        }
+    };
+
+    auto DetermineNextSplit = [](SplitAxis split, const AABB3f& aabb)
+    {
+        SplitAxis nextSplit = static_cast<SplitAxis>((static_cast<int>(split) + 1) %
+                                                     static_cast<int>(SplitAxis::END));
+        int splitIndex = static_cast<int>(nextSplit);
+        // Skip this split if it is very tight (compared to other axis)
+        Vector3 diff = aabb.Max() - aabb.Min();
+        // AABB is like a 2D AABB skip this axis
+        if(std::abs(diff[splitIndex]) < 0.001f)
+            nextSplit = static_cast<SplitAxis>((static_cast<int>(nextSplit) + 1) %
+                                               static_cast<int>(SplitAxis::END));
+        return nextSplit;
+    };
+
+    // Load Leafs to Memory
+    std::vector<Leaf> hLeafs(leafCount);
+    CUDA_CHECK(cudaMemcpy(hLeafs.data(), dLeafList,
+                          sizeof(Leaf) * leafCount,
+                          cudaMemcpyDeviceToHost));
+
+    // Gen AABBs
+    std::vector<AABB3f> hAABBs(leafCount);
+    uint32_t i = 0;
+    for(AABB3f& aabb : hAABBs)
+    {
+        aabb = AABBFunc(hLeafs[i]);
+        i++;
+    }
+    // CPU Memory
+    std::vector<LBVHNode<Leaf>> bvhNodes;
+    //
+    struct SplitWork
+    {
+        bool left;
+        size_t start;
+        size_t end;
+        SplitAxis axis;
+        uint32_t parentId;
+        uint32_t depth;
+    };
+
+    // Start Partitioning
+    std::queue<SplitWork> partitionQueue;
+    partitionQueue.emplace(SplitWork
+                           {
+                               false,
+                               0, leafCount,
+                               SplitAxis::X,
+                               std::numeric_limits<uint32_t>::max(),
+                               0
+                           });
+
+    // Breath first tree generation (top-down)
+    uint8_t maxDepth = 0;
+    while(!partitionQueue.empty())
+    {
+        SplitWork current = partitionQueue.front();
+        partitionQueue.pop();
+
+        size_t splitLoc;
+        LBVHNode<Leaf> node;
+        // Do Generation
+        GenBVHNode(node,
+                   splitLoc,
+                   // I-O
+                   hLeafs,
+                   hAABBs,
+                    // Args
+                   current.parentId,
+                   current.axis,
+                   current.start, current.end);
+
+        bvhNodes.emplace_back(node);
+        uint32_t nextParentId = static_cast<uint32_t>(bvhNodes.size() - 1);
+        SplitAxis nextSplit = DetermineNextSplit(current.axis,
+                                                 AABB3(node.body.aabbMin,
+                                                       node.body.aabbMax));
+
+        // Update parent
+        if(current.parentId != std::numeric_limits<uint32_t>::max())
+        {
+            if(current.left) bvhNodes[current.parentId].body.left = nextParentId;
+            else bvhNodes[current.parentId].body.right = nextParentId;
+        }
+
+        // Check if not base case and add more generation
+        if(splitLoc != std::numeric_limits<size_t>::max())
+        {
+            partitionQueue.emplace(SplitWork{true, current.start, splitLoc, nextSplit, nextParentId, current.depth + 1});
+            partitionQueue.emplace(SplitWork{false, splitLoc, current.end, nextSplit, nextParentId, current.depth + 1});
+            maxDepth = static_cast<uint8_t>(current.depth + 1);
+
+            if((current.depth + 1) > MAX_BASE_DEPTH)
+                return TracerError::TRACER_INTERNAL_ERROR;
+        }
+    }
+    // BVH cannot hold this surface return error
+    if(maxDepth > MAX_BASE_DEPTH)
+        return TracerError::TRACER_INTERNAL_ERROR;
+
+        // Finally Allocate the entire node array
+    LBVHNode<Leaf>* dNodes;
+    GPUMemFuncs::AllocateMultiData(std::tie(dNodes),
+                                   memory,
+                                   {bvhNodes.size()});
+    CUDA_CHECK(cudaMemcpy(dNodes, bvhNodes.data(),
+                          sizeof(LBVHNode<Leaf>)* bvhNodes.size(),
+                          cudaMemcpyHostToDevice));
+
+    treeGPU.rootIndex = 0;
+    treeGPU.nodes = dNodes;
+    treeGPU.nodeCount = static_cast<uint32_t>(bvhNodes.size());
+    treeGPU.leafCount = leafCount;
+    treeGPU.DistanceFunction = df;
+    return TracerError::OK;
+}
+
+template <class Leaf, class DF,
+          AABBGenFunc<Leaf> AF>
 void LinearBVHCPU<Leaf, DF, AF>::DumpTreeAsBinary(std::vector<Byte>& data) const
 {
     size_t bvhSize = sizeof(LBVHNode<Leaf>);
@@ -608,7 +835,7 @@ void LinearBVHCPU<Leaf, DF, AF>::DumpTreeAsBinary(std::vector<Byte>& data) const
     data.resize(totalSize);
     Byte* dataPtr = data.data();
     // Copy
-    std::memcpy(dataPtr, &treeGPU.rootIndex, sizeof(uint32_t));    
+    std::memcpy(dataPtr, &treeGPU.rootIndex, sizeof(uint32_t));
     dataPtr += sizeof(uint32_t);
     std::memcpy(dataPtr, &treeGPU.nodeCount, sizeof(uint32_t));
     dataPtr += sizeof(uint32_t);

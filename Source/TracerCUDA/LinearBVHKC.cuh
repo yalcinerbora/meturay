@@ -7,7 +7,7 @@ struct PointStruct
     Vector3f position;
 };
 
-__device__ inline
+__device__ __host__ HYBRID_INLINE
 AABB3f GenPointAABB(const PointStruct& point)
 {
     return AABB3f(point.position, point.position);

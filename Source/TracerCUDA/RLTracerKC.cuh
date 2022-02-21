@@ -626,7 +626,7 @@ void RLTracerDebugBWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+    uint32_t spatialIndex = posTree.FindNearestPointWithStack(distance, queryLeaf);
     Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
                          ? Zero3f
                          : Utility::RandomColorRGB(spatialIndex);
@@ -677,7 +677,7 @@ void RLTracerDebugWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+    uint32_t spatialIndex = posTree.FindNearestPointWithStack(distance, queryLeaf);
     Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
                          ? Zero3f
                          : Utility::RandomColorRGB(spatialIndex);

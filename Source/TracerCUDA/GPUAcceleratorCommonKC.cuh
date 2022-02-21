@@ -375,19 +375,11 @@ static void KCGenerateAreas(// Output
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < totalPrimCount; globalId += blockDim.x * gridDim.x)
     {
-        float area = AreaFunc(gLeafs[globalId].primitiveId, primData);
-        // Scale the area
+        // Fetch Transform
         const GPUTransformI* t = gTransforms[gTransformIds[globalId]];
-        Vector3f scaleFactor = t->ToWorldScale();
-
-        // Assume a scale matrix with this factors
-        // Determinant should give approx scale
-        float det = scaleFactor.Multiply();
-        dAreas[globalId] = area * det;
-
-        //printf("Scale:[%f, %f, %f], = %f, A %f\n",
-        //       scaleFactor[0], scaleFactor[1], scaleFactor[2],
-        //       det, area);
+        // Area
+        float area = AreaFunc(*t, gLeafs[globalId].primitiveId, primData);
+        dAreas[globalId] = area;
     }
 }
 
