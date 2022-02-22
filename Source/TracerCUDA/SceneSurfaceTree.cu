@@ -112,16 +112,14 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
                        samplePointCount);
 
     // Clear temp memory (data is in surfaceMem now)
-    tempMemory = DeviceMemory();
+    //tempMemory = DeviceMemory();
 
     // Compute an LBVH over the location
     float nThreshold = normalAngleThreshold * MathConstants::DegToRadCoef;
     nThreshold = std::cos(nThreshold);
     SurfaceDistanceFunctor df(nThreshold);
-    if((err = lBVHSurface.ConstructNonLinear(dSurfaceLeafs, samplePointCount, df,
-                                             cudaSystem)) != TracerError::OK)
-    //if((err = lBVHSurface.Construct(dSurfaceLeafs, samplePointCount, df,
-    //                                cudaSystem)) != TracerError::OK)
+    if((err = treeCPU.Construct(dPositions, samplePointCount,
+                                cudaSystem)) != TracerError::OK)
         return err;
 
     // Print the generation timer

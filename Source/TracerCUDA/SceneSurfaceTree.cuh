@@ -3,10 +3,16 @@
 #include "RayLib/TracerStructs.h"
 #include "SceneSurfaceTreeKC.cuh"
 
+#include "KdTree.cuh"
+
 class SceneSurfaceTree
 {
+    public:
+        using TreeGPUType = KDTreeGPU;
+        using TreeCPUType = KDTreeCPU;
+        //LBVHSurfaceCPU          lBVHSurface;
     private:
-        LBVHSurfaceCPU          lBVHSurface;
+        TreeCPUType             treeCPU;
 
     public:
         // Constructors & Destructor
@@ -24,7 +30,7 @@ class SceneSurfaceTree
 
         void                    DumpTreeAsBinary(std::vector<Byte>&) const;
 
-        const LBVHSurfaceGPU&   TreeGPU() const;
+        const TreeGPUType&      TreeGPU() const;
 
         size_t                  UsedGPUMemory() const;
         size_t                  UsedCPUMemory() const;
@@ -32,17 +38,17 @@ class SceneSurfaceTree
 
 inline void SceneSurfaceTree::DumpTreeAsBinary(std::vector<Byte>& vec) const
 {
-    lBVHSurface.DumpTreeAsBinary(vec);
+    //lBVHSurface.DumpTreeAsBinary(vec);
 }
 
-inline const LBVHSurfaceGPU& SceneSurfaceTree::TreeGPU() const
+inline const SceneSurfaceTree::TreeGPUType& SceneSurfaceTree::TreeGPU() const
 {
-    return lBVHSurface.TreeGPU();
+    return treeCPU.TreeGPU();
 }
 
 inline size_t SceneSurfaceTree::UsedGPUMemory() const
 {
-    return lBVHSurface.UsedGPUMemory();
+    return treeCPU.UsedGPUMemory();
 }
 
 inline size_t SceneSurfaceTree::UsedCPUMemory() const

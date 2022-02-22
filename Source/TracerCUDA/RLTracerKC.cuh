@@ -15,10 +15,13 @@
 #include "RayLib/RandomColor.h"
 
 #include "SceneSurfaceTreeKC.cuh"
+#include "SceneSurfaceTree.cuh"
 #include "QFunction.cuh"
 
 struct RLTracerGlobalState
 {
+    using SpatialTree = typename SceneSurfaceTree::TreeGPUType;
+
     // Output Image
     ImageGMem<Vector4>              gImage;
     // Light Related
@@ -29,7 +32,7 @@ struct RLTracerGlobalState
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
     // SDTree Related
-    LBVHSurfaceGPU                  posTree;
+    SpatialTree                     posTree;
     QFunctionGPU                    qFunction;
     // Options
     // Path Guiding
@@ -236,7 +239,9 @@ void RLTracerPathWork(// Output
                       const typename MGroup::Data& gMatData,
                       const HitKey::Type matIndex)
 {
-    const LBVHSurfaceGPU& posTree = renderState.posTree;
+    using SpatialTree = RLTracerGlobalState::SpatialTree;
+    const SpatialTree& posTree = renderState.posTree;
+
     static constexpr Vector3 ZERO_3 = Zero3;
 
     // TODO: change this currently only first strategy is sampled
@@ -261,7 +266,7 @@ void RLTracerPathWork(// Output
     // Before BxDF Acquire the 2D irradiance map
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
     //uint32_t spatialIndex = 0;
 
     if(spatialIndex == UINT32_MAX)
@@ -605,7 +610,8 @@ void RLTracerDebugBWork(// Output
                         // Constants
                         const typename EGroup::GPUType& gLight)
 {
-    const LBVHSurfaceGPU& posTree = renderState.posTree;
+    using SpatialTree = RLTracerGlobalState::SpatialTree;
+    const SpatialTree& posTree = renderState.posTree;
 
     // Helper Class for better code readability
     OutputWriter<RayAuxRL> outputWriter(gOutBoundKeys,
@@ -626,7 +632,7 @@ void RLTracerDebugBWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t spatialIndex = posTree.FindNearestPointWithStack(distance, queryLeaf);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
     Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
                          ? Zero3f
                          : Utility::RandomColorRGB(spatialIndex);
@@ -657,7 +663,8 @@ void RLTracerDebugWork(// Output
                        const typename MGroup::Data& gMatData,
                        const HitKey::Type matIndex)
 {
-    const LBVHSurfaceGPU& posTree = renderState.posTree;
+    using SpatialTree = RLTracerGlobalState::SpatialTree;
+    const SpatialTree& posTree = renderState.posTree;
     // Helper Class for better code readability
     OutputWriter<RayAuxRL> outputWriter(gOutBoundKeys,
                                         gOutRays,
@@ -677,7 +684,7 @@ void RLTracerDebugWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    uint32_t spatialIndex = posTree.FindNearestPointWithStack(distance, queryLeaf);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
     Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
                          ? Zero3f
                          : Utility::RandomColorRGB(spatialIndex);

@@ -1,6 +1,6 @@
 #include "KDTree.cuh"
 #include <queue>
-
+#include <ostream>
 
 KDTreeCPU::KDTreeCPU()
 {
@@ -8,6 +8,7 @@ KDTreeCPU::KDTreeCPU()
     treeGPU.gSplits = nullptr;
     treeGPU.gPackedData = nullptr;
     treeGPU.rootNodeId = UINT32_MAX;
+    treeGPU.voronoiCenterSize = 0;
 }
 
 TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
@@ -16,40 +17,51 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
 {
     static constexpr uint32_t MAX_BASE_DEPTH = 64;
     // Partition Function
-    auto GenKdTreeNode = [](// Output
-                            uint64_t& packedInfo,
-                            float& splitPlane,
-                            size_t& splitLoc,
-                            bool& isLeaf,
-                            // I-O
-                            std::vector<Vector3f>& positions,
-                            // Args
-                            uint32_t childIndex,
-                            uint32_t parentIndex,
-                            size_t start, size_t end)
+    Vector3f pointMin;
+    Vector3f pointMax;
+
+    auto GenKdTreeNode = [&pointMin, &pointMax, leafCount]
+    (
+        // Output
+        uint64_t& packedInfo,
+        float& splitPlane,
+        size_t& splitLoc,
+        bool& isLeaf,
+        // I-O
+        std::vector<Vector3f>& positions,
+        // Args
+        uint32_t childIndex,
+        uint32_t parentIndex,
+        size_t start, size_t end
+    )
     {
         // Base Case
         if(end - start == 1)
         {
             splitLoc = std::numeric_limits<size_t>::max();
-            KDTreeGPU::PackInfo(parentIndex,
-                                start,
-                                true,
-                                KDTreeGPU::AXIS_END);
+            packedInfo = KDTreeGPU::PackInfo(parentIndex,
+                                             static_cast<uint32_t>(start),
+                                             true,
+                                             KDTreeGPU::AXIS_END);
             isLeaf = true;
         }
         else
         {
             Vector3f maxPoint = Vector3f(-FLT_MAX);
             Vector3f minPoint = Vector3f(FLT_MAX);
-            Vector3f center = Zero3f;
             for(size_t j = start; j < end; j++)
             {
                 maxPoint = Vector3f::Max(maxPoint, positions[j]);
                 minPoint = Vector3f::Min(minPoint, positions[j]);
-                center += positions[j];
             }
-            center /= (start - end);
+            Vector3f center = (minPoint + (maxPoint - minPoint) * 0.5f);
+
+            // Save Min Max Point for debug visualization
+            if(start == 0 && end == leafCount)
+            {
+                pointMax = maxPoint;
+                pointMin = minPoint;
+            }
 
             // Determine the split
             int maxIndex = (maxPoint - minPoint).Max();
@@ -86,7 +98,11 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
             }
             // If cant find any proper split
             // Just cut in half
-            if(splitLoc == 0) splitLoc = (end - start) / 2;
+            if(splitStart != static_cast<int64_t>(start) ||
+               splitStart != static_cast<int64_t>(end))
+                splitLoc = splitStart;
+            else
+                splitLoc = (end - start) / 2;
 
             // Sanity Check
             assert(splitLoc != start);
@@ -94,10 +110,10 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
 
             // Return
             splitPlane = center[static_cast<int>(axis)];
-            KDTreeGPU::PackInfo(parentIndex,
-                                childIndex,
-                                false,
-                                axis);
+            packedInfo = KDTreeGPU::PackInfo(parentIndex & 0x3FFFFFFF,
+                                             childIndex,
+                                             false,
+                                             axis);
             isLeaf = false;
         }
     };
@@ -198,14 +214,22 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
     CUDA_CHECK(cudaMemcpy(dSplitPlanes, hSplitPlanes.data(),
                           sizeof(float) * hSplitPlanes.size(),
                           cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(dPositions, dPositionList,
+    CUDA_CHECK(cudaMemcpy(dPositions, hPositions.data(),
                           sizeof(Vector3f) * hPositions.size(),
-                          cudaMemcpyDeviceToDevice));
+                          cudaMemcpyHostToDevice));
 
+    this->leafCount = leafCount;
+    nodeCount = static_cast<uint32_t>(hPackInfo.size());
+
+    treeGPU.voronoiCenterSize = CalculateVoronoiCenterSize(AABB3f(pointMin, pointMax));
     treeGPU.gPackedData = dPackInfo;
     treeGPU.gLeafs = dPositions;
     treeGPU.gSplits = dSplitPlanes;
     treeGPU.rootNodeId = 0;
+
+    std::ofstream file("surfaceTree");
+    DumpTreeToStream(file);
+    file.close();
     return TracerError::OK;
 }
 
@@ -213,4 +237,78 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
 const KDTreeGPU& KDTreeCPU::TreeGPU() const
 {
     return treeGPU;
+}
+
+size_t KDTreeCPU::UsedGPUMemory() const
+{
+    return memory.Size();
+}
+
+size_t KDTreeCPU::UsedCPUMemory() const
+{
+    return sizeof(KDTreeCPU);
+}
+
+float KDTreeCPU::CalculateVoronoiCenterSize(const AABB3f& sceneAABB)
+{
+    Vector3f span = sceneAABB.Span();
+    float sceneSize = span.Length();
+    static constexpr float VORONOI_RATIO = 1.0f / 1'300.0f;
+    return sceneSize * VORONOI_RATIO;
+}
+
+void KDTreeCPU::DumpTreeToStream(std::ostream& s) const
+{
+    std::vector<uint64_t> hPackedData(nodeCount);
+    std::vector<float> hSplitPlanes(nodeCount);
+
+    CUDA_CHECK(cudaMemcpy(hPackedData.data(), treeGPU.gPackedData,
+                          sizeof(uint64_t) * nodeCount,
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(hSplitPlanes.data(), treeGPU.gSplits,
+                          sizeof(float) * nodeCount,
+                          cudaMemcpyDeviceToHost));
+
+    static constexpr uint32_t UINT30_MAX = (UINT32_MAX & 0x3FFFFFFF);
+
+    for(uint32_t i = 0; i < nodeCount; i++)
+    {
+        uint32_t parent;
+        uint32_t child;
+        bool isLeaf;
+        KDTreeGPU::AxisType axis;
+        KDTreeGPU::UnPackInfo(parent, child,
+                              isLeaf, axis,
+                              hPackedData[i]);
+
+        s << std::string("P[");
+        if(parent == UINT30_MAX) s << "-";
+        else s << parent;
+        s << "] ";
+
+        if(isLeaf)
+        {
+            s << "L[";
+            if(child == UINT30_MAX) s << "-";
+            else s << child;
+            s << "]";
+        }
+        else
+        {
+            s << "C[";
+            if(child == UINT30_MAX) s << "-";
+            else s << child;
+            s << ", ";
+            if(child == UINT30_MAX) s << "-";
+            else s << (child + 1);
+            s << "] ";
+            s << "Split [" << hSplitPlanes[i] << "]";
+        }
+        s << "\n";
+    }
+}
+
+void KDTreeCPU::DumpTreeAsBinary(std::vector<Byte>& data) const
+{
+
 }

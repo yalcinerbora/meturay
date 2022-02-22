@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RayLib/Vector.h"
+#include "RayLib/AABB.h"
 #include "RayLib/Types.h"
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
@@ -23,6 +23,12 @@ class KDTreeGPU
                              uint32_t childOrLeafIndex,
                              bool isLeaf,
                              AxisType axis);
+    __host__ __device__
+    static void UnPackInfo(uint32_t& parentIndex,
+                           uint32_t& childOrLeafIndex,
+                           bool& isLeaf,
+                           AxisType& axis,
+                           uint64_t data);
 
     __host__ __device__
     static void UpdateChildIndex(uint64_t& packedData, uint32_t childIndex);
@@ -51,6 +57,7 @@ class KDTreeGPU
     const uint64_t*     gPackedData;
     const Vector3f*     gLeafs;
     uint32_t            rootNodeId;
+    float               voronoiCenterSize;
 
     // Helper Functions
     __device__ uint32_t     SelectChild(const Vector3f& pos,
@@ -73,6 +80,8 @@ class KDTreeGPU
 
     __device__ uint32_t     FindNearestPoint(float& distance,
                                              const Vector3f& point) const;
+
+    __device__ float        VoronoiCenterSize() const;
 };
 
 class KDTreeCPU
@@ -80,6 +89,11 @@ class KDTreeCPU
     private:
         KDTreeGPU           treeGPU;
         DeviceMemory        memory;
+
+        uint32_t            nodeCount;
+        uint32_t            leafCount;
+
+        static float        CalculateVoronoiCenterSize(const AABB3f& aabb);
 
     public:
         // Constructors & Destructor
@@ -94,6 +108,12 @@ class KDTreeCPU
                                       const CudaSystem& system);
 
         const KDTreeGPU&    TreeGPU() const;
+
+        size_t              UsedGPUMemory() const;
+        size_t              UsedCPUMemory() const;
+
+        void                DumpTreeToStream(std::ostream& stream) const;
+        void                DumpTreeAsBinary(std::vector<Byte>& data) const;
 };
 
 __host__ __device__ inline
@@ -111,6 +131,19 @@ uint64_t KDTreeGPU::PackInfo(uint32_t parentIndex,
     result |= (static_cast<uint64_t>(axis) << AXIS_START);
     result |= (static_cast<uint64_t>(isLeaf) << IS_LEAF_BIT_START);
     return result;
+}
+
+__host__ __device__ inline
+void KDTreeGPU::UnPackInfo(uint32_t& parentIndex,
+                           uint32_t& childOrLeafIndex,
+                           bool& isLeaf,
+                           AxisType& axis,
+                           uint64_t p)
+{
+    parentIndex = (p >> PARENT_START) & PARENT_BIT_COUNT;
+    childOrLeafIndex = (p >> CHILD_START) & CHILD_BIT_COUNT;
+    axis = static_cast<AxisType>((p >> AXIS_START) & AXIS_BIT_COUNT);
+    isLeaf = (p >> IS_LEAF_BIT_START)& IS_LEAF_BIT_COUNT;
 }
 
 __host__ __device__ inline
@@ -230,6 +263,8 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
     distance = (point - leafPos).LengthSqr();
     resultNodeIndex = currentNode;
 
+    return resultNodeIndex;
+
     // We found a leaf, which maybe the closest
     // But we need to back-propagate towards to the root
     // (re-descent if necessary) and find the actual closest distance
@@ -243,7 +278,7 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
     // We already on a leaf with the appropriate stack info
     // Continue traversing from the parent
     uint8_t depth = 0;
-    Push(depth, rootNodeId, Zero3f);
+    Push(depth, rootNodeId, Vector3f(0.0f));
 
     currentNode = rootNodeId;
     while(depth > 0)
@@ -303,4 +338,11 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
             currentNode = childId;
         }
     }
+    return resultNodeIndex;
+}
+
+__device__ inline
+float KDTreeGPU::VoronoiCenterSize() const
+{
+    return voronoiCenterSize;
 }
