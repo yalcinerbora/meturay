@@ -118,6 +118,10 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
     float nThreshold = normalAngleThreshold * MathConstants::DegToRadCoef;
     nThreshold = std::cos(nThreshold);
     SurfaceDistanceFunctor df(nThreshold);
+
+    //if((err = treeCPU.Construct(dSurfaceLeafs, samplePointCount, df,
+    //                            cudaSystem)) != TracerError::OK)
+
     if((err = treeCPU.Construct(dPositions, samplePointCount,
                                 cudaSystem)) != TracerError::OK)
         return err;

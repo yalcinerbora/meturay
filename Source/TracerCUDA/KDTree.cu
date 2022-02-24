@@ -110,7 +110,7 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
 
             // Return
             splitPlane = center[static_cast<int>(axis)];
-            packedInfo = KDTreeGPU::PackInfo(parentIndex & 0x3FFFFFFF,
+            packedInfo = KDTreeGPU::PackInfo(parentIndex,
                                              childIndex,
                                              false,
                                              axis);
@@ -165,7 +165,8 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
                       // I-O
                       hPositions,
                        // Args
-                      static_cast<uint32_t>(hPackInfo.size() + 1),
+                      UINT32_MAX,
+                      //static_cast<uint32_t>(hPackInfo.size() + 1),
                       current.parentId,
                       current.start, current.end);
 
@@ -174,7 +175,7 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
         hSplitPlanes.push_back(splitPlane);
 
         // Next parent id
-        uint32_t nextParentId = static_cast<uint32_t>(hPackInfo.size() - 1);
+        uint32_t myNodeId = static_cast<uint32_t>(hPackInfo.size() - 1);
 
         // Update parent
         // Since nodes are adjacent only left can update the parent
@@ -182,11 +183,12 @@ TracerError KDTreeCPU::Construct(const Vector3f* dPositionList,
         {
             // Update the packed child Id of the parent
             KDTreeGPU::UpdateChildIndex(hPackInfo[current.parentId],
-                                        nextParentId);
+                                        myNodeId);
         }
         // Check if not base case and add more generation
         if(splitLoc != std::numeric_limits<size_t>::max())
         {
+            uint32_t nextParentId = myNodeId;
             partitionQueue.emplace(SplitWork{true, current.start, splitLoc, nextParentId, current.depth + 1});
             partitionQueue.emplace(SplitWork{false, splitLoc, current.end, nextParentId, current.depth + 1});
             maxDepth = static_cast<uint8_t>(current.depth + 1);
@@ -253,7 +255,7 @@ float KDTreeCPU::CalculateVoronoiCenterSize(const AABB3f& sceneAABB)
 {
     Vector3f span = sceneAABB.Span();
     float sceneSize = span.Length();
-    static constexpr float VORONOI_RATIO = 1.0f / 1'300.0f;
+    static constexpr float VORONOI_RATIO = 1.0f / 1'000.0f;
     return sceneSize * VORONOI_RATIO;
 }
 
@@ -281,6 +283,7 @@ void KDTreeCPU::DumpTreeToStream(std::ostream& s) const
                               isLeaf, axis,
                               hPackedData[i]);
 
+        s << i << " ";
         s << std::string("P[");
         if(parent == UINT30_MAX) s << "-";
         else s << parent;
@@ -302,7 +305,25 @@ void KDTreeCPU::DumpTreeToStream(std::ostream& s) const
             if(child == UINT30_MAX) s << "-";
             else s << (child + 1);
             s << "] ";
-            s << "Split [" << hSplitPlanes[i] << "]";
+            s << "Split [" << hSplitPlanes[i] << "] ";
+            s << "Axis [";
+            switch(axis)
+            {
+                case KDTreeGPU::X:
+                    s << "X";
+                    break;
+                case KDTreeGPU::Y:
+                    s << "Y";
+                    break;
+                case KDTreeGPU::Z:
+                    s << "Z";
+                    break;
+                default:
+                    s << "?";
+                    break;
+            }
+            s << "]";
+
         }
         s << "\n";
     }

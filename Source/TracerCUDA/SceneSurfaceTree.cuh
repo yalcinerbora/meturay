@@ -10,7 +10,10 @@ class SceneSurfaceTree
     public:
         using TreeGPUType = KDTreeGPU;
         using TreeCPUType = KDTreeCPU;
-        //LBVHSurfaceCPU          lBVHSurface;
+
+        //using TreeGPUType = LBVHSurfaceGPU;
+        //using TreeCPUType = LBVHSurfaceCPU;
+
     private:
         TreeCPUType             treeCPU;
 
@@ -38,7 +41,7 @@ class SceneSurfaceTree
 
 inline void SceneSurfaceTree::DumpTreeAsBinary(std::vector<Byte>& vec) const
 {
-    //lBVHSurface.DumpTreeAsBinary(vec);
+    treeCPU.DumpTreeAsBinary(vec);
 }
 
 inline const SceneSurfaceTree::TreeGPUType& SceneSurfaceTree::TreeGPU() const

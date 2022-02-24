@@ -2,6 +2,7 @@
 
 #include "RayLib/AABB.h"
 #include "RayLib/Types.h"
+#include "RayLib/Constants.h"
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
 
@@ -12,10 +13,10 @@ class KDTreeGPU
     public:
     enum AxisType
     {
-        X,
-        Y,
-        Z,
-        AXIS_END
+        X = 0,
+        Y = 1,
+        Z = 2,
+        AXIS_END = 3
     };
 
     __host__ __device__
@@ -38,6 +39,11 @@ class KDTreeGPU
     static constexpr uint32_t PARENT_BIT_COUNT = 30;
     static constexpr uint32_t AXIS_BIT_COUNT = 2;
     static constexpr uint32_t IS_LEAF_BIT_COUNT = 1;
+
+    static constexpr uint64_t CHILD_BIT_MASK = (1ull << CHILD_BIT_COUNT) - 1;
+    static constexpr uint64_t PARENT_BIT_MASK = (1ull << PARENT_BIT_COUNT) - 1;
+    static constexpr uint64_t AXIS_BIT_MASK = (1ull << AXIS_BIT_COUNT) - 1;
+    static constexpr uint64_t IS_LEAF_BIT_MASK = (1ull << IS_LEAF_BIT_COUNT) - 1;
 
     static constexpr uint32_t CHILD_START = 0;
     static constexpr uint32_t PARENT_START = CHILD_START + CHILD_BIT_COUNT;
@@ -122,14 +128,11 @@ uint64_t KDTreeGPU::PackInfo(uint32_t parentIndex,
                              bool isLeaf,
                              AxisType axis)
 {
-    assert(parentIndex < (1 << PARENT_BIT_COUNT));
-    assert(childOrLeafIndex < (1 << CHILD_BIT_COUNT));
-
     uint64_t result = 0;
-    result |= (static_cast<uint64_t>(childOrLeafIndex) << CHILD_START);
-    result |= (static_cast<uint64_t>(parentIndex) << PARENT_START);
-    result |= (static_cast<uint64_t>(axis) << AXIS_START);
-    result |= (static_cast<uint64_t>(isLeaf) << IS_LEAF_BIT_START);
+    result |= (static_cast<uint64_t>(childOrLeafIndex) & CHILD_BIT_MASK) << CHILD_START;
+    result |= (static_cast<uint64_t>(parentIndex) & PARENT_BIT_MASK) << PARENT_START;
+    result |= (static_cast<uint64_t>(axis) & AXIS_BIT_MASK) << AXIS_START;
+    result |= (static_cast<uint64_t>(isLeaf) & IS_LEAF_BIT_MASK) << IS_LEAF_BIT_START;
     return result;
 }
 
@@ -140,16 +143,18 @@ void KDTreeGPU::UnPackInfo(uint32_t& parentIndex,
                            AxisType& axis,
                            uint64_t p)
 {
-    parentIndex = (p >> PARENT_START) & PARENT_BIT_COUNT;
-    childOrLeafIndex = (p >> CHILD_START) & CHILD_BIT_COUNT;
-    axis = static_cast<AxisType>((p >> AXIS_START) & AXIS_BIT_COUNT);
-    isLeaf = (p >> IS_LEAF_BIT_START)& IS_LEAF_BIT_COUNT;
+    parentIndex = (p >> PARENT_START) & PARENT_BIT_MASK;
+    childOrLeafIndex = (p >> CHILD_START) & CHILD_BIT_MASK;
+    axis = static_cast<AxisType>((p >> AXIS_START) & AXIS_BIT_MASK);
+    isLeaf = (p >> IS_LEAF_BIT_START)& IS_LEAF_BIT_MASK;
 }
 
 __host__ __device__ inline
 void KDTreeGPU::UpdateChildIndex(uint64_t& packedData, uint32_t childIndex)
 {
-    packedData |= (static_cast<uint64_t>(childIndex) << CHILD_START);
+    uint64_t otherBits = packedData & ~(CHILD_BIT_MASK << CHILD_START);
+    uint64_t newBits = (static_cast<uint64_t>(childIndex) & CHILD_BIT_MASK) << CHILD_START;
+    packedData = otherBits | newBits;
 }
 
 __device__ inline
@@ -167,14 +172,14 @@ __device__ inline
 bool KDTreeGPU::IsLeaf(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
-    return (p >> IS_LEAF_BIT_START) & IS_LEAF_BIT_COUNT;
+    return (p >> IS_LEAF_BIT_START) & IS_LEAF_BIT_MASK;
 }
 
 __device__ inline
 KDTreeGPU::AxisType KDTreeGPU::Axis(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
-    uint32_t axis = (p >> AXIS_START) & AXIS_BIT_COUNT;
+    uint32_t axis = (p >> AXIS_START) & AXIS_BIT_MASK;
     return static_cast<AxisType>(axis);
 }
 
@@ -182,7 +187,7 @@ __device__ inline
 uint32_t KDTreeGPU::LeftChildId(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
-    return (p >> CHILD_START) & CHILD_BIT_COUNT;
+    return (p >> CHILD_START) & CHILD_BIT_MASK;
 }
 
 __device__ inline
@@ -195,7 +200,7 @@ __device__ inline
 uint32_t KDTreeGPU::ParentId(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
-    return (p >> PARENT_START) & PARENT_BIT_COUNT;
+    return (p >> PARENT_START) & PARENT_BIT_MASK;
 }
 
 __device__ inline
@@ -219,30 +224,34 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
 {
     struct StackData
     {
-        Vector3f position;
+        Vector3f deltaDist;
         uint32_t index;
 
     };
+    // TODO: Stack is quite thick (1Kib per thread ouch!)
+    //
     StackData sLocationStack[MAX_DEPTH];
 
     // Convenience Functions
     auto Push = [&sLocationStack](uint8_t& depth, uint32_t loc,
-                                  const Vector3f& position) -> void
+                                  const Vector3f& deltaDist) -> void
     {
+        assert(depth < MAX_DEPTH);
         uint32_t index = depth;
         sLocationStack[index].index = loc;
-        sLocationStack[index].position = position;
+        sLocationStack[index].deltaDist = deltaDist;
         depth++;
     };
     auto ReadTop = [&sLocationStack](uint8_t depth) -> StackData
     {
-        uint32_t index = depth;
-        return sLocationStack[index];
+        assert(depth > 0);
+        return sLocationStack[depth - 1];
     };
-    auto Pop = [&ReadTop](uint8_t& depth) -> StackData
+    auto Pop = [&sLocationStack](uint8_t& depth) -> StackData
     {
+        assert(depth > 0);
         depth--;
-        return ReadTop(depth);
+        return sLocationStack[depth];
     };
 
     // Initialize
@@ -259,49 +268,42 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
     }
     // Calculate the distance
     uint32_t leafIndex = LeafIndex(currentNode);
-    Vector3f leafPos = gLeafs[LeafIndex(currentNode)];
+    Vector3f leafPos = gLeafs[leafIndex];
     distance = (point - leafPos).LengthSqr();
     resultNodeIndex = currentNode;
 
-    return resultNodeIndex;
-
     // We found a leaf, which maybe the closest
-    // But we need to back-propagate towards to the root
-    // (re-descent if necessary) and find the actual closest distance
-    // Or we can descent down again
-    // And check other points using a stack
+    // But we need to re-traverse the tree
+    // to find the actual closest distance
     //
     // This implementation is quite similar to the
     // https://github.com/NVlabs/fermat/blob/master/contrib/cugar/kd/cuda/knn_inline.h
 
-
-    // We already on a leaf with the appropriate stack info
-    // Continue traversing from the parent
+    // Re-traverse the tree using stack
     uint8_t depth = 0;
     Push(depth, rootNodeId, Vector3f(0.0f));
-
-    currentNode = rootNodeId;
     while(depth > 0)
     {
         auto traverseData = Pop(depth);
+        uint32_t node = traverseData.index;
 
-        if(IsLeaf(currentNode))
+        if(IsLeaf(node))
         {
             // Calculate the distance
-            uint32_t leafIndex = LeafIndex(currentNode);
-            Vector3f leafPos = gLeafs[LeafIndex(currentNode)];
+            uint32_t leafIndex = LeafIndex(node);
+            Vector3f leafPos = gLeafs[leafIndex];
             float dist = (point - leafPos).LengthSqr();
-
+            // Update close point
             if(dist < distance)
             {
                 distance = dist;
-                resultNodeIndex = currentNode;
+                resultNodeIndex = node;
             }
             // Pop unnecessary nodes in the stack
             // After the update
             while(depth > 0)
             {
-                float lSqr = ReadTop(depth).position.LengthSqr();
+                float lSqr = ReadTop(depth).deltaDist.LengthSqr();
                 // This is necessary break
                 if(lSqr < distance) break;
 
@@ -312,33 +314,31 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
         else
         {
             // Fetch Current Split Plane
-            int axis = static_cast<int>(Axis(currentNode));
-            float splitPlane = gSplits[axis];
-            float splitDist = point[axis] - splitPlane;
+            int splitAxis = static_cast<int>(Axis(node));
+            float splitPlane = gSplits[node];
+            float splitDist = point[splitAxis] - splitPlane;
 
             // Generate Far point
-            Vector3f farPoint = traverseData.position;
-            farPoint[axis] = splitDist;
+            Vector3f deltaDist = traverseData.deltaDist;
+            deltaDist[splitAxis] = splitDist;
 
             // Select Child
-            uint32_t childId = SelectChild(point, currentNode);
+            uint32_t childId = SelectChild(point, node);
+            uint32_t otherChildId = (childId == LeftChildId(node))
+                                        ? RightChildId(node)
+                                        : LeftChildId(node);
 
+            Push(depth, childId, traverseData.deltaDist);
             // Push the non-selected child as well
             // If it may contain a closer point
-            if(farPoint.LengthSqr() < distance)
-            {
-                Push(depth,
-                     (childId == LeftChildId(currentNode))
-                        ? RightChildId(currentNode)
-                        : LeftChildId(currentNode),
-                     farPoint);
-            }
-
-            // Descent down
-            currentNode = childId;
+            if(deltaDist.LengthSqr() < distance)
+                Push(depth, otherChildId, deltaDist);
         }
     }
-    return resultNodeIndex;
+
+    // Calculate actual distance
+    distance = sqrt(distance);
+    return LeafIndex(resultNodeIndex);
 }
 
 __device__ inline

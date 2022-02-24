@@ -266,6 +266,7 @@ void RLTracerPathWork(// Output
     // Before BxDF Acquire the 2D irradiance map
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
+    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
     //uint32_t spatialIndex = 0;
 
@@ -632,6 +633,7 @@ void RLTracerDebugBWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
+    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
     Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
                          ? Zero3f
@@ -684,6 +686,7 @@ void RLTracerDebugWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
+    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
     Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
                          ? Zero3f
