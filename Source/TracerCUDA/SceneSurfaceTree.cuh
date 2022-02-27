@@ -8,8 +8,8 @@
 class SceneSurfaceTree
 {
     public:
-        using TreeGPUType = KDTreeGPU;
-        using TreeCPUType = KDTreeCPU;
+        using TreeGPUType = KDTreeGPU<Vector3f>;
+        using TreeCPUType = KDTreeCPU<Vector3f>;
 
         //using TreeGPUType = LBVHSurfaceGPU;
         //using TreeCPUType = LBVHSurfaceCPU;

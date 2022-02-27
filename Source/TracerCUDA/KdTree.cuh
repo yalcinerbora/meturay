@@ -6,8 +6,13 @@
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
 
+#include <queue>
+#include <ostream>
+
+template <class V>
 class KDTreeCPU;
 
+template <class V>
 class KDTreeGPU
 {
     public:
@@ -56,17 +61,17 @@ class KDTreeGPU
 
     static constexpr uint8_t MAX_DEPTH = 64;
 
-    friend class KDTreeCPU;
+    friend class KDTreeCPU<V>;
 
     // Properties
     const float*        gSplits;
     const uint64_t*     gPackedData;
-    const Vector3f*     gLeafs;
+    const V*            gLeafs;
     uint32_t            rootNodeId;
     float               voronoiCenterSize;
 
     // Helper Functions
-    __device__ uint32_t     SelectChild(const Vector3f& pos,
+    __device__ uint32_t     SelectChild(const V& pos,
                                         uint32_t nodeId) const;
     __device__ bool         IsLeaf(uint32_t nodeId) const;
     //
@@ -85,15 +90,16 @@ class KDTreeGPU
                             ~KDTreeGPU() = default;
 
     __device__ uint32_t     FindNearestPoint(float& distance,
-                                             const Vector3f& point) const;
+                                             const V& point) const;
 
     __device__ float        VoronoiCenterSize() const;
 };
 
+template <class V>
 class KDTreeCPU
 {
     private:
-        KDTreeGPU           treeGPU;
+        KDTreeGPU<V>        treeGPU;
         DeviceMemory        memory;
 
         uint32_t            nodeCount;
@@ -109,11 +115,11 @@ class KDTreeCPU
                             ~KDTreeCPU() = default;
 
         // Construct using the leaf list gpu data provided
-        TracerError         Construct(const Vector3f* dPositionList,
+        TracerError         Construct(const V* dPositionList,
                                       uint32_t leafCount,
                                       const CudaSystem& system);
 
-        const KDTreeGPU&    TreeGPU() const;
+        const KDTreeGPU<V>& TreeGPU() const;
 
         size_t              UsedGPUMemory() const;
         size_t              UsedCPUMemory() const;
@@ -122,8 +128,9 @@ class KDTreeCPU
         void                DumpTreeAsBinary(std::vector<Byte>& data) const;
 };
 
+template <class V>
 __host__ __device__ inline
-uint64_t KDTreeGPU::PackInfo(uint32_t parentIndex,
+uint64_t KDTreeGPU<V>::PackInfo(uint32_t parentIndex,
                              uint32_t childOrLeafIndex,
                              bool isLeaf,
                              AxisType axis)
@@ -136,12 +143,13 @@ uint64_t KDTreeGPU::PackInfo(uint32_t parentIndex,
     return result;
 }
 
+template <class V>
 __host__ __device__ inline
-void KDTreeGPU::UnPackInfo(uint32_t& parentIndex,
-                           uint32_t& childOrLeafIndex,
-                           bool& isLeaf,
-                           AxisType& axis,
-                           uint64_t p)
+void KDTreeGPU<V>::UnPackInfo(uint32_t& parentIndex,
+                              uint32_t& childOrLeafIndex,
+                              bool& isLeaf,
+                              AxisType& axis,
+                              uint64_t p)
 {
     parentIndex = (p >> PARENT_START) & PARENT_BIT_MASK;
     childOrLeafIndex = (p >> CHILD_START) & CHILD_BIT_MASK;
@@ -149,17 +157,18 @@ void KDTreeGPU::UnPackInfo(uint32_t& parentIndex,
     isLeaf = (p >> IS_LEAF_BIT_START)& IS_LEAF_BIT_MASK;
 }
 
+template <class V>
 __host__ __device__ inline
-void KDTreeGPU::UpdateChildIndex(uint64_t& packedData, uint32_t childIndex)
+void KDTreeGPU<V>::UpdateChildIndex(uint64_t& packedData, uint32_t childIndex)
 {
     uint64_t otherBits = packedData & ~(CHILD_BIT_MASK << CHILD_START);
     uint64_t newBits = (static_cast<uint64_t>(childIndex) & CHILD_BIT_MASK) << CHILD_START;
     packedData = otherBits | newBits;
 }
 
+template <class V>
 __device__ inline
-uint32_t KDTreeGPU::SelectChild(const Vector3f& pos,
-                                uint32_t nodeId) const
+uint32_t KDTreeGPU<V>::SelectChild(const V& pos, uint32_t nodeId) const
 {
     AxisType axis = Axis(nodeId);
     if(gSplits[nodeId] <= pos[static_cast<int>(axis)])
@@ -168,73 +177,83 @@ uint32_t KDTreeGPU::SelectChild(const Vector3f& pos,
         return RightChildId(nodeId);
 }
 
+template <class V>
 __device__ inline
-bool KDTreeGPU::IsLeaf(uint32_t nodeId) const
+bool KDTreeGPU<V>::IsLeaf(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
     return (p >> IS_LEAF_BIT_START) & IS_LEAF_BIT_MASK;
 }
 
+template <class V>
 __device__ inline
-KDTreeGPU::AxisType KDTreeGPU::Axis(uint32_t nodeId) const
+KDTreeGPU<V>::AxisType KDTreeGPU<V>::Axis(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
     uint32_t axis = (p >> AXIS_START) & AXIS_BIT_MASK;
     return static_cast<AxisType>(axis);
 }
 
+template <class V>
 __device__ inline
-uint32_t KDTreeGPU::LeftChildId(uint32_t nodeId) const
+uint32_t KDTreeGPU<V>::LeftChildId(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
     return (p >> CHILD_START) & CHILD_BIT_MASK;
 }
 
+template <class V>
 __device__ inline
-uint32_t KDTreeGPU::RightChildId(uint32_t nodeId) const
+uint32_t KDTreeGPU<V>::RightChildId(uint32_t nodeId) const
 {
     return LeftChildId(nodeId) + 1;
 }
 
+template <class V>
 __device__ inline
-uint32_t KDTreeGPU::ParentId(uint32_t nodeId) const
+uint32_t KDTreeGPU<V>::ParentId(uint32_t nodeId) const
 {
     uint64_t p = gPackedData[nodeId];
     return (p >> PARENT_START) & PARENT_BIT_MASK;
 }
 
+template <class V>
 __device__ inline
-uint32_t KDTreeGPU::LeafIndex(uint32_t nodeId) const
+uint32_t KDTreeGPU<V>::LeafIndex(uint32_t nodeId) const
 {
     return LeftChildId(nodeId);
 }
 
+template <class V>
 __device__ inline
-KDTreeGPU::KDTreeGPU(const float* gSplits,
-                     const uint64_t* gPackedData,
-                     uint32_t rootNodeId)
+KDTreeGPU<V>::KDTreeGPU(const float* gSplits,
+                        const uint64_t* gPackedData,
+                        uint32_t rootNodeId)
     : gSplits(gSplits)
     , gPackedData(gPackedData)
     , rootNodeId(rootNodeId)
 {}
 
+template <class V>
 __device__ inline
-uint32_t KDTreeGPU::FindNearestPoint(float& distance,
-                                     const Vector3f& point) const
+uint32_t KDTreeGPU<V>::FindNearestPoint(float& distance,
+                                        const V& point) const
 {
     struct StackData
     {
-        Vector3f deltaDist;
+        V deltaDist;
         uint32_t index;
 
     };
-    // TODO: Stack is quite thick (1Kib per thread ouch!)
-    //
-    StackData sLocationStack[MAX_DEPTH];
+    // Check if the stack is properly aligned
+    static_assert(sizeof(StackData) == (sizeof(V) + sizeof(uint32_t)),
+                  "KdTree traverse stack is not properly aligned!");
 
+    // TODO: Stack is quite thick (1Kib per thread ouch!)
+    StackData sLocationStack[MAX_DEPTH];
     // Convenience Functions
     auto Push = [&sLocationStack](uint8_t& depth, uint32_t loc,
-                                  const Vector3f& deltaDist) -> void
+                                  const V& deltaDist) -> void
     {
         assert(depth < MAX_DEPTH);
         uint32_t index = depth;
@@ -268,7 +287,7 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
     }
     // Calculate the distance
     uint32_t leafIndex = LeafIndex(currentNode);
-    Vector3f leafPos = gLeafs[leafIndex];
+    V leafPos = gLeafs[leafIndex];
     distance = (point - leafPos).LengthSqr();
     resultNodeIndex = currentNode;
 
@@ -281,7 +300,7 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
 
     // Re-traverse the tree using stack
     uint8_t depth = 0;
-    Push(depth, rootNodeId, Vector3f(0.0f));
+    Push(depth, rootNodeId, V(0.0f));
     while(depth > 0)
     {
         auto traverseData = Pop(depth);
@@ -291,7 +310,7 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
         {
             // Calculate the distance
             uint32_t leafIndex = LeafIndex(node);
-            Vector3f leafPos = gLeafs[leafIndex];
+            V leafPos = gLeafs[leafIndex];
             float dist = (point - leafPos).LengthSqr();
             // Update close point
             if(dist < distance)
@@ -300,14 +319,12 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
                 resultNodeIndex = node;
             }
             // Pop unnecessary nodes in the stack
-            // After the update
-            while(depth > 0)
+            // After the update, some nodes are not necessary
+            // Pop those until stack is either empty or we found
+            // valid stack entry
+            while(depth > 0 ||
+                  ReadTop(depth).deltaDist.LengthSqr() >= distance)
             {
-                float lSqr = ReadTop(depth).deltaDist.LengthSqr();
-                // This is necessary break
-                if(lSqr < distance) break;
-
-                // Unnecessary data, break
                 Pop(depth);
             }
         }
@@ -319,7 +336,7 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
             float splitDist = point[splitAxis] - splitPlane;
 
             // Generate Far point
-            Vector3f deltaDist = traverseData.deltaDist;
+            V deltaDist = traverseData.deltaDist;
             deltaDist[splitAxis] = splitDist;
 
             // Select Child
@@ -341,8 +358,14 @@ uint32_t KDTreeGPU::FindNearestPoint(float& distance,
     return LeafIndex(resultNodeIndex);
 }
 
+template <class V>
 __device__ inline
-float KDTreeGPU::VoronoiCenterSize() const
+float KDTreeGPU<V>::VoronoiCenterSize() const
 {
     return voronoiCenterSize;
 }
+
+#include "KDTree.hpp"
+
+extern template class KDTreeCPU<Vector3f>;
+extern template class KDTreeGPU<Vector3f>;
