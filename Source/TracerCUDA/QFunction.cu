@@ -5,8 +5,14 @@
 
 #include <execution>
 
+#include "TracerDebug.h"
+
 void QFunctionCPU::RecalculateDistributions(const CudaSystem& system)
 {
+    Debug::DumpBatchedMemToFile("qFunc", qFuncGPU.gQFunction,
+                                qFuncGPU.dataPerNode.Multiply(),
+                                qFuncGPU.dataPerNode.Multiply() * qFuncGPU.nodeCount);
+
     distributions.UpdateDistributions(qFuncGPU.gQFunction, true,
                                       system, cudaMemcpyDeviceToDevice);
 }

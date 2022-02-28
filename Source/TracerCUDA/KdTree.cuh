@@ -64,11 +64,11 @@ class KDTreeGPU
     friend class KDTreeCPU<V>;
 
     // Properties
-    const float*        gSplits;
-    const uint64_t*     gPackedData;
-    const V*            gLeafs;
-    uint32_t            rootNodeId;
-    float               voronoiCenterSize;
+    const float*            gSplits;
+    const uint64_t*         gPackedData;
+    const V*                gLeafs;
+    uint32_t                rootNodeId;
+    float                   voronoiCenterSize;
 
     // Helper Functions
     __device__ uint32_t     SelectChild(const V& pos,
@@ -322,7 +322,7 @@ uint32_t KDTreeGPU<V>::FindNearestPoint(float& distance,
             // After the update, some nodes are not necessary
             // Pop those until stack is either empty or we found
             // valid stack entry
-            while(depth > 0 ||
+            while(depth > 0 &&
                   ReadTop(depth).deltaDist.LengthSqr() >= distance)
             {
                 Pop(depth);

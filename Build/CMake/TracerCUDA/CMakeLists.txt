@@ -251,7 +251,9 @@ set(SRC_DATA_STRUCTURES
     ${CURRENT_SOURCE_DIR}/LinearBVH.cu
     ${CURRENT_SOURCE_DIR}/LinearBVH.hpp
     ${CURRENT_SOURCE_DIR}/LinearBVH.cuh
-    ${CURRENT_SOURCE_DIR}/LinearBVHKC.cuh)
+    ${CURRENT_SOURCE_DIR}/LinearBVHKC.cuh
+
+    ${CURRENT_SOURCE_DIR}/DataStructsCommon.cuh)
 
 set(SRC_TRACERS_STRUCTS
     ${CURRENT_SOURCE_DIR}/PathNode.cuh

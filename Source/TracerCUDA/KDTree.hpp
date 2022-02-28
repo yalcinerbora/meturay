@@ -229,9 +229,6 @@ TracerError KDTreeCPU<V>::Construct(const V* dPositionList,
     treeGPU.gSplits = dSplitPlanes;
     treeGPU.rootNodeId = 0;
 
-    std::ofstream file("surfaceTree");
-    DumpTreeToStream(file);
-    file.close();
     return TracerError::OK;
 }
 

@@ -24,6 +24,9 @@ class QFunctionGPU
         __device__
         float*              AcquireData(const Vector2ui& dirIndex,
                                         uint32_t spatialIndex);
+        __device__
+        const float*        AcquireData(const Vector2ui& dirIndex,
+                                        uint32_t spatialIndex) const;
 
     public:
         // Constructors & Destructor
@@ -102,6 +105,15 @@ float* QFunctionGPU::AcquireData(const Vector2ui& dirIndex,
                          dirIndex[0]);
 }
 
+__device__ inline
+const float* QFunctionGPU::AcquireData(const Vector2ui& dirIndex,
+                                       uint32_t spatialIndex) const
+{
+    return gQFunction + (spatialIndex * dataPerNode.Multiply() +
+                         dirIndex[1] * dataPerNode[0] +
+                         dirIndex[0]);
+}
+
 inline
 QFunctionGPU::QFunctionGPU()
     : gQFunction(nullptr)
@@ -144,23 +156,30 @@ __device__ inline
 float QFunctionGPU::Pdf(const Vector3f& worldDir,
                         uint32_t spatialIndex) const
 {
-    float pdf = 1.0f;
-    Vector2f coords = GPUDataStructCommon::DirToDiscreteCoords(pdf, worldDir);
+    float pdfDir = 1.0f;
+    Vector2f coords = GPUDataStructCommon::DirToDiscreteCoords(pdfDir, worldDir);
     coords *= Vector2f(dataPerNode[0], dataPerNode[1]);
-    if(coords[0] >= dataPerNode[0] ||
-       coords[1] >= dataPerNode[1])
-    {
-        printf("OOR [%f, %f]\n", coords[0], coords[1]);
-        return 1.0f;
-    }
-    if(isnan(pdf))
-    {
-        printf("nan pdf on dirToDiscrete (%f, %f, %f)\n",
-               worldDir[0], worldDir[1], worldDir[2]);
-        return 0;
-    }
+    //if(coords[0] >= dataPerNode[0] ||
+    //   coords[1] >= dataPerNode[1])
+    //{
+    //    printf("OOR [%f, %f]\n", coords[0], coords[1]);
+    //    return 1.0f;
+    //}
+    //if(isnan(pdfDir) || isinf(pdfDir))
+    //{
+    //    printf("[%f] NaN or Inf pdfDir on dirToDiscrete (%f, %f, %f)\n",
+    //           pdfDir, worldDir[0], worldDir[1], worldDir[2]);
+    //    return 0;
+    //}
 
-    return pdf * gDistributions.Pdf(coords, spatialIndex);
+    float pdfDist = gDistributions.Pdf(coords, spatialIndex);
+    //if(isnan(pdfDist) || isinf(pdfDist))
+    //{
+    //    printf("[%f] NaN or Inf pdfDist on [%f, %f] qIndex [%d]\n",
+    //           pdfDist, coords[0], coords[1], spatialIndex);
+    //    return 0;
+    //}
+    return pdfDir * pdfDist;
 }
 
 __device__ inline
@@ -179,14 +198,26 @@ __device__ inline
 float QFunctionGPU::Value(const Vector2ui& dirIndex,
                           uint32_t spatialIndex) const
 {
-    return 0.0f;
+    const float* location = AcquireData(dirIndex, spatialIndex);
+    // Here we can read the value directly
+    // Data may not be recent (since these are updated by other threads
+    // atomically), however it should still converge
+    return *location;
 }
 
 __device__ inline
 float QFunctionGPU::Value(const Vector3f& worldDir,
                           uint32_t spatialIndex) const
 {
-    return 0.0f;
+    Vector2f uv = GPUDataStructCommon::DirToDiscreteCoords(worldDir);
+    Vector2f indexF = uv * Vector2f(dataPerNode[0], dataPerNode[1]);
+    Vector2ui index = Vector2ui(static_cast<int32_t>(indexF[0]),
+                                static_cast<int32_t>(indexF[1]));
+    const float* location = AcquireData(index, spatialIndex);
+    // Here we can read the value directly
+    // Data may not be recent (since these are updated by other threads
+    // atomically), however it should still converge
+    return *location;
 }
 
 __device__ inline
@@ -200,7 +231,6 @@ Vector3f QFunctionGPU::Update(const Vector3f& worldDir,
     Vector2ui index = Vector2ui(static_cast<int32_t>(indexF[0]),
                               static_cast<int32_t>(indexF[1]));
     float* location = AcquireData(index, spatialIndex);
-
     // Atomic Q-Update using CAS Atomics
     // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
     static_assert(sizeof(float) == sizeof(uint32_t), "Sanity Check");

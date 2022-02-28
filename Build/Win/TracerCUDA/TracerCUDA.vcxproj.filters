@@ -636,6 +636,15 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\SceneSurfaceTreeKC.cuh">
       <Filter>Tracers\RLTracer\Aux Classes</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DataStructsCommon.cuh">
+      <Filter>Tracers\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\KDTree.cuh">
+      <Filter>Tracers\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Source\TracerCUDA\KDTree.hpp">
+      <Filter>Tracers\Data Structures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\RayMemory.cu">
@@ -808,6 +817,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\..\Source\TracerCUDA\SceneSurfaceTree.cu">
       <Filter>Tracers\RLTracer\Aux Classes</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\KDTree.cu">
+      <Filter>Tracers\Data Structures</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

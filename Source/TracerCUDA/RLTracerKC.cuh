@@ -109,6 +109,7 @@ float AccumulateQFunction(const QFunctionGPU& qFunction,
         float value = qFunction.Value(Vector2ui(x, y), spatialIndex);
         Vector3f reflectance = MatEvaluate(wo);
         // TODO: Is this ok? (converting reflectance to luminance)
+        // Instead of other way around
         float lumReflectance = Utility::RGBToLuminance(reflectance);
         sum += lumReflectance * value;
     }
@@ -214,7 +215,7 @@ void RLTracerBoundaryWork(// Output
         {
             float reflectance = aux.prevLumReflectance;
             float sum = reflectance * Utility::RGBToLuminance(emission);
-            //renderState.qFunction.Update(r.getDirection(), sum, aux.prevSpatialIndex);
+            renderState.qFunction.Update(r.getDirection(), sum, aux.prevSpatialIndex);
         }
     }
 }
@@ -268,15 +269,12 @@ void RLTracerPathWork(// Output
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
     //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
-    //uint32_t spatialIndex = 0;
 
     if(spatialIndex == UINT32_MAX)
+    {
+        printf("Out of Range KdTree!\n");
         spatialIndex = 0;
-    //else if(spatialIndex >= 2)
-    //{
-    //    printf("spatialIndex %u\n", spatialIndex);
-    //    return;
-    //}
+    }
 
     // Check Material Sample Strategy
     uint32_t sampleCount = maxOutRay;
@@ -443,7 +441,6 @@ void RLTracerPathWork(// Output
         }
         else
         {
-            printf("AAAA\n");
             // Sample a path using Path Guiding
             Vector3f direction = renderState.qFunction.Sample(pdfGuide, rng,
                                                               spatialIndex);
@@ -502,23 +499,23 @@ void RLTracerPathWork(// Output
         //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
         //    return;
 
-        //// If this ray is not camera ray
-        //// Accumulate everything on the current spatial data
-        //// and send it to previous spatial data
-        //if(aux.type != RayType::CAMERA_RAY)
-        //{
-        //    MatFunctor<MGroup> MatEval(gMatData, surface,
-        //                               wi, position,
-        //                               matIndex, m);
+        // If this ray is not camera ray
+        // Accumulate everything on the current spatial data
+        // and send it to previous spatial data
+        if(aux.type != RayType::CAMERA_RAY)
+        {
+            MatFunctor<MGroup> MatEval(gMatData, surface,
+                                       wi, position,
+                                       matIndex, m);
 
-        //    float sum = AccumulateQFunction<MGroup>(renderState.qFunction,
-        //                                            spatialIndex,
-        //                                            MatEval);
-        //    // Don't forget to add current emission if available
-        //    sum += Utility::RGBToLuminance(emission);
-        //    // Atomically update the value in the previous Q function
-        //    //renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
-        //}
+            float sum = AccumulateQFunction<MGroup>(renderState.qFunction,
+                                                    spatialIndex,
+                                                    MatEval);
+            // Don't forget to add current emission if available
+            sum += Utility::RGBToLuminance(emission);
+            // Atomically update the value in the previous Q function
+            renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+        }
     }
     else
     {
@@ -543,7 +540,7 @@ void RLTracerPathWork(// Output
         // as if the accumulated value
         float value = renderState.qFunction.Value(rayPath.getDirection(), spatialIndex);
         float sum = Utility::RGBToLuminance(reflectance) * value;
-        //renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+        renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
     }
 
     // Factor the radiance of the surface

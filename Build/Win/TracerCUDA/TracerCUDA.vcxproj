@@ -19,6 +19,7 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\BinarySearch.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CameraFunctions.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\CudaSystem.hpp" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\DataStructsCommon.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DirectTracerWorks.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\DTree.cuh" />
@@ -69,6 +70,8 @@
     <ClInclude Include="..\..\..\Source\TracerCUDA\GPUWorkI.h" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageFunctions.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\ImageStructs.h" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\KDTree.cuh" />
+    <ClInclude Include="..\..\..\Source\TracerCUDA\KDTree.hpp" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterial.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\LambertMaterialKC.cuh" />
     <ClInclude Include="..\..\..\Source\TracerCUDA\LinearBVH.cuh" />
@@ -201,6 +204,7 @@
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPULightSpot.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\GPUMediumHomogenous.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\ImageMemory.cu" />
+    <CudaCompile Include="..\..\..\Source\TracerCUDA\KDTree.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LambertMaterial.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\LinearBVH.cu" />
     <CudaCompile Include="..\..\..\Source\TracerCUDA\PathTracerWorks.cu" />

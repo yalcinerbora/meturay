@@ -386,7 +386,18 @@ float PWCDistStaticGPU2D::Pdf(const Vector2f& index,
     const float* gXPDF = gXPDFs + dim.Multiply() * distIndex;
     const float* gXPDFRow = gXPDF + dim[0] * indexInt[1];
 
-    return gYPDF[indexInt[1]] * gXPDFRow[indexInt[0]];
+    float pdfX = gXPDFRow[indexInt[0]];
+    float pdfY = gYPDF[indexInt[1]];
+
+    float result = pdfX * pdfY;
+
+    if(isnan(result))
+    {
+        printf("Nan pdf %u => (%f = %f[X] * %f[Y])\n",
+               distIndex, result, pdfX, pdfY);
+    }
+
+    return result;
 }
 
 inline size_t PWCDistributionGroupCPU1D::UsedCPUMemory() const

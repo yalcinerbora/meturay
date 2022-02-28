@@ -68,6 +68,7 @@ void KCUpdateDistributionsX(float* gXPDFs,
     // Local registers
     float pdfData[DATA_PER_THREAD];
     float cdfData[DATA_PER_THREAD];
+
     // For each row
     for(uint32_t i = 0; i < dim[1]; i++)
     {
@@ -112,7 +113,6 @@ void KCUpdateDistributionsX(float* gXPDFs,
         MultVector(pdfData, static_cast<float>(dim[0]));
 
         MultVector(cdfData, (1.0f / totalSum));
-
         // Finally Store both cdf and pdf
         BlockStore(sMem.storeTempStorage).Store(gXPDFRow, pdfData, dim[0]);
         __syncthreads();
@@ -648,7 +648,6 @@ void PWCDistStaticCPU2D::UpdateDistributions(const float* functionData,
                   gpuDist.dim,
                   gpuDist.distCount,
                   factorSpherical);
-
     // Now do the Y
     gpu.ExactKC_X(0, (cudaStream_t)0,
                   StaticThreadPerBlock1D, gpuDist.distCount,
@@ -660,12 +659,11 @@ void PWCDistStaticCPU2D::UpdateDistributions(const float* functionData,
                   gpuDist.dim,
                   gpuDist.distCount);
 
-
     //uint32_t yPDFCount = gpuDist.dim[1] * gpuDist.distCount;
     //uint32_t yCDFCount = (gpuDist.dim[1] + 1) * gpuDist.distCount;
     //uint32_t xPDFCount = gpuDist.dim.Multiply() * gpuDist.distCount;
     //uint32_t xCDFCount = (gpuDist.dim.Multiply() + gpuDist.dim[0]) * gpuDist.distCount;
-
+    //
     //Debug::DumpMemToFile("yPDFs", gpuDist.gYPDFs, yPDFCount);
     //Debug::DumpMemToFile("yCDFs", gpuDist.gYCDFs, yCDFCount);
     //Debug::DumpMemToFile("xPDFs", gpuDist.gXPDFs, xPDFCount);

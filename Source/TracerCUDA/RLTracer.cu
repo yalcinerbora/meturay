@@ -268,6 +268,9 @@ void RLTracer::Finalize()
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
 
+    static int i = 0;
+    METU_LOG("Pass {:d}", i);
+    i++;
 
     GPUTracer::Finalize();
 }

@@ -22,7 +22,7 @@ namespace GPUDataStructCommon
 __device__ __forceinline__
 Vector2f GPUDataStructCommon::DirToDiscreteCoords(const Vector3f& worldDir)
 {
-    float pdf;
+    float pdf = 0.0f;
     return DirToDiscreteCoords(pdf, worldDir);
 }
 
@@ -49,24 +49,13 @@ Vector2f GPUDataStructCommon::DirToDiscreteCoords(float& pdf, const Vector3f& wo
     float sinPhi = sin(thetaPhi[1]);
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
-
-    //if(isnan(pdf))
-    //{
-    //    printf("Dir = [%f, %f, %f] \n"
-    //       "Sphr= [%f, %f] \n"
-    //       "Coords = [%f, %f]\n"
-    //       "---\n",
-    //       worldDir[0], worldDir[1], worldDir[2],
-    //       thetaPhi[0], thetaPhi[1],
-    //       u, v);
-    //}
     return Vector2f(u,v);
 }
 
 __device__ __forceinline__
 Vector3f GPUDataStructCommon::DiscreteCoordsToDir(const Vector2f& discreteCoords)
 {
-    float pdf;
+    float pdf = 0.0f;
     return DiscreteCoordsToDir(pdf, discreteCoords);
 }
 
@@ -82,22 +71,10 @@ Vector3f GPUDataStructCommon::DiscreteCoordsToDir(float& pdf, const Vector2f& di
     Vector3 dirZUp = Utility::SphericalToCartesianUnit(thetaPhi);
     // Spherical Coords calculates as Z up change it to Y up
     Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
-
-    float incPDF = pdf;
-
     // Convert to solid angle pdf
     // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
     float sinPhi = sin(thetaPhi[1]);
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
-
-    if(isnan(pdf))
-        printf("PDF CONVERT NAN(%f) incPDF %f, sinPhi %f, "
-               "discreteCoords %f %f, "
-               "thetaPhi %f %f\n",
-               pdf, incPDF, sinPhi,
-               discreteCoords[0], discreteCoords[1],
-               thetaPhi[0], thetaPhi[1]);
-
     return dirYUp;
 }
