@@ -84,7 +84,6 @@ bool PathNode::HasNext()
 struct PathGuidingNode : public PathNode
 {
     Vector3f            radFactor;          // A.k.a path throughput
-    uint32_t            dataStructIndex;    // Index of an arbitrary data structure
     Vector3f            totalRadiance;      // Total Radiance
 
     // Accumulate the generated radiance to the path
@@ -92,10 +91,18 @@ struct PathGuidingNode : public PathNode
     // of the path so that the class can utilize its own throughput to calculate
     // radiance of that path
     __device__ void     AccumRadiance(const Vector3f& endPointRadiance);
+
+    template <class Node>
     __device__ void     AccumRadianceDownChain(const Vector3f& endPointRadiance,
-                                               PathGuidingNode* gLocalChain);
+                                               Node* gLocalChain);
+    template <class Node>
     __device__ void     AccumRadianceUpChain(const Vector3f& endPointRadiance,
-                                             PathGuidingNode* gLocalChain);
+                                             Node* gLocalChain);
+};
+
+struct PPGPathNode : public PathGuidingNode
+{
+    uint32_t            dataStructIndex;    // Index of an arbitrary data structure
 };
 
 __device__ inline
@@ -108,9 +115,10 @@ void PathGuidingNode::AccumRadiance(const Vector3f& endPointRadiance)
     totalRadiance[2] += (radFactor[2] == 0.0f) ? 0.0f : endPointRadiance[2] / radFactor[2];
 }
 
+template <class Node>
 __device__ inline
 void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
-                                             PathGuidingNode* gLocalChain)
+                                             Node* gLocalChain)
 {
     // Add to yourself
     AccumRadiance(endPointRadiance);
@@ -122,9 +130,10 @@ void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
     }
 }
 
+template <class Node>
 __device__ inline
 void PathGuidingNode::AccumRadianceUpChain(const Vector3f& endPointRadiance,
-                                           PathGuidingNode* gLocalChain)
+                                           Node* gLocalChain)
 {
     // Add to yourself
     AccumRadiance(endPointRadiance);
@@ -136,16 +145,16 @@ void PathGuidingNode::AccumRadianceUpChain(const Vector3f& endPointRadiance,
 }
 
 __global__
-static void KCInitializePaths(PathGuidingNode* gPathNodes,
+static void KCInitializePaths(PPGPathNode* gPathNodes,
                               uint32_t totalNodeCount)
 {
     uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
     if(globalId < totalNodeCount)
     {
-        PathGuidingNode node;
+        PPGPathNode node;
         node.dataStructIndex = UINT32_MAX;
         node.radFactor = Vector3f(1.0f);
-        node.prevNext = Vector<2, PathGuidingNode::IndexType>(PathGuidingNode::InvalidIndex);
+        node.prevNext = Vector<2, PPGPathNode::IndexType>(PPGPathNode::InvalidIndex);
         node.totalRadiance = Zero3;
         node.worldPosition = Zero3;
 

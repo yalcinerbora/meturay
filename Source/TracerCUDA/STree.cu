@@ -258,7 +258,7 @@ void STree::SplitLeaves(uint32_t maxSamplesPerNode,
     // All done!
 }
 
-void STree::AccumulateRaidances(const PathGuidingNode* dPGNodes,
+void STree::AccumulateRaidances(const PPGPathNode* dPGNodes,
                                 uint32_t totalNodeCount,
                                 uint32_t maxPathNodePerRay,
                                 const CudaSystem& system)

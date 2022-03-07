@@ -270,38 +270,38 @@ TEST(PPG_DTree, AddThenSwap)
     std::vector<DTreeNode> nodes;
     DTreeGPU treeGPU;
 
-    PathGuidingNode camNode;
+    PPGPathNode camNode;
     camNode.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     camNode.prevNext = Vector<2, PathNode::IndexType>(PathNode::InvalidIndex, 1);
     camNode.radFactor = Zero3;
     camNode.dataStructIndex = 0;
     camNode.totalRadiance = RADIANCE;
-    PathGuidingNode midNode0;
+    PPGPathNode midNode0;
     midNode0.worldPosition = Vector3f{10.0f, 10.0f, 0.0f};
     midNode0.prevNext = Vector<2, PathNode::IndexType>(0, 2);
     midNode0.radFactor = Zero3;
     midNode0.dataStructIndex = 0;
     midNode0.totalRadiance = RADIANCE;
-    PathGuidingNode midNode1;
+    PPGPathNode midNode1;
     midNode1.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     midNode1.prevNext = Vector<2, PathNode::IndexType>(1, 3);
     midNode1.radFactor = Zero3;
     midNode1.dataStructIndex = 0;
     midNode1.totalRadiance = RADIANCE;
-    PathGuidingNode midNode2;
+    PPGPathNode midNode2;
     midNode2.worldPosition = Vector3f{-10.0f, 10.0f, 0.0f};
     midNode2.prevNext = Vector<2, PathNode::IndexType>(2, 4);
     midNode2.radFactor = Zero3;
     midNode2.dataStructIndex = 0;
     midNode2.totalRadiance = RADIANCE;
-    PathGuidingNode endNode;
+    PPGPathNode endNode;
     endNode.worldPosition = Vector3f{0.0f, 0.0f, 0.0f};
     endNode.prevNext = Vector<2, PathNode::IndexType>(3, PathNode::InvalidIndex);
     endNode.radFactor = Zero3;
     endNode.dataStructIndex = 0;
     endNode.totalRadiance = RADIANCE;
 
-    std::vector<PathGuidingNode> pathNodes =
+    std::vector<PPGPathNode> pathNodes =
     {
         camNode,
         midNode0,
@@ -311,7 +311,7 @@ TEST(PPG_DTree, AddThenSwap)
     };
 
     std::vector<Vector3f> directions;
-    for(const PathGuidingNode& p : pathNodes)
+    for(const PPGPathNode& p : pathNodes)
     {
         if(p.prevNext[1] != PathNode::InvalidIndex)
         {
@@ -324,10 +324,10 @@ TEST(PPG_DTree, AddThenSwap)
     DTreeGroup testTree;
     testTree.AllocateDefaultTrees(1, system);
     // Copy Vertices to the GPU
-    DeviceMemory pathNodeMemory(pathNodes.size() * sizeof(PathGuidingNode));
-    PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
+    DeviceMemory pathNodeMemory(pathNodes.size() * sizeof(PPGPathNode));
+    PPGPathNode* dPathNodes = static_cast<PPGPathNode*>(pathNodeMemory);
     CUDA_CHECK(cudaMemcpy(dPathNodes, pathNodes.data(),
-                          pathNodes.size() * sizeof(PathGuidingNode),
+                          pathNodes.size() * sizeof(PPGPathNode),
                           cudaMemcpyHostToDevice));
 
     // Push these values to the Tree
@@ -452,8 +452,8 @@ TEST(PPG_DTree, SwapStress)
     rng.seed(0);
 
     // GPU Buffers
-    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
-    PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
+    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PPGPathNode));
+    PPGPathNode* dPathNodes = static_cast<PPGPathNode*>(pathNodeMemory);
 
     // Check buffer
     DTreeGPU treeGPU;
@@ -462,7 +462,7 @@ TEST(PPG_DTree, SwapStress)
     // Stress the Tree by randomly adding data multiple times
     DTreeGroup testTree;
     testTree.AllocateDefaultTrees(1, system);
-    std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
+    std::vector<PPGPathNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ITERATION_COUNT; iCount++)
     {
         // Constants for this iteration
@@ -474,15 +474,15 @@ TEST(PPG_DTree, SwapStress)
         for(size_t i = 0; i < PATH_PER_ITERATION; i++)
         {
             uint32_t localIndex = i % PATH_PER_RAY;
-            uint32_t prev = (localIndex == 0) ? PathGuidingNode::InvalidIndex : localIndex - 1;
-            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PathGuidingNode::InvalidIndex : localIndex + 1;
+            uint32_t prev = (localIndex == 0) ? PPGPathNode::InvalidIndex : localIndex - 1;
+            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PPGPathNode::InvalidIndex : localIndex + 1;
 
             Vector3f worldUniform(uniformDist(rng), uniformDist(rng), uniformDist(rng));
             Vector3f radianceUniform(uniformDist(rng), uniformDist(rng), uniformDist(rng));
 
-            PathGuidingNode p;
+            PPGPathNode p;
             p.worldPosition = MIN_WORLD_BOUND + worldUniform * worldBound;
-            p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
+            p.prevNext = Vector<2, PPGPathNode::IndexType>(prev, next);
             p.totalRadiance = radianceUniform * MAX_TOTAL_RADIANCE;
             // Unnecessary Data for this operation
             p.dataStructIndex = DTREE_ID;
@@ -496,7 +496,7 @@ TEST(PPG_DTree, SwapStress)
 
         // Copy Vertices to the GPU
         CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),
-                              PATH_PER_ITERATION * sizeof(PathGuidingNode),
+                              PATH_PER_ITERATION * sizeof(PPGPathNode),
                               cudaMemcpyHostToDevice));
         // Do add radiance kernel
         testTree.AddRadiancesFromPaths(dPathNodes,
@@ -624,27 +624,27 @@ TEST(PPG_DTree, LargeToSmall)
     DTreeGPU treeGPU;
     std::vector<DTreeNode> nodes;
     // GPU Buffers
-    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
-    PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
+    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PPGPathNode));
+    PPGPathNode* dPathNodes = static_cast<PPGPathNode*>(pathNodeMemory);
 
     // First create a deep tree
     DTreeGroup testTree;
     testTree.AllocateDefaultTrees(1, system);
-    std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
+    std::vector<PPGPathNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ADD_ITERATION_COUNT; iCount++)
     {
         for(size_t i = 0; i < PATH_PER_ITERATION; i++)
         {
             uint32_t localIndex = i % PATH_PER_RAY;
-            uint32_t prev = (localIndex == 0) ? PathGuidingNode::InvalidIndex : localIndex - 1;
-            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PathGuidingNode::InvalidIndex : localIndex + 1;
+            uint32_t prev = (localIndex == 0) ? PPGPathNode::InvalidIndex : localIndex - 1;
+            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PPGPathNode::InvalidIndex : localIndex + 1;
 
             // Directly send to a single location
             Vector3f radiance(100.0f);
 
-            PathGuidingNode p;
+            PPGPathNode p;
             p.worldPosition = static_cast<float>(localIndex) * direction;
-            p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
+            p.prevNext = Vector<2, PPGPathNode::IndexType>(prev, next);
             p.totalRadiance = radiance;
             // Unnecessary Data for this operation
             p.dataStructIndex = DTREE_ID;
@@ -653,7 +653,7 @@ TEST(PPG_DTree, LargeToSmall)
         }
         // Copy Vertices to the GPU
         CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),
-                              PATH_PER_ITERATION * sizeof(PathGuidingNode),
+                              PATH_PER_ITERATION * sizeof(PPGPathNode),
                               cudaMemcpyHostToDevice));
         // Do add radiance kernel
         testTree.AddRadiancesFromPaths(dPathNodes,
@@ -672,14 +672,14 @@ TEST(PPG_DTree, LargeToSmall)
     for(size_t i = 0; i < PATH_PER_ITERATION; i++)
     {
         uint32_t localIndex = i % PATH_PER_RAY;
-        uint32_t prev = (localIndex == 0) ? PathGuidingNode::InvalidIndex : localIndex - 1;
-        uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PathGuidingNode::InvalidIndex : localIndex + 1;
+        uint32_t prev = (localIndex == 0) ? PPGPathNode::InvalidIndex : localIndex - 1;
+        uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PPGPathNode::InvalidIndex : localIndex + 1;
 
         Vector3f worldUniform(uniformDist(rng), uniformDist(rng), uniformDist(rng));
         // Arbitrarily send since it is not important
-        PathGuidingNode p;
+        PPGPathNode p;
         p.worldPosition = p.worldPosition = MIN_WORLD_BOUND + worldUniform * worldBound;
-        p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
+        p.prevNext = Vector<2, PPGPathNode::IndexType>(prev, next);
         p.totalRadiance = Zero3;
         // Unnecessary Data for this operation
         p.dataStructIndex = DTREE_ID;
@@ -688,7 +688,7 @@ TEST(PPG_DTree, LargeToSmall)
     }
     // Copy Vertices to the GPU
     CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),
-                          PATH_PER_ITERATION * sizeof(PathGuidingNode),
+                          PATH_PER_ITERATION * sizeof(PPGPathNode),
                           cudaMemcpyHostToDevice));
     // Do add radiance kernel
     testTree.AddRadiancesFromPaths(dPathNodes,
@@ -842,27 +842,27 @@ TEST(PPG_DTree, SampleDeep)
     std::mt19937 rng;
     rng.seed(0);
     // GPU Buffers
-    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
-    PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
+    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PPGPathNode));
+    PPGPathNode* dPathNodes = static_cast<PPGPathNode*>(pathNodeMemory);
 
     // First create a deep tree
     DTreeGroup testTree;
     testTree.AllocateDefaultTrees(1, system);
-    std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
+    std::vector<PPGPathNode> paths(PATH_PER_ITERATION);
     for(int iCount = 0; iCount < ADD_ITERATION_COUNT; iCount++)
     {
         for(size_t i = 0; i < PATH_PER_ITERATION; i++)
         {
             uint32_t localIndex = i % PATH_PER_RAY;
-            uint32_t prev = (localIndex == 0) ? PathGuidingNode::InvalidIndex : localIndex - 1;
-            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PathGuidingNode::InvalidIndex : localIndex + 1;
+            uint32_t prev = (localIndex == 0) ? PPGPathNode::InvalidIndex : localIndex - 1;
+            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PPGPathNode::InvalidIndex : localIndex + 1;
 
             // Directly send to a single location
             Vector3f radiance(100.0f);
 
-            PathGuidingNode p;
+            PPGPathNode p;
             p.worldPosition = Vector3f(posXDist(rng), posYDist(rng), posZDist(rng));
-            p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
+            p.prevNext = Vector<2, PPGPathNode::IndexType>(prev, next);
             p.totalRadiance = radiance;
             // Unnecessary Data for this operation
             p.dataStructIndex = DTREE_ID;
@@ -871,7 +871,7 @@ TEST(PPG_DTree, SampleDeep)
         }
         // Copy Vertices to the GPU
         CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),
-                              PATH_PER_ITERATION * sizeof(PathGuidingNode),
+                              PATH_PER_ITERATION * sizeof(PPGPathNode),
                               cudaMemcpyHostToDevice));
         // Do add radiance kernel
         testTree.AddRadiancesFromPaths(dPathNodes,

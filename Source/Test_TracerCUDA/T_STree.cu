@@ -113,11 +113,11 @@ TEST(PPG_STree, Split)
     std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
 
     // GPU Buffers
-    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PathGuidingNode));
-    PathGuidingNode* dPathNodes = static_cast<PathGuidingNode*>(pathNodeMemory);
+    DeviceMemory pathNodeMemory(PATH_PER_ITERATION * sizeof(PPGPathNode));
+    PPGPathNode* dPathNodes = static_cast<PPGPathNode*>(pathNodeMemory);
 
     STree testTree(WorldAABB, system);
-    std::vector<PathGuidingNode> paths(PATH_PER_ITERATION);
+    std::vector<PPGPathNode> paths(PATH_PER_ITERATION);
     for(uint32_t iCount = 0; iCount < ITERATION_COUNT; iCount++)
     {
         std::uniform_int_distribution<uint32_t> treeCountDist(0, testTree.TotalTreeCount() - 1);
@@ -125,15 +125,15 @@ TEST(PPG_STree, Split)
         for(size_t i = 0; i < PATH_PER_ITERATION; i++)
         {
             uint32_t localIndex = i % PATH_PER_RAY;
-            uint32_t prev = (localIndex == 0) ? PathGuidingNode::InvalidIndex : localIndex - 1;
-            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PathGuidingNode::InvalidIndex : localIndex + 1;
+            uint32_t prev = (localIndex == 0) ? PPGPathNode::InvalidIndex : localIndex - 1;
+            uint32_t next = (localIndex == (PATH_PER_RAY - 1)) ? PPGPathNode::InvalidIndex : localIndex + 1;
 
             Vector3f worldUniform(uniformDist(rng), uniformDist(rng), uniformDist(rng));
             Vector3f radianceUniform(uniformDist(rng), uniformDist(rng), uniformDist(rng));
 
-            PathGuidingNode p;
+            PPGPathNode p;
             p.worldPosition = WORLD_MIN + worldUniform * WorldAABB.Span();
-            p.prevNext = Vector<2, PathGuidingNode::IndexType>(prev, next);
+            p.prevNext = Vector<2, PPGPathNode::IndexType>(prev, next);
             p.totalRadiance = radianceUniform * MAX_TOTAL_RADIANCE;
             // Unnecessary Data for this operation
             p.dataStructIndex = treeCountDist(rng);
@@ -144,7 +144,7 @@ TEST(PPG_STree, Split)
         // Add Paths to GPU
         // Copy Vertices to the GPU
         CUDA_CHECK(cudaMemcpy(dPathNodes, paths.data(),
-                              PATH_PER_ITERATION * sizeof(PathGuidingNode),
+                              PATH_PER_ITERATION * sizeof(PPGPathNode),
                               cudaMemcpyHostToDevice));
 
         //// DEBUGGING

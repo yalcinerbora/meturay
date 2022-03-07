@@ -588,7 +588,6 @@ void RLTracerPathWork(// Output
     // All Done!
 }
 
-
 template <class EGroup>
 __device__ inline
 void RLTracerDebugBWork(// Output
@@ -685,9 +684,10 @@ void RLTracerDebugWork(// Output
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
     //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
     uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
-    Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
-                         ? Zero3f
-                         : Utility::RandomColorRGB(spatialIndex);
+    //Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
+    //                     ? Zero3f
+    //                     : Utility::RandomColorRGB(spatialIndex);
+    Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
     // Accumulate the pixel
     ImageAccumulatePixel(renderState.gImage,
                          aux.pixelIndex,

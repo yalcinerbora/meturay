@@ -66,7 +66,7 @@ class STree
                                               uint32_t dTreeDepthLimit,
                                               const CudaSystem& system);
 
-        void                AccumulateRaidances(const PathGuidingNode* dPGNodes,
+        void                AccumulateRaidances(const PPGPathNode* dPGNodes,
                                                 uint32_t totalNodeCount,
                                                 uint32_t maxPathNodePerRay,
                                                 const CudaSystem&);

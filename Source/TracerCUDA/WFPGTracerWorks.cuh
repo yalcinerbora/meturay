@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RayAuxStruct.cuh"
 
@@ -15,10 +15,9 @@
 
 #include "RayLib/RandomColor.h"
 
-#include "STreeKC.cuh"
-#include "DTreeKC.cuh"
+#include "AnisoSVO.cuh"
 
-struct PPGTracerGlobalState
+struct WFPGTracerGlobalState
 {
     // Output Image
     ImageGMem<Vector4>              gImage;
@@ -29,12 +28,11 @@ struct PPGTracerGlobalState
     // Medium Related
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
-    // SDTree Related
-    const STreeGPU*                 gStree;
-    const DTreeGPU*                 gReadDTrees;
-    DTreeGPU*                       gWriteDTrees;
+    // Path Guiding Related
+    Vector3h*                       gRaySamples; // Spherical coords (x, y) pdf (z)
+    AnisoSVOctreeGPU                svo;
     // Path Related
-    PPGPathNode*                    gPathNodes;
+    PathGuidingNode*                gPathNodes;
     uint32_t                        maximumPathNodePerRay;
     // Options
     // Path Guiding
@@ -46,7 +44,7 @@ struct PPGTracerGlobalState
     int                             rrStart;
 };
 
-struct PPGTracerLocalState
+struct WFPGTracerLocalState
 {
     bool    emptyPrimitive;
 };
@@ -59,28 +57,28 @@ uint8_t DeterminePathIndex(uint8_t depth)
 
 template <class EGroup>
 __device__ inline
-void PPGTracerBoundaryWork(// Output
-                           HitKey* gOutBoundKeys,
-                           RayGMem* gOutRays,
-                           RayAuxPPG* gOutRayAux,
-                           const uint32_t maxOutRay,
-                           // Input as registers
-                           const RayReg& ray,
-                           const RayAuxPPG& aux,
-                           const typename EGroup::Surface& surface,
-                           const RayId rayId,
-                           // I-O
-                           PPGTracerLocalState& localState,
-                           PPGTracerGlobalState& renderState,
-                           RNGeneratorGPUI& rng,
-                           // Constants
-                           const typename EGroup::GPUType& gLight)
+void WFPGTracerBoundaryWork(// Output
+                            HitKey* gOutBoundKeys,
+                            RayGMem* gOutRays,
+                            RayAuxPPG* gOutRayAux,
+                            const uint32_t maxOutRay,
+                            // Input as registers
+                            const RayReg& ray,
+                            const RayAuxPPG& aux,
+                            const typename EGroup::Surface& surface,
+                            const RayId rayId,
+                            // I-O
+                            WFPGTracerLocalState& localState,
+                            WFPGTracerGlobalState& renderState,
+                            RNGeneratorGPUI& rng,
+                            // Constants
+                            const typename EGroup::GPUType& gLight)
 {
     using GPUType = typename EGroup::GPUType;
 
     // Current Path
     const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
-    PPGPathNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
+    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
@@ -195,8 +193,8 @@ void PPGTracerPathWork(// Output
                        const typename MGroup::Surface& surface,
                        const RayId rayId,
                        // I-O
-                       PPGTracerLocalState& localState,
-                       PPGTracerGlobalState& renderState,
+                       WFPGTracerLocalState& localState,
+                       WFPGTracerGlobalState& renderState,
                        RNGeneratorGPUI& rng,
                        // Constants
                        const typename MGroup::Data& gMatData,
@@ -206,7 +204,7 @@ void PPGTracerPathWork(// Output
 
     // Path Memory
     const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
-    PPGPathNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
+    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
@@ -523,13 +521,13 @@ void PPGTracerPathWork(// Output
     uint8_t prevPathIndex = DeterminePathIndex(aux.depth - 1);
     uint8_t curPathIndex = DeterminePathIndex(aux.depth);
 
-    PPGPathNode node;
+    PathGuidingNode node;
     //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u DT %u\n",
     //       static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
     //       position[0], position[1], position[2],
     //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
     //       aux.pathIndex, dTreeIndex);
-    node.prevNext[1] = PPGPathNode::InvalidIndex;
+    node.prevNext[1] = PathGuidingNode::InvalidIndex;
     node.prevNext[0] = prevPathIndex;
     node.worldPosition = position;
     node.dataStructIndex = dTreeIndex;
@@ -537,7 +535,7 @@ void PPGTracerPathWork(// Output
     node.totalRadiance = Zero3;
     gLocalPathNodes[curPathIndex] = node;
     // Set Previous Path node's next index
-    if(prevPathIndex != PPGPathNode::InvalidIndex)
+    if(prevPathIndex != PathGuidingNode::InvalidIndex)
         gLocalPathNodes[prevPathIndex].prevNext[1] = curPathIndex;
 
     // All Done!

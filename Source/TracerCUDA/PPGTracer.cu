@@ -48,10 +48,10 @@ void PPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
     //METU_LOG("Allocating PPGTracer global path buffer: Size {:d} MiB",
-    //         totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
+    //         totalPathNodeCount * sizeof(PPGPathNode) / 1024 / 1024);
 
-    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
-    dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
+    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PPGPathNode));
+    dPathNodes = static_cast<PPGPathNode*>(pathMemory);
 
     // Initialize Paths
     const CudaGPU& bestGPU = cudaSystem.BestGPU();

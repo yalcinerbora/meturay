@@ -309,6 +309,16 @@ set(SRC_RL_TRACER_AUX_CLASSES
     ${CURRENT_SOURCE_DIR}/SceneSurfaceTree.cu
     ${CURRENT_SOURCE_DIR}/SceneSurfaceTreeKC.cuh)
 
+set(SRC_WFPG_TRACER
+    ${CURRENT_SOURCE_DIR}/WFPGTracer.cu
+    ${CURRENT_SOURCE_DIR}/WFPGTracer.h
+    ${CURRENT_SOURCE_DIR}/WFPGTracerKC.cuh
+    ${CURRENT_SOURCE_DIR}/WFPGTracerWorks.cu
+    ${CURRENT_SOURCE_DIR}/WFPGTracerWorks.cuh)
+
+set(SRC_WFPG_TRACER_AUX_CLASSES
+    ${CURRENT_SOURCE_DIR}/AnisoSVO.cu
+    ${CURRENT_SOURCE_DIR}/AnisoSVO.cuh)
 
 set(SRC_REF_PG_TRACER
     ${CURRENT_SOURCE_DIR}/RefPGTracer.cu
@@ -375,7 +385,9 @@ set(SRC_ALL
     ${SRC_RC_OPTIX}
     ${SRC_RNG}
     ${SRC_RL_TRACER}
-    ${SRC_RL_TRACER_AUX_CLASSES})
+    ${SRC_RL_TRACER_AUX_CLASSES}
+    ${SRC_WFPG_TRACER}
+    ${SRC_WFPG_TRACER_AUX_CLASSES})
 
 # IDE Filters
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
@@ -423,6 +435,8 @@ source_group("Tracers/PPGTracer" FILES ${SRC_PPG_TRACER})
 source_group("Tracers/PPGTracer/Aux Classes" FILES ${SRC_PPG_TRACER_AUX_CLASSES})
 source_group("Tracers/RLTracer" FILES ${SRC_RL_TRACER})
 source_group("Tracers/RLTracer/Aux Classes" FILES ${SRC_RL_TRACER_AUX_CLASSES})
+source_group("Tracers/WFPGTracer" FILES ${SRC_WFPG_TRACER})
+source_group("Tracers/WFPGTracer/Aux Classes" FILES ${SRC_WFPG_TRACER_AUX_CLASSES})
 source_group("Tracers/RefPGTracer" FILES ${SRC_REF_PG_TRACER})
 source_group("Tracers/Data Structures" FILES ${SRC_DATA_STRUCTURES})
 

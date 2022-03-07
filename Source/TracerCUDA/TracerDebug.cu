@@ -190,7 +190,7 @@ std::ostream& operator<<(std::ostream& s, const STreeGPU& n)
     return s;
 }
 
-std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
+std::ostream& operator<<(std::ostream& s, const PPGPathNode& n)
 {
     s << "W: { "
       << n.worldPosition[0] << ", "

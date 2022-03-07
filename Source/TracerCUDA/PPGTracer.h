@@ -7,7 +7,7 @@
 #include "Tracers.h"
 
 class GPUDirectLightSamplerI;
-struct PathGuidingNode;
+struct PPGPathNode;
 
 class PPGTracer final : public RayTracer
 {
@@ -71,7 +71,7 @@ class PPGTracer final : public RayTracer
         const GPUDirectLightSamplerI*   dLightSampler;
         // Path Memory
         DeviceMemory                    pathMemory;
-        PathGuidingNode*                dPathNodes;
+        PPGPathNode*                    dPathNodes;
         // Global STree
         std::unique_ptr<STree>          sTree;
         // Internal State

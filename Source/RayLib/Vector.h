@@ -14,23 +14,44 @@ N should be 2, 3 or 4 at most.
 #include <tuple>
 #include "CudaCheck.h"
 
-template<class T>
-using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
+#ifdef METU_CUDA
+    #include <cuda_fp16.h>
+#endif
+
+template <class T>
+struct IsArithmeticType : std::is_arithmetic<T> {};
+
+template <class T>
+struct IsFloatType : std::is_floating_point<T> {};
+
+template <class T>
+struct IsSignedType : std::is_signed<T> {};
+
+#ifdef METU_CUDA
+    template <>
+    struct IsArithmeticType<half> : std::true_type {};
+
+    template <>
+    struct IsFloatType<half> : std::true_type {};
+
+    template <>
+    struct IsSignedType<half> : std::true_type {};
+#endif
 
 template<class T>
-using ArithmeticEnable = typename std::enable_if<std::is_arithmetic<T>::value>::type;
+using ArithmeticEnable = typename std::enable_if<IsArithmeticType<T>::value>::type;
 
 template<class... Args>
-using AllArithmeticEnable = typename std::enable_if<std::conjunction<std::is_arithmetic<Args>...>::value>::type;
+using AllArithmeticEnable = typename std::enable_if<std::conjunction<IsArithmeticType<Args>...>::value>::type;
 
 template<class T, class RType = void>
-using FloatEnable = typename std::enable_if<std::is_floating_point<T>::value, RType>::type;
+using FloatEnable = typename std::enable_if<IsFloatType<T>::value, RType>::type;
 
 template<class T, class RType = void>
 using IntegralEnable = typename std::enable_if<std::is_integral<T>::value, RType>::type;
 
 template<class T, class RType = void>
-using SignedEnable = typename std::enable_if<std::is_signed<T>::value, RType>::type;
+using SignedEnable = typename std::enable_if<IsSignedType<T>::value, RType>::type;
 
 template<int N, class T, typename = ArithmeticEnable<T>>
 class Vector;
@@ -220,6 +241,12 @@ using Vector3uc  = Vector<3, uint8_t>;
 using Vector4c   = Vector<4, int8_t>;
 using Vector4uc  = Vector<4, uint8_t>;
 
+#ifdef METU_CUDA
+    using Vector2h = Vector<2, half>;
+    using Vector3h = Vector<3, half>;
+    using Vector4h = Vector<4, half>;
+#endif
+
 // Requirements of Vectors
 //static_assert(std::is_literal_type<Vector3>::value == true, "Vectors has to be literal types");
 static_assert(std::is_trivially_copyable<Vector3>::value == true, "Vectors has to be trivially copyable");
@@ -270,6 +297,14 @@ static constexpr Vector2ul Zero2ul = Vector2ul(0ul, 0ul);
 static constexpr Vector2 Zero2 = Zero2f;
 static constexpr Vector3 Zero3 = Zero3f;
 static constexpr Vector4 Zero4 = Zero4f;
+
+// No constepxr support of half on cuda
+//#ifdef METU_CUDA
+//    static constexpr Vector2h Zero2h = Vector2h(static_cast<half>(0.0f),
+//                                                static_cast<half>(0.0f));
+//    static constexpr Vector3h Zero3h = Vector3h(0.0f, 0.0f, 0.0f);
+//    static constexpr Vector4h Zero4h = Vector4h(0.0f, 0.0f, 0.0f, 0.0f);
+//#endif
 
 // Vector Traits
 template<class T>

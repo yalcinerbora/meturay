@@ -21,7 +21,7 @@
 struct FetchTreeIdFunctor
 {
     __device__ __host__ inline
-    uint32_t operator()(const PathGuidingNode& node) const
+    uint32_t operator()(const PPGPathNode& node) const
     {
         return node.dataStructIndex;
     }
@@ -318,7 +318,7 @@ static void KCDetermineTreeAndOffset(// Output
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTrees,
                                        // Input
-                                       const PathGuidingNode* gPathNodes,
+                                       const PPGPathNode* gPathNodes,
                                        uint32_t nodeCount,
                                        uint32_t maxPathNodePerRay)
 {
@@ -329,7 +329,7 @@ static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTrees,
         const uint32_t nodeIndex = threadId;
         const uint32_t pathStartIndex = nodeIndex / maxPathNodePerRay * maxPathNodePerRay;
 
-        PathGuidingNode gPathNode = gPathNodes[nodeIndex];
+        PPGPathNode gPathNode = gPathNodes[nodeIndex];
         const uint32_t treeIndex = gPathNode.dataStructIndex;
 
         // Skip if invalid tree
@@ -337,7 +337,7 @@ static void KCAccumulateRadianceToLeaf(DTreeGPU* gDTrees,
         // Skip if this node cannot calculate wi
         if(!gPathNode.HasNext()) continue;
 
-        Vector3f wi = gPathNode.Wi<PathGuidingNode>(gPathNodes, pathStartIndex);
+        Vector3f wi = gPathNode.Wi<PPGPathNode>(gPathNodes, pathStartIndex);
         float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
         gDTrees[treeIndex].AddRadianceToLeaf(wi, luminance, true);
     }
@@ -870,7 +870,7 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
 }
 
 
-void DTreeGroup::AddRadiancesFromPaths(const PathGuidingNode* dPGNodes,
+void DTreeGroup::AddRadiancesFromPaths(const PPGPathNode* dPGNodes,
                                        uint32_t totalNodeCount,
                                        uint32_t maxPathNodePerRay,
                                        const CudaSystem& system)

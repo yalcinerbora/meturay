@@ -20,7 +20,7 @@ STree Implementation from PPG
 
 struct DTreeNode;
 struct DTreeGPU;
-struct PathGuidingNode;
+struct PPGPathNode;
 
 class CudaSystem;
 
@@ -110,7 +110,7 @@ class DTreeGroup
                                               const CudaSystem& system);
         void                    SwapTrees(float fluxRatio, uint32_t depthLimit,
                                           const CudaSystem& system);
-        void                    AddRadiancesFromPaths(const PathGuidingNode* dPGNodes,
+        void                    AddRadiancesFromPaths(const PPGPathNode* dPGNodes,
                                                       uint32_t totalNodeCount,
                                                       uint32_t maxPathNodePerRay,
                                                       const CudaSystem& system);
