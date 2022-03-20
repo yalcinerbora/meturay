@@ -122,7 +122,6 @@ void GDebugRendererRef::UpdateDirectional(bool doLogScale,
     std::vector<Byte> pixels;
     ImageIOInstance()->ReadImage(pixels, pf, dim, file);
 
-
     TextureGL lumTexture = TextureGL(dim, pf);
     lumTexture.CopyToImage(pixels, Zero2ui, dim, pf);
     if(lumTexture.Size() != currentTexture.Size())

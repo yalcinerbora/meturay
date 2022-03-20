@@ -30,6 +30,7 @@ class RLTracer final : public RayTracer
         static constexpr const char* DEBUG_RENDER_NAME          = "DebugRender";
 
         static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
+        static constexpr const char* DUMP_INTERVAL_NAME         = "DataDumpIntervalExp";
 
         struct Options
         {
@@ -54,6 +55,7 @@ class RLTracer final : public RayTracer
             bool                directLightMIS      = false;
 
             bool                dumpDebugData       = false;
+            uint32_t            qDumpInterval       = 2;
         };
 
     private:
@@ -73,6 +75,9 @@ class RLTracer final : public RayTracer
         DeviceMemory                    memory;
         SceneSurfaceTree                surfaceTree;
         QFunctionCPU                    qFunction;
+
+        uint32_t                        iterationCount;
+        uint32_t                        qDumpCount;
 
     protected:
     public:

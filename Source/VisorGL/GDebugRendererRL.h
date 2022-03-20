@@ -13,9 +13,10 @@ struct SurfaceLeaf
 {
     Vector3f position;
     Vector3f normal;
+    uint32_t leafId;
 };
 
-struct alignas(16) SurfaceLBVHNode
+struct /*alignas(16)*/ SurfaceLBVHNode
 {
     // Pointers
     union
@@ -37,10 +38,10 @@ struct alignas(16) SurfaceLBVHNode
 
 struct SurfaceLBVH
 {
-    std::vector<SurfaceLBVHNode> nodes;
-    uint32_t nodeCount;
-    uint32_t leafCount;
-    uint32_t rootIndex;
+    std::vector<SurfaceLBVHNode>    nodes;
+    uint32_t                        nodeCount;
+    uint32_t                        leafCount;
+    uint32_t                        rootIndex;
 
     uint32_t FindNearestPoint(float& distance, const Vector3f& worldPoint) const;
     float    VoronoiCenterSize() const;
@@ -51,9 +52,25 @@ class GDebugRendererRL : public GDebugRendererI
     public:
         static constexpr const char* TypeName = "RL";
 
+        // Shader Bind Points
+        // SSBOs
+        static constexpr GLuint     SSB_MAX_LUM = 0;
+        // UBOs
+        static constexpr GLuint     UB_MAX_LUM = 0;
+        // Uniforms
+        static constexpr GLuint     U_RES = 0;
+        static constexpr GLuint     U_LOG_ON = 1;
+        // Textures
+        static constexpr GLuint     T_IN_LUM_TEX = 0;
+        static constexpr GLuint     T_IN_GRAD_TEX = 1;
+        // Images
+        static constexpr GLuint     I_OUT_REF_IMAGE = 0;
+
+
     private:
         static constexpr const char* LBVH_NAME = "lbvh";
         static constexpr const char* QFUNC_NAME = "qFunctions";
+        static constexpr const char* QSIZE_NAME = "qSize";
 
         const SamplerGL         linearSampler;
         const TextureGL&        gradientTexture;
@@ -64,11 +81,15 @@ class GDebugRendererRL : public GDebugRendererI
         TextureGL               currentTexture;
         std::vector<float>      currentValues;
         float                   maxValueDisplay;
+        // Shaders
+        ShaderGL                compReduction;
+        ShaderGL                compRefRender;
 
         // Spatial Data Structure
-        SurfaceLBVH             lbvh;
+        SurfaceLBVH                 lbvh;
         // Directional Data Structures
-        // ....
+        std::vector<std::string>    qFuncFileNames;
+        Vector2ui                   qFuncSize;
         // Options
         bool                    renderPerimeter;
 

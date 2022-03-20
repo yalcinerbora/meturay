@@ -133,6 +133,9 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
     double descentFactor = 1.0;
     pdf = 1.0f;
 
+
+    Vector2f initXi = xi;
+
     if(xi[0] < 0.0f || xi[0] >= 1.0f)
         printf("xi[0] fail from start xi: %f\n", xi[0]);
     if(xi[1] < 0.0f || xi[1] >= 1.0f)
@@ -192,10 +195,22 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
         if(xi[1] < cdfMidY)
         {
             // Re-normalize sample for next iteration
+            if(xi[1] == 0.0f && cdfMidY == 0.0f)
+                printf("xi[1] Nan xi(%f, %f), midY %f, samples (%u, %u, %u, %u)\n",
+                       xi[0], xi[1], cdfMidY,
+                       node->sampleCounts[0], node->sampleCounts[1],
+                       node->sampleCounts[2], node->sampleCounts[3]);
+
             xi[1] = xi[1] / cdfMidY;
         }
         else
         {
+            if(xi[1] == 1.0f && cdfMidY == 1.0f)
+                printf("xi[1] Nan xi(%f, %f), midY %f, samples (%u, %u, %u, %u)\n",
+                       xi[0], xi[1], cdfMidY,
+                       node->sampleCounts[0], node->sampleCounts[1],
+                       node->sampleCounts[2], node->sampleCounts[3]);
+
             // Re-normalize sample for next iteration
             xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
             // Set the Y bit on the iteration
@@ -241,12 +256,19 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
         i++;
     }
 
-    //if(isnan(pdf) || discreteCoords.HasNaN())
-    //    printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f)\n", i, pdf,
-    //           discreteCoords[0], discreteCoords[1],
-    //           xi[0], xi[1]);
+    if(isnan(pdf) || discreteCoords.HasNaN())
+        printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f) initXi(%f, %f)\n", i, pdf,
+               discreteCoords[0], discreteCoords[1],
+               xi[0], xi[1], initXi[0], initXi[1]);
 
-    return GPUDataStructCommon::DiscreteCoordsToDir(pdf, discreteCoords);
+    Vector3f dir = GPUDataStructCommon::DiscreteCoordsToDir(pdf, discreteCoords);
+
+    if(isnan(pdf) || dir.HasNaN())
+        printf("%d NAN? PDF(%f) Dir(%f, %f, %f) xi(%f, %f)\n", i, pdf,
+               dir[0], dir[1], dir[2],
+               xi[0], xi[1]);
+
+    return dir;
     //float discretePdf = pdf;
     //Vector3f result = TreeCoordsToWorldDir(pdf, discreteCoords);
     //pdf = discretePdf * 0.25f * MathConstants::InvPi;

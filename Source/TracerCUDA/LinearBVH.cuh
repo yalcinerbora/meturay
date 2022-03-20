@@ -192,7 +192,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPointWithStack(float& dista
 
     // Initialize with an approximate closest value
     float closestDistance = InitClosestDistance(worldSurface);
-    uint32_t closestIndex = UINT32_MAX;
+    uint32_t closestLeafIndex = UINT32_MAX;
     // TODO: There is an optimization here
     // first iteration until leaf is always true
     // initialize closest distance with the radius
@@ -210,7 +210,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPointWithStack(float& dista
             if(distance < closestDistance)
             {
                 closestDistance = distance;
-                closestIndex = static_cast<uint32_t>(currentNode - nodes);
+                closestLeafIndex = currentNode->leaf.leafId;
             }
         }
         else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
@@ -224,7 +224,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPointWithStack(float& dista
         }
     }
     distance = closestDistance;
-    return closestIndex;
+    return closestLeafIndex;
 }
 
 template <class Leaf, class DistFunctor>
@@ -233,6 +233,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
 {
     static_assert(HasPosition<Leaf>::value,
                   "This functions requires its leafs to have public \"position\" variable");
+
     // Helper Variables
     static constexpr uint8_t FIRST_ENTRY = 0b00;
     static constexpr uint8_t U_TURN = 0b01;
@@ -261,7 +262,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
     // & Closest Hit
     // Initialize with an approximate closest value
     float closestDistance = InitClosestDistance(worldSurface);
-    uint32_t closestIndex = UINT32_MAX;
+    uint32_t closestLeafIndex = UINT32_MAX;
 
     // Bit Stack and its pointer
     uint64_t list = 0;
@@ -283,7 +284,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
                 if(distance < closestDistance)
                 {
                     closestDistance = distance;
-                    closestIndex = static_cast<uint32_t>(currentNode - nodes);
+                    closestLeafIndex = currentNode->leaf.leafId;
                 }
                 // Go Up
                 currentNode = nodes + currentNode->parent;
@@ -335,7 +336,7 @@ uint32_t LinearBVHGPU<Leaf, DistFunctor>::FindNearestPoint(float& distance, cons
         }
     }
     distance = closestDistance;
-    return closestIndex;
+    return closestLeafIndex;
 }
 
 template <class Leaf, class DistFunctor>

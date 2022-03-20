@@ -92,6 +92,8 @@ class QFunctionCPU
         void            RecalculateDistributions(const CudaSystem&);
         QFunctionGPU    FunctionGPU() const;
 
+        void            DumpFunctionAsBinary(std::vector<Byte>&) const;
+
         size_t          UsedGPUMemory() const;
         size_t          UsedCPUMemory() const;
 };

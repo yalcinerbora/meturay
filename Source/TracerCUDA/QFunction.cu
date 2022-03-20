@@ -9,9 +9,9 @@
 
 void QFunctionCPU::RecalculateDistributions(const CudaSystem& system)
 {
-    Debug::DumpBatchedMemToFile("qFunc", qFuncGPU.gQFunction,
-                                qFuncGPU.dataPerNode.Multiply(),
-                                qFuncGPU.dataPerNode.Multiply() * qFuncGPU.nodeCount);
+    //Debug::DumpBatchedMemToFile("qFunc", qFuncGPU.gQFunction,
+    //                            qFuncGPU.dataPerNode.Multiply(),
+    //                            qFuncGPU.dataPerNode.Multiply() * qFuncGPU.nodeCount);
 
     distributions.UpdateDistributions(qFuncGPU.gQFunction, true,
                                       system, cudaMemcpyDeviceToDevice);
@@ -41,4 +41,13 @@ TracerError QFunctionCPU::Initialize(const CudaSystem& system)
 
     qFuncGPU.gDistributions = distributions.DistributionGPU();
     return TracerError::OK;
+}
+
+void QFunctionCPU::DumpFunctionAsBinary(std::vector<Byte>& dataOut) const
+{
+    size_t size = qFuncGPU.dataPerNode.Multiply() * qFuncGPU.nodeCount * sizeof(float);
+    dataOut.resize(size);
+
+    CUDA_CHECK(cudaMemcpy(dataOut.data(), qFuncGPU.gQFunction,
+                          size, cudaMemcpyDeviceToHost));
 }

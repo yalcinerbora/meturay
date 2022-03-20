@@ -16,7 +16,8 @@ void KCPackSurfaces(SurfaceLeaf* gSurfaces,
         globalId < surfaceCount; globalId += blockDim.x * gridDim.x)
     {
         gSurfaces[globalId] = SurfaceLeaf{gPositions[globalId],
-                                          gNormals[globalId]};
+                                          gNormals[globalId],
+                                          globalId};
     }
 }
 
@@ -119,12 +120,18 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
     nThreshold = std::cos(nThreshold);
     SurfaceDistanceFunctor df(nThreshold);
 
+    // LBVH
     //if((err = treeCPU.Construct(dSurfaceLeafs, samplePointCount, df,
     //                            cudaSystem)) != TracerError::OK)
-
-    if((err = treeCPU.Construct(dPositions, samplePointCount,
-                                cudaSystem)) != TracerError::OK)
+    //    return err;
+    if((err = treeCPU.ConstructNonLinear(dSurfaceLeafs, samplePointCount, df,
+                                         cudaSystem)) != TracerError::OK)
         return err;
+
+    // Kd Tree
+    //if((err = treeCPU.Construct(dPositions, samplePointCount,
+    //                            cudaSystem)) != TracerError::OK)
+    //    return err;
 
     // Print the generation timer
     cudaSystem.SyncAllGPUs();

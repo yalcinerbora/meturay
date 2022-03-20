@@ -267,12 +267,12 @@ void RLTracerPathWork(// Output
     // Before BxDF Acquire the 2D irradiance map
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
-    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
 
-    if(spatialIndex == UINT32_MAX)
+    if(spatialIndex >= posTree.leafCount)
     {
-        printf("Out of Range KdTree!\n");
+        printf("Out of Range KdTree! %u\n", spatialIndex);
         spatialIndex = 0;
     }
 
@@ -538,9 +538,12 @@ void RLTracerPathWork(// Output
         // Since material is a specular material
         // Only send the found direction value
         // as if the accumulated value
-        float value = renderState.qFunction.Value(rayPath.getDirection(), spatialIndex);
-        float sum = Utility::RGBToLuminance(reflectance) * value;
-        renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+        if(aux.type != RayType::CAMERA_RAY)
+        {
+            float value = renderState.qFunction.Value(rayPath.getDirection(), spatialIndex);
+            float sum = Utility::RGBToLuminance(reflectance) * value;
+            renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+        }
     }
 
     // Factor the radiance of the surface
@@ -629,8 +632,8 @@ void RLTracerDebugBWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
-    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
     Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
                          ? Zero3f
                          : Utility::RandomColorRGB(spatialIndex);
@@ -682,12 +685,12 @@ void RLTracerDebugWork(// Output
     // Acquire Spatial Loc
     float distance;
     SurfaceLeaf queryLeaf{position, surface.WorldNormal()};
-    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
-    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
-    //Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
-    //                     ? Zero3f
-    //                     : Utility::RandomColorRGB(spatialIndex);
-    Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
+    uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf);
+    //uint32_t spatialIndex = posTree.FindNearestPoint(distance, queryLeaf.position);
+    Vector3f locColor = (distance <= posTree.VoronoiCenterSize())
+                         ? Zero3f
+                         : Utility::RandomColorRGB(spatialIndex);
+    //Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
     // Accumulate the pixel
     ImageAccumulatePixel(renderState.gImage,
                          aux.pixelIndex,

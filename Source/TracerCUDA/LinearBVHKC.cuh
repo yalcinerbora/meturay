@@ -5,6 +5,7 @@
 struct PointStruct
 {
     Vector3f position;
+    uint32_t leafId;
 };
 
 __device__ __host__ HYBRID_INLINE

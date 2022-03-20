@@ -353,10 +353,12 @@ void PPGTracer::Finalize()
         nextTreeSwap <<= 1;
 
         uint32_t treeSwapIterationCount = Utility::FindLastSet(nextTreeSwap) - 1;
-        uint64_t sTreeSplit64 = static_cast<uint64_t>((std::pow(2.0f, treeSwapIterationCount) *
-                                                       options.sTreeSplitThreshold));
-        uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>(std::min<uint64_t>(sTreeSplit64,
-                                                                                       std::numeric_limits<uint32_t>::max()));
+
+        uint64_t sTreeSplit64 = static_cast<uint64_t>(std::sqrt(std::pow(2.0f, treeSwapIterationCount)));
+        sTreeSplit64 *= options.sTreeSplitThreshold;
+        // Limit to the 32-bit upper bound
+        sTreeSplit64 = std::min<uint64_t>(sTreeSplit64, std::numeric_limits<uint32_t>::max());
+        uint32_t currentSTreeSplitThreshold = static_cast<uint32_t>(sTreeSplit64);
         // Split and Swap the trees
         sTree->SplitAndSwapTrees(currentSTreeSplitThreshold,
                                  options.dTreeSplitThreshold,
@@ -364,7 +366,8 @@ void PPGTracer::Finalize()
                                  cudaSystem);
 
         size_t mbSize = sTree->UsedGPUMemory() / 1024 / 1024;
-        METU_LOG("{:d}: Splitting and Swapping => Split: {:d}, Trees Size: {:d} MiB, Trees: {:d}",
+        METU_LOG("I: {:d} S: {:d}, Splitting and Swapping => Split: {:d}, Trees Size: {:d} MiB, Trees: {:d}",
+                 treeSwapIterationCount,
                  currentTreeIteration,
                  currentSTreeSplitThreshold,
                  mbSize,

@@ -33,6 +33,9 @@ RLTracer::RLTracer(const CudaSystem& s,
 
 TracerError RLTracer::Initialize()
 {
+    iterationCount = 0;
+    qDumpCount = 0;
+
     TracerError err = TracerError::OK;
     if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
@@ -170,6 +173,8 @@ TracerError RLTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetUInt(options.qDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
+        return err;
 
     return TracerError::OK;
 }
@@ -253,8 +258,6 @@ bool RLTracer::Render()
     return true;
 }
 
-#include "RayLib/CPUTimer.h"
-
 void RLTracer::Finalize()
 {
     cudaSystem.SyncAllGPUs();
@@ -268,9 +271,19 @@ void RLTracer::Finalize()
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
 
-    static int i = 0;
-    METU_LOG("Pass {:d}", i);
-    i++;
+    // If requested write out the LBH as a file
+    uint32_t dumpInterval = static_cast<uint32_t>(std::pow(options.qDumpInterval, qDumpCount));
+    if(options.dumpDebugData &&
+       !options.debugRender &&
+       iterationCount == dumpInterval)
+    {
+        std::vector<Byte> qData;
+        qFunction.DumpFunctionAsBinary(qData);
+        std::string fName = fmt::format("{:d}_qFunc", iterationCount);
+        Utility::DumpStdVectorToFile(qData, fName);
+        qDumpCount++;
+    }
+    iterationCount++;
 
     GPUTracer::Finalize();
 }

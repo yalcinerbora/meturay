@@ -6,6 +6,7 @@ struct SurfaceLeaf
 {
     Vector3f position;
     Vector3f normal;
+    uint32_t leafId;
 };
 
 class SurfaceDistanceFunctor

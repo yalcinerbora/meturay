@@ -22,9 +22,59 @@ inline float DistanceFunction(const Vector3f& worldPos,
 
 uint32_t SurfaceLBVH::FindNearestPoint(float& distance, const Vector3f& worldPos) const
 {
-    static constexpr uint32_t MAX_DEPTH = 64;
+    const SurfaceLeaf worldSurface = SurfaceLeaf{worldPos, Zero3f};
 
-    // Minimal stack to traverse
+    // Distance initialization function
+    auto InitClosestDistance = [&](const SurfaceLeaf& worldSurface) -> float
+    {
+        auto DetermineDistance = [&](const SurfaceLBVHNode* childNode)
+        {
+            float childDistance = FLT_MAX;
+            if(childNode->isLeaf)
+            {
+                childDistance = DistanceFunction(childNode->leaf.position, worldSurface);
+            }
+            else
+            {
+                AABB3f aabbChild = AABB3f(childNode->body.aabbMin,
+                                          childNode->body.aabbMax);
+                if(aabbChild.IsInside(worldSurface.position))
+                {
+                    childDistance = 0.0f;
+                }
+                else
+                {
+                    childDistance = aabbChild.FurthestCorner(worldSurface.position).Length()
+                        + MathConstants::Epsilon;
+                }
+            }
+            return childDistance;
+        };
+
+        // Utilize BVH as a Kd Tree and do AABB-Point
+        // intersection instead of AABB-Sphere.
+        // This is not an exact solution and may fail
+        const SurfaceLBVHNode* currentNode = nodes.data() + rootIndex;
+        // Descent towards the tree
+        while(!currentNode->isLeaf)
+        {
+            // Check both child here
+            const SurfaceLBVHNode* leftNode = nodes.data() + currentNode->body.left;
+            const SurfaceLBVHNode* rightNode = nodes.data() + currentNode->body.right;
+            // Determine the distances
+            float leftDistance = DetermineDistance(leftNode);
+            float rightDistance = DetermineDistance(rightNode);
+            // Select the closest child
+            currentNode = (leftDistance < rightDistance) ? leftNode : rightNode;
+        }
+        // We found a leaf so use it
+        return DistanceFunction(currentNode->leaf.position, worldSurface) + MathConstants::Epsilon;
+
+    };
+
+    // Stack functions for traversal
+    static constexpr uint32_t MAX_DEPTH = 64;
+        // Minimal stack to traverse
     uint32_t sLocationStack[MAX_DEPTH];
     // Convenience Functions
     auto Push = [&sLocationStack](uint8_t& depth, uint32_t loc) -> void
@@ -43,14 +93,10 @@ uint32_t SurfaceLBVH::FindNearestPoint(float& distance, const Vector3f& worldPos
         depth--;
         return ReadTop(depth);
     };
-    // Resulting Closest Leaf Index
-    // & Closest Hit
-    // Arbitrarily set the initial distance 
-    // to the first leaf(node[0]) distance
-    assert(nodes[0].isLeaf == true);
-    float closestDistance = DistanceFunction(worldPos,
-                                             nodes[0].leaf);
-    uint32_t closestIndex = UINT32_MAX;
+
+    // Initialize with an approximate closest value
+    float closestDistance = InitClosestDistance(worldSurface);
+    uint32_t closestLeafIndex = UINT32_MAX;
     // TODO: There is an optimization here
     // first iteration until leaf is always true
     // initialize closest distance with the radius
@@ -64,16 +110,17 @@ uint32_t SurfaceLBVH::FindNearestPoint(float& distance, const Vector3f& worldPos
 
         if(currentNode->isLeaf)
         {
-            float distance = DistanceFunction(worldPos, currentNode->leaf);
+            float distance = DistanceFunction(currentNode->leaf.position, worldSurface);
             if(distance < closestDistance)
             {
                 closestDistance = distance;
-                closestIndex = static_cast<uint32_t>(currentNode - nodes.data());
+                closestLeafIndex = currentNode->leaf.leafId;
             }
         }
         else if(AABB3f aabb = AABB3f(currentNode->body.aabbMin,
                                      currentNode->body.aabbMax);
-                aabb.IntersectsSphere(worldPos, closestDistance))
+                aabb.IntersectsSphere(worldSurface.position,
+                                      closestDistance))
         {
             // Push to stack
             Push(depth, currentNode->body.right);
@@ -81,7 +128,7 @@ uint32_t SurfaceLBVH::FindNearestPoint(float& distance, const Vector3f& worldPos
         }
     }
     distance = closestDistance;
-    return closestIndex;
+    return closestLeafIndex;
 }
 
 float SurfaceLBVH::VoronoiCenterSize() const
@@ -115,7 +162,7 @@ bool GDebugRendererRL::LoadLBVH(SurfaceLBVH& bvh,
     file.read(reinterpret_cast<char*>(&bvh.leafCount), sizeof(uint32_t));
     // Read DTree Offset/Count Pairs
     bvh.nodes.resize(bvh.nodeCount);
-    file.read(reinterpret_cast<char*>(bvh.nodes.data()), 
+    file.read(reinterpret_cast<char*>(bvh.nodes.data()),
               sizeof(SurfaceLBVHNode) * bvh.nodeCount);
     assert(bvh.nodes.size() == bvh.nodeCount);
     return true;
@@ -129,14 +176,24 @@ GDebugRendererRL::GDebugRendererRL(const nlohmann::json& config,
                     SamplerGLInterpType::LINEAR)
     , gradientTexture(gradientTexture)
     , renderPerimeter(false)
+    , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
+    , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
 {
     if(!LoadLBVH(lbvh, config, configPath))
         throw std::runtime_error("Unable to Load LBVH");
     // Load the Name
     name = config[GuideDebug::NAME];
 
-    // Load QFunctions from the files aswell
-    // TODO:
+    // Load QFunctions from the files as well
+    for(const std::string& fName : config[QFUNC_NAME])
+    {
+        qFuncFileNames.push_back(Utility::MergeFileFolder(configPath, fName));
+    }
+    // Load QFunc Size
+    qFuncSize = SceneIO::LoadVector<2, uint32_t>(config[QSIZE_NAME]);
+
+    // Allocate the texture for rendering
+    currentTexture = TextureGL(qFuncSize, PixelFormat::RGBA8_UNORM);
 }
 
 GDebugRendererRL::~GDebugRendererRL()
@@ -152,7 +209,7 @@ void GDebugRendererRL::RenderSpatial(TextureGL& overlayTex, uint32_t,
     pixelColors.resize(worldPositions.size() * sizeof(Vector3f));
     std::transform(std::execution::par_unseq,
                    worldPositions.cbegin(), worldPositions.cend(),
-                   reinterpret_cast<Vector3f*>(pixelColors.data()), 
+                   reinterpret_cast<Vector3f*>(pixelColors.data()),
                    [&](const Vector3f& pos)
                    {
                        float distance;
@@ -173,7 +230,94 @@ void GDebugRendererRL::UpdateDirectional(const Vector3f& worldPos,
                                          bool doLogScale,
                                          uint32_t depth)
 {
-    // TODO:
+    const std::string& fileName = qFuncFileNames[depth];
+
+
+    // Query leaf
+    float distance;
+    uint32_t leafIndex = lbvh.FindNearestPoint(distance, worldPos);
+
+    size_t dirPortionByteCount = qFuncSize.Multiply() * sizeof(float);
+    size_t fileStart = leafIndex * dirPortionByteCount;
+
+    // Load from the qFile of the requested depth
+    std::ifstream file(fileName, std::ios_base::binary);
+    // Read only the required portion
+    file.seekg(fileStart);
+    std::vector<Byte> data(dirPortionByteCount);
+    file.read(reinterpret_cast<char*>(data.data()), dirPortionByteCount);
+
+    // Copy the actual current values to the member variable as well.
+    currentValues.resize(qFuncSize.Multiply());
+    std::memcpy(currentValues.data(), data.data(), dirPortionByteCount);
+
+    // Load temporarily to a texture
+    TextureGL qTexture = TextureGL(qFuncSize, PixelFormat::R_FLOAT);
+    qTexture.CopyToImage(data, Zero2ui, qFuncSize, PixelFormat::R_FLOAT);
+
+    // ============================= //
+    //     Call Reduction Shader     //
+    // ============================= //
+    // Get a max luminance buffer;
+    float initalMaxData = 0.0f;
+    GLuint maxBuffer;
+    glGenBuffers(1, &maxBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBuffer);
+    glBufferStorage(GL_SHADER_STORAGE_BUFFER, 1 * sizeof(float), &initalMaxData, 0);
+
+    // Both of these compute shaders total work count is same
+    const GLuint workCount = qTexture.Size()[1] * qTexture.Size()[0];
+    // Some WG Definitions (statically defined in shader)
+    static constexpr GLuint WORK_GROUP_1D_X = 256;
+    static constexpr GLuint WORK_GROUP_2D_X = 16;
+    static constexpr GLuint WORK_GROUP_2D_Y = 16;
+    // =======================================================
+    // Set Max Shader
+    compReduction.Bind();
+    // Bind Uniforms
+    glUniform2ui(U_RES, qTexture.Size()[0], qTexture.Size()[1]);
+    // Bind SSBO
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, maxBuffer);
+    // Textures
+    qTexture.Bind(T_IN_LUM_TEX);
+    // Dispatch Max Shader
+    // Max shader is 1D shader set data accordingly
+    GLuint gridX_1D = (workCount + WORK_GROUP_1D_X - 1) / WORK_GROUP_1D_X;
+    glDispatchCompute(gridX_1D, 1, 1);
+    glMemoryBarrier(GL_UNIFORM_BARRIER_BIT |
+                    GL_SHADER_STORAGE_BARRIER_BIT);
+    // =======================================================
+    // Unbind SSBO just to be sure
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, 0);
+    // ============================= //
+    //     Call Reduction Shader     //
+    // ============================= //
+     // Set Render Shader
+    compRefRender.Bind();
+    // Bind Uniforms
+    glUniform2ui(U_RES, qTexture.Size()[0], qTexture.Size()[1]);
+    glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
+    //
+    // UBOs
+    glBindBufferBase(GL_UNIFORM_BUFFER, UB_MAX_LUM, maxBuffer);
+    // Textures
+    qTexture.Bind(T_IN_LUM_TEX);
+    gradientTexture.Bind(T_IN_GRAD_TEX);  linearSampler.Bind(T_IN_GRAD_TEX);
+    // Images
+    glBindImageTexture(I_OUT_REF_IMAGE, currentTexture.TexId(),
+                       0, false, 0, GL_WRITE_ONLY,
+                       PixelFormatToSizedGL(currentTexture.Format()));
+    // Dispatch Render Shader
+    // Max shader is 2D shader set data accordingly
+    GLuint gridX_2D = (qTexture.Size()[0] + WORK_GROUP_2D_X - 1) / WORK_GROUP_2D_X;
+    GLuint gridY_2D = (qTexture.Size()[1] + WORK_GROUP_2D_Y - 1) / WORK_GROUP_2D_Y;
+    glDispatchCompute(gridX_2D, gridY_2D, 1);
+    // =======================================================
+    // All done!!!
+
+    // Delete Temp Max Buffer
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glDeleteBuffers(1, &maxBuffer);
 }
 
 bool GDebugRendererRL::RenderGUI(bool& overlayCheckboxChanged,
