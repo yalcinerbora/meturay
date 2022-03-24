@@ -87,7 +87,7 @@ class AnisoSVOctreeGPU
     __device__
     float               TraceRay(const RayF&) const;
     // Deposit radiance to the nearest voxel leaf
-    // Use atomics, returns false if no leaf is found on this location
+    // Uses atomics, returns false if no leaf is found on this location
     __device__
     bool                DepositRadiance(const Vector3f& worldPos, const Vector3f& outgoingDir,
                                         float radiance);
@@ -127,6 +127,7 @@ class AnisoSVOctreeCPU
     void                    Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
                                       const AcceleratorBatchMap&,
                                       const GPULightI** dSceneLights,
+                                      uint32_t totalLightCount,
                                       const CudaSystem&);
     // Normalize and filter radiances for sampling
     void                    NormalizeAndFilterRadiance(const CudaSystem&);

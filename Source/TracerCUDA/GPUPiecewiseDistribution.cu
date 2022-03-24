@@ -109,18 +109,27 @@ void KCUpdateDistributionsX(float* gXPDFs,
         __syncthreads();
 
         // Do the normalization for PDF and CDF
-        MultVector(pdfData, (1.0f / totalSum));
+        if(totalSum != 0.0f)
+        {
+            // If total sum is zero
+            // meaning that this row is not probable
+            // Prevent NaN here
+            MultVector(pdfData, (1.0f / totalSum));
+            MultVector(cdfData, (1.0f / totalSum));
+        }
         MultVector(pdfData, static_cast<float>(dim[0]));
 
-        MultVector(cdfData, (1.0f / totalSum));
         // Finally Store both cdf and pdf
         BlockStore(sMem.storeTempStorage).Store(gXPDFRow, pdfData, dim[0]);
         __syncthreads();
         BlockStore(sMem.storeTempStorage).Store(gXCDFRow, cdfData, dim[0]);
         __syncthreads();
-        // Thread 0 will write the total sum to the end (normalized which is 1)
+        // Thread 0 will write the total sum to the end (since normalized, it is 1)
         if(threadIdx.x == 0)
-            gXCDFRow[dim[0]] = 1.0f;
+            if(totalSum != 0.0f)
+                gXCDFRow[dim[0]] = 1.0f;
+            else
+                gXCDFRow[dim[0]] = 0.0f;
     }
 }
 
@@ -174,10 +183,12 @@ void KCUpdateDistributionsY(float* gYPDFs,
     BlockScan(sMem.scanTempStorage).ExclusiveSum(pdfData, cdfData, totalSum);
     __syncthreads();
 
-    MultVector(pdfData, (1.0f / totalSum));
+    if(totalSum != 0.0f)
+    {
+        MultVector(pdfData, (1.0f / totalSum));
+        MultVector(cdfData, (1.0f / totalSum));
+    }
     MultVector(pdfData, static_cast<float>(dim[1]));
-
-    MultVector(cdfData, (1.0f / totalSum));
 
     BlockStore(sMem.storeTempStorage).Store(gYPDFLocal, pdfData, dim[1]);
     __syncthreads();
@@ -185,7 +196,10 @@ void KCUpdateDistributionsY(float* gYPDFs,
 
     // Thread 0 will write the total sum to the end (normalized which is 1)
     if(threadIdx.x == 0)
-        gYCDFLocal[dim[1]] = 1.0f;
+        if(totalSum != 0.0f)
+            gYCDFLocal[dim[1]] = 1.0f;
+        else
+            gYCDFLocal[dim[1]] = 0.0f;
 }
 
 template <class T>

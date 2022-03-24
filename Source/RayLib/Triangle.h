@@ -45,6 +45,10 @@ namespace Triangle
     template <class T>
     __device__ __host__ HYBRID_INLINE
     T Area(const Vector<3, T>* positions);
+
+    template <class T>
+    __device__ __host__ HYBRID_INLINE
+    Vector<3, T> Normal(const Vector<3, T>* positions);
 }
 
 template <class T>
@@ -175,4 +179,14 @@ T Triangle::Area(const Vector<3, T>* positions)
     Vector<3, T> e1 = positions[2] - positions[0];
 
     return Cross(e0, e1).Length() * static_cast<T>(0.5);
+}
+
+template <class T>
+__device__ __host__ HYBRID_INLINE
+Vector<3, T> Triangle::Normal(const Vector<3, T>* positions)
+{
+    Vector<3, T> e0 = positions[1] - positions[0];
+    Vector<3, T> e1 = positions[2] - positions[0];
+
+    return  Cross(e0, e1).Normalize();
 }

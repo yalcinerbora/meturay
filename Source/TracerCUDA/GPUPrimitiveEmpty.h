@@ -38,6 +38,7 @@ struct EPrimFunctions
     static constexpr auto& AcquirePositions         = DefaultAcqPosition<EmptyData, 1>;
     static constexpr auto& AlphaTest                = DefaultAlphaTest<EmptyHit, EmptyData, EmptyLeaf>;
     static constexpr auto& Intersects               = DefaultIntersects<EmptyHit, EmptyData, EmptyLeaf>;
+    static constexpr auto& Voxelize                 = DefaultVoxelize<EmptyData>;
 };
 
 struct EmptySurfaceGenerator

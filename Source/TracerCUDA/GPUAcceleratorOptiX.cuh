@@ -149,6 +149,26 @@ class GPUAccOptiXGroup final
                                                          uint32_t surfacePatchCount,
                                                          const CudaSystem&) const override;
 
+        // Voxelization of surfaces
+        void                    EachPrimVoxelCount(// Output
+                                                   uint64_t* gVoxCounts,
+                                                   // Inputs
+                                                   uint32_t resolutionXYZ,
+                                                   const AABB3f& sceneAABB,
+                                                   const CudaSystem& system) const override;
+        void                    VoxelizeSurfaces(// Outputs
+                                                 uint64_t* dVoxels,
+                                                 HitKey* gVoxelLightKeys,
+                                                 // Inputs
+                                                 const uint64_t* dVoxelOffsets, // For each primitive
+                                                 // Light Lookup Table (Binary Search)
+                                                 const HitKey* dLightKeys,      // Sorted
+                                                 uint32_t totalLightCount,
+                                                 // Constants
+                                                 uint32_t resolutionXYZ,
+                                                 const AABB3f& sceneAABB,
+                                                 const CudaSystem& system) const override;
+
         // OptiX Implementation
         // Return the hit record list for each accelerator
         DeviceMemory                GetHitRecords() const override;

@@ -377,6 +377,144 @@ struct TriFunctions
     }
 
     static constexpr auto& Leaf = GenerateDefaultLeaf<TriData>;
+
+    __device__ inline
+    static uint32_t Voxelize(uint64_t* voxIndices,
+                             uint32_t voxIndMaxCount,
+                             // Inputs
+                             bool onlyCalcSize,
+                             PrimitiveId primitiveId,
+                             const TriData& primData,
+                             const GPUTransformI& transform,
+                             // Voxel Inputs
+                             const AABB3f& sceneAABB,
+                             uint32_t resolutionXYZ)
+    {
+        Vector3f normal;
+        Vector3f positions[3];
+
+        uint64_t index0 = primData.indexList[primitiveId * 3 + 0];
+        uint64_t index1 = primData.indexList[primitiveId * 3 + 1];
+        uint64_t index2 = primData.indexList[primitiveId * 3 + 2];
+        positions[0] = primData.positions[index0];
+        positions[1] = primData.positions[index1];
+        positions[2] = primData.positions[index2];
+
+        // Convert positions to World Space
+        positions[0] = transform.LocalToWorld(positions[0]);
+        positions[1] = transform.LocalToWorld(positions[1]);
+        positions[2] = transform.LocalToWorld(positions[2]);
+
+        // World Space Normal (Will be used to determine best projection plane)
+        normal = Triangle::Normal(positions);
+        // Find the best projection plane (XY, YZ, XZ)
+        int domAxis = normal.Abs().Max();
+        Vector3f domPlaneNormal;
+        switch(domAxis)
+        {
+            case 0: domPlaneNormal = XAxis; break;
+            case 1: domPlaneNormal = YAxis; break;
+            case 2: domPlaneNormal = ZAxis; break;
+            default: break;
+        }
+        QuatF rot = Quat::RotationBetweenZAxis(domPlaneNormal);
+        // Generate a projection matrix (orthogonal)
+        Matrix4x4 proj = TransformGen::Ortogonal(sceneAABB.Min()[0], sceneAABB.Max()[0],
+                                                 sceneAABB.Min()[1], sceneAABB.Max()[1],
+                                                 sceneAABB.Min()[2], sceneAABB.Max()[2]);
+
+        // Apply Transformations
+        Vector4f positionsT[3];
+        positionsT[0] = Vector4f(rot.ApplyRotation(positions[0]), 1.0f);
+        positionsT[1] = Vector4f(rot.ApplyRotation(positions[1]), 1.0f);
+        positionsT[2] = Vector4f(rot.ApplyRotation(positions[2]), 1.0f);
+
+        positionsT[0] = proj * positionsT[0];
+        positionsT[1] = proj * positionsT[1];
+        positionsT[2] = proj * positionsT[2];
+        // Divide by w (is this necessary when orthogonal projection?)
+        positionsT[0] = positionsT[0] / positionsT[0][3];
+        positionsT[1] = positionsT[1] / positionsT[1][3];
+        positionsT[2] = positionsT[2] / positionsT[2][3];
+
+        Vector2f positions2D[3];
+        positions2D[0] = Vector2f(positionsT[0]);
+        positions2D[1] = Vector2f(positionsT[1]);
+        positions2D[2] = Vector2f(positionsT[2]);
+
+        // Finally Triangle is on NDC
+        // Find AABB then start scan line
+        Vector2f aabbMin = Vector2f(FLT_MAX);
+        Vector2f aabbMax = Vector2f(-FLT_MAX);
+        aabbMin = Vector2f::Min(aabbMin, positions2D[0]);
+        aabbMin = Vector2f::Min(aabbMin, positions2D[1]);
+        aabbMin = Vector2f::Min(aabbMin, positions2D[2]);
+
+        aabbMax = Vector2f::Max(aabbMax, positions2D[0]);
+        aabbMax = Vector2f::Max(aabbMax, positions2D[1]);
+        aabbMax = Vector2f::Max(aabbMax, positions2D[2]);
+
+        // Convert to [0, resolution] (pixel space)
+        Vector2i xRangeInt(floor((0.5f + 0.5f * aabbMin[0]) * static_cast<float>(resolutionXYZ)),
+                           ceil((0.5f + 0.5f * aabbMax[0]) * static_cast<float>(resolutionXYZ)));
+        Vector2i yRangeInt(floor((0.5f + 0.5f * aabbMin[1]) * static_cast<float>(resolutionXYZ)),
+                           ceil((0.5f + 0.5f * aabbMax[1]) * static_cast<float>(resolutionXYZ)));
+
+        // Clip the range
+        xRangeInt.Clamp(0, resolutionXYZ - 1);
+        yRangeInt.Clamp(0, resolutionXYZ - 1);
+
+        // Generate Edges (for Cramer's Rule)
+        // & iteration constants
+        const Vector2f e0 = positions2D[1] - positions2D[0];
+        const Vector2f e1 = positions2D[2] - positions2D[0];
+        const float denom = e0[0] * e1[1] - e1[0] * e0[1];
+        const float deltaPix = 1.0f / static_cast<float>(resolutionXYZ);
+
+        // Scan Line
+        uint32_t writeIndex = 0;
+        for(int y = yRangeInt[0]; y < yRangeInt[1]; y++)
+        for(int x = xRangeInt[0]; x < xRangeInt[1]; x++)
+        {
+            // Gen Point
+            // TODO: Do conservative rasterization here
+            // currently it is non-conservative (only mid of pixels are checked)
+            Vector2f pos = Vector2f((static_cast<float>(x) + 0.5f) * deltaPix,
+                                    (static_cast<float>(y) + 0.5f) * deltaPix);
+            Vector2f e2 = pos - positions2D[0];
+
+            // Cramer's Rule
+            float v = (e2[0] * e1[1] - e1[0] * e2[1]) / denom;
+            float w = (e0[0] * e2[1] - e2[0] * e0[1]) / denom;
+            float u = 1.0f - v - w;
+
+            if(v <= 1.0f && v >= 0.0f &&
+               w <= 1.0f && w >= 0.0f)
+            {
+                // Bary's match, pixel is inside the triangle
+                if(!onlyCalcSize)
+                {
+                    Vector3f voxelPos = positions[0] * u + positions[1] * v + positions[2] * w;
+
+                    Vector3f voxelIndexF = ((voxelPos - sceneAABB.Min()) / sceneAABB.Span()) * static_cast<float>(resolutionXYZ);
+                    Vector3ul voxelIndex = Vector3ul(static_cast<uint64_t>(voxelIndexF[0]),
+                                                     static_cast<uint64_t>(voxelIndexF[1]),
+                                                     static_cast<uint64_t>(voxelIndexF[2]));
+
+                    uint64_t res64 = static_cast<uint64_t>(resolutionXYZ);
+                    uint64_t voxelIndexLinear = (voxelIndex[2] * res64 * res64 +
+                                                 voxelIndex[1] * res64 +
+                                                 voxelIndex[0]);
+                    // Write the found voxel
+                    assert(writeIndex < voxIndMaxCount);
+                    if(writeIndex < voxIndMaxCount)
+                        voxIndices[writeIndex] = voxelIndexLinear;
+                };
+                writeIndex++;
+            }
+        }
+        return writeIndex;
+    }
 };
 
 class GPUPrimitiveTriangle;
@@ -390,8 +528,6 @@ struct TriangleSurfaceGenerator
                                         PrimitiveId primitiveId,
                                         const TriData& primData)
     {
-        //float c = 1 - baryCoords[0] - baryCoords[1];
-
         uint64_t i0 = primData.indexList[primitiveId * 3 + 0];
         uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t i2 = primData.indexList[primitiveId * 3 + 2];

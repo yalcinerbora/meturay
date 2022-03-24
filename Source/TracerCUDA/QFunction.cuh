@@ -70,10 +70,12 @@ class QFunctionGPU
 class QFunctionCPU
 {
     private:
-        DeviceMemory        memory;
-        QFunctionGPU        qFuncGPU;
-        PWCDistStaticCPU2D  distributions;
-        uint32_t            spatialCount;
+        DeviceMemory            memory;
+        QFunctionGPU            qFuncGPU;
+        PWCDistStaticCPU2D      distributions;
+        uint32_t                spatialCount;
+
+        static constexpr float  INITIAL_Q_VALUE = 0.0f;
 
     protected:
     public:

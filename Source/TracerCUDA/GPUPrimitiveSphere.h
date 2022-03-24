@@ -229,6 +229,9 @@ struct SphrFunctions
     }
 
     static constexpr auto& Leaf = GenerateDefaultLeaf<SphereData>;
+
+    // TODO: Voxelize the spheres (Currently it returns nothing)
+    static constexpr auto& Voxelize = DefaultVoxelize<SphereData>;
 };
 
 struct SphereSurfaceGenerator

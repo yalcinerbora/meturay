@@ -137,6 +137,9 @@ class GPUPrimitiveGroup
         static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Intersects),
                                               IntersectsFunction<HitD, PrimitiveD, LeafD>>,
                       "PrimDeviceFunctions Class Member 'Intersects' does not have correct signature");
+        static_assert(std::is_same_v<decltype(&PrimDeviceFunctions::Voxelize),
+                                              VoxelizeFunction<PrimitiveD>>,
+                      "PrimDeviceFunctions Class Member 'Voxelize' does not have correct signature");
 
         // Function Definitions
         // Used by accelerator definitions etc.
@@ -150,6 +153,7 @@ class GPUPrimitiveGroup
         static constexpr auto AcquirePositions  = PrimDeviceFunctions::AcquirePositions;
         static constexpr auto AlphaTest         = PrimDeviceFunctions::AlphaTest;
         static constexpr auto Intersects        = PrimDeviceFunctions::Intersects;
+        static constexpr auto Voxelize          = PrimDeviceFunctions::Voxelize;
 
         // Templated Intersects Function
         // This is used by OptiX instead of virtual functions

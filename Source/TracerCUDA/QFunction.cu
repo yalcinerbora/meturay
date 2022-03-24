@@ -9,10 +9,6 @@
 
 void QFunctionCPU::RecalculateDistributions(const CudaSystem& system)
 {
-    //Debug::DumpBatchedMemToFile("qFunc", qFuncGPU.gQFunction,
-    //                            qFuncGPU.dataPerNode.Multiply(),
-    //                            qFuncGPU.dataPerNode.Multiply() * qFuncGPU.nodeCount);
-
     distributions.UpdateDistributions(qFuncGPU.gQFunction, true,
                                       system, cudaMemcpyDeviceToDevice);
 }
@@ -28,9 +24,8 @@ TracerError QFunctionCPU::Initialize(const CudaSystem& system)
                        KCMemset<float>,
                        //
                        qFuncGPU.gQFunction,
-                       1.0f,
+                       INITIAL_Q_VALUE,
                        dataCount);
-
 
     // Generate Distributions over this
     distributions = PWCDistStaticCPU2D(qFuncGPU.gQFunction,

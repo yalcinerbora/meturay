@@ -45,7 +45,7 @@ void main(void)
 		vec3 gradValue = texture(tGradient, fUV).xyz;
 
 		fboColor = (fValue == 0.0f)
-						? vec4(0.1f)
+						? vec4(vec3(0.1f), 1.0f)
 						: vec4(gradValue, 1.0f);
 
 		fboValue = fValue;

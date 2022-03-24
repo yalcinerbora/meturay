@@ -348,6 +348,13 @@ Vector2f PWCDistStaticGPU2D::Sample(float& pdf, Vector2f& index,
     const float* gYCDF = gYCDFs + (dim[1] + 1) * distIndex;
     const float* gYPDF = gYPDFs + dim[1] * distIndex;
 
+    // Entire PDF is zero cant binary search here
+    if(gYCDFs[dim[1]] == 0.0f)
+    {
+        pdf = 0.0f;
+        return Zero2f;
+    }
+
     Vector2f xi = Vector2f(rng.Uniform(), rng.Uniform());
     GPUFunctions::BinarySearchInBetween<float>(index[1], xi[1], gYCDFs, dim[1] + 1);
     uint32_t indexYInt = static_cast<uint32_t>(index[1]);

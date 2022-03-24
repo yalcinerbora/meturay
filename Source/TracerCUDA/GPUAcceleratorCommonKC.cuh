@@ -4,6 +4,7 @@
 #include "GPUTransformI.h"
 #include "GPUPiecewiseDistribution.cuh"
 #include "AcceleratorFunctions.h"
+#include "BinarySearch.cuh"
 
 struct HKList
 {
@@ -430,5 +431,107 @@ static void KCSampleSurfacePatch(// Output
         dPositions[globalId] = pos;
         dNormals[globalId] = normal;
         i++;
+    }
+}
+
+template <class PGroup>
+__global__
+static void KCGetVoxelCount(//Output
+                            uint64_t* gVoxCounts, // For each primitive
+                            // Inputs
+                            const typename PGroup::LeafData* gLeafs,
+                            const TransformId* gTransformIds,
+                            const GPUTransformI** gTransforms,
+                            // Constants
+                            const typename PGroup::PrimitiveData primData,
+                            size_t totalPrimtCount,
+                            const AABB3f& sceneAABB,
+                            uint32_t voxResolutionXYZ)
+{
+    static constexpr auto VoxelizeFunc = PGroup::Voxelize;
+
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < totalPrimtCount; globalId += blockDim.x * gridDim.x)
+    {
+
+        // Fetch Transform
+        const GPUTransformI* t = gTransforms[gTransformIds[globalId]];
+        PrimitiveId primId = gLeafs[globalId].primitiveId;
+
+        // Voxelize the geom to the global memory
+        uint32_t voxCount = VoxelizeFunc(nullptr, 0,
+                                         true,
+                                         primId,
+                                         primData,
+                                         *t,
+                                         sceneAABB,
+                                         voxResolutionXYZ);
+
+        gVoxCounts[globalId] = static_cast<uint64_t>(voxCount);
+    }
+}
+
+template <class PGroup>
+__global__
+static void KCVoxelizePrims(//Outputs
+                            uint64_t* gVoxels,
+                            HitKey* gVoxelLightKeys, // For each voxel
+                            // Inputs
+                            const uint64_t* gVoxOffsets, // For each primitive
+                            // Prim Related
+                            const typename PGroup::LeafData* gLeafs,
+                            const TransformId* gTransformIds,
+                            const GPUTransformI** gTransforms,
+                            // Light Lookup Table (Binary Search)
+                            const HitKey* gLightKeys,   // Sorted
+                            uint32_t totalLightCount,
+                            // Constants
+                            const typename PGroup::PrimitiveData primData,
+                            size_t totalPrimtCount,
+                            const AABB3f& sceneAABB,
+                            uint32_t voxResolutionXYZ)
+{
+    static constexpr auto VoxelizeFunc = PGroup::Voxelize;
+
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < totalPrimtCount; globalId += blockDim.x * gridDim.x)
+    {
+        uint64_t voxStart = gVoxOffsets[globalId];
+        uint64_t voxEnd = gVoxOffsets[globalId + 1];
+        uint64_t voxCount = voxEnd - voxStart;
+        // Allocate a segment on the allocated array using atomics)
+        // CC 6 or better
+        uint64_t* gLocalVoxelStart = gVoxels + voxStart;
+
+        // Fetch Transform
+        const GPUTransformI* t = gTransforms[gTransformIds[globalId]];
+        PrimitiveId primId = gLeafs[globalId].primitiveId;
+
+        // Voxelize the geom to the global memory
+        [[maybe_unused]] uint32_t voxCountOut = VoxelizeFunc(gLocalVoxelStart,
+                                                             voxCount,
+                                                             false,
+                                                             primId,
+                                                             primData,
+                                                             *t,
+                                                             sceneAABB,
+                                                             voxResolutionXYZ);
+        // Sanity Check
+        assert(voxCountOut == voxCount);
+
+        // Also
+        // Try to find a light of this prim and store it if avail
+        HitKey workKey = gLeafs[globalId].matId;
+        float index;
+        bool found = GPUFunctions::BinarySearchInBetween(index, workKey,
+                                                         gLightKeys,
+                                                         totalLightCount);
+        uint32_t indexInt = static_cast<uint32_t>(index);
+        HitKey lKey = (found) ? gLightKeys[indexInt]
+                              : HitKey::InvalidKey;
+
+        #pragma unroll
+        for(uint32_t i = 0; i < voxCount; i++)
+            gVoxelLightKeys[voxStart + i] = lKey;
     }
 }

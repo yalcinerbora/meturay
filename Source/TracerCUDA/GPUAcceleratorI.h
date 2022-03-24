@@ -98,7 +98,7 @@ class GPUAcceleratorGroupI
         virtual void                        AttachGlobalTransformArray(const GPUTransformI** deviceTransforms,
                                                                        uint32_t identityTransformIndex) = 0;
         virtual size_t      AcceleratorCount() const = 0;
-        // Arbitrary Position Fetching
+        // Arbitrary Position Fetching on surfaces
         virtual size_t      TotalPrimitiveCount() const = 0;
         virtual float       TotalApproximateArea(const CudaSystem&) const = 0;
         virtual void        SampleAreaWeightedPoints(// Outs
@@ -109,6 +109,26 @@ class GPUAcceleratorGroupI
                                                      // Inputs
                                                      uint32_t surfacePathCount,
                                                      const CudaSystem&) const = 0;
+        // Voxelization of surfaces
+        virtual void        EachPrimVoxelCount(// Output
+                                               uint64_t* dVoxCounts,
+                                               // Inputs
+                                               uint32_t resolutionXYZ,
+                                               const AABB3f& sceneAABB,
+                                               const CudaSystem& system) const = 0;
+        virtual void        VoxelizeSurfaces(// Outputs
+                                             uint64_t* dVoxels,
+                                             HitKey* gVoxelLightKeys,
+                                             // Inputs
+                                             const uint64_t* dVoxelOffsets, // For each primitive
+                                             // Light Lookup Table (Binary Search)
+                                             const HitKey* dLightKeys,      // Sorted
+                                             uint32_t totalLightCount,
+                                             // Constants
+                                             uint32_t resolutionXYZ,
+                                             const AABB3f& sceneAABB,
+                                             const CudaSystem& system) const = 0;
+
 };
 
 class GPUBaseAcceleratorI

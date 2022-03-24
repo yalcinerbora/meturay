@@ -988,3 +988,31 @@ void GPUAccBVHGroup<PGroup>::SampleAreaWeightedPoints(// Outs
 
     // All Done!
 }
+
+template <class PGroup>
+void GPUAccBVHGroup<PGroup>::EachPrimVoxelCount(// Output
+                                                uint64_t* dVoxCounts,
+                                                // Inputs
+                                                uint32_t resolutionXYZ,
+                                                const AABB3f& sceneAABB,
+                                                const CudaSystem& system) const
+{
+
+}
+
+template <class PGroup>
+void GPUAccBVHGroup<PGroup>::VoxelizeSurfaces(// Outputs
+                                              uint64_t* dVoxels,
+                                              HitKey* gVoxelLightKeys,
+                                              // Inputs
+                                              const uint64_t* dVoxelOffsets, // For each primitive
+                                              // Light Lookup Table (Binary Search)
+                                              const HitKey* dLightKeys,      // Sorted
+                                              uint32_t totalLightCount,
+                                              // Constants
+                                              uint32_t resolutionXYZ,
+                                              const AABB3f& sceneAABB,
+                                              const CudaSystem& system) const
+{
+
+}

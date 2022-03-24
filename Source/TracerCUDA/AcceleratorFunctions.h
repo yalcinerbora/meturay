@@ -106,6 +106,18 @@ using AlphaTestFunction = bool(*)(// Input
                                   const LeafData& leaf,
                                   const PrimitiveData& primData);
 
+template <class PrimitiveData>
+using VoxelizeFunction = uint32_t(*)(uint64_t* voxIndices,
+                                     uint32_t voxIndMaxCount,
+                                     // Inputs
+                                     bool onlyCalcSize,
+                                     PrimitiveId primitiveId,
+                                     const PrimitiveData& primData,
+                                     const GPUTransformI& transform,
+                                     // Voxel Inputs
+                                     const AABB3f& sceneAABB,
+                                     uint32_t resolutionXYZ);
+
 // Common Functors for gpu AABB Generation
 template<class PrimitiveGroup>
 struct AABBGen
@@ -281,3 +293,18 @@ bool DefaultIntersects(// Output
     return false;
 }
 
+template <class PrimitiveData>
+__device__ inline
+static uint32_t DefaultVoxelize(uint64_t* voxIndices,
+                                uint32_t voxIndMaxCount,
+                                // Inputs
+                                bool onlyCalcSize,
+                                PrimitiveId primitiveId,
+                                const PrimitiveData& primData,
+                                const GPUTransformI& transform,
+                                // Voxel Inputs
+                                const AABB3f& sceneAABB,
+                                uint32_t resolutionXYZ)
+{
+    return 0;
+}

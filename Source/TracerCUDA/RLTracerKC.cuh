@@ -514,7 +514,7 @@ void RLTracerPathWork(// Output
             // Don't forget to add current emission if available
             sum += Utility::RGBToLuminance(emission);
             // Atomically update the value in the previous Q function
-            renderState.qFunction.Update(wi, sum, aux.prevSpatialIndex);
+            renderState.qFunction.Update(r.getDirection(), sum, aux.prevSpatialIndex);
         }
     }
     else

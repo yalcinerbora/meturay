@@ -816,3 +816,115 @@ void GPUAccOptiXGroup<PGroup>::SampleAreaWeightedPoints(// Outs
     //                   primData,
     //                   surfacePatchCount);
 }
+
+template <class PGroup>
+void GPUAccOptiXGroup<PGroup>::EachPrimVoxelCount(// Output
+                                                  uint64_t* dVoxCounts,
+                                                  // Inputs
+                                                  uint32_t resolutionXYZ,
+                                                  const AABB3f& sceneAABB,
+                                                  const CudaSystem& system) const
+{
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+
+    const CudaGPU& gpu = system.BestGPU();
+    size_t totalLeafCount = accRanges.back()[1];
+
+    // Allocate flattened transform id (one per prim)
+    TransformId* dLeafTransformIds;
+    DeviceMemory areaMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dLeafTransformIds),
+                                   areaMemory,
+                                   {totalLeafCount});
+
+    uint32_t innerIndex = 0;
+    for(const auto& range : accRanges)
+    {
+        size_t localLeafCount = range[1] - range[0];
+
+        // Expand the transform over leafs
+        ExpandValueGPU<TransformId>(dLeafTransformIds + range[0],
+                                    dAccTransformIds + innerIndex,
+                                    localLeafCount);
+        innerIndex++;
+    }
+
+    // Voxelize each primitive over an array
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalLeafCount,
+                       //
+                       KCGetVoxelCount<PGroup>,
+                       // Output
+                       dVoxCounts,
+                       // Prim Related
+                       dLeafList,
+                       dLeafTransformIds,
+                       this->dTransforms,
+                       // Constants
+                       primData,
+                       totalLeafCount,
+                       sceneAABB,
+                       resolutionXYZ);
+}
+
+template <class PGroup>
+void GPUAccOptiXGroup<PGroup>::VoxelizeSurfaces(// Outputs
+                                                uint64_t* dVoxels,
+                                                HitKey* gVoxelLightKeys,
+                                                // Inputs
+                                                const uint64_t* dVoxelOffsets, // For each primitive
+                                                // Light Lookup Table (Binary Search)
+                                                const HitKey* dLightKeys,      // Sorted
+                                                uint32_t totalLightCount,
+                                                // Constants
+                                                uint32_t resolutionXYZ,
+                                                const AABB3f& sceneAABB,
+                                                const CudaSystem& system) const
+{
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData primData = PrimDataAccessor::Data(this->primitiveGroup);
+
+    const CudaGPU& gpu = system.BestGPU();
+    size_t totalLeafCount = accRanges.back()[1];
+
+    // Allocate flattened transform id (one per prim)
+    TransformId* dLeafTransformIds;
+    DeviceMemory areaMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dLeafTransformIds),
+                                   areaMemory,
+                                   {totalLeafCount});
+
+    uint32_t innerIndex = 0;
+    for(const auto& range : accRanges)
+    {
+        size_t localLeafCount = range[1] - range[0];
+
+        // Expand the transform over leafs
+        ExpandValueGPU<TransformId>(dLeafTransformIds + range[0],
+                                    dAccTransformIds + innerIndex,
+                                    localLeafCount);
+        innerIndex++;
+    }
+
+    // Voxelize each primitive over an array
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalLeafCount,
+                       //
+                       KCVoxelizePrims<PGroup>,
+                       // Outputs
+                       dVoxels,
+                       gVoxelLightKeys,
+                       // Inputs
+                       dVoxelOffsets,
+                       // Prim Related
+                       dLeafList,
+                       dLeafTransformIds,
+                       this->dTransforms,
+                       // Light Lookup Table
+                       dLightKeys,
+                       totalLightCount,
+                       // Constants
+                       primData,
+                       totalLeafCount,
+                       sceneAABB,
+                       resolutionXYZ);
+}

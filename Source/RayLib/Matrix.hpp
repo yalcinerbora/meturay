@@ -1040,7 +1040,7 @@ Matrix<4, T> TransformGen::Ortogonal(T left, T right,
 template<class T, typename>
 __device__ __host__
 Matrix<4, T> TransformGen::Ortogonal(T width, T height,
-                                            T nearPlane, T farPlane)
+                                     T nearPlane, T farPlane)
 {
     //  orto    0       0       0
     //  0       orto    0       0
@@ -1056,8 +1056,8 @@ Matrix<4, T> TransformGen::Ortogonal(T width, T height,
 template<class T, typename>
 __device__ __host__
 Matrix<4, T> TransformGen::LookAt(const Vector<3, T>& eyePos,
-                                         const Vector<3, T>& at,
-                                         const Vector<3, T>& up)
+                                  const Vector<3, T>& at,
+                                  const Vector<3, T>& up)
 {
     // Calculate Orthogonal Vectors for this rotation
     Vector<3, T> zAxis = (eyePos - at).NormalizeSelf();

@@ -571,8 +571,8 @@
 
     // Cameras
     "CameraSurfaces": [
-        // // Overall View
-        // {"camera": 0},
+        // Overall View
+        {"camera": 0},
         // Pool Camera
         {"camera": 1, "medium": 2},
         // Reflection of Caustics Camera
