@@ -6,6 +6,8 @@
 
 #include "RayLib/ColorConversion.h"
 #include "RayLib/HitStructs.h"
+#include "RayLib/BitManipulation.h"
+#include "RayLib/CPUTimer.h"
 
 #include "GPUAcceleratorI.h"
 #include "ParallelReduction.cuh"
@@ -13,6 +15,54 @@
 
 #include <cub/cub.cuh>
 #include <numeric>
+
+#include "TracerDebug.h"
+
+__global__
+void KCGetLightKeys(HitKey* gKeys,
+                    const GPULightI** gLights,
+                    uint32_t totalLightCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalLightCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        gKeys[threadId] = gLights[threadId]->WorkKey();
+    }
+}
+
+
+__global__
+void KCMarkMortonChanges(uint32_t* gMarks,
+                         const uint64_t* gVoxels,
+                         uint32_t voxelCount,
+                         uint32_t level,
+                         uint32_t maxLevel)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < voxelCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        static constexpr uint64_t DIMENSION = 3;
+        // Check 3*level bits from the MSB to find the voxel counts
+        uint32_t bitCount = level * DIMENSION;
+        uint32_t levelStart = (maxLevel * DIMENSION) - bitCount;
+        uint64_t mask = (1ull << static_cast<uint64_t>(bitCount)) - 1;
+
+        uint64_t voxelMorton = gVoxels[threadId];
+        uint64_t voxelMortonNext = gVoxels[threadId + 1];
+
+        voxelMorton >>= levelStart;
+        voxelMorton &= mask;
+
+        voxelMortonNext >>= levelStart;
+        voxelMortonNext &= mask;
+
+        gMarks[threadId] = (voxelMorton != voxelMortonNext) ? 1 : 0;
+        if(threadId == voxelCount - 1)
+            gMarks[threadId + 1] = 0;
+    }
+}
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
@@ -47,18 +97,43 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
     }
 }
 
-void AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
-                                 const AcceleratorBatchMap& accels,
-                                 const GPULightI** dSceneLights,
-                                 uint32_t totalLightCount,
-                                 const CudaSystem& system)
+TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
+                                        const AcceleratorBatchMap& accels,
+                                        const GPULightI** dSceneLights,
+                                        uint32_t totalLightCount,
+                                        HitKey boundaryLightKey,
+                                        const CudaSystem& system)
 {
-    // Generate Light / HitKey sorted array (for binary search)
-    HitKey* dLightKeys;
+    Utility::CPUTimer timer;
+    timer.Start();
+
+    // Find The SVO AABB
+    Vector3f span = sceneAABB.Span();
+    int maxDimIndex = span.Max();
+    float worldSizeXYZ = span[maxDimIndex];
+    treeGPU.svoAABB = AABB3f(sceneAABB.Min(),
+                             sceneAABB.Min() + Vector3f(worldSizeXYZ));
+    treeGPU.leafDepth = Utility::FindLastSet(resolutionXYZ);
+    treeGPU.leafVoxelSize = worldSizeXYZ / static_cast<float>(resolutionXYZ);
+    treeGPU.voxelResolution = resolutionXYZ;
 
 
+    size_t lightSortMemSize;
+    HitKey* dLightKeys = nullptr;
+    const GPULightI** dSortedLights = nullptr;
+    HitKey* dSortedLightKeys = nullptr;
+    CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, lightSortMemSize,
+                                               reinterpret_cast<HitKey::Type*>(dLightKeys),
+                                               reinterpret_cast<HitKey::Type*>(dSortedLightKeys),
+                                               dSceneLights, dSortedLights,
+                                               totalLightCount));
 
-
+    DeviceMemory lightMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dLightKeys, dSortedLights,
+                                            dSortedLightKeys),
+                                   lightMemory,
+                                   {totalLightCount, totalLightCount,
+                                    totalLightCount});
 
     // For each accelerator
     // First allocate per prim voxel count array
@@ -77,14 +152,17 @@ void AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ
     uint64_t* dVoxelCounts;
     uint64_t* dVoxelOffsets;
     uint64_t* dPrimOffsets;
+    Byte* dLightSortTempMem;
     DeviceMemory voxOffsetMem;
     GPUMemFuncs::AllocateMultiData(std::tie(dVoxelCounts,
                                             dVoxelOffsets,
-                                            dPrimOffsets),
+                                            dPrimOffsets,
+                                            dLightSortTempMem),
                                    voxOffsetMem,
                                    {primOffsets.back(),
                                     primOffsets.back() + 1,
-                                    accels.size() + 1});
+                                    accels.size() + 1,
+                                    lightSortMemSize});
 
     // Copy prim offsets for segmented reduction
     CUDA_CHECK(cudaMemcpy(dPrimOffsets, primOffsets.data(),
@@ -97,7 +175,7 @@ void AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ
     {
         accel->EachPrimVoxelCount(dVoxelCounts + primOffsets[i],
                                   resolutionXYZ,
-                                  sceneAABB,
+                                  treeGPU.svoAABB,
                                   system);
         i++;
     }
@@ -119,6 +197,28 @@ void AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ
     GPUMemFuncs::AllocateMultiData(std::tie(dVoxels, dVoxelLightKeys),
                                    voxelMemory,
                                    {hTotalVoxCount, hTotalVoxCount});
+
+    // Generate Light / HitKey sorted array (for binary search)
+    const CudaGPU& gpu = system.BestGPU();
+    if(totalLightCount != 0)
+    {
+        gpu.GridStrideKC_X(0, (cudaStream_t)0,
+                           totalLightCount,
+                           //
+                           KCGetLightKeys,
+                           //
+                           dLightKeys,
+                           dSceneLights,
+                           totalLightCount);
+        // Sort these for binary search
+        CUDA_CHECK(cub::DeviceRadixSort::SortPairs(dLightSortTempMem, lightSortMemSize,
+                                                   reinterpret_cast<HitKey::Type*>(dLightKeys),
+                                                   reinterpret_cast<HitKey::Type*>(dSortedLightKeys),
+                                                   dSceneLights, dSortedLights,
+                                                   totalLightCount));
+
+    }
+
     // For each accelerator
     // Actually rasterize the primitives
     // and push to the memory (find the light key if available here)
@@ -131,11 +231,11 @@ void AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ
                                 // Inputs
                                 dVoxelOffsets + primOffsets[i],
                                 // Light Lookup Table (Binary Search)
-                                dLightKeys,
+                                dSortedLightKeys,
                                 totalLightCount,
                                 // Constants
                                 resolutionXYZ,
-                                sceneAABB,
+                                treeGPU.svoAABB,
                                 system);
         i++;
     }
@@ -143,60 +243,147 @@ void AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ
     // Temporary Data Structures are not needed from now on
     // Deallocate
     voxOffsetMem = DeviceMemory();
+    dVoxelCounts = nullptr;
+    dVoxelOffsets = nullptr;
+    dPrimOffsets = nullptr;
+    dLightSortTempMem = nullptr;
+
     //
-    DeviceMemory tempMem;
     size_t rleTempMemSize;
     size_t sortTempMemSize;
 
     uint64_t* dSortedVoxels = nullptr;
-    HitKey* dSortedLightKeys = nullptr;
+    HitKey* dSortedVoxelKeys = nullptr;
     // Duplicate counts
     uint32_t* dDuplicateCounts = nullptr;
-    uint64_t* dReducedCount = nullptr;
+    uint32_t* dUniqueVoxelCount = nullptr;
     Byte* dTempMemory = nullptr;
 
     // Acquire Temp Memory Requirements
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, sortTempMemSize,
                                                dVoxels, dSortedVoxels,
                                                dVoxelLightKeys, dSortedVoxelKeys,
-                                               hTotalVoxCount));
+                                               static_cast<uint32_t>(hTotalVoxCount)));
     CUDA_CHECK(cub::DeviceRunLengthEncode::Encode(nullptr,
                                                   rleTempMemSize,
                                                   dSortedVoxels, dVoxels,
-                                                  dDuplicateCounts, dReducedCount,
-                                                  hTotalVoxCount));
+                                                  dDuplicateCounts, dUniqueVoxelCount,
+                                                  static_cast<uint32_t>(hTotalVoxCount)));
     size_t tempMemSize = std::max(rleTempMemSize, sortTempMemSize);
 
     // Allocation
-    DeviceMemory reduceMemory;
-    GPUMemFuncs::AllocateMultiData(std::tie(dSortedVoxels, dSortedLightKeys,
+    DeviceMemory sortedVoxelMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dSortedVoxels, dSortedVoxelKeys,
                                             dDuplicateCounts, dTempMemory,
-                                            dReducedCount),
-                                   reduceMemory,
+                                            dUniqueVoxelCount),
+                                   sortedVoxelMemory,
                                    {hTotalVoxCount, hTotalVoxCount,
                                    hTotalVoxCount, tempMemSize,
                                    1});
 
-    //
+    // Sort and RLE
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(dTempMemory, sortTempMemSize,
                                                dVoxels, dSortedVoxels,
                                                dVoxelLightKeys, dSortedVoxelKeys,
-                                               hTotalVoxCount));
-    CUDA_CHECKcub::DeviceRunLengthEncode::Encode(dTempMemory,
-                                                 rleTempMemSize,
-                                                 dSortedVoxels, dVoxels,
-                                                 dDuplicateCounts, dReducedCount,
-                                                 hTotalVoxCount));
+                                               static_cast<uint32_t>(hTotalVoxCount)));
+    CUDA_CHECK(cub::DeviceRunLengthEncode::Encode(dTempMemory,
+                                                  rleTempMemSize,
+                                                  dSortedVoxels, dVoxels,
+                                                  dDuplicateCounts, dUniqueVoxelCount,
+                                                  static_cast<uint32_t>(hTotalVoxCount)));
 
-    // Top down-generate the voxels
+
+    // Load the found unique voxel count to host memory for kernel calls
+    uint32_t hUniqueVoxelCount;
+    CUDA_CHECK(cudaMemcpy(&hUniqueVoxelCount, dUniqueVoxelCount, sizeof(uint32_t),
+                          cudaMemcpyDeviceToHost));
+    assert(hUniqueVoxelCount <= hTotalVoxCount);
+
+    // Voxel are sorted and RLE is run
+    // Rename the dVoxels array to sorted unique voxels
+    uint64_t* dSortedUniqueVoxels = dVoxels;
+    // Rename voxel light keys buffer to difference buffer (you can?)
+    uint32_t* dDiffBitBuffer = reinterpret_cast<uint32_t*>(dVoxelLightKeys);
+    // Top-down find the required voxel counts by looking the morton codes
+    assert(Utility::BitCount(resolutionXYZ) == 1);
+    uint32_t levelCount = Utility::FindLastSet(resolutionXYZ);
+    std::vector<uint32_t> levelNodeCounts(levelCount + 1, 0);
+
+    // Root node is always available
+    levelNodeCounts[0] = 1;
+    for(uint32_t i = 1; i <= levelCount; i++)
+    {
+        // Mark the differences between neighbors
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
+                           //
+                           KCMarkMortonChanges,
+                           //
+                           dDiffBitBuffer,
+                           dSortedUniqueVoxels,
+                           hUniqueVoxelCount - 1,
+                           i,
+                           levelCount);
+
+        // Reduce the marks to find
+        ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>, cudaMemcpyDeviceToHost>
+        (
+            levelNodeCounts[i],
+            dDiffBitBuffer,
+            hUniqueVoxelCount,
+            0u
+        );
+        // n difference slices means n+1 segments
+        gpu.WaitMainStream();
+        levelNodeCounts[i] += 1;
+    }
+    assert(levelNodeCounts.back() == hUniqueVoxelCount);
+
+    uint32_t totalNodeCount = std::reduce(levelNodeCounts.cbegin(),
+                                          levelNodeCounts.cend() - 1,
+                                          0u);
+
+    treeGPU.nodeCount = totalNodeCount;
+    treeGPU.leafCount = hUniqueVoxelCount;
+
+    // Allocate required memories now
+    // since we found out the total node count
+    GPUMemFuncs::AllocateMultiData(std::tie(// Node Related,
+                                            treeGPU.dNodes,
+                                            treeGPU.dRadiance,
+                                            treeGPU.dRayCounts,
+                                            // Leaf Related
+                                            treeGPU.dLeafParents,
+                                            treeGPU.dLeafRadianceRead,
+                                            treeGPU.dLeafRayCounts,
+                                            treeGPU.dLeafRadianceWrite,
+                                            treeGPU.dLeafSampleCountWrite),
+                                   octreeMem,
+                                   {totalNodeCount, totalNodeCount,
+                                   totalNodeCount,
+                                   hUniqueVoxelCount, hUniqueVoxelCount,
+                                   hUniqueVoxelCount, hUniqueVoxelCount,
+                                   hUniqueVoxelCount});
+
+    // Top down-generate voxels
     // For each level save the node range for
     // efficient kernel calls later (level by level kernel calls)
     // Now start voxel generation level by level
-    uint32_t levelCount = std::log2(resolutionXYZ);
     for(uint32_t i = 0; i < levelCount; i++)
     {
 
     }
+
+    // Scan the reduce counts to find the light index offsets
+
+
+
+
+    // Log some stuff
+    timer.Stop();
+    double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0f;
+    METU_LOG("Scene Aniso-SVO Generated in {:f} seconds. ({:f} MiB)",
+             timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
+    return TracerError::OK;
 }
 
 void AnisoSVOctreeCPU::NormalizeAndFilterRadiance(const CudaSystem&)

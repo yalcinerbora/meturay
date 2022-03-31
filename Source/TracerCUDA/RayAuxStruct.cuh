@@ -72,6 +72,26 @@ struct RayAuxRL
     float       prevLumReflectance; // Previous reflectance factor of the ray.
 };
 
+struct RayAuxWFPG
+{
+    // Path throughput
+    // (a.k.a. total radiance coefficient along the path)
+    Vector3f        radianceFactor;
+
+    uint32_t        pixelIndex;     // Starting pixel index of the ray
+    uint32_t        endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
+    uint16_t        mediumIndex;    // Current Medium of the Ray
+    uint8_t         depth;          // Current path depth
+    RayType         type;           // Ray Type
+    float           prevPDF;        // Previous Intersections BxDF pdf
+                                    // (is used when a path ray hits a light (MIS))
+    // Method Related
+    uint32_t        pathIndex;      // Index of the path in the path array
+    uint32_t        binId;          // Position bin id
+    Vector2h        guideDir;       // Spherical coords of the guided direction
+    half            guidePDF;       // Guided direction's sample pdf
+};
+
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 {
     UINT32_MAX

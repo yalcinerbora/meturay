@@ -104,7 +104,7 @@ class CPUEndpointGroupI
 													   const std::string& scenePath) = 0;
 		virtual TracerError					ConstructEndpoints(const GPUTransformI**,
                                                                const CudaSystem&) = 0;
-		virtual uint32_t						EndpointCount() const = 0;
+		virtual uint32_t					EndpointCount() const = 0;
 
         // This returns the packed keys,
         // if a primitive endpoint (light) present

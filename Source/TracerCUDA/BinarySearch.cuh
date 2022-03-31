@@ -11,13 +11,15 @@ namespace GPUFunctions
 {
     template<class T>
     __device__
-    inline bool BinarySearchInBetween(float& index, T value, const T* list, uint32_t size)
+    inline bool BinarySearchInBetween(float& index, T value, const T* list, int32_t size)
     {
-        uint32_t start = 0;
-        uint32_t end = size;
+        if(size == 0) return false;
+
+        int32_t start = 0;
+        int32_t end = size;
         while(start <= end)
         {
-            uint32_t mid = (start + end) / 2;
+            int32_t mid = (start + end) / 2;
 
             T current = list[mid];
             T next = list[mid + 1];

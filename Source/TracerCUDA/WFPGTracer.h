@@ -4,6 +4,7 @@
 #include "WorkPool.h"
 #include "GPULightI.h"
 #include "Tracers.h"
+#include "AnisoSVO.cuh"
 
 class GPUDirectLightSamplerI;
 
@@ -12,11 +13,19 @@ class WFPGTracer final : public RayTracer
     public:
         static constexpr const char*    TypeName() { return "WFPGTracer"; }
 
-        static constexpr const char*    MAX_DEPTH_NAME = "MaxDepth";
-        static constexpr const char*    NEE_NAME = "NextEventEstimation";
-        static constexpr const char*    RR_START_NAME = "RussianRouletteStart";
-        static constexpr const char*    DIRECT_LIGHT_MIS_NAME = "DirectLightMIS";
+        static constexpr const char*    MAX_DEPTH_NAME          = "MaxDepth";
+        static constexpr const char*    NEE_NAME                = "NextEventEstimation";
+        static constexpr const char*    RR_START_NAME           = "RussianRouletteStart";
+        static constexpr const char*    DIRECT_LIGHT_MIS_NAME   = "DirectLightMIS";
         static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME = "NEESampler";
+
+        static constexpr const char*    OCTREE_LEVEL_NAME       = "OctreeLevel";
+        static constexpr const char*    RAY_BIN_MIN_LEVEL_NAME  = "MinRayBinLevel";
+        static constexpr const char*    BIN_RAY_COUNT_NAME      = "BinRayCount";
+
+        static constexpr const char*    DEBUG_RENDER_NAME       = "DebugRender";
+        static constexpr const char*    DUMP_DEBUG_NAME         = "DumpDebugData";
+        static constexpr const char*    DUMP_INTERVAL_NAME      = "DataDumpIntervalExp";
 
         struct Options
         {
@@ -26,20 +35,36 @@ class WFPGTracer final : public RayTracer
             uint32_t            rrStart             = 3;
             bool                directLightMIS      = false;
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
+
+            // Method Related
+            uint32_t            octreeLevel         = 10;   // Octree Level (10 = 1024x1024x1024)
+            uint32_t            minRayBinLevel      = 5;    // When rays are binned they cannot group
+                                                            // even if they did not satisfy the ray bin count
+            uint32_t            binRayCount         = 512;  // Amount of rays on each bin
+            // Misc
+            bool                debugRender         = false;
+            bool                dumpDebugData       = false;
+            uint32_t            svoDumpInterval     = 2;
         };
 
     private:
         Options                         options;
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
-        // Work Pools
+         // Work Pools
         BoundaryWorkPool<bool, bool>    boundaryWorkPool;
-        // Single large kernel
         WorkPool<bool, bool>            pathWorkPool;
+        // Debug Works
+        BoundaryWorkPool<>              debugBoundaryWorkPool;
+        WorkPool<>                      debugPathWorkPool;
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
 
+        uint32_t                        iterationCount;
+        uint32_t                        treeDumpCount;
+
+        AnisoSVOctreeCPU                svo;
 
     protected:
     public:

@@ -44,15 +44,15 @@ class AnisoSVOctreeGPU
                                                   CHILD_MASK_BIT_COUNT),
                   "SVO Packed Bits exceeds 64-bit uint");
     // Data Unpack
-    __device__ static bool     IsChildrenLeaf(uint64_t packedData);
-    __device__ static uint8_t  ChildMask(uint64_t packedData);
-    __device__ static uint32_t ChildrenIndex(uint64_t packedData);
-    __device__ static uint32_t ParentIndex(uint64_t packedData);
+    __device__ static bool      IsChildrenLeaf(uint64_t packedData);
+    __device__ static uint8_t   ChildMask(uint64_t packedData);
+    __device__ static uint32_t  ChildrenIndex(uint64_t packedData);
+    __device__ static uint32_t  ParentIndex(uint64_t packedData);
     // Data Pack
-    __device__ static void     SetIsChildrenLeaf(uint64_t& packedData, bool);
-    __device__ static void     SetChildMask(uint64_t& packedData, uint8_t);
-    __device__ static void     SetChildrenIndex(uint64_t& packedData, uint32_t);
-    __device__ static void     SetParentIndex(uint64_t& packedData, uint32_t);
+    __device__ static void      SetIsChildrenLeaf(uint64_t& packedData, bool);
+    __device__ static void      SetChildMask(uint64_t& packedData, uint8_t);
+    __device__ static void      SetChildrenIndex(uint64_t& packedData, uint32_t);
+    __device__ static void      SetParentIndex(uint64_t& packedData, uint32_t);
 
     // SVO Data
     uint64_t*           dNodes;     // children ptr (28) parent ptr (27), child mask, leafBit
@@ -70,7 +70,7 @@ class AnisoSVOctreeGPU
     // Boundary Light (Used when any ray does not hit anything)
     const GPULightI*    dBoundaryLight;
     // Constants
-    AABB3f              sceneAABB;
+    AABB3f              svoAABB;
     uint32_t            voxelResolution;    // x = y = z
     uint32_t            leafDepth;          // log2(voxelResolution)
     uint32_t            nodeCount;
@@ -110,7 +110,7 @@ class AnisoSVOctreeGPU
     __device__
     float               VoxelResolution() const;
     __device__
-    AABB3f              SceneAABB() const;
+    AABB3f              OctreeAABB() const;
 };
 
 class AnisoSVOctreeCPU
@@ -122,13 +122,18 @@ class AnisoSVOctreeCPU
     std::vector<Vector2ui>      levelRanges; // Node Range of each level (Except leaf)
 
     public:
+    // Constructors & Destructor
+                                AnisoSVOctreeCPU() = default;
+                                ~AnisoSVOctreeCPU() = default;
+
     // Construct SVO using the primitives on the Accelerators
     // initialize the radiances with the Lights
-    void                    Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
-                                      const AcceleratorBatchMap&,
-                                      const GPULightI** dSceneLights,
-                                      uint32_t totalLightCount,
-                                      const CudaSystem&);
+    TracerError                 Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
+                                          const AcceleratorBatchMap&,
+                                          const GPULightI** dSceneLights,
+                                          uint32_t totalLightCount,
+                                          HitKey boundaryLightKey,
+                                          const CudaSystem&);
     // Normalize and filter radiances for sampling
     void                    NormalizeAndFilterRadiance(const CudaSystem&);
     // Collapse the ray counts to find optimal binning
@@ -160,7 +165,7 @@ AnisoSVOctreeGPU::AnisoSVOctreeGPU()
     , dLeafRadianceWrite(nullptr)
     , dLeafSampleCountWrite(nullptr)
     , dBoundaryLight(nullptr)
-    , sceneAABB(Vector3f(0.0f), Vector3f(0.0f))
+    , svoAABB(Vector3f(0.0f), Vector3f(0.0f))
     , voxelResolution(0)
     , nodeCount(0)
     , leafCount(0)
@@ -245,9 +250,9 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 __device__ inline
 bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos) const
 {
-    if(sceneAABB.IsOutside(worldPos)) return false;
+    if(svoAABB.IsOutside(worldPos)) return false;
     // Calculate Dense Voxel Id
-    Vector3f lIndex = ((worldPos - sceneAABB.Min()) / leafVoxelSize).Round();
+    Vector3f lIndex = ((worldPos - svoAABB.Min()) / leafVoxelSize).Round();
     Vector3ui denseIndex = Vector3ui(lIndex[0], lIndex[1], lIndex[2]);
 
     // Now descend down
@@ -311,9 +316,9 @@ float AnisoSVOctreeGPU::VoxelResolution() const
 }
 
 __device__ inline
-AABB3f AnisoSVOctreeGPU::SceneAABB() const
+AABB3f AnisoSVOctreeGPU::OctreeAABB() const
 {
-    return sceneAABB;
+    return svoAABB;
 }
 
 inline

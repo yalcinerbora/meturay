@@ -445,7 +445,7 @@ static void KCGetVoxelCount(//Output
                             // Constants
                             const typename PGroup::PrimitiveData primData,
                             size_t totalPrimtCount,
-                            const AABB3f& sceneAABB,
+                            const AABB3f sceneAABB,
                             uint32_t voxResolutionXYZ)
 {
     static constexpr auto VoxelizeFunc = PGroup::Voxelize;
@@ -488,7 +488,7 @@ static void KCVoxelizePrims(//Outputs
                             // Constants
                             const typename PGroup::PrimitiveData primData,
                             size_t totalPrimtCount,
-                            const AABB3f& sceneAABB,
+                            const AABB3f sceneAABB,
                             uint32_t voxResolutionXYZ)
 {
     static constexpr auto VoxelizeFunc = PGroup::Voxelize;

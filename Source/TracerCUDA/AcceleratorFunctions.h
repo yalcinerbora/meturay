@@ -107,7 +107,7 @@ using AlphaTestFunction = bool(*)(// Input
                                   const PrimitiveData& primData);
 
 template <class PrimitiveData>
-using VoxelizeFunction = uint32_t(*)(uint64_t* voxIndices,
+using VoxelizeFunction = uint32_t(*)(uint64_t* gVoxMortonCodes,
                                      uint32_t voxIndMaxCount,
                                      // Inputs
                                      bool onlyCalcSize,
@@ -295,7 +295,7 @@ bool DefaultIntersects(// Output
 
 template <class PrimitiveData>
 __device__ inline
-static uint32_t DefaultVoxelize(uint64_t* voxIndices,
+static uint32_t DefaultVoxelize(uint64_t* gVoxMortonCodes,
                                 uint32_t voxIndMaxCount,
                                 // Inputs
                                 bool onlyCalcSize,

@@ -35,8 +35,8 @@ class CPUTimer
 
         // Utility
         void            Start();
-        void			    Stop();
-        void			    Lap();
+        void			Stop();
+        void			Lap();
 
         template <class Time>
         double          Elapsed();

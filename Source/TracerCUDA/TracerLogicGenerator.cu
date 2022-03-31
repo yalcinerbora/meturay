@@ -29,6 +29,7 @@
 #include "PPGTracer.h"
 #include "RefPGTracer.h"
 #include "RLTracer.h"
+#include "WFPGTracer.h"
 // Lights
 #include "GPULightNull.cuh"
 #include "GPULightConstant.cuh"
@@ -234,6 +235,9 @@ TracerLogicGenerator::TracerLogicGenerator()
                                           DefaultDestruct<GPUTracerI>));
     tracerGenerators.emplace(RLTracer::TypeName(),
                              GPUTracerGen(TracerLogicConstruct<GPUTracerI, RLTracer>,
+                                          DefaultDestruct<GPUTracerI>));
+    tracerGenerators.emplace(WFPGTracer::TypeName(),
+                             GPUTracerGen(TracerLogicConstruct<GPUTracerI, WFPGTracer>,
                                           DefaultDestruct<GPUTracerI>));
 }
 

@@ -30,6 +30,7 @@ All of them should be provided
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
 #include "TextureFunctions.h"
+#include "MortonCode.cuh"
 
 class SurfaceDataLoaderI;
 using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;
@@ -379,7 +380,7 @@ struct TriFunctions
     static constexpr auto& Leaf = GenerateDefaultLeaf<TriData>;
 
     __device__ inline
-    static uint32_t Voxelize(uint64_t* voxIndices,
+    static uint32_t Voxelize(uint64_t* gVoxMortonCodes,
                              uint32_t voxIndMaxCount,
                              // Inputs
                              bool onlyCalcSize,
@@ -415,12 +416,12 @@ struct TriFunctions
             case 0: domPlaneNormal = XAxis; break;
             case 1: domPlaneNormal = YAxis; break;
             case 2: domPlaneNormal = ZAxis; break;
-            default: break;
+            default: assert(false); return 0;
         }
         QuatF rot = Quat::RotationBetweenZAxis(domPlaneNormal);
         // Generate a projection matrix (orthogonal)
         Matrix4x4 proj = TransformGen::Ortogonal(sceneAABB.Min()[0], sceneAABB.Max()[0],
-                                                 sceneAABB.Min()[1], sceneAABB.Max()[1],
+                                                 sceneAABB.Max()[1], sceneAABB.Min()[1],
                                                  sceneAABB.Min()[2], sceneAABB.Max()[2]);
 
         // Apply Transformations
@@ -459,56 +460,94 @@ struct TriFunctions
                            ceil((0.5f + 0.5f * aabbMax[0]) * static_cast<float>(resolutionXYZ)));
         Vector2i yRangeInt(floor((0.5f + 0.5f * aabbMin[1]) * static_cast<float>(resolutionXYZ)),
                            ceil((0.5f + 0.5f * aabbMax[1]) * static_cast<float>(resolutionXYZ)));
-
         // Clip the range
-        xRangeInt.Clamp(0, resolutionXYZ - 1);
-        yRangeInt.Clamp(0, resolutionXYZ - 1);
+        xRangeInt.ClampSelf(0, resolutionXYZ);
+        yRangeInt.ClampSelf(0, resolutionXYZ);
+
+        // Conservative Rasterization
+        // Move all the edges "outwards" at least half a pixel
+        // Notice NDC is [-1, 1] pixel size is 2 / resolution
+        const float halfPixel = 1.0f / static_cast<float>(resolutionXYZ);
+        const float deltaPix = 2.0f * halfPixel;
+        // https://developer.nvidia.com/gpugems/gpugems2/part-v-image-oriented-computing/chapter-42-conservative-rasterization
+        // This was CG shader code which was optimized
+        // with a single cross product you can find the line equation
+        // ax + by + c = 0 (planes variable holds a,b,c)
+        Vector3f planes[3];
+        planes[0] = Cross(Vector3f(positions2D[1] - positions2D[0], 0.0f),
+                          Vector3f(positions2D[0], 1.0f));
+        planes[1] = Cross(Vector3f(positions2D[2] - positions2D[1], 0.0f),
+                          Vector3f(positions2D[1], 1.0f));
+        planes[2] = Cross(Vector3f(positions2D[0] - positions2D[2], 0.0f),
+                          Vector3f(positions2D[2], 1.0f));
+        // Move the planes by the appropriate diagonal
+        planes[0][2] -= Vector2f(halfPixel).Dot(Vector2f(planes[0]).Abs());
+        planes[1][2] -= Vector2f(halfPixel).Dot(Vector2f(planes[1]).Abs());
+        planes[2][2] -= Vector2f(halfPixel).Dot(Vector2f(planes[2]).Abs());
+        // Compute the intersection point of the planes.
+        // Again this code utilizes cross product to find x,y positions with (w)
+        // which was implicitly divided by the rasterizer pipeline
+        Vector3f positionsConserv[3];
+        positionsConserv[0] = Cross(planes[0], planes[2]);
+        positionsConserv[1] = Cross(planes[0], planes[1]);
+        positionsConserv[2] = Cross(planes[1], planes[2]);
+        // Manually divide "w" (in this case Z) manually
+        Vector2f positionsConsv2D[3];
+        positionsConsv2D[0] = Vector2f(positionsConserv[0]) / positionsConserv[0][2];
+        positionsConsv2D[1] = Vector2f(positionsConserv[1]) / positionsConserv[1][2];
+        positionsConsv2D[2] = Vector2f(positionsConserv[2]) / positionsConserv[2][2];
 
         // Generate Edges (for Cramer's Rule)
         // & iteration constants
+        // Conservative Edges
+        const Vector2f eCons0 = positionsConsv2D[1] - positionsConsv2D[0];
+        const Vector2f eCons1 = positionsConsv2D[2] - positionsConsv2D[0];
+        const float denomCons = 1.0f / (eCons0[0] * eCons1[1] - eCons1[0] * eCons0[1]);
+        // Actual Edges
         const Vector2f e0 = positions2D[1] - positions2D[0];
         const Vector2f e1 = positions2D[2] - positions2D[0];
-        const float denom = e0[0] * e1[1] - e1[0] * e0[1];
-        const float deltaPix = 1.0f / static_cast<float>(resolutionXYZ);
-
+        const float denom = 1.0f / (e0[0] * e1[1] - e1[0] * e0[1]);
         // Scan Line
         uint32_t writeIndex = 0;
         for(int y = yRangeInt[0]; y < yRangeInt[1]; y++)
         for(int x = xRangeInt[0]; x < xRangeInt[1]; x++)
         {
-            // Gen Point
-            // TODO: Do conservative rasterization here
-            // currently it is non-conservative (only mid of pixels are checked)
-            Vector2f pos = Vector2f((static_cast<float>(x) + 0.5f) * deltaPix,
-                                    (static_cast<float>(y) + 0.5f) * deltaPix);
-            Vector2f e2 = pos - positions2D[0];
+            // Gen Point (+0.5 for pixel middle)
+            Vector2f pos = Vector2f((static_cast<float>(x) + 0.5f) * deltaPix - 1.0f,
+                                    (static_cast<float>(y) + 0.5f) * deltaPix - 1.0f);
 
             // Cramer's Rule
-            float v = (e2[0] * e1[1] - e1[0] * e2[1]) / denom;
-            float w = (e0[0] * e2[1] - e2[0] * e0[1]) / denom;
-            float u = 1.0f - v - w;
+            Vector2f eCons2 = pos - positionsConsv2D[0];
+            float v = (eCons2[0] * eCons1[1] - eCons1[0] * eCons2[1]) * denomCons;
+            float w = (eCons0[0] * eCons2[1] - eCons2[0] * eCons0[1]) * denomCons;
 
-            if(v <= 1.0f && v >= 0.0f &&
-               w <= 1.0f && w >= 0.0f)
+            // If barycentrics are in range
+            if(v >= 0.0f && v <= 1.0f &&
+               w >= 0.0f && w <= 1.0f)
             {
                 // Bary's match, pixel is inside the triangle
                 if(!onlyCalcSize)
                 {
-                    Vector3f voxelPos = positions[0] * u + positions[1] * v + positions[2] * w;
+                    // Find the Actual Bary Coords here
+                    // Cramer's Rule
+                    Vector2f e2 = pos - positions2D[0];
+                    float actualV = (e2[0] * e1[1] - e1[0] * e2[1]) * denom;
+                    float actualW = (e0[0] * e2[1] - e2[0] * e0[1]) * denom;
+                    float actualU = 1.0f - actualV - actualW;
+
+                    Vector3f voxelPos = (positions[0] * actualU +
+                                         positions[1] * actualV +
+                                         positions[2] * actualW);
 
                     Vector3f voxelIndexF = ((voxelPos - sceneAABB.Min()) / sceneAABB.Span()) * static_cast<float>(resolutionXYZ);
-                    Vector3ul voxelIndex = Vector3ul(static_cast<uint64_t>(voxelIndexF[0]),
-                                                     static_cast<uint64_t>(voxelIndexF[1]),
-                                                     static_cast<uint64_t>(voxelIndexF[2]));
-
-                    uint64_t res64 = static_cast<uint64_t>(resolutionXYZ);
-                    uint64_t voxelIndexLinear = (voxelIndex[2] * res64 * res64 +
-                                                 voxelIndex[1] * res64 +
-                                                 voxelIndex[0]);
+                    Vector3ui voxelIndex = Vector3ui(static_cast<uint32_t>(voxelIndexF[0]),
+                                                     static_cast<uint32_t>(voxelIndexF[1]),
+                                                     static_cast<uint32_t>(voxelIndexF[2]));
+                    uint64_t voxelIndexMorton = MortonCode::Compose<uint64_t>(voxelIndex);
                     // Write the found voxel
                     assert(writeIndex < voxIndMaxCount);
                     if(writeIndex < voxIndMaxCount)
-                        voxIndices[writeIndex] = voxelIndexLinear;
+                        gVoxMortonCodes[writeIndex] = voxelIndexMorton;
                 };
                 writeIndex++;
             }

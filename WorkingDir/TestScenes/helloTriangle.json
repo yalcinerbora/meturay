@@ -25,7 +25,9 @@
 	"Materials":[
 	{
 		"id": 0,
-		"type": "Barycentric"
+		//"type": "Barycentric"
+		"type": "LambertC",
+		"albedo" : [0, 1, 0]
 	}],
 
 	"Primitives":[
