@@ -12,6 +12,7 @@
 #include "GPUAcceleratorI.h"
 #include "ParallelReduction.cuh"
 #include "ParallelScan.cuh"
+#include "ParallelMemset.cuh"
 
 #include <cub/cub.cuh>
 #include <numeric>
@@ -32,7 +33,7 @@ void KCGetLightKeys(HitKey* gKeys,
 }
 
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCMarkMortonChanges(uint32_t* gMarks,
                          const uint64_t* gVoxels,
                          uint32_t voxelCount,
@@ -59,8 +60,145 @@ void KCMarkMortonChanges(uint32_t* gMarks,
         voxelMortonNext &= mask;
 
         gMarks[threadId] = (voxelMorton != voxelMortonNext) ? 1 : 0;
-        if(threadId == voxelCount - 1)
-            gMarks[threadId + 1] = 0;
+    }
+}
+
+__global__
+void KCMarkChild(// I-O
+                 uint64_t* gNodes,
+                 // Input
+                 const uint64_t* gVoxels,
+                 // Constants
+                 uint32_t voxelCount,
+                 uint32_t level,
+                 uint32_t maxLevel)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < voxelCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        static constexpr uint64_t DIMENSION = 3;
+        uint64_t voxelMortonCode = gVoxels[threadId];
+
+        // Start traversing (Root node is the very first node)
+        uint64_t* currentNode = gNodes;
+        for(int curLevel = 0; curLevel < level; curLevel++)
+        {
+            // Fetch the current bit triples of the level from the
+            // morton code
+            uint32_t currentBitOffset = (maxLevel - curLevel - 1) * DIMENSION;
+            uint32_t childId = (voxelMortonCode >> currentBitOffset) & 0b111;
+
+            uint8_t childOffset = AnisoSVOctreeGPU::FindChildOffset(*currentNode, childId);
+            uint8_t childrenIndex = AnisoSVOctreeGPU::ChildrenIndex(*currentNode);
+
+            // Go to next child
+            currentNode = gNodes + childrenIndex + childOffset;
+        }
+        // Now we are at the not that does not set its children ptr and mask is set
+        // Atomically mark the required child
+        uint32_t currentBitOffset = (maxLevel - level - 1) * DIMENSION;
+        uint32_t childId = (voxelMortonCode >> currentBitOffset) & 0b111;
+        uint32_t childBit = (1 << childId);
+
+        AnisoSVOctreeGPU::AtomicSetChildMaskBit(*currentNode, childBit);
+    }
+}
+
+__global__
+void KCExtractChildrenCounts(uint32_t* gChildrenCounts,
+                             const uint64_t* gLevelNodes,
+                             uint32_t levelNodeCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < levelNodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint64_t node = gLevelNodes[threadId];
+        uint32_t childrenCount = AnisoSVOctreeGPU::ChildrenCount(node);
+        // Write the count
+        gChildrenCounts[threadId] = childrenCount;
+    }
+}
+
+__global__
+void KCSetChildrenPtrs(uint64_t* gLevelNodes,
+                       const uint32_t* gChildrenOffsets,
+                       uint32_t nextLevelStartIndex,
+                       uint32_t levelNodeCount,
+                       bool markIsChildrenLeaf)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < levelNodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint64_t node = gLevelNodes[threadId];
+        uint32_t offset = gChildrenOffsets[threadId];
+
+        // Children offsets are relative to the level
+        // we need to put global pointer (index)
+        uint32_t globalOffset = nextLevelStartIndex + offset;
+        AnisoSVOctreeGPU::SetChildrenIndex(node, globalOffset);
+        // If this the last non-leaf level we need to mark the children
+        if(markIsChildrenLeaf)
+            AnisoSVOctreeGPU::SetIsChildrenLeaf(node, true);
+        // Write back the modified node
+        gLevelNodes[threadId] = node;
+
+        printf("Node (M: %x C: %u P: %u L %u\n",
+               static_cast<uint32_t>(AnisoSVOctreeGPU::ChildMask(node)),
+               AnisoSVOctreeGPU::ChildrenIndex(node),
+               AnisoSVOctreeGPU::ParentIndex(node),
+               static_cast<uint32_t>(AnisoSVOctreeGPU::IsChildrenLeaf(node)));
+    }
+}
+
+__global__
+void KCSetParentOfChildren(uint64_t* gNodes,
+                           const uint64_t* gLevelNodes,
+                           uint32_t levelNodeCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < levelNodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint64_t node = gLevelNodes[threadId];
+        uint32_t childrenCount = AnisoSVOctreeGPU::ChildrenCount(node);
+        uint32_t childrenIndex = AnisoSVOctreeGPU::ChildrenIndex(node);
+
+        // Find the parent id using pointer arithmetic
+        uint32_t currentNodeGlobalId  = (gLevelNodes + threadId) - gNodes;
+        // Set ptrs for all children
+        for(uint32_t i = 0; i < childrenCount; i++)
+        {
+            uint64_t* gChildNode = gNodes + childrenIndex + i;
+            AnisoSVOctreeGPU::SetParentIndex(*gChildNode, currentNodeGlobalId);
+        }
+    }
+}
+
+__global__
+void KCSetParentOfLeafChildren(uint32_t* gLeafParents,
+                               const uint64_t* gNodes,
+                               const uint64_t* gLevelNodes,
+                               uint32_t levelNodeCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < levelNodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint64_t node = gLevelNodes[threadId];
+        uint32_t childrenCount = AnisoSVOctreeGPU::ChildrenCount(node);
+        uint32_t childrenIndex = AnisoSVOctreeGPU::ChildrenIndex(node);
+        assert(AnisoSVOctreeGPU::IsChildrenLeaf(node));
+        // Find the parent id using pointer arithmetic
+        uint32_t currentNodeGlobalId = (gLevelNodes + threadId) - gNodes;
+        // Set ptrs for all children
+        for(uint32_t i = 0; i < childrenCount; i++)
+        {
+            uint32_t* gChildParent = gLeafParents + childrenIndex + i;
+            *gChildParent = currentNodeGlobalId;
+        }
     }
 }
 
@@ -117,7 +255,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     treeGPU.leafVoxelSize = worldSizeXYZ / static_cast<float>(resolutionXYZ);
     treeGPU.voxelResolution = resolutionXYZ;
 
-
+    // Find out the sort memory requirement of Light Keys
     size_t lightSortMemSize;
     HitKey* dLightKeys = nullptr;
     const GPULightI** dSortedLights = nullptr;
@@ -196,7 +334,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     DeviceMemory voxelMemory;
     GPUMemFuncs::AllocateMultiData(std::tie(dVoxels, dVoxelLightKeys),
                                    voxelMemory,
-                                   {hTotalVoxCount, hTotalVoxCount});
+                                   {hTotalVoxCount, hTotalVoxCount + 1});
 
     // Generate Light / HitKey sorted array (for binary search)
     const CudaGPU& gpu = system.BestGPU();
@@ -251,6 +389,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     //
     size_t rleTempMemSize;
     size_t sortTempMemSize;
+    size_t scanTempMemSize;
 
     uint64_t* dSortedVoxels = nullptr;
     HitKey* dSortedVoxelKeys = nullptr;
@@ -260,6 +399,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     Byte* dTempMemory = nullptr;
 
     // Acquire Temp Memory Requirements
+    CUDA_CHECK(cub::DeviceScan::ExclusiveSum(nullptr, scanTempMemSize,
+                                             dDuplicateCounts, dDuplicateCounts,
+                                             static_cast<uint32_t>(hTotalVoxCount + 1)));
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, sortTempMemSize,
                                                dVoxels, dSortedVoxels,
                                                dVoxelLightKeys, dSortedVoxelKeys,
@@ -270,6 +412,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                                   dDuplicateCounts, dUniqueVoxelCount,
                                                   static_cast<uint32_t>(hTotalVoxCount)));
     size_t tempMemSize = std::max(rleTempMemSize, sortTempMemSize);
+    tempMemSize = std::max(tempMemSize, scanTempMemSize);
 
     // Allocation
     DeviceMemory sortedVoxelMemory;
@@ -278,7 +421,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                             dUniqueVoxelCount),
                                    sortedVoxelMemory,
                                    {hTotalVoxCount, hTotalVoxCount,
-                                   hTotalVoxCount, tempMemSize,
+                                   hTotalVoxCount + 1, tempMemSize,
                                    1});
 
     // Sort and RLE
@@ -286,6 +429,10 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                                dVoxels, dSortedVoxels,
                                                dVoxelLightKeys, dSortedVoxelKeys,
                                                static_cast<uint32_t>(hTotalVoxCount)));
+
+    //Debug::DumpMemToFile("voxels", dVoxels, hTotalVoxCount,
+    //                     false, true);
+
     CUDA_CHECK(cub::DeviceRunLengthEncode::Encode(dTempMemory,
                                                   rleTempMemSize,
                                                   dSortedVoxels, dVoxels,
@@ -293,28 +440,78 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                                   static_cast<uint32_t>(hTotalVoxCount)));
 
 
+    //Debug::DumpMemToFile("sortedVoxels", dSortedVoxels, hTotalVoxCount,
+    //                     false, true);
+    //Debug::DumpMemToFile("rleVoxels", dVoxels, hTotalVoxCount,
+    //                     false, true);
+
     // Load the found unique voxel count to host memory for kernel calls
     uint32_t hUniqueVoxelCount;
     CUDA_CHECK(cudaMemcpy(&hUniqueVoxelCount, dUniqueVoxelCount, sizeof(uint32_t),
                           cudaMemcpyDeviceToHost));
     assert(hUniqueVoxelCount <= hTotalVoxCount);
 
+    // Temp reuse the voxel keys array for scan operation
+    uint32_t* dLightKeyOffsets = reinterpret_cast<uint32_t*>(dVoxelLightKeys);
+    CUDA_CHECK(cub::DeviceScan::ExclusiveSum(dTempMemory, scanTempMemSize,
+                                             dDuplicateCounts, dLightKeyOffsets,
+                                             static_cast<uint32_t>(hUniqueVoxelCount + 1)));
+
+    // Copy the scanned result back to the duplicate counts variable
+    CUDA_CHECK(cudaMemcpy(dDuplicateCounts, dLightKeyOffsets,
+                          sizeof(uint32_t) * (hUniqueVoxelCount + 1),
+                          cudaMemcpyDeviceToDevice));
+    // Rename the allocated buffer to the proper name
+    uint32_t* dLightOffsets = dDuplicateCounts;
+    dDuplicateCounts = nullptr;
+
     // Voxel are sorted and RLE is run
+    // Non-unique voxel array is not required copy the unique voxels
+    // (which is in dVoxels) to dSortedVoxels array and rename
+    CUDA_CHECK(cudaMemcpy(dSortedVoxels, dVoxels,
+                          sizeof(uint64_t) * hUniqueVoxelCount,
+                          cudaMemcpyDeviceToDevice));
+
     // Rename the dVoxels array to sorted unique voxels
-    uint64_t* dSortedUniqueVoxels = dVoxels;
-    // Rename voxel light keys buffer to difference buffer (you can?)
-    uint32_t* dDiffBitBuffer = reinterpret_cast<uint32_t*>(dVoxelLightKeys);
+    uint64_t* dSortedUniqueVoxels = dSortedVoxels;
+
+    //Debug::DumpMemToFile("sortedVox", dSortedUniqueVoxels, hUniqueVoxelCount,
+    //                     false, true);
+
+    // Now we can deallocate the large non-unique voxel buffers
+    voxelMemory = DeviceMemory();
+    dVoxels = nullptr;
+    dVoxelLightKeys = nullptr;
+
+    // Now Allocate another temp memory for SVO Construction
+    uint32_t* dDiffBitBuffer = nullptr;
+    uint32_t* dChildOffsetBuffer = nullptr;
+    Byte* dScanMemory = nullptr;
+    DeviceMemory svoTempMemory;
+    // Check Scan Memory for child reduction on SVO
+    CUDA_CHECK(cub::DeviceScan::ExclusiveSum(nullptr, scanTempMemSize,
+                                             dDiffBitBuffer, dChildOffsetBuffer,
+                                             static_cast<uint32_t>(hUniqueVoxelCount + 1)));
+
+    // Allocate
+    GPUMemFuncs::AllocateMultiData(std::tie(dDiffBitBuffer, dChildOffsetBuffer,
+                                            dScanMemory),
+                                   svoTempMemory,
+                                   {hUniqueVoxelCount, hUniqueVoxelCount + 1,
+                                   scanTempMemSize});
+
     // Top-down find the required voxel counts by looking the morton codes
     assert(Utility::BitCount(resolutionXYZ) == 1);
     uint32_t levelCount = Utility::FindLastSet(resolutionXYZ);
     std::vector<uint32_t> levelNodeCounts(levelCount + 1, 0);
+    std::vector<uint32_t> levelNodeOffsets(levelCount + 2, 0);
 
     // Root node is always available
     levelNodeCounts[0] = 1;
     for(uint32_t i = 1; i <= levelCount; i++)
     {
         // Mark the differences between neighbors
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount - 1,
                            //
                            KCMarkMortonChanges,
                            //
@@ -329,7 +526,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
         (
             levelNodeCounts[i],
             dDiffBitBuffer,
-            hUniqueVoxelCount,
+            hUniqueVoxelCount - 1,
             0u
         );
         // n difference slices means n+1 segments
@@ -341,10 +538,12 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     uint32_t totalNodeCount = std::reduce(levelNodeCounts.cbegin(),
                                           levelNodeCounts.cend() - 1,
                                           0u);
+    std::exclusive_scan(levelNodeCounts.cbegin(), levelNodeCounts.cend(),
+                        levelNodeOffsets.begin(),
+                        0u);
 
     treeGPU.nodeCount = totalNodeCount;
     treeGPU.leafCount = hUniqueVoxelCount;
-
     // Allocate required memories now
     // since we found out the total node count
     GPUMemFuncs::AllocateMultiData(std::tie(// Node Related,
@@ -364,19 +563,92 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                    hUniqueVoxelCount, hUniqueVoxelCount,
                                    hUniqueVoxelCount});
 
+    // Set Node and leaf parents to max to early catch errors
+    // Rest is set to zero
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
+                       //
+                       KCMemset<uint64_t>,
+                       //
+                       treeGPU.dNodes,
+                       AnisoSVOctreeGPU::INVALID_NODE,
+                       totalNodeCount);
+    CUDA_CHECK(cudaMemset(treeGPU.dRadiance, 0x00, totalNodeCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dRayCounts, 0x00, totalNodeCount * sizeof(uint64_t)));
+
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafParents, 0xFF, hUniqueVoxelCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceRead, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafRayCounts, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafSampleCountWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
+
+    //DEBUG
+    remove("svoChildOffsets");
+
     // Top down-generate voxels
     // For each level save the node range for
     // efficient kernel calls later (level by level kernel calls)
     // Now start voxel generation level by level
     for(uint32_t i = 0; i < levelCount; i++)
     {
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
+                           //
+                           KCMarkChild,
+                           // I-O
+                           treeGPU.dNodes,
+                           // Input
+                           dSortedUniqueVoxels,
+                           // Constants
+                           hUniqueVoxelCount,
+                           i,
+                           levelCount);
 
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+                           //
+                           KCExtractChildrenCounts,
+                           //
+                           dDiffBitBuffer,
+                           treeGPU.dNodes + levelNodeOffsets[i],
+                           levelNodeCounts[i]);
+
+        CUDA_CHECK(cub::DeviceScan::ExclusiveSum(dScanMemory, scanTempMemSize,
+                                                 dDiffBitBuffer, dChildOffsetBuffer,
+                                                 static_cast<uint32_t>(levelNodeCounts[i] + 1)));
+
+        Debug::DumpMemToFile("svoChildOffsets", dChildOffsetBuffer,
+                             levelNodeCounts[i] + 1,
+                             true);
+
+
+        bool lastNonLeafLevel = (i == (levelCount - 1));
+        uint32_t nextLevelOffset = (lastNonLeafLevel)
+                                    ? 0
+                                    : static_cast<uint32_t>(levelNodeOffsets[i + 1]);
+
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+                           //
+                           KCSetChildrenPtrs,
+                           //
+                           treeGPU.dNodes + levelNodeOffsets[i],
+                           dChildOffsetBuffer,
+                           nextLevelOffset,
+                           levelNodeCounts[i],
+                           lastNonLeafLevel);
+
+        if(!lastNonLeafLevel)
+        {
+            gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+                               //
+                               KCSetParentOfChildren,
+                               //
+                               treeGPU.dNodes,
+                               treeGPU.dNodes + levelNodeOffsets[i],
+                               levelNodeCounts[i]);
+        }
+
+        METU_LOG("=============");
     }
 
-    // Scan the reduce counts to find the light index offsets
-
-
-
+    // Only leaf parents are left
 
     // Log some stuff
     timer.Stop();

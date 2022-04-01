@@ -543,6 +543,18 @@ struct TriFunctions
                     Vector3ui voxelIndex = Vector3ui(static_cast<uint32_t>(voxelIndexF[0]),
                                                      static_cast<uint32_t>(voxelIndexF[1]),
                                                      static_cast<uint32_t>(voxelIndexF[2]));
+
+                    //if(voxelIndex[0] >= resolutionXYZ)
+                    //    printf("X out of range %u\n", voxelIndex[0]);
+                    //if(voxelIndex[1] >= resolutionXYZ)
+                    //    printf("Y out of range %u\n", voxelIndex[1]);
+                    //if(voxelIndex[2] >= resolutionXYZ)
+                    //    printf("Z out of range %u\n", voxelIndex[2]);
+
+                    // TODO: This sometimes happen but it shouldn't??
+                    // Clamp the Voxel due to numerical errors
+                    voxelIndex.ClampSelf(0, resolutionXYZ - 1);
+
                     uint64_t voxelIndexMorton = MortonCode::Compose<uint64_t>(voxelIndex);
                     // Write the found voxel
                     assert(writeIndex < voxIndMaxCount);

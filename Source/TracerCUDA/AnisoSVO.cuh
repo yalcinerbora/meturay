@@ -43,17 +43,6 @@ class AnisoSVOctreeGPU
                                                   CHILD_BIT_COUNT +
                                                   CHILD_MASK_BIT_COUNT),
                   "SVO Packed Bits exceeds 64-bit uint");
-    // Data Unpack
-    __device__ static bool      IsChildrenLeaf(uint64_t packedData);
-    __device__ static uint8_t   ChildMask(uint64_t packedData);
-    __device__ static uint32_t  ChildrenIndex(uint64_t packedData);
-    __device__ static uint32_t  ParentIndex(uint64_t packedData);
-    // Data Pack
-    __device__ static void      SetIsChildrenLeaf(uint64_t& packedData, bool);
-    __device__ static void      SetChildMask(uint64_t& packedData, uint8_t);
-    __device__ static void      SetChildrenIndex(uint64_t& packedData, uint32_t);
-    __device__ static void      SetParentIndex(uint64_t& packedData, uint32_t);
-
     // SVO Data
     uint64_t*           dNodes;     // children ptr (28) parent ptr (27), child mask, leafBit
     AnisoRadiance*      dRadiance;  // Anisotropic emitted radiance (normalized)
@@ -111,6 +100,24 @@ class AnisoSVOctreeGPU
     float               VoxelResolution() const;
     __device__
     AABB3f              OctreeAABB() const;
+
+    //
+    static constexpr uint64_t   INVALID_NODE = 0x008FFFFFFFFFFFFF;
+    // Utility Bit Options
+    // Data Unpack
+    __device__ static bool      IsChildrenLeaf(uint64_t packedData);
+    __device__ static uint8_t   ChildMask(uint64_t packedData);
+    __device__ static uint8_t   ChildrenCount(uint64_t packedData);
+    __device__ static uint32_t  ChildrenIndex(uint64_t packedData);
+    __device__ static uint32_t  ParentIndex(uint64_t packedData);
+    // Data Pack
+    __device__ static void      SetIsChildrenLeaf(uint64_t& packedData, bool);
+    __device__ static void      SetChildMask(uint64_t& packedData, uint8_t);
+    __device__ static void      SetChildrenIndex(uint64_t& packedData, uint32_t);
+    __device__ static void      SetParentIndex(uint64_t& packedData, uint32_t);
+
+    __device__ static void      AtomicSetChildMaskBit(uint64_t& packedData, uint8_t);
+    __device__ static uint8_t   FindChildOffset(uint64_t packedData, uint8_t childId);
 };
 
 class AnisoSVOctreeCPU
@@ -185,6 +192,12 @@ uint8_t AnisoSVOctreeGPU::ChildMask(uint64_t packedData)
 }
 
 __device__ inline
+uint8_t AnisoSVOctreeGPU::ChildrenCount(uint64_t packedData)
+{
+    return __popc(ChildMask(packedData));
+}
+
+__device__ inline
 uint32_t AnisoSVOctreeGPU::ChildrenIndex(uint64_t packedData)
 {
     return static_cast<uint32_t>((packedData >> CHILD_OFFSET) & CHILD_BIT_MASK);
@@ -207,14 +220,24 @@ void AnisoSVOctreeGPU::SetIsChildrenLeaf(uint64_t& packedData, bool b)
 __device__ inline
 void AnisoSVOctreeGPU::SetChildMask(uint64_t& packedData, uint8_t mask)
 {
+    assert(mask < (1 << CHILD_MASK_BIT_COUNT));
     static constexpr uint64_t NEGATIVE_MASK = ~(CHILD_MASK_BIT_MASK << CHILD_MASK_OFFSET);
     packedData &= NEGATIVE_MASK;
     packedData |= (static_cast<uint64_t>(mask) << CHILD_MASK_OFFSET);
 }
 
 __device__ inline
+void AnisoSVOctreeGPU::AtomicSetChildMaskBit(uint64_t& packedData, uint8_t mask)
+{
+    assert(mask < (1 << CHILD_MASK_BIT_COUNT));
+    // Atomically set the value to the mask
+    atomicOr(&packedData, static_cast<uint64_t>(mask) << CHILD_MASK_OFFSET);
+}
+
+__device__ inline
 void AnisoSVOctreeGPU::SetChildrenIndex(uint64_t& packedData, uint32_t childIndex)
 {
+    assert(childIndex < (1 << CHILD_BIT_COUNT));
     static constexpr uint64_t NEGATIVE_MASK = ~(CHILD_BIT_MASK << CHILD_OFFSET);
     packedData &= NEGATIVE_MASK;
     packedData |= (static_cast<uint64_t>(childIndex) << CHILD_OFFSET);
@@ -223,9 +246,20 @@ void AnisoSVOctreeGPU::SetChildrenIndex(uint64_t& packedData, uint32_t childInde
 __device__ inline
 void AnisoSVOctreeGPU::SetParentIndex(uint64_t& packedData, uint32_t parentIndex)
 {
+    assert(parentIndex < (1 << PARENT_BIT_COUNT));
     static constexpr uint64_t NEGATIVE_MASK = ~(PARENT_BIT_MASK << PARENT_OFFSET);
     packedData &= NEGATIVE_MASK;
     packedData |= (static_cast<uint64_t>(parentIndex) << PARENT_OFFSET);
+}
+
+__device__ inline
+uint8_t AnisoSVOctreeGPU::FindChildOffset(uint64_t packedData, uint8_t childId)
+{
+    uint32_t mask = ChildMask(packedData);
+    uint32_t bitLoc = (1 << static_cast<uint32_t>(childId));
+    assert((bitLoc & mask) != 0);
+    uint32_t lsbMask = bitLoc - 1;
+    return __popc(lsbMask & mask);
 }
 
 __device__ inline
