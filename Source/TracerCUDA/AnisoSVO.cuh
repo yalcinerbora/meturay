@@ -7,6 +7,7 @@
 #include "GPULightI.h"
 #include "RayLib/TracerStructs.h"
 #include "DeviceMemory.h"
+#include "MortonCode.cuh"
 
 struct PathGuidingNode;
 class CudaSystem;
@@ -89,6 +90,9 @@ class AnisoSVOctreeGPU
     __device__
     uint32_t            FindBin(bool& isLeaf, uint32_t upperLimit, uint32_t leafIndex)  const;
 
+    __device__
+    Vector3f            VoxelToWorld(const Vector3ui& denseIndex);
+
     // Accessors
     __device__
     uint32_t            LeafVoxelSize() const;
@@ -126,7 +130,7 @@ class AnisoSVOctreeCPU
     DeviceMemory                octreeMem;
     AnisoSVOctreeGPU            treeGPU;
     // Level Ranges
-    std::vector<Vector2ui>      levelRanges; // Node Range of each level (Except leaf)
+    std::vector<uint32_t>       levelNodeOffsets; // Node Range of each level (except leaf)
 
     public:
     // Constructors & Destructor
@@ -284,38 +288,45 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 __device__ inline
 bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos) const
 {
-    if(svoAABB.IsOutside(worldPos)) return false;
-    // Calculate Dense Voxel Id
-    Vector3f lIndex = ((worldPos - svoAABB.Min()) / leafVoxelSize).Round();
-    Vector3ui denseIndex = Vector3ui(lIndex[0], lIndex[1], lIndex[2]);
+    // Useful constants
+    static constexpr uint32_t DIMENSION = 3;
+    static constexpr uint32_t DIM_MASK = (1 << DIMENSION) - 1;
 
-    // Now descend down
-    uint64_t currentNode = dNodes[0];
-    for(uint32_t i = 1; i <= leafDepth; i++)
+    if(svoAABB.IsOutside(worldPos))
     {
-        uint8_t childMask = ChildMask(currentNode);
-        uint32_t childPtr = ChildrenIndex(currentNode);
+        index = UINT32_MAX;
+        return false;
+    }
 
-        uint32_t x = (denseIndex[0] >> (leafDepth - i)) & 0b1;
-        uint32_t y = (denseIndex[0] >> (leafDepth - i)) & 0b1;
-        uint32_t z = (denseIndex[0] >> (leafDepth - i)) & 0b1;
-        uint32_t nextChildOffset = 0;
-        nextChildOffset |= (z << 2);
-        nextChildOffset |= (y << 1);
-        nextChildOffset |= (x << 0);
+    // Calculate Dense Voxel Id
+    Vector3f lIndex = ((worldPos - svoAABB.Min()) / leafVoxelSize).Floor();
+    Vector3ui denseIndex = Vector3ui(lIndex[0], lIndex[1], lIndex[2]);
+    // Generate Morton code of the index
+    uint64_t voxelMorton = MortonCode::Compose<uint64_t>(denseIndex);
+    // Reverse the morton code for efficient iteration (traversal)
+    uint64_t mortonRev = __brevll(voxelMorton);
+    // Now descend down
+    uint32_t currentNodeIndex = 0;
+    for(uint32_t i = 0; i < leafDepth; i++)
+    {
+        uint64_t currentNode = dNodes[currentNodeIndex];
+
+        uint8_t childId = mortonRev & DIM_MASK;
+        uint8_t childOffset = FindChildOffset(currentNode, childId);
+        uint8_t childrenIndex = ChildrenIndex(currentNode);
 
         // Check if this node has that child avail
-        if(!(childMask >> nextChildOffset))
+        if(!(ChildMask(currentNode) >> childId) & 0b1)
         {
             index = UINT32_MAX;
             return false;
         }
-        // Continue
-        currentNode = dNodes[childPtr + nextChildOffset];
+        currentNodeIndex = childrenIndex + childOffset;
+        mortonRev >>= DIMENSION;
     }
     // If we descended down properly currentNode should point to the
     // index. Notice that, last level's children ptr will point to the leaf arrays
-    index = currentNode;
+    index = currentNodeIndex;
     return true;
 }
 
@@ -323,6 +334,15 @@ __device__ inline
 uint32_t AnisoSVOctreeGPU::FindBin(bool& isLeaf, uint32_t upperLimit, uint32_t leafIndex) const
 {
     return UINT32_MAX;
+}
+
+__device__ inline
+Vector3f AnisoSVOctreeGPU::VoxelToWorld(const Vector3ui& denseIndex)
+{
+    Vector3f denseIFloat = Vector3f(static_cast<float>(denseIndex[0]) + 0.5f,
+                                    static_cast<float>(denseIndex[1]) + 0.5f,
+                                    static_cast<float>(denseIndex[2]) + 0.5f);
+    return svoAABB.Min() + (denseIFloat * leafVoxelSize);
 }
 
 __device__ inline
@@ -370,5 +390,5 @@ size_t AnisoSVOctreeCPU::UsedGPUMemory() const
 inline
 size_t AnisoSVOctreeCPU::UsedCPUMemory() const
 {
-    return sizeof(AnisoSVOctreeCPU) + levelRanges.size() * sizeof(Vector2ui);
+    return sizeof(AnisoSVOctreeCPU) + levelNodeOffsets.size() * sizeof(Vector2ui);
 }

@@ -13,13 +13,15 @@
 #include "ParallelReduction.cuh"
 #include "ParallelScan.cuh"
 #include "ParallelMemset.cuh"
+#include "BinarySearch.cuh"
+
 
 #include <cub/cub.cuh>
 #include <numeric>
 
 #include "TracerDebug.h"
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGetLightKeys(HitKey* gKeys,
                     const GPULightI** gLights,
                     uint32_t totalLightCount)
@@ -63,7 +65,7 @@ void KCMarkMortonChanges(uint32_t* gMarks,
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCMarkChild(// I-O
                  uint64_t* gNodes,
                  // Input
@@ -105,7 +107,7 @@ void KCMarkChild(// I-O
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCExtractChildrenCounts(uint32_t* gChildrenCounts,
                              const uint64_t* gLevelNodes,
                              uint32_t levelNodeCount)
@@ -121,7 +123,7 @@ void KCExtractChildrenCounts(uint32_t* gChildrenCounts,
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCSetChildrenPtrs(uint64_t* gLevelNodes,
                        const uint32_t* gChildrenOffsets,
                        uint32_t nextLevelStartIndex,
@@ -144,16 +146,10 @@ void KCSetChildrenPtrs(uint64_t* gLevelNodes,
             AnisoSVOctreeGPU::SetIsChildrenLeaf(node, true);
         // Write back the modified node
         gLevelNodes[threadId] = node;
-
-        printf("Node (M: %x C: %u P: %u L %u\n",
-               static_cast<uint32_t>(AnisoSVOctreeGPU::ChildMask(node)),
-               AnisoSVOctreeGPU::ChildrenIndex(node),
-               AnisoSVOctreeGPU::ParentIndex(node),
-               static_cast<uint32_t>(AnisoSVOctreeGPU::IsChildrenLeaf(node)));
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCSetParentOfChildren(uint64_t* gNodes,
                            const uint64_t* gLevelNodes,
                            uint32_t levelNodeCount)
@@ -177,7 +173,7 @@ void KCSetParentOfChildren(uint64_t* gNodes,
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCSetParentOfLeafChildren(uint32_t* gLeafParents,
                                const uint64_t* gNodes,
                                const uint64_t* gLevelNodes,
@@ -199,6 +195,60 @@ void KCSetParentOfLeafChildren(uint32_t* gLeafParents,
             uint32_t* gChildParent = gLeafParents + childrenIndex + i;
             *gChildParent = currentNodeGlobalId;
         }
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCDepositInitialLightRadiance(// I-O
+                                   AnisoSVOctreeGPU treeGPU,
+                                   // Input
+                                   const HitKey* gVoxelLightKeys,
+                                   const uint32_t* gVoxelLightOffsets,
+                                   const uint64_t* gUniqueVoxels,
+                                   // Binary Search for light
+                                   const HitKey* gLightKeys,
+                                   const GPULightI** gLights,
+                                   uint32_t lightCount,
+                                   // Constants
+                                   uint32_t uniqueVoxCount,
+                                   uint32_t lightKeyCount,
+                                   const AABB3f svoAABB,
+                                   uint32_t resolutionXYZ)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < lightKeyCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        HitKey lightKey = gVoxelLightKeys[threadId];
+        if(lightKey == HitKey::InvalidKey)
+            continue;
+
+        float index;
+        // Binary search the light with key
+        bool found = GPUFunctions::BinarySearchInBetween(index, lightKey,
+                                                         gLightKeys, lightCount);
+        uint32_t lightIndex = static_cast<uint32_t>(index);
+        assert(found);
+        if(!found) continue;
+
+        // Binary search the voxel morton code with threadId
+        found = GPUFunctions::BinarySearchInBetween(index, threadId,
+                                                    gVoxelLightOffsets, uniqueVoxCount);
+        uint32_t voxelIndex = static_cast<uint32_t>(index);
+        assert(found);
+        if(!found) continue;
+
+        uint64_t mortonCode = gUniqueVoxels[voxelIndex];
+
+        // Traverse down the tree using tree's code
+        // Generate world position from morton code
+        Vector3ui denseIndex = MortonCode::Decompose<uint64_t>(mortonCode);
+        Vector3f worldPos = treeGPU.VoxelToWorld(denseIndex);
+
+        uint32_t leafIndex;
+        found = treeGPU.LeafIndex(leafIndex, worldPos);
+
+        // ...
     }
 }
 
@@ -504,8 +554,6 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     assert(Utility::BitCount(resolutionXYZ) == 1);
     uint32_t levelCount = Utility::FindLastSet(resolutionXYZ);
     std::vector<uint32_t> levelNodeCounts(levelCount + 1, 0);
-    std::vector<uint32_t> levelNodeOffsets(levelCount + 2, 0);
-
     // Root node is always available
     levelNodeCounts[0] = 1;
     for(uint32_t i = 1; i <= levelCount; i++)
@@ -529,18 +577,18 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
             hUniqueVoxelCount - 1,
             0u
         );
-        // n difference slices means n+1 segments
         gpu.WaitMainStream();
+        // n different slices means n+1 segments
         levelNodeCounts[i] += 1;
     }
     assert(levelNodeCounts.back() == hUniqueVoxelCount);
 
-    uint32_t totalNodeCount = std::reduce(levelNodeCounts.cbegin(),
-                                          levelNodeCounts.cend() - 1,
-                                          0u);
-    std::exclusive_scan(levelNodeCounts.cbegin(), levelNodeCounts.cend(),
-                        levelNodeOffsets.begin(),
-                        0u);
+    levelNodeOffsets.resize(levelCount + 2, 0);
+    std::inclusive_scan(levelNodeCounts.cbegin(), levelNodeCounts.cend(),
+                        levelNodeOffsets.begin() + 1);
+    levelNodeOffsets.front() = 0;
+
+    uint32_t totalNodeCount = levelNodeOffsets[levelNodeOffsets.size() - 2];
 
     treeGPU.nodeCount = totalNodeCount;
     treeGPU.leafCount = hUniqueVoxelCount;
@@ -614,11 +662,6 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                                  dDiffBitBuffer, dChildOffsetBuffer,
                                                  static_cast<uint32_t>(levelNodeCounts[i] + 1)));
 
-        Debug::DumpMemToFile("svoChildOffsets", dChildOffsetBuffer,
-                             levelNodeCounts[i] + 1,
-                             true);
-
-
         bool lastNonLeafLevel = (i == (levelCount - 1));
         uint32_t nextLevelOffset = (lastNonLeafLevel)
                                     ? 0
@@ -644,17 +687,27 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                treeGPU.dNodes + levelNodeOffsets[i],
                                levelNodeCounts[i]);
         }
-
-        METU_LOG("=============");
+        else
+        {
+            gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+                               //
+                               KCSetParentOfLeafChildren,
+                               //
+                               treeGPU.dLeafParents,
+                               treeGPU.dNodes,
+                               treeGPU.dNodes + levelNodeOffsets[i],
+                               levelNodeCounts[i]);
+        }
     }
+    // Only Direct light information deposition is left
 
-    // Only leaf parents are left
 
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0f;
     METU_LOG("Scene Aniso-SVO Generated in {:f} seconds. ({:f} MiB)",
              timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
+
     return TracerError::OK;
 }
 
