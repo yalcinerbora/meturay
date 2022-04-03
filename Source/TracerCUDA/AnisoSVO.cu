@@ -265,8 +265,16 @@ void KCDepositInitialLightRadiance(// I-O
         }
         // Atomically average (add) the light radiance
         // to the leaf voxel
+        const GPULightI* gLight = gLights[lightIndex];
 
+        #pragma unroll
+        for(int i = 0; i < AnisoSVOctreeGPU::VOXEL_DIRECTION_COUNT; i++)
+        {
+            Vector3f dir = AnisoSVOctreeGPU::VoxelDirection(i);
 
+            Vector3f radiance = gLight->Emit(dir, worldPos,
+                                             UVSurface{});
+        }
         // ...
     }
 }
