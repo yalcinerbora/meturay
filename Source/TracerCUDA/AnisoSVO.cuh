@@ -39,10 +39,10 @@ class AnisoSVOctreeGPU
     static constexpr uint64_t CHILD_BIT_MASK        = (1 << CHILD_BIT_COUNT) - 1;
     static constexpr uint64_t CHILD_MASK_BIT_MASK   = (1 << CHILD_MASK_BIT_COUNT) - 1;
     // Sanity Check
-    static_assert(sizeof(uint64_t)* BYTE_BITS == (IS_LEAF_BIT_COUNT +
-                                                  PARENT_BIT_COUNT +
-                                                  CHILD_BIT_COUNT +
-                                                  CHILD_MASK_BIT_COUNT),
+    static_assert(sizeof(uint64_t) * BYTE_BITS == (IS_LEAF_BIT_COUNT +
+                                                   PARENT_BIT_COUNT +
+                                                   CHILD_BIT_COUNT +
+                                                   CHILD_MASK_BIT_COUNT),
                   "SVO Packed Bits exceeds 64-bit uint");
     // SVO Data
     uint64_t*           dNodes;     // children ptr (28) parent ptr (27), child mask, leafBit
@@ -106,22 +106,22 @@ class AnisoSVOctreeGPU
     AABB3f              OctreeAABB() const;
 
     //
-    static constexpr uint64_t   INVALID_NODE = 0x008FFFFFFFFFFFFF;
+    static constexpr uint64_t   INVALID_NODE = 0x007FFFFFFFFFFFFF;
     // Utility Bit Options
     // Data Unpack
     __device__ static bool      IsChildrenLeaf(uint64_t packedData);
-    __device__ static uint8_t   ChildMask(uint64_t packedData);
-    __device__ static uint8_t   ChildrenCount(uint64_t packedData);
+    __device__ static uint32_t  ChildMask(uint64_t packedData);
+    __device__ static uint32_t  ChildrenCount(uint64_t packedData);
     __device__ static uint32_t  ChildrenIndex(uint64_t packedData);
     __device__ static uint32_t  ParentIndex(uint64_t packedData);
     // Data Pack
     __device__ static void      SetIsChildrenLeaf(uint64_t& packedData, bool);
-    __device__ static void      SetChildMask(uint64_t& packedData, uint8_t);
+    __device__ static void      SetChildMask(uint64_t& packedData, uint32_t);
     __device__ static void      SetChildrenIndex(uint64_t& packedData, uint32_t);
     __device__ static void      SetParentIndex(uint64_t& packedData, uint32_t);
 
-    __device__ static void      AtomicSetChildMaskBit(uint64_t& packedData, uint8_t);
-    __device__ static uint8_t   FindChildOffset(uint64_t packedData, uint8_t childId);
+    __device__ static void      AtomicSetChildMaskBit(uint64_t* packedData, uint32_t);
+    __device__ static uint32_t  FindChildOffset(uint64_t packedData, uint32_t childId);
 };
 
 class AnisoSVOctreeCPU
@@ -190,13 +190,13 @@ bool AnisoSVOctreeGPU::IsChildrenLeaf(uint64_t packedData)
 }
 
 __device__ inline
-uint8_t AnisoSVOctreeGPU::ChildMask(uint64_t packedData)
+uint32_t AnisoSVOctreeGPU::ChildMask(uint64_t packedData)
 {
-    return static_cast<uint8_t>((packedData >> CHILD_MASK_OFFSET) & CHILD_MASK_BIT_MASK);
+    return static_cast<uint32_t>((packedData >> CHILD_MASK_OFFSET) & CHILD_MASK_BIT_MASK);
 }
 
 __device__ inline
-uint8_t AnisoSVOctreeGPU::ChildrenCount(uint64_t packedData)
+uint32_t AnisoSVOctreeGPU::ChildrenCount(uint64_t packedData)
 {
     return __popc(ChildMask(packedData));
 }
@@ -222,7 +222,7 @@ void AnisoSVOctreeGPU::SetIsChildrenLeaf(uint64_t& packedData, bool b)
 }
 
 __device__ inline
-void AnisoSVOctreeGPU::SetChildMask(uint64_t& packedData, uint8_t mask)
+void AnisoSVOctreeGPU::SetChildMask(uint64_t& packedData, uint32_t mask)
 {
     assert(mask < (1 << CHILD_MASK_BIT_COUNT));
     static constexpr uint64_t NEGATIVE_MASK = ~(CHILD_MASK_BIT_MASK << CHILD_MASK_OFFSET);
@@ -231,11 +231,11 @@ void AnisoSVOctreeGPU::SetChildMask(uint64_t& packedData, uint8_t mask)
 }
 
 __device__ inline
-void AnisoSVOctreeGPU::AtomicSetChildMaskBit(uint64_t& packedData, uint8_t mask)
+void AnisoSVOctreeGPU::AtomicSetChildMaskBit(uint64_t* packedData, uint32_t mask)
 {
     assert(mask < (1 << CHILD_MASK_BIT_COUNT));
     // Atomically set the value to the mask
-    atomicOr(&packedData, static_cast<uint64_t>(mask) << CHILD_MASK_OFFSET);
+    atomicOr(packedData, static_cast<uint64_t>(mask) << CHILD_MASK_OFFSET);
 }
 
 __device__ inline
@@ -257,13 +257,18 @@ void AnisoSVOctreeGPU::SetParentIndex(uint64_t& packedData, uint32_t parentIndex
 }
 
 __device__ inline
-uint8_t AnisoSVOctreeGPU::FindChildOffset(uint64_t packedData, uint8_t childId)
+uint32_t AnisoSVOctreeGPU::FindChildOffset(uint64_t packedData, uint32_t childId)
 {
+    static constexpr uint32_t MAX_CHILDREN_COUNT = 8;
+    assert(childId < MAX_CHILDREN_COUNT);
+
     uint32_t mask = ChildMask(packedData);
     uint32_t bitLoc = (1 << static_cast<uint32_t>(childId));
     assert((bitLoc & mask) != 0);
     uint32_t lsbMask = bitLoc - 1;
-    return __popc(lsbMask & mask);
+    uint32_t offset = __popc(lsbMask & mask);
+    assert(offset < MAX_CHILDREN_COUNT);
+    return offset;
 }
 
 __device__ inline
@@ -303,26 +308,24 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos) cons
     Vector3ui denseIndex = Vector3ui(lIndex[0], lIndex[1], lIndex[2]);
     // Generate Morton code of the index
     uint64_t voxelMorton = MortonCode::Compose<uint64_t>(denseIndex);
-    // Reverse the morton code for efficient iteration (traversal)
-    uint64_t mortonRev = __brevll(voxelMorton);
+    uint32_t mortonLevelShift = (leafDepth - 1) * DIMENSION;
     // Now descend down
     uint32_t currentNodeIndex = 0;
     for(uint32_t i = 0; i < leafDepth; i++)
     {
         uint64_t currentNode = dNodes[currentNodeIndex];
-
-        uint8_t childId = mortonRev & DIM_MASK;
-        uint8_t childOffset = FindChildOffset(currentNode, childId);
-        uint8_t childrenIndex = ChildrenIndex(currentNode);
-
+        uint32_t childId = (voxelMorton >> mortonLevelShift) & DIM_MASK;;
         // Check if this node has that child avail
         if(!(ChildMask(currentNode) >> childId) & 0b1)
         {
             index = UINT32_MAX;
             return false;
         }
+
+        uint32_t childOffset = FindChildOffset(currentNode, childId);
+        uint32_t childrenIndex = ChildrenIndex(currentNode);
         currentNodeIndex = childrenIndex + childOffset;
-        mortonRev >>= DIMENSION;
+        mortonLevelShift -= DIMENSION;
     }
     // If we descended down properly currentNode should point to the
     // index. Notice that, last level's children ptr will point to the leaf arrays

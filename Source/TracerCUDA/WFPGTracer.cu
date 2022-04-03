@@ -113,12 +113,12 @@ TracerError WFPGTracer::Initialize()
     }
 
     // Init SVO
-    if((err == svo.Constrcut(scene.BaseAccelerator()->SceneExtents(),
-                             (1 << options.octreeLevel),
-                             scene.AcceleratorBatchMappings(),
-                             dLights, lightCount,
-                             scene.BaseBoundaryMaterial(),
-                             cudaSystem)) != TracerError::OK)
+    if((err = svo.Constrcut(scene.BaseAccelerator()->SceneExtents(),
+                            (1 << options.octreeLevel),
+                            scene.AcceleratorBatchMappings(),
+                            dLights, lightCount,
+                            scene.BaseBoundaryMaterial(),
+                            cudaSystem)) != TracerError::OK)
         return err;
 
     return TracerError::OK;

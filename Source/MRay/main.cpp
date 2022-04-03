@@ -17,6 +17,7 @@
 // Args Parser
 #include <CLI11.hpp>
 #include <array>
+
 int main(int argc, const char* argv[])
 {
     // Fancy CMD
