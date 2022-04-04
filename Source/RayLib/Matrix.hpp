@@ -1029,12 +1029,14 @@ Matrix<4, T> TransformGen::Ortogonal(T left, T right,
     //  orto    orto    orto    1
     T xt = -((right + left) / (right - left));
     T yt = -((top + bottom) / (top - bottom));
-    T zt = -((nearPlane) / (farPlane - nearPlane));
-
-    return Matrix<4, T>(2 / (right - left), 0, 0, 0,
-                        0, 2 / (top - bottom), 0, 0,
-                        0, 0, 1 / (nearPlane - farPlane), 0,
-                        xt, yt, zt, 1);
+    T zt = -((farPlane + nearPlane) / (farPlane - nearPlane));
+    T xs = 2 / (right - left);
+    T ys = 2 / (top - bottom);
+    T zs = 2 / (farPlane - nearPlane);
+    return  Matrix<4, T>(xs,  0,  0, 0,
+                          0, ys,  0, 0,
+                          0,  0, zs, 0,
+                         xt, yt, zt, 1);
 }
 
 template<class T, typename>

@@ -15,7 +15,6 @@
 #include "ParallelMemset.cuh"
 #include "BinarySearch.cuh"
 
-
 #include <cub/cub.cuh>
 #include <numeric>
 
@@ -74,7 +73,6 @@ void KCMarkChild(// I-O
                  uint32_t maxLevel)
 {
     // Useful constants
-    static constexpr uint32_t MAX_CHILDREN_COUNT = 8;
     static constexpr uint32_t DIMENSION = 3;
     static constexpr uint32_t DIM_MASK = (1 << DIMENSION) - 1;
 
@@ -103,7 +101,7 @@ void KCMarkChild(// I-O
         // Atomically mark the required child
         uint32_t childId = (voxelMortonCode >> mortonLevelShift) & DIM_MASK;
         uint32_t childBit = (1 << childId);
-        assert(childId < MAX_CHILDREN_COUNT);
+        assert(childId < 8);
         assert(__popc(childBit) == 1);
         // Atomically set the child bit on the packed node
         AnisoSVOctreeGPU::AtomicSetChildMaskBit(gNodes + currentNodeIndex,
@@ -272,10 +270,18 @@ void KCDepositInitialLightRadiance(// I-O
         {
             Vector3f dir = AnisoSVOctreeGPU::VoxelDirection(i);
 
+            // TODO:
+            // Emit function needs UV surface
+            // Currently it is not used (neither normal or uv
+            // is needed for the implemented light sources.
+            //
+            // Also Emit function does not respect normal
+            // orientation it should
             Vector3f radiance = gLight->Emit(dir, worldPos,
                                              UVSurface{});
+            float radianceF = Utility::RGBToLuminance(radiance);
+            treeGPU.DepositRadiance(worldPos, dir, radianceF);
         }
-        // ...
     }
 }
 
@@ -326,10 +332,11 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     Vector3f span = sceneAABB.Span();
     int maxDimIndex = span.Max();
     float worldSizeXYZ = span[maxDimIndex];
-    treeGPU.svoAABB = AABB3f(sceneAABB.Min(),
-                             sceneAABB.Min() + Vector3f(worldSizeXYZ));
+    float halfVoxelSize = (worldSizeXYZ / static_cast<float>(resolutionXYZ)) * 0.5f;
+    treeGPU.svoAABB = AABB3f(sceneAABB.Min() - Vector3f(halfVoxelSize),
+                             sceneAABB.Min() + Vector3f(halfVoxelSize + worldSizeXYZ));
     treeGPU.leafDepth = Utility::FindLastSet(resolutionXYZ);
-    treeGPU.leafVoxelSize = worldSizeXYZ / static_cast<float>(resolutionXYZ);
+    treeGPU.leafVoxelSize = (worldSizeXYZ + 2.0f * halfVoxelSize) / static_cast<float>(resolutionXYZ);
     treeGPU.voxelResolution = resolutionXYZ;
 
     // Find out the sort memory requirement of Light Keys
@@ -741,6 +748,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        static_cast<uint32_t>(hTotalVoxCount),
                        treeGPU.svoAABB,
                        resolutionXYZ);
+
+    // Create the node radiance map
+    //????
 
     // Log some stuff
     timer.Stop();

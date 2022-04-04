@@ -391,6 +391,9 @@ struct TriFunctions
                              const AABB3f& sceneAABB,
                              uint32_t resolutionXYZ)
     {
+        static constexpr Vector3f X_AXIS = XAxis;
+        static constexpr Vector3f Y_AXIS = YAxis;
+
         Vector3f normal;
         Vector3f positions[3];
 
@@ -410,33 +413,33 @@ struct TriFunctions
         normal = Triangle::Normal(positions);
         // Find the best projection plane (XY, YZ, XZ)
         int domAxis = normal.Abs().Max();
-        Vector3f domPlaneNormal;
+        bool hasNegSign = signbit(normal[domAxis]);
+        float domSign = hasNegSign ? -1 : 1;
+
+        // Look towards to the dominant axis
+        QuatF rot;
         switch(domAxis)
         {
-            case 0: domPlaneNormal = XAxis; break;
-            case 1: domPlaneNormal = YAxis; break;
-            case 2: domPlaneNormal = ZAxis; break;
+            case 0: rot = QuatF(MathConstants::Pi * 0.5f, -domSign * Y_AXIS); break;
+            case 1: rot = QuatF(MathConstants::Pi * 0.5f, domSign * X_AXIS); break;
+            case 2: rot = (hasNegSign) ? QuatF(MathConstants::Pi, Y_AXIS) : IdentityQuatF; break;
             default: assert(false); return 0;
         }
-        QuatF rot = Quat::RotationBetweenZAxis(domPlaneNormal);
         // Generate a projection matrix (orthogonal)
         Matrix4x4 proj = TransformGen::Ortogonal(sceneAABB.Min()[0], sceneAABB.Max()[0],
                                                  sceneAABB.Max()[1], sceneAABB.Min()[1],
                                                  sceneAABB.Min()[2], sceneAABB.Max()[2]);
 
         // Apply Transformations
-        Vector4f positionsT[3];
-        positionsT[0] = Vector4f(rot.ApplyRotation(positions[0]), 1.0f);
-        positionsT[1] = Vector4f(rot.ApplyRotation(positions[1]), 1.0f);
-        positionsT[2] = Vector4f(rot.ApplyRotation(positions[2]), 1.0f);
-
-        positionsT[0] = proj * positionsT[0];
-        positionsT[1] = proj * positionsT[1];
-        positionsT[2] = proj * positionsT[2];
-        // Divide by w (is this necessary when orthogonal projection?)
-        positionsT[0] = positionsT[0] / positionsT[0][3];
-        positionsT[1] = positionsT[1] / positionsT[1][3];
-        positionsT[2] = positionsT[2] / positionsT[2][3];
+        Vector3f positionsT[3];
+        // First Project
+        positionsT[0] = Vector3f(proj * Vector4f(positions[0], 1.0f));
+        positionsT[1] = Vector3f(proj * Vector4f(positions[1], 1.0f));
+        positionsT[2] = Vector3f(proj * Vector4f(positions[2], 1.0f));
+        // Now rotate towards Z axis
+        positionsT[0] = rot.ApplyRotation(positionsT[0]);
+        positionsT[1] = rot.ApplyRotation(positionsT[1]);
+        positionsT[2] = rot.ApplyRotation(positionsT[2]);
 
         Vector2f positions2D[3];
         positions2D[0] = Vector2f(positionsT[0]);
@@ -539,7 +542,8 @@ struct TriFunctions
                                          positions[1] * actualV +
                                          positions[2] * actualW);
 
-                    Vector3f voxelIndexF = ((voxelPos - sceneAABB.Min()) / sceneAABB.Span()) * static_cast<float>(resolutionXYZ);
+                    Vector3f voxelIndexF = ((voxelPos - sceneAABB.Min()) / sceneAABB.Span());
+                    voxelIndexF *= static_cast<float>(resolutionXYZ);
                     Vector3ui voxelIndex = Vector3ui(static_cast<uint32_t>(voxelIndexF[0]),
                                                      static_cast<uint32_t>(voxelIndexF[1]),
                                                      static_cast<uint32_t>(voxelIndexF[2]));

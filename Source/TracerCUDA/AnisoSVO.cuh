@@ -4,8 +4,10 @@
 
 #include "RayLib/Ray.h"
 #include "RayLib/AABB.h"
-#include "GPULightI.h"
 #include "RayLib/TracerStructs.h"
+#include "RayLib/CoordinateConversion.h"
+
+#include "GPULightI.h"
 #include "DeviceMemory.h"
 #include "MortonCode.cuh"
 
@@ -19,6 +21,9 @@ class AnisoSVOctreeGPU
     struct AnisoData
     {
         Vector<4, T> data[2];
+
+        __device__ void AtomicAdd(uint8_t index, T value);
+        __device__ T    Read(uint8_t index) const;
     };
     using AnisoRadiance = AnisoData<half>;
     using AnisoRadianceF = AnisoData<float>;
@@ -66,6 +71,8 @@ class AnisoSVOctreeGPU
     __device__ static uint32_t  FindChildOffset(uint64_t packedData, uint32_t childId);
 
     __device__ static Vector3f  VoxelDirection(uint32_t directionId);
+    __device__ static Vector4uc DirectionToNeigVoxels(Vector2f& interp,
+                                                      const Vector3f& direction);
 
     private:
     // SVO Data
@@ -171,6 +178,24 @@ class AnisoSVOctreeCPU
     size_t                  UsedCPUMemory() const;
 };
 
+template <class T>
+__device__ inline
+void AnisoSVOctreeGPU::AnisoData<T>::AtomicAdd(uint8_t index, T value)
+{
+    uint8_t iMSB = index >> 2;
+    uint8_t iLower = index & 0b11;
+    atomicAdd(&(data[iMSB][iLower]), value);
+}
+
+template <class T>
+__device__ inline
+T AnisoSVOctreeGPU::AnisoData<T>::Read(uint8_t index) const
+{
+    uint8_t iMSB = index >> 2;
+    uint8_t iLower = index & 0b11;
+    return  data[iMSB][iLower];
+}
+
 __device__ inline
 AnisoSVOctreeGPU::AnisoSVOctreeGPU()
     : dNodes(nullptr)
@@ -271,14 +296,68 @@ uint32_t AnisoSVOctreeGPU::FindChildOffset(uint64_t packedData, uint32_t childId
     assert((bitLoc & mask) != 0);
     uint32_t lsbMask = bitLoc - 1;
     uint32_t offset = __popc(lsbMask & mask);
-    assert(offset < MAX_CHILDREN_COUNT);
+    assert(offset < 8);
     return offset;
 }
 
 __device__ inline
 Vector3f AnisoSVOctreeGPU::VoxelDirection(uint32_t directionId)
 {
-    // TODO:
+    static constexpr Vector3f X_AXIS = XAxis;
+    static constexpr Vector3f Y_AXIS = YAxis;
+    static constexpr Vector3f Z_AXIS = ZAxis;
+
+    int8_t signX = (directionId >> 0) & 0b1;
+    int8_t signY = (directionId >> 1) & 0b1;
+    int8_t signZ = (directionId >> 2) & 0b1;
+    signX = (1 - signX) * 2 - 1;
+    signY = (1 - signY) * 2 - 1;
+    signZ = (1 - signZ) * 2 - 1;
+
+    Vector3f dir = (X_AXIS * signX +
+                    Y_AXIS * signY +
+                    Z_AXIS * signZ);
+    return dir.Normalize();
+}
+
+__device__ inline
+Vector4uc AnisoSVOctreeGPU::DirectionToNeigVoxels(Vector2f& interp,
+                                                  const Vector3f& direction)
+{
+    // I couldn't comprehend this as a mathematical
+    // representation so tabulated the output
+    static constexpr Vector4uc TABULATED_LAYOUTS[12] =
+    {
+        Vector4uc(3,2,0,1), Vector4uc(0,3,1,2),  Vector4uc(0,1,2,3), Vector4uc(2,1,3,0),
+        Vector4uc(0,1,4,5), Vector4uc(1,2,5,6),  Vector4uc(2,3,6,7), Vector4uc(3,0,7,4),
+        Vector4uc(4,5,7,6), Vector4uc(5,6,4,7),  Vector4uc(6,7,5,4), Vector4uc(7,4,6,5)
+    };
+
+    static constexpr float PIXEL_X = 4;
+    static constexpr float PIXEL_Y = 2;
+
+    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(direction);
+    // Normalize to generate UV [0, 1]
+    // theta range [-pi, pi]
+    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    // phi range [0, pi]
+    float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
+
+    // Convert to pixelCoords
+    float pixelX = u * PIXEL_X;
+    float pixelY = v * PIXEL_Y;
+
+    float indexX;
+    float interpX = modff(pixelX + 0.5f, &indexX);
+    indexX -= 1.0f;
+    uint32_t indexXInt = signbit(indexX) ? 3 : static_cast<uint32_t>(indexX);
+
+    float indexY;
+    float interpY = abs(modff(pixelY + 0.5f, &indexY));
+    uint32_t indexYInt = static_cast<uint32_t>(indexX);
+
+    interp = Vector2f(interpX, interpY);
+    return TABULATED_LAYOUTS[indexYInt * 4 + indexXInt];
 }
 
 __device__ inline
@@ -294,10 +373,22 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 {
     uint32_t lIndex;
     bool leafFound = LeafIndex(lIndex, worldPos);
-
-    // Extrapolate the data to the all appropriate locations
-
-    return false;
+    if(leafFound)
+    {
+        // Extrapolate the data to the all appropriate locations
+        Vector2f interpValues;
+        Vector4uc neighbours = DirectionToNeigVoxels(interpValues,
+                                                     outgoingDir);
+        // Deposition should be done in a
+        // Box filter like fashion
+        #pragma unroll
+        for(int i = 0; i < 4; i++)
+        {
+            dLeafRadianceWrite[lIndex].AtomicAdd(neighbours[i], radiance);
+            dLeafSampleCountWrite[lIndex].AtomicAdd(neighbours[i], 1);
+        }
+    }
+    return leafFound;
 }
 
 __device__ inline
@@ -324,14 +415,14 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos) cons
     for(uint32_t i = 0; i < leafDepth; i++)
     {
         uint64_t currentNode = dNodes[currentNodeIndex];
-        uint32_t childId = (voxelMorton >> mortonLevelShift) & DIM_MASK;;
+        uint32_t childId = (voxelMorton >> mortonLevelShift) & DIM_MASK;
         // Check if this node has that child avail
-        if(!(ChildMask(currentNode) >> childId) & 0b1)
+        if(!((ChildMask(currentNode) >> childId) & 0b1))
         {
+            //printf("Child NF\n");
             index = UINT32_MAX;
             return false;
         }
-
         uint32_t childOffset = FindChildOffset(currentNode, childId);
         uint32_t childrenIndex = ChildrenIndex(currentNode);
         currentNodeIndex = childrenIndex + childOffset;

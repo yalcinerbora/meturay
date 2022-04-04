@@ -58,7 +58,7 @@ void PPGTracer::ResizeAndInitPathMemory()
     if(totalPathNodeCount > 0)
         bestGPU.KC_X(0, 0, totalPathNodeCount,
                      //
-                     KCInitializePaths,
+                     KCInitializePPGPaths,
                      //
                      dPathNodes,
                      static_cast<uint32_t>(totalPathNodeCount));

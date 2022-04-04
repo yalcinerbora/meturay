@@ -135,6 +135,7 @@
         {"transform": 0, "accelerator": 0,"material": 3,"primitive": 3},
         {"transform": 0, "accelerator": 0,"material": 3,"primitive": 4},
         {"transform": 0, "accelerator": 0,"material": 3,"primitive": 5},
+		//,
 		// Box
 	    {"transform": 1, "accelerator": 0,"material": 2,"primitive": 2}
 		// Sphere

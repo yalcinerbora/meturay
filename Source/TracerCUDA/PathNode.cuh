@@ -145,14 +145,31 @@ void PathGuidingNode::AccumRadianceUpChain(const Vector3f& endPointRadiance,
 }
 
 __global__
-static void KCInitializePaths(PPGPathNode* gPathNodes,
-                              uint32_t totalNodeCount)
+static void KCInitializePPGPaths(PPGPathNode* gPathNodes,
+                                 uint32_t totalNodeCount)
 {
     uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
     if(globalId < totalNodeCount)
     {
         PPGPathNode node;
         node.dataStructIndex = UINT32_MAX;
+        node.radFactor = Vector3f(1.0f);
+        node.prevNext = Vector<2, PPGPathNode::IndexType>(PPGPathNode::InvalidIndex);
+        node.totalRadiance = Zero3;
+        node.worldPosition = Zero3;
+
+        gPathNodes[globalId] = node;
+    }
+}
+
+__global__
+static void KCInitializePGPaths(PathGuidingNode* gPathNodes,
+                                 uint32_t totalNodeCount)
+{
+    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    if(globalId < totalNodeCount)
+    {
+        PathGuidingNode node;
         node.radFactor = Vector3f(1.0f);
         node.prevNext = Vector<2, PPGPathNode::IndexType>(PPGPathNode::InvalidIndex);
         node.totalRadiance = Zero3;

@@ -133,6 +133,20 @@ static const RayAuxRL InitialRLAux = RayAuxRL
     NAN
 };
 
+static const RayAuxWFPG InitialWFPGAux = RayAuxWFPG
+{
+    Vector3f(1.0f, 1.0f, 1.0f),
+    UINT32_MAX, UINT32_MAX, UINT16_MAX,
+    0,
+    RayType::CAMERA_RAY,
+    NAN,
+    // WFPG Related
+    UINT32_MAX,
+    UINT32_MAX,
+    Vector2h(0.0f, 0.0f),
+    0.0f
+};
+
 class RayAuxInitBasic
 {
      private:
@@ -294,6 +308,37 @@ class RayAuxInitRL
         {
             RayAuxRL init = defaultValue;
             init.pixelIndex = localPixelId;
+            init.depth = 1;
+            init.mediumIndex = medumIndex;
+            gOutPPG = init;
+        }
+};
+
+class RayAuxInitWFPG
+{
+    private:
+        RayAuxWFPG  defaultValue;
+        uint32_t    samplePerPixel;
+
+    public:
+        RayAuxInitWFPG(const RayAuxWFPG& aux,
+                      uint32_t samplePerPixel)
+            : defaultValue(aux)
+            , samplePerPixel(samplePerPixel)
+        {}
+
+        __device__ __host__ HYBRID_INLINE
+        void operator()(RayAuxWFPG& gOutPPG,
+                        // Input
+                        const RayReg&,
+                        // Index
+                        uint16_t medumIndex,
+                        const uint32_t localPixelId,
+                        const uint32_t pixelSampleId) const
+        {
+            RayAuxWFPG init = defaultValue;
+            init.pixelIndex = localPixelId;
+            init.pathIndex = localPixelId * samplePerPixel + pixelSampleId;
             init.depth = 1;
             init.mediumIndex = medumIndex;
             gOutPPG = init;

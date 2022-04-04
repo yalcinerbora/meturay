@@ -5,6 +5,7 @@
 #include "GPULightI.h"
 #include "Tracers.h"
 #include "AnisoSVO.cuh"
+//#include "PathNode.cuh"
 
 class GPUDirectLightSamplerI;
 
@@ -63,8 +64,15 @@ class WFPGTracer final : public RayTracer
 
         uint32_t                        iterationCount;
         uint32_t                        treeDumpCount;
-
+        // SVO
         AnisoSVOctreeCPU                svo;
+        // Path Memory
+        DeviceMemory                    pathMemory;
+        PathGuidingNode*                dPathNodes;
+        // Misc
+        void                            ResizeAndInitPathMemory();
+        uint32_t                        TotalPathNodeCount() const;
+        uint32_t                        MaximumPathNodePerPath() const;
 
     protected:
     public:

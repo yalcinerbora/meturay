@@ -14,7 +14,44 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
-// Constructors & Destructor
+
+void WFPGTracer::ResizeAndInitPathMemory()
+{
+    size_t totalPathNodeCount = TotalPathNodeCount();
+    //METU_LOG("Allocating WFPGTracer global path buffer: Size {:d} MiB",
+    //         totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
+
+    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
+    dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
+
+    // Initialize Paths
+    const CudaGPU& bestGPU = cudaSystem.BestGPU();
+    if(totalPathNodeCount > 0)
+        bestGPU.KC_X(0, 0, totalPathNodeCount,
+                     //
+                     KCInitializePGPaths,
+                     //
+                     dPathNodes,
+                     static_cast<uint32_t>(totalPathNodeCount));
+
+    //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
+    //                            MaximumPathNodePerPath(),
+    //                            totalPathNodeCount);
+
+}
+
+uint32_t WFPGTracer::TotalPathNodeCount() const
+{
+    return (imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1] *
+            options.sampleCount * options.sampleCount) * MaximumPathNodePerPath();
+}
+
+uint32_t WFPGTracer::MaximumPathNodePerPath() const
+{
+    return (options.maximumDepth == 0) ? 0 : (options.maximumDepth + 1);
+}
+
+
 WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
                        const TracerParameters& p)
@@ -180,30 +217,144 @@ void WFPGTracer::AskOptions()
 
 void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 {
+    if(callbacks)
+        callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
+    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+    (
+        cameraIndex,
+        options.sampleCount,
+        RayAuxInitWFPG(InitialWFPGAux,
+                       options.sampleCount *
+                       options.sampleCount),
+        true,
+        !options.debugRender
+    );
+
+    ResizeAndInitPathMemory();
+    currentDepth = 0;
 }
 
-void WFPGTracer::GenerateWork(const VisorTransform&, uint32_t cameraIndex)
+void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-
+    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+    (
+        t, cameraIndex, options.sampleCount,
+        RayAuxInitWFPG(InitialWFPGAux,
+                       options.sampleCount *
+                       options.sampleCount),
+        true,
+        !options.debugRender
+    );
+    ResizeAndInitPathMemory();
+    currentDepth = 0;
 }
 
-void WFPGTracer::GenerateWork(const GPUCameraI&)
+void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
-
+    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+    (
+        dCam, options.sampleCount,
+        RayAuxInitWFPG(InitialWFPGAux,
+                       options.sampleCount *
+                       options.sampleCount),
+        true,
+        !options.debugRender
+    );
+    ResizeAndInitPathMemory();
+    currentDepth = 0;
 }
 
 bool WFPGTracer::Render()
 {
+    // Check tracer termination conditions
+    // Either there is no ray left for iteration or maximum depth is exceeded
+    if(rayCaster->CurrentRayCount() == 0 ||
+       currentDepth >= options.maximumDepth)
+        return false;
+
+    const auto partitions = rayCaster->HitAndPartitionRays();
+
+    // Generate Global Data Struct
+    WFPGTracerGlobalState globalData;
+    globalData.gImage = imgMemory.GMem<Vector4>();
+    globalData.gLightList = dLights;
+    globalData.totalLightCount = lightCount;
+    globalData.gLightSampler = dLightSampler;
+    globalData.mediumList = dMediums;
+    globalData.totalMediumCount = mediumCount;
+    //
+    globalData.svo = svo.TreeGPU();
+    globalData.gPathNodes = dPathNodes;
+    globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
+    globalData.rawPathGuiding = false;
+    //
+    globalData.directLightMIS = options.directLightMIS;
+    globalData.nee = options.nextEventEstimation;
+    globalData.rrStart = options.rrStart;
+
+    // Generate output partitions
+    uint32_t totalOutRayCount = 0;
+    auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
+                                                         partitions,
+                                                         workMap);
+    // Allocate new auxiliary buffer
+    // to fit all potential ray outputs
+    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxWFPG);
+    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
+
+    // Set Auxiliary Pointers
+    //for(auto pIt = workPartition.crbegin();
+    //    pIt != workPartition.crend(); pIt++)
+    for(auto p : outPartitions)
+    {
+        // Skip if null batch or not found material
+        if(p.portionId == HitKey::NullBatch) continue;
+        auto loc = workMap.find(p.portionId);
+        if(loc == workMap.end()) continue;
+
+        // Set pointers
+        const RayAuxWFPG* dAuxInLocal = static_cast<const RayAuxWFPG*>(*dAuxIn);
+        using WorkData = GPUWorkBatchD<WFPGTracerGlobalState, RayAuxWFPG>;
+        int i = 0;
+        for(auto& work : loc->second)
+        {
+            RayAuxWFPG* dAuxOutLocal = static_cast<RayAuxWFPG*>(*dAuxOut) + p.offsets[i];
+
+            auto& wData = static_cast<WorkData&>(*work);
+            wData.SetGlobalData(globalData);
+            wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+            i++;
+        }
+    }
+
+    // Launch Kernels
+    rayCaster->WorkRays(workMap, outPartitions,
+                        partitions,
+                        *rngCPU.get(),
+                        totalOutRayCount,
+                        scene.BaseBoundaryMaterial());
+
+    // Swap auxiliary buffers since output rays are now input rays
+    // for the next iteration
+    SwapAuxBuffers();
+    // Increase Depth
+    currentDepth++;
+    return true;
     return true;
 }
 
 void WFPGTracer::Finalize()
 {
-
+    cudaSystem.SyncAllGPUs();
+    frameTimer.Stop();
+    UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
+    GPUTracer::Finalize();
 }
 
 size_t WFPGTracer::TotalGPUMemoryUsed() const
 {
-    return 0;
+    return (RayTracer::TotalGPUMemoryUsed() +
+            svo.UsedGPUMemory() +
+            lightSamplerMemory.Size() + pathMemory.Size());
 }

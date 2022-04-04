@@ -29,7 +29,6 @@ struct WFPGTracerGlobalState
     const GPUMediumI**              mediumList;
     uint32_t                        totalMediumCount;
     // Path Guiding Related
-    Vector3h*                       gRaySamples; // Spherical coords (x, y) pdf (z)
     AnisoSVOctreeGPU                svo;
     // Path Related
     PathGuidingNode*                gPathNodes;
@@ -553,14 +552,12 @@ void WFPGTracerDebugBWork(// Output
     // Query SVO find a leaf
     uint32_t svoLeafIndex;
     bool found = svo.LeafIndex(svoLeafIndex, position);
-    if(found)
-    {
-        Vector3f locColor = Utility::RandomColorRGB(svoLeafIndex);
-        // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(locColor, 1.0f));
-    }
+    Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
+                                : Vector3f(0.0f);
+    // Accumulate the pixel
+    ImageAccumulatePixel(renderState.gImage,
+                            aux.pixelIndex,
+                            Vector4f(locColor, 1.0f));
 }
 
 template <class MGroup>
@@ -584,7 +581,6 @@ void WFPGTracerDebugWork(// Output
                          const HitKey::Type matIndex)
 {
     const AnisoSVOctreeGPU& svo = renderState.svo;
-
     // Helper Class for better code readability
     OutputWriter<RayAuxWFPG> outputWriter(gOutBoundKeys,
                                           gOutRays,
@@ -602,12 +598,10 @@ void WFPGTracerDebugWork(// Output
     // Query SVO find a leaf
     uint32_t svoLeafIndex;
     bool found = svo.LeafIndex(svoLeafIndex, position);
-    if(found)
-    {
-        Vector3f locColor = Utility::RandomColorRGB(svoLeafIndex);
-        // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(locColor, 1.0f));
-    }
+    Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
+                                : Vector3f(0.0f);
+    // Accumulate the pixel
+    ImageAccumulatePixel(renderState.gImage,
+                            aux.pixelIndex,
+                            Vector4f(locColor, 1.0f));
 }
