@@ -605,3 +605,35 @@ void WFPGTracerDebugWork(// Output
                             aux.pixelIndex,
                             Vector4f(locColor, 1.0f));
 }
+
+
+__global__
+static void KCTraceSVO(// Output
+                       WFPGTracerGlobalState& renderState,
+                       // Input
+                       const RayGMem* gRays,
+                       const RayAuxWFPG* gRayAux,
+                       // Constants
+                       uint32_t rayCount)
+{
+    const AnisoSVOctreeGPU& svo = renderState.svo;
+
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < rayCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        RayReg ray = RayReg(gRays, threadId);
+        RayAuxWFPG aux = gRayAux[threadId];
+
+        uint32_t svoLeafIndex;
+        float tMin = svo.TraceRay(svoLeafIndex, ray.ray,
+                                  ray.tMin, ray.tMax);
+
+        Vector3f locColor = (svoLeafIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoLeafIndex)
+                                                         : Vector3f(0.0f);
+        // Accumulate the pixel
+        ImageAccumulatePixel(renderState.gImage,
+                             aux.pixelIndex,
+                             Vector4f(locColor, 1.0f));
+    }
+}

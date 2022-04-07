@@ -69,6 +69,7 @@ class AnisoSVOctreeGPU
 
     __device__ static void      AtomicSetChildMaskBit(uint64_t* packedData, uint32_t);
     __device__ static uint32_t  FindChildOffset(uint64_t packedData, uint32_t childId);
+    __device__ static bool      HasChild(uint64_t packedData, uint32_t childId);
 
     __device__ static Vector3f  VoxelDirection(uint32_t directionId);
     __device__ static Vector4uc DirectionToNeigVoxels(Vector2f& interp,
@@ -104,9 +105,10 @@ class AnisoSVOctreeGPU
     // Constructors & Destructor
     __device__          AnisoSVOctreeGPU();
     // Methods
-    // Trace the ray over the SVO and find the radiance towards the rays origin
+    // Trace the ray over the SVO and tMin and leafId
     __device__
-    float               TraceRay(const RayF&) const;
+    float               TraceRay(uint32_t& leafId, const RayF&,
+                                 float tMin, float tMax) const;
     // Deposit radiance to the nearest voxel leaf
     // Uses atomics, returns false if no leaf is found on this location
     __device__
@@ -301,6 +303,14 @@ uint32_t AnisoSVOctreeGPU::FindChildOffset(uint64_t packedData, uint32_t childId
 }
 
 __device__ inline
+bool AnisoSVOctreeGPU::HasChild(uint64_t packedData, uint32_t childId)
+{
+    assert(childId < 8);
+    uint32_t childMask = ChildMask(packedData);
+    return (childMask >> childId) & 0b1;
+}
+
+__device__ inline
 Vector3f AnisoSVOctreeGPU::VoxelDirection(uint32_t directionId)
 {
     static constexpr Vector3f X_AXIS = XAxis;
@@ -361,9 +371,209 @@ Vector4uc AnisoSVOctreeGPU::DirectionToNeigVoxels(Vector2f& interp,
 }
 
 __device__ inline
-float AnisoSVOctreeGPU::TraceRay(const RayF& ray) const
+float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
+                                 float tMin, float tMax) const
 {
-    return 0.0f;
+    static constexpr float EPSILON = MathConstants::Epsilon;
+    // Instead of holding a large stack for each thread,
+    // we hold a bit stack which will hold the node morton Id
+    // when we "pop" from the stack we will use global parent pointer
+    // to pop up a level then use the extracted bits (last 3 bits)
+    // to find the voxel corner position
+    //
+    // An example
+    // Root corner is implicitly (0, 0) (2D example)
+    // If morton stack has 11
+    // corner = 0 + (exp2f(morton3BitCount + 1) if(axis bit is 1 else 0)
+    // for each dimension
+    // if we pop up a level from (0.5, 0.5) and the bit are 11
+    // p = 0.5 - (exp2f(morton3BitCount + 1))  if(axis bit is 1 else 0)
+    uint64_t mortonBitStack = 0;
+    uint8_t stack3BitCount = 0;
+
+    // Helper Lambdas for readability (Basic stack functionality over the variables)
+    auto PushMortonCode = [&mortonBitStack, &stack3BitCount](uint32_t bitCode)
+    {
+        assert(bitCode < 8);
+        mortonBitStack = (mortonBitStack << 3) | bitCode;
+        stack3BitCount += 1;
+        assert(stack3BitCount >= 21);
+    };
+    auto PopMortonCode = [&mortonBitStack, &stack3BitCount]()
+    {
+        mortonBitStack >>= 3;
+        stack3BitCount -= 1;
+    };
+    auto ReadMortonCode = [&mortonBitStack]() -> uint32_t
+    {
+        return mortonBitStack & 0b111;
+    };
+
+    // Set leaf to invalid value
+    leafId = UINT32_MAX;
+
+    // Pull ray to the registers
+    Vector3f rDir = ray.getDirection();
+    Vector3f rPos = ray.getPosition();
+
+    // On AABB intersection tests (Voxels are special case AABBs)
+    // we will use 1 / rayDirection in their calculations
+    // If any of the directions are parallel to any of the axes
+    // t values will explode (or NaN may happen (0 / 0))
+    // In order to prevent that use an epsilon here
+    if(fabs(rDir[0]) < EPSILON) rDir[0] = copysignf(EPSILON, rDir[0]);
+    if(fabs(rDir[1]) < EPSILON) rDir[1] = copysignf(EPSILON, rDir[1]);
+    if(fabs(rDir[2]) < EPSILON) rDir[2] = copysignf(EPSILON, rDir[2]);
+
+    // Ray is in world space convert to SVO space
+    // (SVO is in [0,1]
+    // Translate the ray to -AABBmin
+    // Scale the ray from  [AABBmin, AABBmax] to [0,1]
+    const Vector3f svoTranslate = -svoAABB.Min();
+    const Vector3f svoScale = svoAABB.Max() - svoAABB.Min();
+    rDir = rDir * svoScale;
+    rPos = (rPos + svoTranslate) * svoScale;
+    // Now svo span calculations become trivial
+    // 1.0f, 0.5f, 0.25f ...
+    // You can even convert this to integer arithmetic (by changing exponent
+    // only but it is out of scope of this code base)
+
+    // Now also align all the rays as if their direction is positive
+    // Mirror the SVO appropriately
+    rPos[0] = (rDir[0] > 0.0f) ? (1.0f - rPos[0]) : rPos[0];
+    rPos[1] = (rDir[1] > 0.0f) ? (1.0f - rPos[1]) : rPos[1];
+    rPos[2] = (rDir[2] > 0.0f) ? (1.0f - rPos[2]) : rPos[2];
+    // Mask will flip the childId to mirrored childId
+    uint32_t mirrorMask = 0b111;
+    if(rDir[0] > 0.0f) mirrorMask ^= 0b001;
+    if(rDir[1] > 0.0f) mirrorMask ^= 0b010;
+    if(rDir[2] > 0.0f) mirrorMask ^= 0b100;
+
+    // Generate Direction Coefficient (All ray directions are positive now
+    // so abs the direction as well)
+    const Vector3f dirCoeff = Vector3f(1.0f) / rDir.Abs();
+    // Every AABB(Voxel) Test will have this formula
+    //
+    // (planes - rayPos) * dirCoeff - tCurrent
+    //
+    // In order to hit compiler to use mad (multiply and add) instructions,
+    // expand the parenthesis and save the "rayPos * dirCoeff"
+    //
+    // planes * dirCoefff - rayPos - tCurrent = 0
+    //
+    // planes * dirCoefff - rayPos = tCurrent
+    // we can check if this is greater or smaller etc.
+    Vector3f posBias = rPos * dirCoeff;
+
+    // Do initial AABB check with ray's tMin
+    Vector3f tMaxXYZ = (Vector3f(1.0f) * dirCoeff - posBias) - Vector3f(tMin);
+    Vector3f tMinXYZ = (                          - posBias) - Vector3f(tMin);
+
+    // Since every ray has positive direction, "tMin" will have the
+    // minimum values.
+    // Normally for every orientation (wrt. ray dir)
+    // you need to check differently the "tMax" corner as well
+    // here we don't need to
+    float tMinSVO = min(min(tMinXYZ[0], tMinXYZ[1]), tMinXYZ[2]);
+    float tMaxSVO = min(min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
+
+    // Check if ray is already out of bounds
+    if(tMin > tMaxSVO) return tMaxSVO;
+    // Ray is outside the svo but it can hit update tMin
+    if(tMin < tMinSVO) tMin = tMinSVO;
+    // Ray would never reach the svo return tMax as if we traversed to the fullest
+    if(tMax < tMinSVO) return tMax;
+    // Continuing case:
+    // Ray is inside the SVO thus, tMin stays same
+
+    // Traversal initial data
+    // 0 index is root
+    uint64_t nodeId = 0;
+    // Initially corner is zero (SVO space [0,1])
+    Vector3f corner = Zero3f;
+    // Ray March Loop
+    while(nodeId != UINT32_MAX)
+    {
+        // Global mem node fetch
+        uint64_t node = dNodes[nodeId];
+
+        // Children Voxel Span (derived from the level)
+        uint32_t mortonBits = ReadMortonCode();
+        float childVoxSpan = exp2f(-(stack3BitCount + 1));
+
+        // Check if we are out of bounds of this voxel
+        Vector3f voxTopRight = corner + exp2f(-(stack3BitCount));
+        Vector3f tMaxXYZ = (voxTopRight * dirCoeff - posBias) - Vector3f(tMin);
+        float tMax = min(min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
+        if(tMax > 0.0f)
+        {
+            // We completely processed this node pop up
+            nodeId = ParentIndex(node);
+
+            // Update Corner
+            corner -= Vector3f(((mortonBits >> 0) & 0b1) ? childVoxSpan : 0.0f,
+                               ((mortonBits >> 1) & 0b1) ? childVoxSpan : 0.0f,
+                               ((mortonBits >> 2) & 0b1) ? childVoxSpan : 0.0f);
+
+            PopMortonCode();
+            continue;
+        }
+        // Find Center
+        Vector3f voxCenter = corner + Vector3f(childVoxSpan);
+
+        // Until you find a child try to advance the tMin
+        uint8_t childId = 0;
+        uint8_t mirChildId = 0;
+        do
+        {
+            // Find the t values of the voxel center
+            Vector3f tMinXYZ = (voxCenter * dirCoeff - posBias) - Vector3f(tMin);
+            if(tMinXYZ[0] > 0.0f) childId |= 0b001;
+            if(tMinXYZ[1] > 0.0f) childId |= 0b010;
+            if(tMinXYZ[2] > 0.0f) childId |= 0b100;
+            // Check if this childId has actually have a child
+            // Don't forget to mirror the SVO
+            mirChildId = childId ^ mirrorMask;
+
+            // Break the advance loop if this child contains voxel
+            if(HasChild(node, mirChildId))
+                break;
+
+            // This position do not have any children
+            // Advance the tMin accordingly
+            tMin = min(min(tMinXYZ[0], tMinXYZ[1]), tMinXYZ[2]);
+            // Nudge the tMin here
+            tMin = nextafterf(tMin, 1.0f);
+            // Loop will recheck the next child
+        }
+        while(!HasChild(node, mirChildId));
+
+        // If we are out of the loop this means we have child here
+        // Traverse down to it
+        // If it is leaf just return its id and the tMin
+        if(IsChildrenLeaf(node))
+        {
+            // We found a leaf, return leafId and tMin
+            leafId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
+            break;
+        }
+        // Unfortunately it is not leaf
+        // Traverse down
+        // Update Corner
+        corner += Vector3f(((mortonBits >> 0) & 0b1) ? childVoxSpan : 0.0f,
+                           ((mortonBits >> 1) & 0b1) ? childVoxSpan : 0.0f,
+                           ((mortonBits >> 2) & 0b1) ? childVoxSpan : 0.0f);
+
+        // This node is not a leaf
+        // Push the morton code and continue
+        // Push the non-mirrored child id to the mask
+        PushMortonCode(childId);
+
+        nodeId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
+    }
+    // If code returns from here it means we could not find any child
+    // All Done!
+    return tMin;
 }
 
 __device__ inline
