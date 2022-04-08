@@ -609,7 +609,7 @@ void WFPGTracerDebugWork(// Output
 
 __global__
 static void KCTraceSVO(// Output
-                       WFPGTracerGlobalState& renderState,
+                       WFPGTracerGlobalState renderState,
                        // Input
                        const RayGMem* gRays,
                        const RayAuxWFPG* gRayAux,

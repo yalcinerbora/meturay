@@ -101,6 +101,7 @@ class RayCasterOptiX : public RayCasterI
         void                    ResizeRayOut(uint32_t rayCount,
                                              HitKey baseBoundMatKey) override;
         RayGMem*                RaysOut() override;
+        const RayGMem*          RaysIn() override;
         void                    SwapRays() override;
         // Work Related
         void                    OverrideWorkBits(const Vector2i newWorkBits) override;
@@ -123,6 +124,11 @@ inline void RayCasterOptiX::ResizeRayOut(uint32_t rayCount,
 inline RayGMem* RayCasterOptiX::RaysOut()
 {
     return rayMemory.RaysOut();
+}
+
+inline const RayGMem* RayCasterOptiX::RaysIn()
+{
+    return rayMemory.Rays();
 }
 
 inline void RayCasterOptiX::SwapRays()

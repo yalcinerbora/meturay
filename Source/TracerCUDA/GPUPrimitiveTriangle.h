@@ -414,7 +414,7 @@ struct TriFunctions
         // Find the best projection plane (XY, YZ, XZ)
         int domAxis = normal.Abs().Max();
         bool hasNegSign = signbit(normal[domAxis]);
-        float domSign = hasNegSign ? -1 : 1;
+        float domSign = hasNegSign ? -1.0f : 1.0f;
 
         // Look towards to the dominant axis
         QuatF rot;

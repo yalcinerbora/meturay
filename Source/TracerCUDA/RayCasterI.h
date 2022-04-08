@@ -45,6 +45,7 @@ class RayCasterI
         virtual void                    ResizeRayOut(uint32_t rayCount,
                                                      HitKey baseBoundMatKey) = 0;
         virtual RayGMem*                RaysOut() = 0;
+        virtual const RayGMem*          RaysIn() = 0;
         virtual void                    SwapRays() = 0;
         // Work Related
         virtual void                    OverrideWorkBits(const Vector2i newWorkBits) = 0;

@@ -375,6 +375,31 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
                                  float tMin, float tMax) const
 {
     static constexpr float EPSILON = MathConstants::Epsilon;
+
+    // TODO:
+    // We wrap the exp2f function here
+    // since you can implement an integer version
+    // with some bit manipulation
+    // It is maybe faster?
+    auto FastNegExp2f = [](int power)
+    {
+        // Just manipulate exponent bits
+        //static constexpr int IEEE754_EXPONENT_COUNT = 8;
+        static constexpr int IEEE754_EXPONENT_OFFSET = 23;
+        static constexpr int IEEE754_EXPONENT_BIAS = 127;
+        // This expression probably make it slow tho
+        // 2^0 does not fit the mathematical expression
+        // We need a special case here
+        if(power == 0) return 1.0f;
+        uint32_t fVal = IEEE754_EXPONENT_BIAS - power;
+        fVal <<= IEEE754_EXPONENT_OFFSET;
+        return __int_as_float(fVal);
+
+        // This is the float version
+        //return log2f(-power);
+    };
+
+
     // Instead of holding a large stack for each thread,
     // we hold a bit stack which will hold the node morton Id
     // when we "pop" from the stack we will use global parent pointer
@@ -397,12 +422,18 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
         assert(bitCode < 8);
         mortonBitStack = (mortonBitStack << 3) | bitCode;
         stack3BitCount += 1;
-        assert(stack3BitCount >= 21);
+
+        //printf("PUSH %u -> %llX\n", static_cast<uint32_t>(stack3BitCount),
+        //       mortonBitStack);
+
+        assert(stack3BitCount <= 21);
     };
     auto PopMortonCode = [&mortonBitStack, &stack3BitCount]()
     {
         mortonBitStack >>= 3;
         stack3BitCount -= 1;
+        //printf("POP %u -> %llX\n", static_cast<uint32_t>(stack3BitCount),
+        //       mortonBitStack);
     };
     auto ReadMortonCode = [&mortonBitStack]() -> uint32_t
     {
@@ -430,7 +461,7 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     // Translate the ray to -AABBmin
     // Scale the ray from  [AABBmin, AABBmax] to [0,1]
     const Vector3f svoTranslate = -svoAABB.Min();
-    const Vector3f svoScale = svoAABB.Max() - svoAABB.Min();
+    const Vector3f svoScale = Vector3f(1.0f) / (svoAABB.Max() - svoAABB.Min());
     rDir = rDir * svoScale;
     rPos = (rPos + svoTranslate) * svoScale;
     // Now svo span calculations become trivial
@@ -440,14 +471,14 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
 
     // Now also align all the rays as if their direction is positive
     // Mirror the SVO appropriately
-    rPos[0] = (rDir[0] > 0.0f) ? (1.0f - rPos[0]) : rPos[0];
-    rPos[1] = (rDir[1] > 0.0f) ? (1.0f - rPos[1]) : rPos[1];
-    rPos[2] = (rDir[2] > 0.0f) ? (1.0f - rPos[2]) : rPos[2];
+    rPos[0] = (rDir[0] < 0.0f) ? (1.0f - rPos[0]) : rPos[0];
+    rPos[1] = (rDir[1] < 0.0f) ? (1.0f - rPos[1]) : rPos[1];
+    rPos[2] = (rDir[2] < 0.0f) ? (1.0f - rPos[2]) : rPos[2];
     // Mask will flip the childId to mirrored childId
-    uint32_t mirrorMask = 0b111;
-    if(rDir[0] > 0.0f) mirrorMask ^= 0b001;
-    if(rDir[1] > 0.0f) mirrorMask ^= 0b010;
-    if(rDir[2] > 0.0f) mirrorMask ^= 0b100;
+    uint8_t mirrorMask = 0b000;
+    if(rDir[0] < 0.0f) mirrorMask |= 0b001;
+    if(rDir[1] < 0.0f) mirrorMask |= 0b010;
+    if(rDir[2] < 0.0f) mirrorMask |= 0b100;
 
     // Generate Direction Coefficient (All ray directions are positive now
     // so abs the direction as well)
@@ -466,21 +497,23 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     Vector3f posBias = rPos * dirCoeff;
 
     // Do initial AABB check with ray's tMin
-    Vector3f tMaxXYZ = (Vector3f(1.0f) * dirCoeff - posBias) - Vector3f(tMin);
-    Vector3f tMinXYZ = (                          - posBias) - Vector3f(tMin);
+    Vector3f tMaxXYZ = (dirCoeff - posBias) - Vector3f(tMin);
+    Vector3f tMinXYZ = (         - posBias) - Vector3f(tMin);
 
     // Since every ray has positive direction, "tMin" will have the
     // minimum values.
     // Normally for every orientation (wrt. ray dir)
     // you need to check differently the "tMax" corner as well
     // here we don't need to
+    tMinXYZ = Vector3f::Max(tMinXYZ, 0.0f);
+    tMaxXYZ = Vector3f::Max(tMaxXYZ, 0.0f);
     float tMinSVO = min(min(tMinXYZ[0], tMinXYZ[1]), tMinXYZ[2]);
     float tMaxSVO = min(min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
 
     // Check if ray is already out of bounds
     if(tMin > tMaxSVO) return tMaxSVO;
     // Ray is outside the svo but it can hit update tMin
-    if(tMin < tMinSVO) tMin = tMinSVO;
+    if(tMin < tMinSVO) tMin += tMinSVO;
     // Ray would never reach the svo return tMax as if we traversed to the fullest
     if(tMax < tMinSVO) return tMax;
     // Continuing case:
@@ -488,88 +521,124 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
 
     // Traversal initial data
     // 0 index is root
-    uint64_t nodeId = 0;
+    uint32_t nodeId = 0;
     // Initially corner is zero (SVO space [0,1])
     Vector3f corner = Zero3f;
+    // Empty node boolean will be used to
+    // create cleaner code
+    // There should be at least one node
+    // available on the tree (root)
+    bool emptyNode = false;
     // Ray March Loop
     while(nodeId != UINT32_MAX)
     {
-        // Global mem node fetch
-        uint64_t node = dNodes[nodeId];
-
         // Children Voxel Span (derived from the level)
-        uint32_t mortonBits = ReadMortonCode();
-        float childVoxSpan = exp2f(-(stack3BitCount + 1));
+        float childVoxSpan = FastNegExp2f(stack3BitCount + 1);
+        float currentVoxSpan = FastNegExp2f(stack3BitCount);
+        // Find Center
+        Vector3f voxCenter = corner + Vector3f(childVoxSpan);
+        Vector3f voxTopRight = corner + Vector3f(currentVoxSpan);
 
-        // Check if we are out of bounds of this voxel
-        Vector3f voxTopRight = corner + exp2f(-(stack3BitCount));
+        // Check early pop
         Vector3f tMaxXYZ = (voxTopRight * dirCoeff - posBias) - Vector3f(tMin);
         float tMax = min(min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
-        if(tMax > 0.0f)
-        {
-            // We completely processed this node pop up
-            nodeId = ParentIndex(node);
 
-            // Update Corner
+        if(tMax <= 0.0f)
+        {
+            printf("[%u], FAILED tMax(%f) neg (Level %u)\n",
+                   static_cast<uint32_t>(emptyNode), tMax,
+                   static_cast<uint32_t>(stack3BitCount));
+        }
+
+        // We will "fake" traverse this empty node by just advancing
+        // the tMin
+        if(emptyNode)
+        {
+            // Find the smallest non-negative tValue
+            // Advance the tMin accordingly
+            tMin += tMax + MathConstants::Epsilon;
+            // Nudge the tMin here
+            //tMin = nextafterf(tMin, INFINITY);
+            uint32_t mortonBits = ReadMortonCode();
             corner -= Vector3f(((mortonBits >> 0) & 0b1) ? childVoxSpan : 0.0f,
                                ((mortonBits >> 1) & 0b1) ? childVoxSpan : 0.0f,
                                ((mortonBits >> 2) & 0b1) ? childVoxSpan : 0.0f);
-
+            //printf("[1] - POP: tMin %f  tMax %f NodeID %u Corner(%f, %f, %f)\n",
+            //       tMin, tMax, nodeId,
+            //       corner[0], corner[1], corner[2]);
             PopMortonCode();
+            emptyNode = false;
             continue;
         }
-        // Find Center
-        Vector3f voxCenter = corner + Vector3f(childVoxSpan);
 
-        // Until you find a child try to advance the tMin
-        uint8_t childId = 0;
-        uint8_t mirChildId = 0;
-        do
+        // We can fetch the node now
+        uint64_t node = dNodes[nodeId];
+        // Actual Traversal code
+        // If out of bounds directly pop to parent
+        if(tMax < 0.0f)
         {
+            // Update the corner back according to the stack
+            uint32_t mortonBits = ReadMortonCode();
+            corner -= Vector3f(((mortonBits >> 0) & 0b1) ? childVoxSpan : 0.0f,
+                               ((mortonBits >> 1) & 0b1) ? childVoxSpan : 0.0f,
+                               ((mortonBits >> 2) & 0b1) ? childVoxSpan : 0.0f);
+            PopMortonCode();
+            // Actually pop to the parent
+            //printf("[0] - POP: tMin %f tMax %f NodeID %u Corner(%f, %f, %f)\n",
+            //       tMin, tMax, nodeId,
+            //       corner[0], corner[1], corner[2]);
+            nodeId = ParentIndex(node);
+            emptyNode = false;
+        }
+        // Check the children etc.
+        else
+        {
+            uint8_t childId = 0;
+            uint8_t mirChildId = 0;
             // Find the t values of the voxel center
-            Vector3f tMinXYZ = (voxCenter * dirCoeff - posBias) - Vector3f(tMin);
-            if(tMinXYZ[0] > 0.0f) childId |= 0b001;
-            if(tMinXYZ[1] > 0.0f) childId |= 0b010;
-            if(tMinXYZ[2] > 0.0f) childId |= 0b100;
+            // Find out the childId using that
+            Vector3f tMinXYZ = (voxCenter * dirCoeff - posBias);// -Vector3f(tMin);
+            if(tMinXYZ[0] < tMin) childId |= 0b001;
+            if(tMinXYZ[1] < tMin) childId |= 0b010;
+            if(tMinXYZ[2] < tMin) childId |= 0b100;
             // Check if this childId has actually have a child
             // Don't forget to mirror the SVO
             mirChildId = childId ^ mirrorMask;
 
-            // Break the advance loop if this child contains voxel
+            // If the found out voxel has children
+            // Traverse down
             if(HasChild(node, mirChildId))
-                break;
+            {
+                // Descend down
+                // Only update the node if it has an actual children
+                nodeId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
 
-            // This position do not have any children
-            // Advance the tMin accordingly
-            tMin = min(min(tMinXYZ[0], tMinXYZ[1]), tMinXYZ[2]);
-            // Nudge the tMin here
-            tMin = nextafterf(tMin, 1.0f);
-            // Loop will recheck the next child
+                // If it is leaf just return the "nodeId" it is actually
+                // leaf id
+                if(IsChildrenLeaf(node))
+                {
+                    leafId = nodeId;
+                    //printf("Found Leaf!\n");
+                    break;
+                }
+            }
+            // If this node does not have a child
+            // "Fake" traverse down to this node (don't update the node)
+
+            // Set empty node for next iteration
+            emptyNode = !HasChild(node, mirChildId);
+            // Unfortunately it is not leaf
+            // Traverse down, update Corner
+            corner += Vector3f(((childId >> 0) & 0b1) ? childVoxSpan : 0.0f,
+                               ((childId >> 1) & 0b1) ? childVoxSpan : 0.0f,
+                               ((childId >> 2) & 0b1) ? childVoxSpan : 0.0f);
+            // Push the non-mirrored child id to the mask
+            // (since corners are in mirrored coordinates)
+            //printf("[%u] - PUSH: tMin %f NodeID %u Corner(%f, %f, %f)\n",
+            //       static_cast<uint32_t>(emptyNode), tMin, nodeId,
+            //       corner[0], corner[1], corner[2]);
+            PushMortonCode(childId);
         }
-        while(!HasChild(node, mirChildId));
-
-        // If we are out of the loop this means we have child here
-        // Traverse down to it
-        // If it is leaf just return its id and the tMin
-        if(IsChildrenLeaf(node))
-        {
-            // We found a leaf, return leafId and tMin
-            leafId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
-            break;
-        }
-        // Unfortunately it is not leaf
-        // Traverse down
-        // Update Corner
-        corner += Vector3f(((mortonBits >> 0) & 0b1) ? childVoxSpan : 0.0f,
-                           ((mortonBits >> 1) & 0b1) ? childVoxSpan : 0.0f,
-                           ((mortonBits >> 2) & 0b1) ? childVoxSpan : 0.0f);
-
-        // This node is not a leaf
-        // Push the morton code and continue
-        // Push the non-mirrored child id to the mask
-        PushMortonCode(childId);
-
-        nodeId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
     }
     // If code returns from here it means we could not find any child
     // All Done!

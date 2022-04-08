@@ -730,24 +730,24 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
         }
     }
     // Only Direct light information deposition is left
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
-                       //
-                       KCDepositInitialLightRadiance,
-                       // I-O
-                       treeGPU,
-                       // Input
-                       dSortedVoxelKeys,
-                       dLightOffsets,
-                       dSortedUniqueVoxels,
-                       // Binary Search for light
-                       dSortedLightKeys,
-                       dSortedLights,
-                       totalLightCount,
-                       // Constants
-                       hUniqueVoxelCount,
-                       static_cast<uint32_t>(hTotalVoxCount),
-                       treeGPU.svoAABB,
-                       resolutionXYZ);
+    //gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
+    //                   //
+    //                   KCDepositInitialLightRadiance,
+    //                   // I-O
+    //                   treeGPU,
+    //                   // Input
+    //                   dSortedVoxelKeys,
+    //                   dLightOffsets,
+    //                   dSortedUniqueVoxels,
+    //                   // Binary Search for light
+    //                   dSortedLightKeys,
+    //                   dSortedLights,
+    //                   totalLightCount,
+    //                   // Constants
+    //                   hUniqueVoxelCount,
+    //                   static_cast<uint32_t>(hTotalVoxCount),
+    //                   treeGPU.svoAABB,
+    //                   resolutionXYZ);
 
     // Create the node radiance map
     //????

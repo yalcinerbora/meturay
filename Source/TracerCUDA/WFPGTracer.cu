@@ -189,6 +189,8 @@ TracerError WFPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetBool(options.debugRender, DEBUG_RENDER_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.voxTrace, VOX_TRACE_NAME)) != TracerError::OK)
+        return err;
     if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.svoDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
@@ -209,6 +211,7 @@ void WFPGTracer::AskOptions()
     list.emplace(OCTREE_LEVEL_NAME, OptionVariable(options.octreeLevel));
     list.emplace(RAY_BIN_MIN_LEVEL_NAME, OptionVariable(options.minRayBinLevel));
     list.emplace(BIN_RAY_COUNT_NAME, OptionVariable(options.binRayCount));
+    list.emplace(VOX_TRACE_NAME, OptionVariable(options.voxTrace));
     list.emplace(DEBUG_RENDER_NAME, OptionVariable(options.debugRender));
     list.emplace(DUMP_DEBUG_NAME, OptionVariable(options.dumpDebugData));
     list.emplace(DUMP_INTERVAL_NAME, OptionVariable(options.svoDumpInterval));
@@ -228,10 +231,13 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        !options.debugRender
+        true//!options.debugRender
     );
 
-    ResizeAndInitPathMemory();
+    // On voxel trace mode we don't need paths
+    if(!(options.debugRender && options.voxTrace))
+        ResizeAndInitPathMemory();
+
     currentDepth = 0;
 }
 
@@ -244,9 +250,11 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        !options.debugRender
+        true//!options.debugRender
     );
-    ResizeAndInitPathMemory();
+    // On voxel trace mode we don't need paths
+    if(!(options.debugRender && options.voxTrace))
+        ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
@@ -259,21 +267,22 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        !options.debugRender
+        true//!options.debugRender
     );
-    ResizeAndInitPathMemory();
+    // On voxel trace mode we don't need paths
+    if(!(options.debugRender && options.voxTrace))
+        ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
 bool WFPGTracer::Render()
 {
+
     // Check tracer termination conditions
     // Either there is no ray left for iteration or maximum depth is exceeded
     if(rayCaster->CurrentRayCount() == 0 ||
        currentDepth >= options.maximumDepth)
         return false;
-
-    const auto partitions = rayCaster->HitAndPartitionRays();
 
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
@@ -293,7 +302,30 @@ bool WFPGTracer::Render()
     globalData.nee = options.nextEventEstimation;
     globalData.rrStart = options.rrStart;
 
+    // On voxel trace mode we just trace the rays without any material
+    if(options.debugRender && options.voxTrace)
+    {
+        // Just call the voxel trace kernel on a gpu and call it a day
+        const auto& gpu = cudaSystem.BestGPU();
+
+        uint32_t totalRayCount = rayCaster->CurrentRayCount();
+
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
+                           //
+                           KCTraceSVO,
+                           //
+                           globalData,
+                           rayCaster->RaysIn(),
+                           static_cast<RayAuxWFPG*>(*dAuxIn),
+                           totalRayCount);
+        // Signal as if we finished processing
+        METU_LOG("=============");
+
+        return false;
+    }
+
     // Generate output partitions
+    const auto partitions = rayCaster->HitAndPartitionRays();
     uint32_t totalOutRayCount = 0;
     auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
                                                          partitions,
@@ -340,7 +372,6 @@ bool WFPGTracer::Render()
     SwapAuxBuffers();
     // Increase Depth
     currentDepth++;
-    return true;
     return true;
 }
 
