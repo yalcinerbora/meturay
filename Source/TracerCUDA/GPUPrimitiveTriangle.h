@@ -409,6 +409,19 @@ struct TriFunctions
         positions[1] = transform.LocalToWorld(positions[1]);
         positions[2] = transform.LocalToWorld(positions[2]);
 
+
+                // Find the primitive
+        float batchIndex;
+        GPUFunctions::BinarySearchInBetween(batchIndex, primitiveId,
+                                            primData.primOffsets, primData.primBatchCount);
+        uint32_t batchIndexInt = static_cast<uint32_t>(batchIndex);
+        const GPUBitmap* alphaMap = primData.alphaMaps[batchIndexInt];
+
+        // Fetch UV's for potential alpha map check
+        Vector2f uv0 = primData.uvs[index0];
+        Vector2f uv1 = primData.uvs[index1];
+        Vector2f uv2 = primData.uvs[index2];
+
         // World Space Normal (Will be used to determine best projection plane)
         normal = Triangle::Normal(positions);
         // Find the best projection plane (XY, YZ, XZ)
@@ -521,39 +534,43 @@ struct TriFunctions
 
             // Cramer's Rule
             Vector2f eCons2 = pos - positionsConsv2D[0];
-            float v = (eCons2[0] * eCons1[1] - eCons1[0] * eCons2[1]) * denomCons;
-            float w = (eCons0[0] * eCons2[1] - eCons2[0] * eCons0[1]) * denomCons;
+            float b = (eCons2[0] * eCons1[1] - eCons1[0] * eCons2[1]) * denomCons;
+            float c = (eCons0[0] * eCons2[1] - eCons2[0] * eCons0[1]) * denomCons;
 
             // If barycentrics are in range
-            if(v >= 0.0f && v <= 1.0f &&
-               w >= 0.0f && w <= 1.0f)
+            if(b >= 0.0f && b <= 1.0f &&
+               c >= 0.0f && c <= 1.0f)
             {
+                // Find the Actual Bary Coords here
+                // Cramer's Rule
+                Vector2f e2 = pos - positions2D[0];
+                float actualB = (e2[0] * e1[1] - e1[0] * e2[1]) * denom;
+                float actualC = (e0[0] * e2[1] - e2[0] * e0[1]) * denom;
+                float actualA = 1.0f - actualB - actualC;
+
+                // Check alpha map if available
+                bool isTransparent = false;
+                if(alphaMap)
+                {
+                    Vector2f uv = (actualA * uv0 +
+                                   actualB * uv1 +
+                                   actualC * uv2);
+                    isTransparent = !(*alphaMap)(uv);
+                }
+                if(isTransparent) continue;
+
                 // Bary's match, pixel is inside the triangle
                 if(!onlyCalcSize)
                 {
-                    // Find the Actual Bary Coords here
-                    // Cramer's Rule
-                    Vector2f e2 = pos - positions2D[0];
-                    float actualV = (e2[0] * e1[1] - e1[0] * e2[1]) * denom;
-                    float actualW = (e0[0] * e2[1] - e2[0] * e0[1]) * denom;
-                    float actualU = 1.0f - actualV - actualW;
-
-                    Vector3f voxelPos = (positions[0] * actualU +
-                                         positions[1] * actualV +
-                                         positions[2] * actualW);
+                    Vector3f voxelPos = (positions[0] * actualA +
+                                         positions[1] * actualB +
+                                         positions[2] * actualC);
 
                     Vector3f voxelIndexF = ((voxelPos - sceneAABB.Min()) / sceneAABB.Span());
                     voxelIndexF *= static_cast<float>(resolutionXYZ);
                     Vector3ui voxelIndex = Vector3ui(static_cast<uint32_t>(voxelIndexF[0]),
                                                      static_cast<uint32_t>(voxelIndexF[1]),
                                                      static_cast<uint32_t>(voxelIndexF[2]));
-
-                    //if(voxelIndex[0] >= resolutionXYZ)
-                    //    printf("X out of range %u\n", voxelIndex[0]);
-                    //if(voxelIndex[1] >= resolutionXYZ)
-                    //    printf("Y out of range %u\n", voxelIndex[1]);
-                    //if(voxelIndex[2] >= resolutionXYZ)
-                    //    printf("Z out of range %u\n", voxelIndex[2]);
 
                     // TODO: This sometimes happen but it shouldn't??
                     // Clamp the Voxel due to numerical errors

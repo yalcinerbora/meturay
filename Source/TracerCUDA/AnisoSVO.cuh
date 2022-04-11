@@ -43,6 +43,9 @@ class AnisoSVOctreeGPU
     static constexpr uint64_t PARENT_BIT_MASK       = (1 << PARENT_BIT_COUNT) - 1;
     static constexpr uint64_t CHILD_BIT_MASK        = (1 << CHILD_BIT_COUNT) - 1;
     static constexpr uint64_t CHILD_MASK_BIT_MASK   = (1 << CHILD_MASK_BIT_COUNT) - 1;
+
+    static constexpr uint32_t INVALID_PARENT        = PARENT_BIT_MASK;
+
     // Sanity Check
     static_assert(sizeof(uint64_t) * BYTE_BITS == (IS_LEAF_BIT_COUNT +
                                                    PARENT_BIT_COUNT +
@@ -375,8 +378,6 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
                                  float tMin, float tMax) const
 {
     static constexpr float EPSILON = MathConstants::Epsilon;
-
-    // TODO:
     // We wrap the exp2f function here
     // since you can implement an integer version
     // with some bit manipulation
@@ -398,8 +399,6 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
         // This is the float version
         //return log2f(-power);
     };
-
-
     // Instead of holding a large stack for each thread,
     // we hold a bit stack which will hold the node morton Id
     // when we "pop" from the stack we will use global parent pointer
@@ -415,25 +414,18 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     // p = 0.5 - (exp2f(morton3BitCount + 1))  if(axis bit is 1 else 0)
     uint64_t mortonBitStack = 0;
     uint8_t stack3BitCount = 0;
-
     // Helper Lambdas for readability (Basic stack functionality over the variables)
     auto PushMortonCode = [&mortonBitStack, &stack3BitCount](uint32_t bitCode)
     {
         assert(bitCode < 8);
         mortonBitStack = (mortonBitStack << 3) | bitCode;
         stack3BitCount += 1;
-
-        //printf("PUSH %u -> %llX\n", static_cast<uint32_t>(stack3BitCount),
-        //       mortonBitStack);
-
         assert(stack3BitCount <= 21);
     };
     auto PopMortonCode = [&mortonBitStack, &stack3BitCount]()
     {
         mortonBitStack >>= 3;
         stack3BitCount -= 1;
-        //printf("POP %u -> %llX\n", static_cast<uint32_t>(stack3BitCount),
-        //       mortonBitStack);
     };
     auto ReadMortonCode = [&mortonBitStack]() -> uint32_t
     {
@@ -446,6 +438,9 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     // Pull ray to the registers
     Vector3f rDir = ray.getDirection();
     Vector3f rPos = ray.getPosition();
+
+    //rDir = Vector3f(0.432342, -0.269441, -0.860513);
+    //rPos = Vector3f(-71.389999, 71.489998, 205.300003);
 
     // On AABB intersection tests (Voxels are special case AABBs)
     // we will use 1 / rayDirection in their calculations
@@ -494,31 +489,26 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     //
     // planes * dirCoefff - rayPos = tCurrent
     // we can check if this is greater or smaller etc.
-    Vector3f posBias = rPos * dirCoeff;
+    const Vector3f posBias = rPos * dirCoeff;
 
     // Do initial AABB check with ray's tMin
-    Vector3f tMaxXYZ = (dirCoeff - posBias) - Vector3f(tMin);
+    // Only with lower left corner (first iteration will check
+    // the upper right corner and may terminate
     Vector3f tMinXYZ = (         - posBias) - Vector3f(tMin);
-
     // Since every ray has positive direction, "tMin" will have the
-    // minimum values.
+    // minimum values. Maximum of "tMin" can be used to advance the
+    // ray.
     // Normally for every orientation (wrt. ray dir)
-    // you need to check differently the "tMax" corner as well
-    // here we don't need to
-    tMinXYZ = Vector3f::Max(tMinXYZ, 0.0f);
-    tMaxXYZ = Vector3f::Max(tMaxXYZ, 0.0f);
-    float tMinSVO = min(min(tMinXYZ[0], tMinXYZ[1]), tMinXYZ[2]);
-    float tMaxSVO = min(min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
-
-    // Check if ray is already out of bounds
-    if(tMin > tMaxSVO) return tMaxSVO;
-    // Ray is outside the svo but it can hit update tMin
-    if(tMin < tMinSVO) tMin += tMinSVO;
-    // Ray would never reach the svo return tMax as if we traversed to the fullest
-    if(tMax < tMinSVO) return tMax;
-    // Continuing case:
-    // Ray is inside the SVO thus, tMin stays same
-
+    // you need to check the top right corner as well
+    float tSVO = max(max(tMinXYZ[0], tMinXYZ[1]), tMinXYZ[2]);
+    // Move the point to the "bottom left" corners
+    // Only do this if and of the three axes are not negative
+    if(!(tMinXYZ < Vector3f(0.0f)))
+    {
+        tMin += tSVO;
+        // Nudge the tMin here
+        tMin = nextafter(tMin, INFINITY);// +MathConstants::Epsilon;
+    }
     // Traversal initial data
     // 0 index is root
     uint32_t nodeId = 0;
@@ -530,7 +520,7 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     // available on the tree (root)
     bool emptyNode = false;
     // Ray March Loop
-    while(nodeId != UINT32_MAX)
+    while(nodeId != INVALID_PARENT)
     {
         // Children Voxel Span (derived from the level)
         float childVoxSpan = FastNegExp2f(stack3BitCount + 1);
@@ -543,29 +533,19 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
         Vector3f tMaxXYZ = (voxTopRight * dirCoeff - posBias) - Vector3f(tMin);
         float tMax = min(min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
 
-        if(tMax <= 0.0f)
-        {
-            printf("[%u], FAILED tMax(%f) neg (Level %u)\n",
-                   static_cast<uint32_t>(emptyNode), tMax,
-                   static_cast<uint32_t>(stack3BitCount));
-        }
-
         // We will "fake" traverse this empty node by just advancing
         // the tMin
         if(emptyNode)
         {
             // Find the smallest non-negative tValue
             // Advance the tMin accordingly
-            tMin += tMax + MathConstants::Epsilon;
+            tMin += tMax;
             // Nudge the tMin here
-            //tMin = nextafterf(tMin, INFINITY);
+            tMin = nextafter(tMin, INFINITY);// +MathConstants::Epsilon;
             uint32_t mortonBits = ReadMortonCode();
-            corner -= Vector3f(((mortonBits >> 0) & 0b1) ? childVoxSpan : 0.0f,
-                               ((mortonBits >> 1) & 0b1) ? childVoxSpan : 0.0f,
-                               ((mortonBits >> 2) & 0b1) ? childVoxSpan : 0.0f);
-            //printf("[1] - POP: tMin %f  tMax %f NodeID %u Corner(%f, %f, %f)\n",
-            //       tMin, tMax, nodeId,
-            //       corner[0], corner[1], corner[2]);
+            corner -= Vector3f(((mortonBits >> 0) & 0b1) ? currentVoxSpan : 0.0f,
+                               ((mortonBits >> 1) & 0b1) ? currentVoxSpan : 0.0f,
+                               ((mortonBits >> 2) & 0b1) ? currentVoxSpan : 0.0f);
             PopMortonCode();
             emptyNode = false;
             continue;
@@ -573,20 +553,18 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
 
         // We can fetch the node now
         uint64_t node = dNodes[nodeId];
+
         // Actual Traversal code
         // If out of bounds directly pop to parent
         if(tMax < 0.0f)
         {
             // Update the corner back according to the stack
             uint32_t mortonBits = ReadMortonCode();
-            corner -= Vector3f(((mortonBits >> 0) & 0b1) ? childVoxSpan : 0.0f,
-                               ((mortonBits >> 1) & 0b1) ? childVoxSpan : 0.0f,
-                               ((mortonBits >> 2) & 0b1) ? childVoxSpan : 0.0f);
+            corner -= Vector3f(((mortonBits >> 0) & 0b1) ? currentVoxSpan : 0.0f,
+                               ((mortonBits >> 1) & 0b1) ? currentVoxSpan : 0.0f,
+                               ((mortonBits >> 2) & 0b1) ? currentVoxSpan : 0.0f);
             PopMortonCode();
             // Actually pop to the parent
-            //printf("[0] - POP: tMin %f tMax %f NodeID %u Corner(%f, %f, %f)\n",
-            //       tMin, tMax, nodeId,
-            //       corner[0], corner[1], corner[2]);
             nodeId = ParentIndex(node);
             emptyNode = false;
         }
@@ -618,7 +596,6 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
                 if(IsChildrenLeaf(node))
                 {
                     leafId = nodeId;
-                    //printf("Found Leaf!\n");
                     break;
                 }
             }
@@ -634,9 +611,6 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
                                ((childId >> 2) & 0b1) ? childVoxSpan : 0.0f);
             // Push the non-mirrored child id to the mask
             // (since corners are in mirrored coordinates)
-            //printf("[%u] - PUSH: tMin %f NodeID %u Corner(%f, %f, %f)\n",
-            //       static_cast<uint32_t>(emptyNode), tMin, nodeId,
-            //       corner[0], corner[1], corner[2]);
             PushMortonCode(childId);
         }
     }

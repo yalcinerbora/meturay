@@ -607,7 +607,7 @@ void WFPGTracerDebugWork(// Output
 }
 
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCTraceSVO(// Output
                        WFPGTracerGlobalState renderState,
                        // Input

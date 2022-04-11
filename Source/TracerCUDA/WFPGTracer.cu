@@ -231,7 +231,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        true//!options.debugRender
+        true
+        //!options.debugRender
     );
 
     // On voxel trace mode we don't need paths
@@ -250,7 +251,8 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        true//!options.debugRender
+        true
+        //!options.debugRender
     );
     // On voxel trace mode we don't need paths
     if(!(options.debugRender && options.voxTrace))
@@ -267,7 +269,8 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        true//!options.debugRender
+        true
+        //!options.debugRender
     );
     // On voxel trace mode we don't need paths
     if(!(options.debugRender && options.voxTrace))
@@ -310,6 +313,11 @@ bool WFPGTracer::Render()
 
         uint32_t totalRayCount = rayCaster->CurrentRayCount();
 
+        cudaEvent_t start, stop;
+        cudaEventCreate(&start);
+        cudaEventCreate(&stop);
+
+        cudaEventRecord(start);
         gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
                            //
                            KCTraceSVO,
@@ -318,9 +326,17 @@ bool WFPGTracer::Render()
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
                            totalRayCount);
-        // Signal as if we finished processing
-        METU_LOG("=============");
+        cudaEventRecord(stop);
 
+        cudaEventSynchronize(stop);
+        float milliseconds = 0.0f;
+        cudaEventElapsedTime(&milliseconds, start, stop);
+
+        METU_LOG("Trace Time {:f}ms, {:d} rays",
+                 milliseconds,
+                 imgMemory.Resolution().Multiply());
+
+        // Signal as if we finished processing
         return false;
     }
 
