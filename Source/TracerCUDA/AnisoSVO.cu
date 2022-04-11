@@ -755,7 +755,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0f;
-    METU_LOG("Scene Aniso-SVO Generated in {:f} seconds. ({:f} MiB)",
+    METU_LOG("Scene Aniso-SVO [N: {:d}, L: {:d}] Generated in {:f} seconds. ({:f} MiB)",
+             treeGPU.nodeCount, treeGPU.leafCount,
              timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
 
     // All Done!

@@ -13,18 +13,18 @@ enum class RayType : uint8_t
     CAMERA_RAY
 };
 
-struct RayAuxBasic
+struct alignas(4) RayAuxBasic
 {
     uint32_t        pixelIndex;
 };
 
-struct RayAuxAO
+struct alignas(16) RayAuxAO
 {
     Vector3f        aoFactor;
     uint32_t        pixelIndex;
 };
 
-struct RayAuxPath
+struct alignas(32) RayAuxPath
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
@@ -39,7 +39,7 @@ struct RayAuxPath
                                     // (is used when a path ray hits a light (MIS))
 };
 
-struct RayAuxPPG
+struct alignas(32) RayAuxPPG
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
@@ -55,7 +55,7 @@ struct RayAuxPPG
     uint32_t        pathIndex;      // Global path node index
 };
 
-struct RayAuxRL
+struct alignas(32) RayAuxRL
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
@@ -72,7 +72,7 @@ struct RayAuxRL
     float       prevLumReflectance; // Previous reflectance factor of the ray.
 };
 
-struct RayAuxWFPG
+struct alignas(32) RayAuxWFPG
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
