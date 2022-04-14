@@ -66,7 +66,6 @@ class GDebugRendererRL : public GDebugRendererI
         // Images
         static constexpr GLuint     I_OUT_REF_IMAGE = 0;
 
-
     private:
         static constexpr const char* LBVH_NAME = "lbvh";
         static constexpr const char* QFUNC_NAME = "qFunctions";

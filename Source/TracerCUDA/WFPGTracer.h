@@ -76,6 +76,8 @@ class WFPGTracer final : public RayTracer
         uint32_t                        TotalPathNodeCount() const;
         uint32_t                        MaximumPathNodePerPath() const;
 
+        void                            GenerateGuidedDirections();
+
     protected:
     public:
         // Constructors & Destructor

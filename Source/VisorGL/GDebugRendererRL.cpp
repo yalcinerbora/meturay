@@ -191,9 +191,10 @@ GDebugRendererRL::GDebugRendererRL(const nlohmann::json& config,
     }
     // Load QFunc Size
     qFuncSize = SceneIO::LoadVector<2, uint32_t>(config[QSIZE_NAME]);
-
     // Allocate the texture for rendering
     currentTexture = TextureGL(qFuncSize, PixelFormat::RGBA8_UNORM);
+    // Allocate values array even if it is empty
+    currentValues.resize(qFuncSize.Multiply());
 }
 
 GDebugRendererRL::~GDebugRendererRL()

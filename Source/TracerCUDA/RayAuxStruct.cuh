@@ -24,7 +24,7 @@ struct alignas(16) RayAuxAO
     uint32_t        pixelIndex;
 };
 
-struct alignas(32) RayAuxPath
+struct alignas(16) RayAuxPath
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
@@ -39,7 +39,7 @@ struct alignas(32) RayAuxPath
                                     // (is used when a path ray hits a light (MIS))
 };
 
-struct alignas(32) RayAuxPPG
+struct alignas(16) RayAuxPPG
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
@@ -55,7 +55,7 @@ struct alignas(32) RayAuxPPG
     uint32_t        pathIndex;      // Global path node index
 };
 
-struct alignas(32) RayAuxRL
+struct alignas(16) RayAuxRL
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
@@ -72,7 +72,7 @@ struct alignas(32) RayAuxRL
     float       prevLumReflectance; // Previous reflectance factor of the ray.
 };
 
-struct alignas(32) RayAuxWFPG
+struct alignas(16) RayAuxWFPG
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)

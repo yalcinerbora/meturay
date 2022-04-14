@@ -120,7 +120,8 @@ class AnisoSVOctreeGPU
     // Return the leaf index of this position
     // Return false if no such leaf exists
     __device__
-    bool                LeafIndex(uint32_t& index, const Vector3f& worldPos) const;
+    bool                LeafIndex(uint32_t& index, const Vector3f& worldPos,
+                                  bool checkNeighbours = false) const;
     // Find the bin from the leaf
     // Bin is the node that is the highest non-collapsed node
     __device__
@@ -385,7 +386,6 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     auto FastNegExp2f = [](int power)
     {
         // Just manipulate exponent bits
-        //static constexpr int IEEE754_EXPONENT_COUNT = 8;
         static constexpr int IEEE754_EXPONENT_OFFSET = 23;
         static constexpr int IEEE754_EXPONENT_BIAS = 127;
         // This expression probably make it slow tho
@@ -408,10 +408,10 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     // An example
     // Root corner is implicitly (0, 0) (2D example)
     // If morton stack has 11
-    // corner = 0 + (exp2f(morton3BitCount + 1) if(axis bit is 1 else 0)
+    // corner = 0 + exp2f(-(morton3BitCount + 1)) if(axis bit is 1 else 0)
     // for each dimension
     // if we pop up a level from (0.5, 0.5) and the bit are 11
-    // p = 0.5 - (exp2f(morton3BitCount + 1))  if(axis bit is 1 else 0)
+    // p = 0.5 - exp2f(-(morton3BitCount + 1))  if(axis bit is 1 else 0)
     uint64_t mortonBitStack = 0;
     uint8_t stack3BitCount = 0;
     // Helper Lambdas for readability (Basic stack functionality over the variables)
@@ -438,10 +438,6 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     // Pull ray to the registers
     Vector3f rDir = ray.getDirection();
     Vector3f rPos = ray.getPosition();
-
-    //rDir = Vector3f(0.432342, -0.269441, -0.860513);
-    //rPos = Vector3f(-71.389999, 71.489998, 205.300003);
-
     // On AABB intersection tests (Voxels are special case AABBs)
     // we will use 1 / rayDirection in their calculations
     // If any of the directions are parallel to any of the axes
@@ -452,24 +448,25 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     if(fabs(rDir[2]) < EPSILON) rDir[2] = copysignf(EPSILON, rDir[2]);
 
     // Ray is in world space convert to SVO space
-    // (SVO is in [0,1]
+    // (SVO is in [0,1])
     // Translate the ray to -AABBmin
     // Scale the ray from  [AABBmin, AABBmax] to [0,1]
     const Vector3f svoTranslate = -svoAABB.Min();
     const Vector3f svoScale = Vector3f(1.0f) / (svoAABB.Max() - svoAABB.Min());
     rDir = rDir * svoScale;
     rPos = (rPos + svoTranslate) * svoScale;
-    // Now svo span calculations become trivial
+    // Now voxel span calculations become trivial
     // 1.0f, 0.5f, 0.25f ...
-    // You can even convert this to integer arithmetic (by changing exponent
-    // only but it is out of scope of this code base)
+    // You can use integer exp2f version now
 
     // Now also align all the rays as if their direction is positive
-    // Mirror the SVO appropriately
+    // on all axes and we will
+    // mirror the SVO appropriately
     rPos[0] = (rDir[0] < 0.0f) ? (1.0f - rPos[0]) : rPos[0];
     rPos[1] = (rDir[1] < 0.0f) ? (1.0f - rPos[1]) : rPos[1];
     rPos[2] = (rDir[2] < 0.0f) ? (1.0f - rPos[2]) : rPos[2];
     // Mask will flip the childId to mirrored childId
+    // XOR the child bit mask with this value when traversing
     uint8_t mirrorMask = 0b000;
     if(rDir[0] < 0.0f) mirrorMask |= 0b001;
     if(rDir[1] < 0.0f) mirrorMask |= 0b010;
@@ -491,10 +488,15 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     // we can check if this is greater or smaller etc.
     const Vector3f posBias = rPos * dirCoeff;
 
+    // Since we mirrored the svo and rays are always goes through
+    // as positive, we can ray march only by checking the "tMin"
+    // (aka. "Bottom Left" corner)
+    // We will only check tMax to find if we leaved the voxel
+
     // Do initial AABB check with ray's tMin
     // Only with lower left corner (first iteration will check
-    // the upper right corner and may terminate
-    Vector3f tMinXYZ = (         - posBias) - Vector3f(tMin);
+    // the upper right corner and may terminate)
+    Vector3f tMinXYZ = (-posBias);
     // Since every ray has positive direction, "tMin" will have the
     // minimum values. Maximum of "tMin" can be used to advance the
     // ray.
@@ -503,11 +505,11 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     float tSVO = max(max(tMinXYZ[0], tMinXYZ[1]), tMinXYZ[2]);
     // Move the point to the "bottom left" corners
     // Only do this if and of the three axes are not negative
-    if(!(tMinXYZ < Vector3f(0.0f)))
+    if(!(tMinXYZ < Vector3f(tMin)))
     {
-        tMin += tSVO;
+        tMin = tSVO;
         // Nudge the tMin here
-        tMin = nextafter(tMin, INFINITY);// +MathConstants::Epsilon;
+        tMin = nextafter(tMin, INFINITY);
     }
     // Traversal initial data
     // 0 index is root
@@ -530,7 +532,7 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
         Vector3f voxTopRight = corner + Vector3f(currentVoxSpan);
 
         // Check early pop
-        Vector3f tMaxXYZ = (voxTopRight * dirCoeff - posBias) - Vector3f(tMin);
+        Vector3f tMaxXYZ = (voxTopRight * dirCoeff - posBias);
         float tMax = min(min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
 
         // We will "fake" traverse this empty node by just advancing
@@ -539,9 +541,9 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
         {
             // Find the smallest non-negative tValue
             // Advance the tMin accordingly
-            tMin += tMax;
+            tMin = tMax;
             // Nudge the tMin here
-            tMin = nextafter(tMin, INFINITY);// +MathConstants::Epsilon;
+            tMin = nextafter(tMin, INFINITY);
             uint32_t mortonBits = ReadMortonCode();
             corner -= Vector3f(((mortonBits >> 0) & 0b1) ? currentVoxSpan : 0.0f,
                                ((mortonBits >> 1) & 0b1) ? currentVoxSpan : 0.0f,
@@ -556,7 +558,7 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
 
         // Actual Traversal code
         // If out of bounds directly pop to parent
-        if(tMax < 0.0f)
+        if(tMax < tMin)
         {
             // Update the corner back according to the stack
             uint32_t mortonBits = ReadMortonCode();
@@ -575,7 +577,7 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
             uint8_t mirChildId = 0;
             // Find the t values of the voxel center
             // Find out the childId using that
-            Vector3f tMinXYZ = (voxCenter * dirCoeff - posBias);// -Vector3f(tMin);
+            Vector3f tMinXYZ = (voxCenter * dirCoeff - posBias);
             if(tMinXYZ[0] < tMin) childId |= 0b001;
             if(tMinXYZ[1] < tMin) childId |= 0b010;
             if(tMinXYZ[2] < tMin) childId |= 0b100;
@@ -600,7 +602,8 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
                 }
             }
             // If this node does not have a child
-            // "Fake" traverse down to this node (don't update the node)
+            // "Fake" traverse down to child node
+            // (don't update the node variable)
 
             // Set empty node for next iteration
             emptyNode = !HasChild(node, mirChildId);
@@ -614,7 +617,6 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
             PushMortonCode(childId);
         }
     }
-    // If code returns from here it means we could not find any child
     // All Done!
     return tMin;
 }
@@ -645,11 +647,40 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 }
 
 __device__ inline
-bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos) const
+bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
+                                 bool checkNeighbours) const
 {
     // Useful constants
     static constexpr uint32_t DIMENSION = 3;
     static constexpr uint32_t DIM_MASK = (1 << DIMENSION) - 1;
+
+    // Descend module (may be called multiple times
+    // when checkNeighbours is on)
+    auto Descend = [&](uint64_t mortonCode) -> bool
+    {
+        uint32_t mortonLevelShift = (leafDepth - 1) * DIMENSION;
+        // Now descend down
+        uint32_t currentNodeIndex = 0;
+        for(uint32_t i = 0; i < leafDepth; i++)
+        {
+            uint64_t currentNode = dNodes[currentNodeIndex];
+            uint32_t childId = (mortonCode >> mortonLevelShift) & DIM_MASK;
+            // Check if this node has that child avail
+            if(!((ChildMask(currentNode) >> childId) & 0b1))
+                return false;
+
+            uint32_t childOffset = FindChildOffset(currentNode, childId);
+            uint32_t childrenIndex = ChildrenIndex(currentNode);
+            currentNodeIndex = childrenIndex + childOffset;
+            mortonLevelShift -= DIMENSION;
+        }
+        // If we descended down properly currentNode should point to the
+        // index. Notice that, last level's children ptr will point to the leaf arrays
+        index = currentNodeIndex;
+        return true;
+    };
+
+    index = UINT32_MAX;
 
     if(svoAABB.IsOutside(worldPos))
     {
@@ -658,33 +689,65 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos) cons
     }
 
     // Calculate Dense Voxel Id
-    Vector3f lIndex = ((worldPos - svoAABB.Min()) / leafVoxelSize).Floor();
+    Vector3f lIndex = ((worldPos - svoAABB.Min()) / leafVoxelSize);
+    Vector3f lIndexInt;
+    Vector3f lIndexFrac = Vector3f(modff(lIndex[0], &(lIndexInt[0])),
+                                   modff(lIndex[1], &(lIndexInt[1])),
+                                   modff(lIndex[2], &(lIndexInt[2])));
+    lIndex.FloorSelf();
+    // Find movement mask
+    // If that bit is set we go negative instead of positive
+    Vector3ui inc = Vector3ui((lIndexFrac[0] < 0.5f) ? -1 : 1,
+                              (lIndexFrac[1] < 0.5f) ? -1 : 1,
+                              (lIndexFrac[2] < 0.5f) ? -1 : 1);
+
+    // Shuffle the order as well
+    // Smallest fraction (w.r.t 0.5f)
+    lIndexFrac = Vector3f(0.5f) - (lIndexFrac - Vector3f(0.5f)).Abs();
+    //
+    int minIndex0 = lIndexFrac.Min();
+    int minIndex1 = Vector2f(lIndexFrac[(minIndex0 + 1) % 3],
+                             lIndexFrac[(minIndex0 + 2) % 3]).Min();
+    minIndex1 = (minIndex0 + minIndex1 + 1) % 3;
+    int minIndex2 = 3 - minIndex0 - minIndex1;
+    assert((minIndex0 != minIndex1) &&
+           (minIndex1 != minIndex2));
+    assert(minIndex0 >= 0 && minIndex0 < 3 &&
+           minIndex1 >= 0 && minIndex1 < 3 &&
+           minIndex2 >= 0 && minIndex2 < 3);
+
+    //printf("%d, %d, %d\n", minIndex0, minIndex1, minIndex2);
+    // Initial Level index
     Vector3ui denseIndex = Vector3ui(lIndex[0], lIndex[1], lIndex[2]);
-    // Generate Morton code of the index
-    uint64_t voxelMorton = MortonCode::Compose<uint64_t>(denseIndex);
-    uint32_t mortonLevelShift = (leafDepth - 1) * DIMENSION;
-    // Now descend down
-    uint32_t currentNodeIndex = 0;
-    for(uint32_t i = 0; i < leafDepth; i++)
+
+    bool found = false;
+    #pragma unroll
+    for(uint32_t i = 0; i < 8; i++)
     {
-        uint64_t currentNode = dNodes[currentNodeIndex];
-        uint32_t childId = (voxelMorton >> mortonLevelShift) & DIM_MASK;
-        // Check if this node has that child avail
-        if(!((ChildMask(currentNode) >> childId) & 0b1))
-        {
-            //printf("Child NF\n");
-            index = UINT32_MAX;
-            return false;
-        }
-        uint32_t childOffset = FindChildOffset(currentNode, childId);
-        uint32_t childrenIndex = ChildrenIndex(currentNode);
-        currentNodeIndex = childrenIndex + childOffset;
-        mortonLevelShift -= DIMENSION;
+        // Convert if clauses to mathematical expression
+        Vector3ui curIndex = Vector3ui(((i >> 0) & 0b1) ? 1 : 0,
+                                       ((i >> 1) & 0b1) ? 1 : 0,
+                                       ((i >> 2) & 0b1) ? 1 : 0);
+        // Shuffle the set values for the traversal
+        // Nearest nodes will be checked first
+        Vector3ui curShfl;
+        curShfl[minIndex0] = curIndex[0];
+        curShfl[minIndex1] = curIndex[1];
+        curShfl[minIndex2] = curIndex[2];
+
+        Vector3ui voxIndex = Vector3ui(denseIndex[0] + curShfl[0] * inc[0],
+                                       denseIndex[1] + curShfl[1] * inc[1],
+                                       denseIndex[2] + curShfl[2] * inc[2]);
+
+        // Generate Morton code of the index
+        uint64_t voxelMorton = MortonCode::Compose<uint64_t>(voxIndex);
+
+        // Traverse this
+        found = Descend(voxelMorton);
+
+        if(!checkNeighbours || found) break;
     }
-    // If we descended down properly currentNode should point to the
-    // index. Notice that, last level's children ptr will point to the leaf arrays
-    index = currentNodeIndex;
-    return true;
+    return found;
 }
 
 __device__ inline

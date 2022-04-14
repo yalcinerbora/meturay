@@ -19,6 +19,7 @@
 #include "GPULightDisk.cuh"
 #include "GPULightRectangular.cuh"
 #include "GPULightNull.cuh"
+#include "GPULightConstant.cuh"
 // Misc
 #include "WFPGTracerKC.cuh"
 #include "WorkPool.h"
@@ -213,6 +214,7 @@ extern template class WFPGDebugBoundaryWork<CPULightGroupDirectional>;
 extern template class WFPGDebugBoundaryWork<CPULightGroupSpot>;
 extern template class WFPGDebugBoundaryWork<CPULightGroupDisk>;
 extern template class WFPGDebugBoundaryWork<CPULightGroupRectangular>;
+extern template class WFPGDebugBoundaryWork<CPULightGroupConstant>;
 // ===================================================
 // Path
 extern template class WFPGWork<LambertCMat, GPUPrimitiveTriangle>;
@@ -263,7 +265,8 @@ using WFPGDebugBoundaryWorkerList = TypeList<WFPGDebugBoundaryWork<CPULightGroup
                                              WFPGDebugBoundaryWork<CPULightGroupDirectional>,
                                              WFPGDebugBoundaryWork<CPULightGroupSpot>,
                                              WFPGDebugBoundaryWork<CPULightGroupDisk>,
-                                             WFPGDebugBoundaryWork<CPULightGroupRectangular>>;
+                                             WFPGDebugBoundaryWork<CPULightGroupRectangular>,
+                                             WFPGDebugBoundaryWork<CPULightGroupConstant>>;
 // ===================================================
 using WFPGPathWorkerList = TypeList<WFPGWork<LambertCMat, GPUPrimitiveTriangle>,
                                     WFPGWork<LambertCMat, GPUPrimitiveSphere>,

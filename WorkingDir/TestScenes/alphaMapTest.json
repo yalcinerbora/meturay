@@ -16,7 +16,8 @@
 
 	"Lights": [
 		// White Background
-		{ "id" : 0, "type" : "Constant", "radiance": [1, 1, 1]}],
+		{ "id" : 0, "type" : "Constant", "radiance": [1, 1, 1]}
+	],
 
 	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
 

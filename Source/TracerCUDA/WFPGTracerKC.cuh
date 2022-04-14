@@ -551,7 +551,7 @@ void WFPGTracerDebugBWork(// Output
 
     // Query SVO find a leaf
     uint32_t svoLeafIndex;
-    bool found = svo.LeafIndex(svoLeafIndex, position);
+    bool found = svo.LeafIndex(svoLeafIndex, position, true);
     Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
                                 : Vector3f(0.0f);
     // Accumulate the pixel
@@ -597,7 +597,7 @@ void WFPGTracerDebugWork(// Output
 
     // Query SVO find a leaf
     uint32_t svoLeafIndex;
-    bool found = svo.LeafIndex(svoLeafIndex, position);
+    bool found = svo.LeafIndex(svoLeafIndex, position, true);
     Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
                                 : Vector3f(0.0f);
     // Accumulate the pixel
@@ -605,7 +605,6 @@ void WFPGTracerDebugWork(// Output
                             aux.pixelIndex,
                             Vector4f(locColor, 1.0f));
 }
-
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCTraceSVO(// Output
@@ -636,4 +635,33 @@ static void KCTraceSVO(// Output
                              aux.pixelIndex,
                              Vector4f(locColor, 1.0f));
     }
+}
+
+__global__
+static void KCInitializeSVOBins(// Outpus
+                                RayAuxWFPG* gRayAux,
+                                // Inputs
+                                const RayGMem* gRays,
+                                // Constants
+                                AnisoSVOctreeGPU svo,
+                                uint32_t rayCount)
+{
+    // Traverse all 8 neighbours of the ray hit position
+    //
+}
+
+__global__
+static void KCCheckReducedSVOBins(// Outpus
+                                  RayAuxWFPG* gRayAux,
+                                  // Inputs
+                                  const RayGMem* gRays,
+                                  // Constants
+                                  AnisoSVOctreeGPU svo,
+                                  uint32_t rayCount)
+{
+    // Directly go to the node using node Id
+
+    // Traverse to the parent untill mark is found
+
+    // Set the node id again
 }

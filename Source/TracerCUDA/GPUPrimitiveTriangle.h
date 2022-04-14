@@ -555,7 +555,7 @@ struct TriFunctions
                     Vector2f uv = (actualA * uv0 +
                                    actualB * uv1 +
                                    actualC * uv2);
-                    isTransparent = !(*alphaMap)(uv);
+                    isTransparent = !((*alphaMap)(uv));
                 }
                 if(isTransparent) continue;
 

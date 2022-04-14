@@ -20,6 +20,7 @@ template class WFPGDebugBoundaryWork<CPULightGroupDirectional>;
 template class WFPGDebugBoundaryWork<CPULightGroupSpot>;
 template class WFPGDebugBoundaryWork<CPULightGroupDisk>;
 template class WFPGDebugBoundaryWork<CPULightGroupRectangular>;
+template class WFPGDebugBoundaryWork<CPULightGroupConstant>;
 // ===================================================
 // Combo
 template class WFPGWork<LambertCMat, GPUPrimitiveTriangle>;

@@ -14,7 +14,6 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
-
 void WFPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
@@ -51,6 +50,43 @@ uint32_t WFPGTracer::MaximumPathNodePerPath() const
     return (options.maximumDepth == 0) ? 0 : (options.maximumDepth + 1);
 }
 
+void WFPGTracer::GenerateGuidedDirections()
+{
+    const CudaGPU& gpu = cudaSystem.BestGPU();
+    // Cluster the rays according to their svo location
+    const RayGMem* dRays = rayCaster->RaysIn();
+    RayAuxWFPG* dRayAux = static_cast<RayAuxWFPG*>(*dAuxIn);
+    uint32_t rayCount = rayCaster->CurrentRayCount();
+
+    // Init ray bins
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                       //
+                       KCInitializeSVOBins,
+                       //
+                       dRayAux,
+                       dRays,
+                       svo.TreeGPU(),
+                       rayCount);
+
+    // Then call svo to reduce the bins
+    svo.CollapseRayCounts(options.minRayBinLevel,
+                          options.binRayCount,
+                          cudaSystem);
+
+    // Then rays check if their initial node is reduced
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                       //
+                       KCCheckReducedSVOBins,
+                       //
+                       dRayAux,
+                       dRays,
+                       svo.TreeGPU(),
+                       rayCount);
+
+
+    /*    RayGMem* dRays = rayMemory.Rays();
+    HitKey* dWorkKeys = rayMemory.WorkKeys();*/
+}
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
@@ -319,6 +355,10 @@ bool WFPGTracer::Render()
         // Signal as if we finished processing
         return false;
     }
+
+    // Before Material Evaluation
+    // Generate guideDirection and PDF
+    GenerateGuidedDirections();
 
     // Generate output partitions
     const auto partitions = rayCaster->HitAndPartitionRays();
