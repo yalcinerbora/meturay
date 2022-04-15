@@ -391,6 +391,13 @@ struct TriFunctions
                              const AABB3f& sceneAABB,
                              uint32_t resolutionXYZ)
     {
+        // Clang signbit definition is only on std namespace
+        // this is a crappy workaround, since this is only a device function
+        // but clang gives an error
+        #ifndef __CUDA_ARCH__
+            using namespace std;
+        #endif
+
         static constexpr Vector3f X_AXIS = XAxis;
         static constexpr Vector3f Y_AXIS = YAxis;
 

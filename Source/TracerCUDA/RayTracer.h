@@ -4,6 +4,7 @@
 #include "TypeTraits.h"
 #include "GPUCameraI.h"
 #include "CameraFunctions.h"
+#include "RNGIndependent.cuh"
 
 // Generic Ray Tracer Class
 class RayTracer : public GPUTracer

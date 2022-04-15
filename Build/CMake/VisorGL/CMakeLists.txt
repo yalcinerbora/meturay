@@ -135,15 +135,14 @@ add_custom_command(TARGET VisorGL POST_BUILD
                    ${SRC_FONTS}
                    "${MRAY_CONFIG_BIN_DIRECTORY}/Fonts")
 
-# Additional Copy Operation for Shaders
+# # Additional Copy Operation for Shaders
 add_custom_target(VisorGL_Shaders ALL
                   COMMAND ${CMAKE_COMMAND} -E make_directory
                   "${MRAY_CONFIG_BIN_DIRECTORY}/Shaders"
 
                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
                   ${SRC_SHADERS}
-                  "${MRAY_CONFIG_BIN_DIRECTORY}/Shaders"
-)
+                  "${MRAY_CONFIG_BIN_DIRECTORY}/Shaders")
 add_dependencies(VisorGL_Shaders VisorGL)
 
 # Copy DLLS

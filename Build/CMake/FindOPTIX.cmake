@@ -24,6 +24,18 @@ if(WIN32)
         )
 else()
     set(OPTIX_POTENTIAL_PATH_LIST
+            "/opt/nvidia/NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64"
+            "/opt/nvidia/NVIDIA-OptiX-SDK-7.4.0-linux64-x86_64"
+            "/opt/nvidia/NVIDIA-OptiX-SDK-7.3.0-linux64-x86_64"
+            "/opt/nvidia/NVIDIA-OptiX-SDK-7.2.0-linux64-x86_64"
+            "/opt/nvidia/NVIDIA-OptiX-SDK-7.1.0-linux64-x86_64"
+            "/opt/nvidia/NVIDIA-OptiX-SDK-7.0.0-linux64-x86_64"
+            "/opt/nvidia/NVIDIA-Optix-SDK-7.5.0"
+            "/opt/nvidia/NVIDIA-Optix-SDK-7.4.0"
+            "/opt/nvidia/NVIDIA-Optix-SDK-7.3.0"
+            "/opt/nvidia/NVIDIA-Optix-SDK-7.2.0"
+            "/opt/nvidia/NVIDIA-Optix-SDK-7.1.0"
+            "/opt/nvidia/NVIDIA-Optix-SDK-7.0.0"
             "~/NVIDIA-Optix-SDK-7.5.0-linux64"
             "~/NVIDIA-Optix-SDK-7.4.0-linux64"
             "~/NVIDIA-Optix-SDK-7.3.0-linux64"

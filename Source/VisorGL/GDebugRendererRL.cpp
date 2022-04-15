@@ -22,7 +22,7 @@ inline float DistanceFunction(const Vector3f& worldPos,
 
 uint32_t SurfaceLBVH::FindNearestPoint(float& distance, const Vector3f& worldPos) const
 {
-    const SurfaceLeaf worldSurface = SurfaceLeaf{worldPos, Zero3f};
+    const SurfaceLeaf worldSurface = SurfaceLeaf{worldPos, Zero3f, UINT32_MAX};
 
     // Distance initialization function
     auto InitClosestDistance = [&](const SurfaceLeaf& worldSurface) -> float
@@ -175,9 +175,9 @@ GDebugRendererRL::GDebugRendererRL(const nlohmann::json& config,
     : linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
     , gradientTexture(gradientTexture)
-    , renderPerimeter(false)
     , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
     , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
+    , renderPerimeter(false)
 {
     if(!LoadLBVH(lbvh, config, configPath))
         throw std::runtime_error("Unable to Load LBVH");
@@ -185,7 +185,7 @@ GDebugRendererRL::GDebugRendererRL(const nlohmann::json& config,
     name = config[GuideDebug::NAME];
 
     // Load QFunctions from the files as well
-    for(const std::string& fName : config[QFUNC_NAME])
+    for(std::string fName : config[QFUNC_NAME])
     {
         qFuncFileNames.push_back(Utility::MergeFileFolder(configPath, fName));
     }

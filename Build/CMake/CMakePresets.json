@@ -42,9 +42,9 @@
         }
     },
     {
-        "name": "Linux-Clang-11",
-        "displayName": "Linux-Clang-11-x64",
-        "description": "Linux Clang-11 using ninja multi config",
+        "name": "Linux-Clang-12",
+        "displayName": "Linux-Clang-12-x64",
+        "description": "Linux Clang-12 using ninja multi config",
         "inherits": "folders",
         "generator": "Ninja Multi-Config",
         "condition": {
@@ -53,14 +53,14 @@
             "rhs": "Linux"
         },
         "cacheVariables": {
-            "CMAKE_CXX_COMPILER": "clang++-11"
+            "CMAKE_CXX_COMPILER": "clang++-12"
         }
     },
     {
-        "name": "Linux-Clang-11-OptiX",
-        "displayName": "Linux-Clang-11-x64 with OptiX",
-        "description": "Linux Clang-11 using ninja multi config and using OptiX",
-        "inherits": "Linux-Clang-11",
+        "name": "Linux-Clang-12-OptiX",
+        "displayName": "Linux-Clang-12-x64 with OptiX",
+        "description": "Linux Clang-12 using ninja multi config and using OptiX",
+        "inherits": "Linux-Clang-12",
         "cacheVariables": {
             "USE_OPTIX": true
         }
@@ -110,13 +110,13 @@
         "description": "Debug Build",
         "displayName": "Debug",
         "configuration": "Debug",
-        "configurePreset": "Linux-Clang-11-OptiX"
+        "configurePreset": "Linux-Clang-12-OptiX"
     },
     {
         "name": "rel-clang",
         "description": "Release Build",
         "displayName": "Release",
         "configuration": "Release",
-        "configurePreset": "Linux-Clang-11-OptiX"
+        "configurePreset": "Linux-Clang-12-OptiX"
     }]
 }

@@ -119,7 +119,7 @@ if(MSVC)
                         # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4324>
                         # # '__cudaUnregisterBinaryUtil': unreferenced function with internal linkage has been removed
                         # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4505>)
-                        add_link_options($<$<COMPILE_LANGUAGE:CXX>:/DEBUG>)
+    add_link_options($<$<COMPILE_LANGUAGE:CXX>:/DEBUG>)
 else()
     # Clang / GCC both use same syntax
     # Warnings
@@ -166,7 +166,9 @@ set(MRAY_PREPROCESSOR_DEFS_GENERIC
 
 set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    METU_CUDA)
+    METU_CUDA
+    # Suppress Dynamic Parallelism cudaDeviceSyncWarning
+    -D__CDPRT_SUPPRESS_SYNC_DEPRECATION_WARNING)
 
 # After Everything is set
 # Include NVCC compile to ptx routine

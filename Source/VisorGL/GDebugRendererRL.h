@@ -71,18 +71,18 @@ class GDebugRendererRL : public GDebugRendererI
         static constexpr const char* QFUNC_NAME = "qFunctions";
         static constexpr const char* QSIZE_NAME = "qSize";
 
-        const SamplerGL         linearSampler;
-        const TextureGL&        gradientTexture;
-        uint32_t                curLocationIndex;
+        const SamplerGL             linearSampler;
+        const TextureGL&            gradientTexture;
+        uint32_t                    curLocationIndex;
         // Name of the Guider (shown in GUI)
-        std::string             name;
+        std::string                 name;
         //
-        TextureGL               currentTexture;
-        std::vector<float>      currentValues;
-        float                   maxValueDisplay;
+        TextureGL                   currentTexture;
+        std::vector<float>          currentValues;
+        float                       maxValueDisplay;
         // Shaders
-        ShaderGL                compReduction;
-        ShaderGL                compRefRender;
+        ShaderGL                    compReduction;
+        ShaderGL                    compRefRender;
 
         // Spatial Data Structure
         SurfaceLBVH                 lbvh;
@@ -90,11 +90,11 @@ class GDebugRendererRL : public GDebugRendererI
         std::vector<std::string>    qFuncFileNames;
         Vector2ui                   qFuncSize;
         // Options
-        bool                    renderPerimeter;
+        bool                        renderPerimeter;
 
-        static bool             LoadLBVH(SurfaceLBVH&,
-                                         const nlohmann::json& config,
-                                         const std::string& configPath);
+        static bool                 LoadLBVH(SurfaceLBVH&,
+                                             const nlohmann::json& config,
+                                             const std::string& configPath);
 
     protected:
 

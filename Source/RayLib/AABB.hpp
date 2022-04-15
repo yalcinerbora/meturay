@@ -123,6 +123,12 @@ template<int N, class T>
 __device__ __host__ HYBRID_INLINE
 Vector<N, T> AABB<N, T>::FurthestCorner(const Vector<N, T>& point) const
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workaround
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     Vector<N, T> result;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)

@@ -527,7 +527,7 @@ static void KCVoxelizePrims(//Outputs
                                                          gLightKeys,
                                                          totalLightCount);
         uint32_t indexInt = static_cast<uint32_t>(index);
-        HitKey lKey = (found) ? gLightKeys[indexInt]
+        HitKey lKey = (found) ? static_cast<HitKeyType>(gLightKeys[indexInt])
                               : HitKey::InvalidKey;
 
         #pragma unroll

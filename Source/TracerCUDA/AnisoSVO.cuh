@@ -271,8 +271,13 @@ __device__ inline
 void AnisoSVOctreeGPU::AtomicSetChildMaskBit(uint64_t* packedData, uint32_t mask)
 {
     assert(mask < (1 << CHILD_MASK_BIT_COUNT));
+
+    // Clang complains this function args does not match
+    static_assert(sizeof(uint64_t) == sizeof(unsigned long long));
+
     // Atomically set the value to the mask
-    atomicOr(packedData, static_cast<uint64_t>(mask) << CHILD_MASK_OFFSET);
+    atomicOr(reinterpret_cast<unsigned long long*>(packedData),
+             static_cast<unsigned long long>(mask) << CHILD_MASK_OFFSET);
 }
 
 __device__ inline

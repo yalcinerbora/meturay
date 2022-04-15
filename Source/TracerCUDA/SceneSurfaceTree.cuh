@@ -3,7 +3,7 @@
 #include "RayLib/TracerStructs.h"
 #include "SceneSurfaceTreeKC.cuh"
 
-#include "KdTree.cuh"
+#include "KDTree.cuh"
 
 class SceneSurfaceTree
 {
