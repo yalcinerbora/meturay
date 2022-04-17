@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "RayCasterI.h"
+#include "RayCaster.h"
 #include "OptixSystem.h"
 #include "GPUOptiXPTX.cuh"
 #include "RayMemory.h"
@@ -9,7 +9,7 @@
 class GPUSceneI;
 class GPUAcceleratorI;
 
-class RayCasterOptiX : public RayCasterI
+class RayCasterOptiX : public RayCaster
 {
     public:
         static constexpr const char* MODULE_BASE_NAME       = "OptiXShaders/GPUOptiXPTX.o.ptx";
@@ -19,8 +19,8 @@ class RayCasterOptiX : public RayCasterI
         static constexpr const char* AHIT_FUNC_PREFIX       = "__anyhit__";
         static constexpr const char* INTERSECT_FUNC_PREFIX  = "__intersection__";
 
-        static constexpr int CH_INDEX = 0;
-        static constexpr int AH_INDEX = 1;
+        static constexpr int CH_INDEX   = 0;
+        static constexpr int AH_INDEX   = 1;
         static constexpr int INTS_INDEX = 2;
 
         using HitFunctionNames          = std::tuple<std::string, std::string, std::string>;
@@ -44,26 +44,13 @@ class RayCasterOptiX : public RayCasterI
         };
 
     private:
-        Vector2i                        maxAccelBits;
-        Vector2i                        maxWorkBits;
-        // Combined hit struct size
-        const uint32_t                  maxHitSize;
-        const uint32_t                  boundaryTransformIndex;
-        // Cuda System for GPU Kernel Launches
-        const CudaSystem&               cudaSystem;
-        // Accelerators
-        GPUBaseAcceleratorI&            baseAccelerator;
-        const AcceleratorBatchMap&      accelBatches;
-        // Misc
-        uint32_t                        currentRayCount;
         // OptiX Related
-        OptiXSystem                     optixSystem;
-        std::vector<OptixGPUData>       optixGPUData;
+        OptiXSystem                 optixSystem;
+        std::vector<OptixGPUData>   optixGPUData;
         // GPU Memory
-        RayMemory                       rayMemory;
-        const GPUTransformI**           dGlobalTransformArray;
+        const GPUTransformI**       dGlobalTransformArray;
 
-        // Funcs
+        // Functions
         TracerError                 CreateProgramGroups(const std::string& rgFuncName,
                                                         const std::string& missFuncName,
                                                         const std::vector<HitFunctionNames>&);
@@ -88,55 +75,8 @@ class RayCasterOptiX : public RayCasterI
         // Interface
         TracerError                 ConstructAccelerators(const GPUTransformI** dTransforms,
                                                           uint32_t identityTransformIndex) override;
-        RayPartitions<uint32_t>     HitAndPartitionRays() override;
-        void                        WorkRays(const WorkBatchMap& workMap,
-                                             const RayPartitionsMulti<uint32_t>& outPortions,
-                                             const RayPartitions<uint32_t>& inPartitions,
-                                             RNGeneratorCPUI& rngCPU,
-                                             uint32_t totalRayOut,
-                                             HitKey baseBoundMatKey) override;
+        void                        HitRays() override;
 
-        // Ray Related
-        uint32_t                CurrentRayCount() const override;
-        void                    ResizeRayOut(uint32_t rayCount,
-                                             HitKey baseBoundMatKey) override;
-        RayGMem*                RaysOut() override;
-        const RayGMem*          RaysIn() override;
-        void                    SwapRays() override;
-        // Work Related
-        void                    OverrideWorkBits(const Vector2i newWorkBits) override;
-        // Mem Usage
-        size_t                  UsedGPUMemory() const override;
+        // Memory Usage
+        size_t                      UsedGPUMemory() const override;
 };
-
-inline uint32_t RayCasterOptiX::CurrentRayCount() const
-{
-    return currentRayCount;
-}
-
-inline void RayCasterOptiX::ResizeRayOut(uint32_t rayCount,
-                                         HitKey baseBoundMatKey)
-{
-    currentRayCount = rayCount;
-    return rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
-}
-
-inline RayGMem* RayCasterOptiX::RaysOut()
-{
-    return rayMemory.RaysOut();
-}
-
-inline const RayGMem* RayCasterOptiX::RaysIn()
-{
-    return rayMemory.Rays();
-}
-
-inline void RayCasterOptiX::SwapRays()
-{
-    rayMemory.SwapRays();
-}
-
-inline void RayCasterOptiX::OverrideWorkBits(const Vector2i newWorkBits)
-{
-    maxWorkBits = newWorkBits;
-}

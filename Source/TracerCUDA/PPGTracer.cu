@@ -211,7 +211,8 @@ bool PPGTracer::Render()
        currentDepth >= options.maximumDepth)
         return false;
 
-    const auto partitions = rayCaster->HitAndPartitionRays();
+    rayCaster->HitRays();
+    const auto partitions = rayCaster->PartitionRaysWRTWork();
 
     //Debug::DumpMemToFile("auxIn",
     //                     static_cast<const RayAuxPPG*>(*dAuxIn),

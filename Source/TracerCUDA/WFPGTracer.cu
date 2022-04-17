@@ -14,6 +14,15 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
+struct NodeIdFetchFunctor
+{
+    __device__ inline
+    uint32_t operator()(const RayAuxWFPG& aux) const
+    {
+        return aux.binId;
+    }
+};
+
 void WFPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
@@ -68,6 +77,8 @@ void WFPGTracer::GenerateGuidedDirections()
                        //
                        dRayAux,
                        dRays,
+                       rayCaster->WorkKeys(),
+                       scene.BaseBoundaryMaterial(),
                        svo.TreeGPU(),
                        rayCount);
 
@@ -86,6 +97,23 @@ void WFPGTracer::GenerateGuidedDirections()
                        rayCount);
 
     // Partition the generated rays wrt. to the svo nodeId
+    uint32_t hPartitionCount;
+    uint32_t* dPartitionOffsets;
+    uint32_t* dPartitionBinIds;
+    DeviceMemory partitionMemory;
+    // Custom Ray Partition
+    rayCaster->PartitionRaysWRTCustomData(hPartitionCount,
+                                          partitionMemory,
+                                          dPartitionOffsets,
+                                          dPartitionBinIds,
+                                          dRayAux,
+                                          NodeIdFetchFunctor(),
+                                          rayCount,
+                                          cudaSystem);
+
+    METU_LOG("Depth {:d} -> PartitionCount {:d}",
+             currentDepth, hPartitionCount);
+
     // Utilize the ray memory here
     // However ray memory is encapsulated by the ray caster
     // interface and we can't push
@@ -361,12 +389,16 @@ bool WFPGTracer::Render()
         return false;
     }
 
+    // Hit Rays
+    rayCaster->HitRays();
+
     // Before Material Evaluation
     // Generate guideDirection and PDF
     GenerateGuidedDirections();
 
-    // Generate output partitions
-    const auto partitions = rayCaster->HitAndPartitionRays();
+    // Generate output partitions wrt. materials
+    const auto partitions = rayCaster->PartitionRaysWRTWork();
+
     uint32_t totalOutRayCount = 0;
     auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
                                                          partitions,
@@ -416,6 +448,9 @@ bool WFPGTracer::Render()
 
 void WFPGTracer::Finalize()
 {
+    METU_LOG("==============");
+
+
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

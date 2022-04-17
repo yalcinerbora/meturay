@@ -132,7 +132,8 @@ void AOTracer::GenerateWork(const GPUCameraI& dCam)
 
 bool AOTracer::Render()
 {
-    const auto partitions = rayCaster->HitAndPartitionRays();
+    rayCaster->HitRays();
+    const auto partitions = rayCaster->PartitionRaysWRTWork();
 
     cudaSystem.SyncAllGPUs();
 

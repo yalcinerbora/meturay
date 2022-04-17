@@ -23,7 +23,7 @@ using RayPartitionsMulti = std::set<MultiArrayPortion<T>>;
 class RayCasterI
 {
     public:
-        virtual                         ~RayCasterI() = default;
+        virtual                             ~RayCasterI() = default;
 
         // Static Helpers
         static Vector2i                     DetermineMaxBitFromId(const Vector2i& maxIds);
@@ -33,7 +33,9 @@ class RayCasterI
         // Interface
         virtual TracerError             ConstructAccelerators(const GPUTransformI** dTransforms,
                                                               uint32_t identityTransformIndex) = 0;
-        virtual RayPartitions<uint32_t> HitAndPartitionRays() = 0;
+
+        virtual void                    HitRays() = 0;
+        virtual RayPartitions<uint32_t> PartitionRaysWRTWork() = 0;
         virtual void                    WorkRays(const WorkBatchMap& workMap,
                                                  const RayPartitionsMulti<uint32_t>& outPortions,
                                                  const RayPartitions<uint32_t>& inPartitions,
@@ -44,8 +46,10 @@ class RayCasterI
         virtual uint32_t                CurrentRayCount() const = 0;
         virtual void                    ResizeRayOut(uint32_t rayCount,
                                                      HitKey baseBoundMatKey) = 0;
+
         virtual RayGMem*                RaysOut() = 0;
-        virtual const RayGMem*          RaysIn() = 0;
+        virtual const RayGMem*          RaysIn() const = 0;
+        virtual const HitKey*           WorkKeys() const = 0;
         virtual void                    SwapRays() = 0;
         // Work Related
         virtual void                    OverrideWorkBits(const Vector2i newWorkBits) = 0;

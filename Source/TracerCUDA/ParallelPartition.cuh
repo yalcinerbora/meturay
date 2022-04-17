@@ -197,7 +197,7 @@ __host__ void PartitionGPU(std::set<ArrayPortion<Key>>& segmentList,
                           sizeof(uint32_t), cudaMemcpyDeviceToHost));
 
     Key* dDenseKeys = static_cast<Key*>(ifInput);
-    gridSize = static_cast<unsigned int>((locCount + TPB - 1) / TPB);
+    gridSize = static_cast<unsigned int>((hSelectCount + TPB - 1) / TPB);
     KCFindSplitBatches<<<gridSize, TPB, 0, stream>>>
     (
         dDenseKeys,

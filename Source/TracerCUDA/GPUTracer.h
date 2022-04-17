@@ -22,9 +22,8 @@ All Tracers should inherit this class
 #include "RayLib/VisorTransform.h"
 #include "RayLib/CPUTimer.h"
 
-#include "RayCasterI.h"
 #include "RNGenerator.h"
-#include "RayMemory.h"
+#include "RayCaster.h"
 #include "ImageMemory.h"
 
 #include "RayLib/AnalyticData.h"
@@ -73,7 +72,7 @@ class GPUTracer : public GPUTracerI
         // Cuda System For Kernel Calls
         const CudaSystem&                   cudaSystem;
         // Ray Caster
-        std::unique_ptr<RayCasterI>         rayCaster;
+        std::unique_ptr<RayCaster>          rayCaster;
         // GPU Memory
         std::unique_ptr<RNGeneratorCPUI>    rngCPU;
         ImageMemory                         imgMemory;

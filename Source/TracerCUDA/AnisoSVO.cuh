@@ -135,7 +135,7 @@ class AnisoSVOctreeGPU
     // Find the bin from the leaf
     // Bin is the node that is the highest non-collapsed node
     __device__
-    uint32_t            FindBin(bool& isLeaf, uint32_t initialLeafIndex)  const;
+    uint32_t            FindMarkedBin(bool& isLeaf, uint32_t initialLeafIndex)  const;
 
     __device__
     Vector3f            VoxelToWorld(const Vector3ui& denseIndex);
@@ -405,7 +405,7 @@ void AnisoSVOctreeGPU::SetBinAsMarked(uint32_t& gNodeRayCount)
 __device__ inline
 uint32_t AnisoSVOctreeGPU::GetRayCount(uint32_t binInfo)
 {
-    return binInfo & (LAST_BIT_UINT32 - 1);
+    return binInfo & ((1u << LAST_BIT_UINT32) - 1);
 }
 
 __device__ inline
@@ -793,20 +793,24 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
 }
 
 __device__ inline
-uint32_t AnisoSVOctreeGPU::FindBin(bool& isLeaf, uint32_t initialLeafIndex) const
+uint32_t AnisoSVOctreeGPU::FindMarkedBin(bool& isLeaf, uint32_t initialLeafIndex) const
 {
     isLeaf = true;
     uint32_t binInfo = dLeafBinInfo[initialLeafIndex];
     uint32_t parentIndex = dLeafParents[initialLeafIndex];
 
     // Traverse towards parent terminate when marked bin is found
+    // Bin should be marked
+    uint32_t nodeIndex = initialLeafIndex;
     while(parentIndex != INVALID_PARENT && !IsBinMarked(binInfo))
     {
-        parentIndex = dNodes[parentIndex];
+        nodeIndex = parentIndex;
         binInfo = dBinInfo[parentIndex];
+        parentIndex = ParentIndex(dNodes[parentIndex]);
         isLeaf = false;
     }
-    return GetRayCount(binInfo);
+    assert(parentIndex != INVALID_PARENT);
+    return nodeIndex;
 }
 
 __device__ inline

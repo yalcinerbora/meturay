@@ -32,10 +32,10 @@ if(USE_OPTIX)
         ${CURRENT_SOURCE_DIR}/RayCasterOptiX.h)
 
     # Additionally Define PTX Source
-    # Which will be passed to the Optix Compile Target
+    # Which will be passed to the OptiX Compile Target
     set(OPTIX_PTX_SOURCES
         ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu)
-    # Make Optix Sources not participate in build
+    # Make OptiX Sources not participate in build
     set_source_files_properties(${OPTIX_PTX_SOURCES}
                                  PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
@@ -43,6 +43,8 @@ endif()
 set(SRC_RC
     ${CURRENT_SOURCE_DIR}/RayCaster.cu
     ${CURRENT_SOURCE_DIR}/RayCaster.h
+    ${CURRENT_SOURCE_DIR}/RayCasterCUDA.cu
+    ${CURRENT_SOURCE_DIR}/RayCasterCUDA.h
     ${CURRENT_SOURCE_DIR}/RayCasterI.h)
 
 set(SRC_CAMERAS

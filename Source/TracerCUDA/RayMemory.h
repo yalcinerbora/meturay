@@ -12,6 +12,9 @@ General Device memory manager for ray and it's auxiliary data
 
 #include "DeviceMemory.h"
 #include "RayStructs.h"
+#include "ParallelPartition.cuh"
+#include "CudaSystem.h"
+#include "CudaSystem.hpp"
 
 class CudaGPU;
 
@@ -92,8 +95,10 @@ class RayMemory
         // Accessors
         // Ray In
         RayGMem*                    Rays();
+        const RayGMem*              Rays() const;
         // Ray Out
         RayGMem*                    RaysOut();
+        const RayGMem*              RaysOut() const;
 
         // Hit Related
         HitStructPtr                HitStructs();
@@ -135,14 +140,37 @@ class RayMemory
         size_t                      UsedGPUMemory() const;
 
         // Custom Partition Function
+        // Partition the rays wrt. to the custom key type
+        // This type can be in another Type (FetchType)
+        // a device function must be provided for conversion
+        // KeyType must fit on a HitKey array
+        // thus, this function SFINAE'd the Key type to be same size
+        // has HitKey (which is 32-bit number)
+        //
+        // Partitions are directly created under the device memory,
+        // which holds partition offsets,
+        // partitioned ray indices are hold in the ray memories inner type
+        // Total number of partitions are returned hPartitionCount variable
+        //
+        // This function may return false if current ray memory could not have
+        // enough temporary memory for "sort", "select" (cub functions)
+        // operations. Since sizeof(KeyType) == sizeof(HitKey) this should
+        // not happen. (However it is provided as a output if cub somehow
+        // changes the underlying algorithm of those functions
         template <class KeyType, class FetchType,
                   class FetchFunction,
                   typename = CustomKeySizeEnable<KeyType>>
-        uint32_t                   CustomPartitionRays(DeviceMemory & partitions,
-                                                       const FetchType* dFetchData,
-                                                       FetchFunction f,
-                                                       uint32_t rayCount,
-                                                       const CudaSystem & system);
+        bool                PartitionRaysCustom(// Outputs
+                                                uint32_t& hPartitionCount,
+                                                // GPU Outputs
+                                                DeviceMemory & partitionMemory,
+                                                uint32_t*& dPartitionOffsets,
+                                                KeyType*& dPartitionKeys,
+                                                // Inputs
+                                                const FetchType* dFetchData,
+                                                FetchFunction FetchFunc,
+                                                uint32_t rayCount,
+                                                const CudaSystem& system);
 };
 
 inline const CudaGPU& RayMemory::LeaderDevice() const
@@ -155,7 +183,17 @@ inline RayGMem* RayMemory::Rays()
     return dRayIn;
 }
 
+inline const RayGMem* RayMemory::Rays() const
+{
+    return dRayIn;
+}
+
 inline RayGMem* RayMemory::RaysOut()
+{
+    return dRayOut;
+}
+
+inline const RayGMem* RayMemory::RaysOut() const
 {
     return dRayOut;
 }
@@ -227,21 +265,153 @@ inline size_t RayMemory::UsedGPUMemory() const
 
 template <class KeyType, class FetchType, class FetchFunction>
 __global__ static
-void KCFetchKeys(KeyType* gKeys,
-                 const FetchType* gFetchData,
-                 FetchFunction f,
-                 uint32_t rayCount)
+void KCFillKeysForSort(KeyType* gKeys,
+                       uint32_t* gRayIds,
+                       const FetchType* gFetchData,
+                       FetchFunction FetchFunc,
+                       uint32_t rayCount)
 {
-
+    // Grid Stride Loop
+    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+        globalId < rayCount;
+        globalId += blockDim.x * gridDim.x)
+    {
+        gKeys[globalId] = FetchFunc(gFetchData[globalId]);
+        gRayIds[globalId] = globalId;
+    }
 }
 
 template <class KeyType, class FetchType,
           class FetchFunction, typename>
-uint32_t RayMemory::CustomPartitionRays(DeviceMemory& partitions,
-                                        const FetchType* dFetchData,
-                                        FetchFunction f,
-                                        uint32_t rayCount,
-                                        const CudaSystem& system)
+bool RayMemory::PartitionRaysCustom(// Outputs
+                                    uint32_t& hPartitionCount,
+                                    // GPU Outputs
+                                    DeviceMemory& partitionMemory,
+                                    uint32_t*& dPartitionOffsets,
+                                    KeyType*& dPartitionKeys,
+                                    // Inputs
+                                    const FetchType* dFetchData,
+                                    FetchFunction FetchFunc,
+                                    uint32_t rayCount,
+                                    const CudaSystem& system)
 {
+    hPartitionCount = 0;
+    dPartitionOffsets = nullptr;
+    dPartitionKeys = nullptr;
 
+    // Type cast the HitKey -> KeyType
+    KeyType* dCurKeysT = reinterpret_cast<KeyType*>(dCurrentKeys);
+    KeyType* dOtherKeysT = reinterpret_cast<KeyType*>((dCurrentKeys == dKeys0)
+                                                      ? dKeys1
+                                                      : dKeys0);
+    RayId* dIdsOther = (dCurrentIds == dIds0) ? dIds1 : dIds0;
+
+    leaderDevice.GridStrideKC_X(0, 0, rayCount,
+                                //
+                                KCFillKeysForSort<KeyType, FetchType, FetchFunction>,
+                                // Output
+                                dCurKeysT,
+                                dCurrentIds,
+                                // Input
+                                dFetchData,
+                                FetchFunc,
+                                rayCount);
+
+    // Set the leader for cub operations
+    CUDA_CHECK(cudaSetDevice(leaderDevice.DeviceId()));
+
+    // Sort the ray ids with keys
+    cub::DoubleBuffer<KeyType> dbKeys(dCurKeysT, dOtherKeysT);
+    cub::DoubleBuffer<RayId> dbIds(dCurrentIds, dIdsOther);
+
+    // Pre-check if sort operation temp memory size is enough
+    size_t requiredSize = 0;
+    CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(nullptr, requiredSize,
+                                                         dbKeys, dbIds,
+                                                         static_cast<int>(rayCount)));
+    if(requiredSize > cubSortMemSize) return false;
+
+    // Looks fine just call the sort
+    // since we do not know if 32-bit is fully utilized or not
+    // call the radix sort full range [0,32)
+    CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
+                                                         dbKeys, dbIds,
+                                                         static_cast<int>(rayCount)));
+
+    // Get the actual buffer that holds the sorted data
+    KeyType* dCurrentKeysT = dbKeys.Current();
+    dCurrentIds = dbIds.Current();
+    dCurrentKeys = reinterpret_cast<HitKey*>(dCurrentKeysT);
+    // Re-purpose the empty buffers for the partition operation
+    RayId* dEmptyIds = dbKeys.Alternate();
+    KeyType* dEmptyKeysT = dbIds.Alternate();
+    // Generate Names that make sense for the operation
+    // We have total of three buffers
+    // Temp Memory will be used for temp memory
+    // (it holds enough space for both sort and select)
+    //
+    // dSparseSplitIndices (a.k.a. dEmptyKeys)
+    // will be used as intermediate buffer
+    uint32_t* dSparseSplitIndices = reinterpret_cast<uint32_t*>(dEmptyKeysT);
+    uint32_t* dDenseSplitIndices = reinterpret_cast<uint32_t*>(dEmptyIds);
+    uint32_t* dSelectCount = static_cast<uint32_t*>(dTempMemory);
+    void* dSelectTempMemory = dSelectCount + 1;
+
+    // Find Split Locations
+    // Read from dKeys -> dEmptyKeys
+    uint32_t locCount = rayCount - 1;
+    leaderDevice.GridStrideKC_X(0, 0, locCount,
+                                KCMarkSplits<KeyType>,
+                                dSparseSplitIndices, dCurrentKeysT, locCount);
+
+    // Make Splits Dense
+    // From dEmptyKeys -> dEmptyIds
+    CUDA_CHECK(cub::DeviceSelect::If(nullptr, requiredSize,
+                                     dSparseSplitIndices, dDenseSplitIndices, dSelectCount,
+                                     static_cast<int>(rayCount),
+                                     ValidSplit(),
+                                     (cudaStream_t)0,
+                                     false));
+    if(requiredSize > cubIfMemSize) return false;
+
+    // Actual "Partition" algorithm
+    CUDA_CHECK(cub::DeviceSelect::If(dSelectTempMemory, cubIfMemSize,
+                                     dSparseSplitIndices, dDenseSplitIndices, dSelectCount,
+                                     static_cast<int>(rayCount),
+                                     ValidSplit(),
+                                     (cudaStream_t)0,
+                                     false));
+
+    // Copy Reduced Count
+    uint32_t hSelectCount;
+    CUDA_CHECK(cudaMemcpy(&hSelectCount, dSelectCount,
+                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
+
+    // Now we can allocate the output buffer since we got the size
+    GPUMemFuncs::AllocateMultiData(std::tie(dPartitionOffsets,
+                                            dPartitionKeys),
+                                   partitionMemory,
+                                   {hSelectCount + 1, hSelectCount});
+
+    // Partition offsets are already generated by partition function
+    // Copy these to this memory
+    // Except the end offset which is the ray count
+    CUDA_CHECK(cudaMemcpy(dPartitionOffsets, dDenseSplitIndices,
+                          sizeof(uint32_t) * hSelectCount,
+                          cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy(dPartitionOffsets + hSelectCount, &rayCount,
+                          sizeof(uint32_t), cudaMemcpyHostToDevice));
+
+    // Copy the key of each partition to the dense array
+    leaderDevice.GridStrideKC_X(0, 0, hSelectCount,
+                                //
+                                KCFindSplitBatches<KeyType>,
+                                //
+                                dPartitionKeys,
+                                dDenseSplitIndices,
+                                dCurrentKeysT,
+                                hSelectCount);
+    // All Done!
+    hPartitionCount = hSelectCount;
+    return true;
 }

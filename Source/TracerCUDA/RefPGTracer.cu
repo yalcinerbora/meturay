@@ -285,7 +285,8 @@ bool RefPGTracer::Render()
        currentDepth >= options.maximumDepth)
         return false;
 
-    const auto partitions = rayCaster->HitAndPartitionRays();
+    rayCaster->HitRays();
+    const auto partitions = rayCaster->PartitionRaysWRTWork();
 
     // Generate Global Data Struct
     RPGTracerGlobalState globalData;

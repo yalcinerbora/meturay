@@ -13,17 +13,6 @@
 #include <cub/cub.cuh>
 #pragma warning( pop )
 
-static constexpr uint32_t INVALID_LOCATION = std::numeric_limits<uint32_t>::max();
-
-struct ValidSplit
-{
-    __device__ __host__
-    inline bool operator()(const uint32_t &ids) const
-    {
-        return (ids != INVALID_LOCATION);
-    }
-};
-
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void FillMatIdsForSortKC(HitKey* gKeys, RayId* gIds,
                          const HitKey* gWorkKeys,
@@ -262,7 +251,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     // Find Split Locations
     // Read from dKeys -> dEmptyKeys
     uint32_t locCount = rayCount - 1;
-    leaderDevice.GridStrideKC_X(0, 0, rayCount,
+    leaderDevice.GridStrideKC_X(0, 0, locCount,
                                 FindSplitsSparseKC,
                                 dSparseSplitIndices, dCurrentKeys, locCount);
 
@@ -283,7 +272,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     // Find The Hit Keys for each split
     // From dEmptyIds, dKeys -> dEmptyKeys
     uint16_t* dBatches = reinterpret_cast<uint16_t*>(dSparseSplitIndices);
-    leaderDevice.GridStrideKC_X(0, 0, rayCount,
+    leaderDevice.GridStrideKC_X(0, 0, hSelectCount,
                                 FindSplitBatchesKC,
                                 dBatches,
                                 dDenseSplitIndices,

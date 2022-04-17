@@ -350,13 +350,13 @@ void KCCollapseRayCounts(// I-O
         // collaborate with the other children
         if(rayCount < minRayCount)
         {
-            uint32_t parent = AnisoSVOctreeGPU::ParentIndex(gNodes[threadId]);
+            uint32_t parent = AnisoSVOctreeGPU::ParentIndex(gNodes[nodeId]);
             atomicAdd(gBinInfo + parent, rayCount);
         }
         // We have enough rays in this node use it as is
         else
         {
-            AnisoSVOctreeGPU::SetBinAsMarked(gBinInfo[threadId]);
+            AnisoSVOctreeGPU::SetBinAsMarked(gBinInfo[nodeId]);
         }
     }
 }
@@ -389,7 +389,7 @@ void KCCollapseRayCountsLeaf(// I-O
         if(rayCount == 0) continue;
 
         // If ray count is not enough on this voxel
-        // collaborate with the other childs
+        // collaborate with the other children
         if(rayCount < minRayCount)
         {
             uint32_t parent = gLeafParents[threadId];
@@ -837,6 +837,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Create the node radiance map
     //????
 
+    //Debug::DumpMemToFile("leafParent", treeGPU.dLeafParents,
+    //                     treeGPU.leafCount);
+
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0f;
@@ -876,6 +879,11 @@ void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount
                            treeGPU.leafDepth,
                            minLevel,
                            minRayCount);
+
+    //Debug::DumpMemToFile(std::to_string(treeGPU.leafDepth) + std::string("_binInfo"),
+    //                     treeGPU.dLeafBinInfo,
+    //                     treeGPU.leafCount, false, true);
+
     // Bottom-up process bins
     int32_t bottomNodeLevel = static_cast<int32_t>(treeGPU.leafDepth - 1);
     for(int32_t i = bottomNodeLevel; i >= static_cast<int32_t>(minLevel); i--)
@@ -896,6 +904,10 @@ void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount
                                i,
                                minLevel,
                                minRayCount);
+
+        //Debug::DumpMemToFile(std::to_string(i) + std::string("_binInfo"),
+        //                     treeGPU.dBinInfo + levelNodeOffsets[i],
+        //                     nodeCount, false, true);
     }
     // Leaf->Parent chain now there is at least a single mark
     // Rays will re-check and find their marked bin and set their id accordingly

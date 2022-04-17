@@ -21,7 +21,7 @@
 #include "GPUCameraI.h"
 #include "RNGIndependent.cuh"
 
-#include "RayCaster.h"
+#include "RayCasterCUDA.h"
 #ifdef MRAY_OPTIX
     #include "RayCasterOptiX.h"
 #endif
@@ -235,10 +235,10 @@ GPUTracer::GPUTracer(const CudaSystem& system,
         if(allOptiXScene)
             rayCaster = std::make_unique<RayCasterOptiX>(scene, system);
         else
-            rayCaster = std::make_unique<RayCaster>(scene, system);
+            rayCaster = std::make_unique<RayCasterCUDA>(scene, system);
     #else
         // Just create original RayCaster
-        rayCaster = std::make_unique<RayCaster>(scene, system);
+        rayCaster = std::make_unique<RayCasterCUDA>(scene, system);
     #endif
 }
 

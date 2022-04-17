@@ -556,15 +556,15 @@ struct TriFunctions
                 float actualA = 1.0f - actualB - actualC;
 
                 // Check alpha map if available
-                bool isTransparent = false;
-                if(alphaMap)
-                {
-                    Vector2f uv = (actualA * uv0 +
-                                   actualB * uv1 +
-                                   actualC * uv2);
-                    isTransparent = !((*alphaMap)(uv));
-                }
-                if(isTransparent) continue;
+                //bool isTransparent = false;
+                //if(alphaMap)
+                //{
+                //    Vector2f uv = (actualA * uv0 +
+                //                   actualB * uv1 +
+                //                   actualC * uv2);
+                //    isTransparent = !((*alphaMap)(uv));
+                //}
+                //if(isTransparent) continue;
 
                 // Bary's match, pixel is inside the triangle
                 if(!onlyCalcSize)

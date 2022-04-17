@@ -11,16 +11,8 @@
 
 RayCasterOptiX::RayCasterOptiX(const GPUSceneI& gpuScene,
                                const CudaSystem& system)
-    : maxAccelBits(DetermineMaxBitFromId(gpuScene.MaxAccelIds()))
-    , maxWorkBits(DetermineMaxBitFromId(gpuScene.MaxMatIds()))
-    , maxHitSize(gpuScene.HitStructUnionSize())
-    , boundaryTransformIndex(gpuScene.BoundaryTransformIndex())
-    , cudaSystem(system)
-    , baseAccelerator(*gpuScene.BaseAccelerator())
-    , accelBatches(gpuScene.AcceleratorBatchMappings())
-    , currentRayCount(0)
+    : RayCaster(gpuScene, system)
     , optixSystem(system)
-    , rayMemory(system.BestGPU())
     , dGlobalTransformArray(nullptr)
 {
     optixGPUData.reserve(optixSystem.OptixCapableDevices().size());
@@ -497,7 +489,7 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     return TracerError::OK;
 }
 
-RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
+void RayCasterOptiX::HitRays()
 {
     // Reset Hit Memory
     rayMemory.ResetHitMemory(boundaryTransformIndex, currentRayCount, maxHitSize);
@@ -569,141 +561,120 @@ RayPartitions<uint32_t> RayCasterOptiX::HitAndPartitionRays()
                                     1, 1));
             CUDA_KERNEL_CHECK();
         }
-        // Issue a global sync after optix calls
+        // Issue a global sync after optiX calls
         cudaSystem.SyncAllGPUs();
         // =========================//
         //     OPTIX LAUNCH END     //
         // =========================//
     }
-    //Debug::DumpMemToFile("workKeys", dWorkKeys, currentRayCount);
-    //Debug::DumpMemToFile("primIds", dPrimitiveIds, currentRayCount);
-    //Debug::DumpMemToFile("transformIds", dTransfomIds, currentRayCount);
-    //Debug::DumpMemToFile("barys", &dHitStructs.Ref<Vector2f>(0), currentRayCount);
-
-    // Partition rays for work kernel calls
-    HitKey* dCurrentKeys = rayMemory.CurrentKeys();
-    RayId* dCurrentRayIds = rayMemory.CurrentIds();
-    // Copy materialKeys to currentKeys
-    // to make it ready for sorting
-    rayMemory.FillMatIdsForSort(currentRayCount);
-    // Sort with respect to the materials keys
-    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
-
-    // Partition w.r.t.material batch
-    RayPartitions<uint32_t> workPartition;
-    workPartition.clear();
-    workPartition = rayMemory.Partition(currentRayCount);
-
-    return std::move(workPartition);
+    // After launch all rays found out their hit location
+    // as primitive id, work key, hit info (barycentrics) etc.
+    // All Done!
 }
 
-void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
-                              const RayPartitionsMulti<uint32_t>& outPortions,
-                              const RayPartitions<uint32_t>& inPartitions,
-                              RNGeneratorCPUI& rngCPU,
-                              uint32_t totalRayOut,
-                              HitKey baseBoundMatKey)
-{
-    // Sort and Partition happens on leader device
-    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
-
-    // Ray Memory Pointers
-    const RayGMem* dRays = rayMemory.Rays();
-    const HitStructPtr dHitStructs = rayMemory.HitStructs();
-    const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
-    const TransformId* dTransformIds = rayMemory.TransformIds();
-    // These are sorted etc.
-    HitKey* dCurrentKeys = rayMemory.CurrentKeys();
-    RayId* dCurrentRayIds = rayMemory.CurrentIds();
-
-    // Allocate output ray memory
-    rayMemory.ResizeRayOut(totalRayOut, baseBoundMatKey);
-    RayGMem* dRaysOut = rayMemory.RaysOut();
-    HitKey* dBoundKeyOut = rayMemory.WorkKeys();
-
-    // Reorder partitions for efficient calls
-    // (sort by gpu and order for better async access)
-    // ....
-    // TODO:
-
-    // Wait that "ResizeRayOut" is completed on the leader device
-    rayMemory.LeaderDevice().WaitMainStream();
-
-    // For each partition
-    //for(auto pIt = workPartition.crbegin();
-    //    pIt != workPartition.crend(); pIt++)
-    for(const auto& p : inPartitions)
-    {
-        //const auto& p = (*pIt);
-
-        // Skip if null batch or not found material
-        if(p.portionId == HitKey::NullBatch) continue;
-        auto loc = workMap.find(p.portionId);
-        if(loc == workMap.end()) continue;
-
-        // TODO: change this loop to combine iterator instead of find
-        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
-        const auto& pOut = *(outPortions.find(MultiArrayPortion<uint32_t>{p.portionId}));
-
-        // Relativize input & output pointers
-        const RayId* dRayIdStart = dCurrentRayIds + p.offset;
-        const HitKey* dKeyStart = dCurrentKeys + p.offset;
-
-        assert(pOut.counts.size() == pOut.offsets.size());
-        assert(pOut.counts.size() == loc->second.size());
-
-        // Actual Shade Calls
-        int i = 0;
-        for(auto& workBatch : loc->second)
-        {
-            // Output
-            RayGMem* dRayOutStart = dRaysOut + pOut.offsets[i];
-            HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offsets[i];
-
-            workBatch->Work(dBoundKeyStart,
-                            dRayOutStart,
-                            //  Input
-                            dRays,
-                            dPrimitiveIds,
-                            dTransformIds,
-                            dHitStructs,
-                            // Ids
-                            dKeyStart,
-                            dRayIdStart,
-                            //
-                            static_cast<uint32_t>(p.count),
-                            rngCPU);
-
-            i++;
-        }
-        //cudaSystem.SyncGPUAll();
-        //METU_LOG("--------------------------");
-    }
-    currentRayCount = totalRayOut;
-
-    //METU_LOG("Before Sync");
-    // Again wait all of the GPU's since
-    // CUDA functions will be on multiple-gpus
-    cudaSystem.SyncAllGPUs();
-
-    //METU_LOG("After Sync");
-
-    //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
-    //Debug::DumpMemToFile("dPrimIdsUNsorted", dPrimitiveIds, totalRayOut);
-
-    // Shading complete
-    // Now make "RayOut" to "RayIn"
-    // and continue
-    rayMemory.SwapRays();
-}
+//void RayCasterOptiX::WorkRays(const WorkBatchMap& workMap,
+//                              const RayPartitionsMulti<uint32_t>& outPortions,
+//                              const RayPartitions<uint32_t>& inPartitions,
+//                              RNGeneratorCPUI& rngCPU,
+//                              uint32_t totalRayOut,
+//                              HitKey baseBoundMatKey)
+//{
+//    // Sort and Partition happens on leader device
+//    CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
+//
+//    // Ray Memory Pointers
+//    const RayGMem* dRays = rayMemory.Rays();
+//    const HitStructPtr dHitStructs = rayMemory.HitStructs();
+//    const PrimitiveId* dPrimitiveIds = rayMemory.PrimitiveIds();
+//    const TransformId* dTransformIds = rayMemory.TransformIds();
+//    // These are sorted etc.
+//    HitKey* dCurrentKeys = rayMemory.CurrentKeys();
+//    RayId* dCurrentRayIds = rayMemory.CurrentIds();
+//
+//    // Allocate output ray memory
+//    rayMemory.ResizeRayOut(totalRayOut, baseBoundMatKey);
+//    RayGMem* dRaysOut = rayMemory.RaysOut();
+//    HitKey* dBoundKeyOut = rayMemory.WorkKeys();
+//
+//    // Reorder partitions for efficient calls
+//    // (sort by gpu and order for better async access)
+//    // ....
+//    // TODO:
+//
+//    // Wait that "ResizeRayOut" is completed on the leader device
+//    rayMemory.LeaderDevice().WaitMainStream();
+//
+//    // For each partition
+//    //for(auto pIt = workPartition.crbegin();
+//    //    pIt != workPartition.crend(); pIt++)
+//    for(const auto& p : inPartitions)
+//    {
+//        //const auto& p = (*pIt);
+//
+//        // Skip if null batch or not found material
+//        if(p.portionId == HitKey::NullBatch) continue;
+//        auto loc = workMap.find(p.portionId);
+//        if(loc == workMap.end()) continue;
+//
+//        // TODO: change this loop to combine iterator instead of find
+//        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
+//        const auto& pOut = *(outPortions.find(MultiArrayPortion<uint32_t>{p.portionId}));
+//
+//        // Relativize input & output pointers
+//        const RayId* dRayIdStart = dCurrentRayIds + p.offset;
+//        const HitKey* dKeyStart = dCurrentKeys + p.offset;
+//
+//        assert(pOut.counts.size() == pOut.offsets.size());
+//        assert(pOut.counts.size() == loc->second.size());
+//
+//        // Actual Shade Calls
+//        int i = 0;
+//        for(auto& workBatch : loc->second)
+//        {
+//            // Output
+//            RayGMem* dRayOutStart = dRaysOut + pOut.offsets[i];
+//            HitKey* dBoundKeyStart = dBoundKeyOut + pOut.offsets[i];
+//
+//            workBatch->Work(dBoundKeyStart,
+//                            dRayOutStart,
+//                            //  Input
+//                            dRays,
+//                            dPrimitiveIds,
+//                            dTransformIds,
+//                            dHitStructs,
+//                            // Ids
+//                            dKeyStart,
+//                            dRayIdStart,
+//                            //
+//                            static_cast<uint32_t>(p.count),
+//                            rngCPU);
+//
+//            i++;
+//        }
+//        //cudaSystem.SyncGPUAll();
+//        //METU_LOG("--------------------------");
+//    }
+//    currentRayCount = totalRayOut;
+//
+//    //METU_LOG("Before Sync");
+//    // Again wait all of the GPU's since
+//    // CUDA functions will be on multiple-gpus
+//    cudaSystem.SyncAllGPUs();
+//
+//    //METU_LOG("After Sync");
+//
+//    //Debug::DumpMemToFile("workKeyOut", rayMemory.WorkKeys(), totalRayOut);
+//    //Debug::DumpMemToFile("dPrimIdsUNsorted", dPrimitiveIds, totalRayOut);
+//
+//    // Shading complete
+//    // Now make "RayOut" to "RayIn"
+//    // and continue
+//    rayMemory.SwapRays();
+//}
 
 size_t RayCasterOptiX::UsedGPUMemory() const
 {
-    size_t mem = 0;
-    for(const auto& accel : accelBatches)
-        mem += accel.second->UsedGPUMemory();
-    mem += baseAccelerator.UsedGPUMemory();
-    mem += rayMemory.UsedGPUMemory();
+    size_t mem = RayCaster::UsedGPUMemory();
 
     for(const auto& optixData : optixGPUData)
     {

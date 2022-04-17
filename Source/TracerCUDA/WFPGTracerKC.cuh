@@ -666,11 +666,13 @@ bool ReadSVONodeId(uint32_t& nodeId, uint32_t packedData)
 }
 
 __global__
-static void KCInitializeSVOBins(// Outpus
+static void KCInitializeSVOBins(// Outputs
                                 RayAuxWFPG* gRayAux,
                                 // Inputs
                                 const RayGMem* gRays,
+                                const HitKey* gRayWorkKeys,
                                 // Constants
+                                HitKey boundaryMatKey,
                                 AnisoSVOctreeGPU svo,
                                 uint32_t rayCount)
 {
@@ -680,6 +682,11 @@ static void KCInitializeSVOBins(// Outpus
     {
         const RayType rayType = gRayAux[threadId].type;
         RayReg ray = RayReg(gRays, threadId);
+        HitKey key = gRayWorkKeys[threadId];
+
+        bool unnecessaryRay = (rayType == RayType::NEE_RAY ||
+                               key == HitKey::InvalidKey ||
+                               key == boundaryMatKey);
 
         // Skip NEE rays
         // These either hit the light or not
@@ -687,12 +694,11 @@ static void KCInitializeSVOBins(// Outpus
         // Or if the ray is invalid
         // It happens when a material does not write a ray
         // to its available spot)
-        if(rayType == RayType::NEE_RAY || ray.IsInvalidRay())
+        if(unnecessaryRay)
         {
             gRayAux[threadId].binId = INVALID_BIN_ID;
             continue;
         }
-
 
         // Hit Position
         Vector3 position = ray.ray.AdvancedPos(ray.tMax);
@@ -736,7 +742,7 @@ static void KCCheckReducedSVOBins(// I-O
         ReadSVONodeId(leafNodeId, gRayAux[threadId].binId);
 
         bool isLeaf;
-        uint32_t newBinId = svo.FindBin(isLeaf, leafNodeId);
+        uint32_t newBinId = svo.FindMarkedBin(isLeaf, leafNodeId);
 
         if(!isLeaf)
         {

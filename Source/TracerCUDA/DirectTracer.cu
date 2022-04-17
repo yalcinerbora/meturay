@@ -161,7 +161,8 @@ TracerError DirectTracer::Initialize()
 bool DirectTracer::Render()
 {
     // Do Hit Loop
-    const auto partitions = rayCaster->HitAndPartitionRays();
+    rayCaster->HitRays();
+    const auto partitions = rayCaster->PartitionRaysWRTWork();
 
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
