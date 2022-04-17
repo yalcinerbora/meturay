@@ -1,4 +1,4 @@
-#include "RayCaster.h"
+#include "RayCasterCUDA.h"
 #include "CudaSystem.h"
 
 #include "RayLib/GPUSceneI.h"
@@ -6,8 +6,8 @@
 #include "RayLib/TracerStructs.h"
 
 // Constructors & Destructor
-RayCaster::RayCaster(const GPUSceneI& gpuScene,
-                     const CudaSystem& system)
+RayCasterCUDA::RayCasterCUDA(const GPUSceneI& gpuScene,
+                             const CudaSystem& system)
     : rayMemory(system.BestGPU())
     , maxAccelBits(DetermineMaxBitFromId(gpuScene.MaxAccelIds()))
     , maxWorkBits(DetermineMaxBitFromId(gpuScene.MaxMatIds()))
@@ -19,8 +19,8 @@ RayCaster::RayCaster(const GPUSceneI& gpuScene,
     , currentRayCount(0)
 {}
 
-TracerError RayCaster::ConstructAccelerators(const GPUTransformI** dTransforms,
-                                             uint32_t identityTransformIndex)
+TracerError RayCasterCUDA::ConstructAccelerators(const GPUTransformI** dTransforms,
+                                                 uint32_t identityTransformIndex)
 {
     TracerError e = TracerError::OK;
 
@@ -46,7 +46,7 @@ TracerError RayCaster::ConstructAccelerators(const GPUTransformI** dTransforms,
     return e;
 }
 
-RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
+RayPartitions<uint32_t> RayCasterCUDA::HitAndPartitionRays()
 {
     // Sort and Partition happens on the leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
@@ -193,12 +193,12 @@ RayPartitions<uint32_t> RayCaster::HitAndPartitionRays()
     return workPartition;
 }
 
-void RayCaster::WorkRays(const WorkBatchMap& workMap,
-                         const RayPartitionsMulti<uint32_t>& outPortions,
-                         const RayPartitions<uint32_t>& inPartitions,
-                         RNGeneratorCPUI& rngCPU,
-                         uint32_t totalRayOut,
-                         HitKey baseBoundMatKey)
+void RayCasterCUDA::WorkRays(const WorkBatchMap& workMap,
+                             const RayPartitionsMulti<uint32_t>& outPortions,
+                             const RayPartitions<uint32_t>& inPartitions,
+                             RNGeneratorCPUI& rngCPU,
+                             uint32_t totalRayOut,
+                             HitKey baseBoundMatKey)
 {
     // Sort and Partition happens on leader device
     CUDA_CHECK(cudaSetDevice(rayMemory.LeaderDevice().DeviceId()));
@@ -274,7 +274,7 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
 }
 
 // Memory Usage
-size_t RayCaster::UsedGPUMemory() const
+size_t RayCasterCUDA::UsedGPUMemory() const
 {
     size_t mem = 0;
     for(const auto& accel : accelBatches)

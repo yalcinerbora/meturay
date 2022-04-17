@@ -40,7 +40,7 @@ void main(void)
 		fboColor = vec4(perimeterColor, 1.0f);
 	else
 	{
-		// Dtrees should not have 0.0f radiance
+		// Dtree should not have 0.0f radiance
 		// force these to white to visualize the bug
 		vec3 gradValue = texture(tGradient, fUV).xyz;
 

@@ -7,7 +7,7 @@ class GPUAcceleratorI;
 class GPUSceneI;
 
 // Default Ray Caster
-class RayCaster : public RayCasterI
+class RayCasterCUDA : public RayCasterI
 {
     private:
         RayMemory                   rayMemory;
@@ -17,7 +17,7 @@ class RayCaster : public RayCasterI
         // Combined hit struct size
         const uint32_t              maxHitSize;
         const uint32_t              boundaryTransformIndex;
-        // Cuda System for GPU Kernel Launches
+        // CUDA System for GPU Kernel Launches
         const CudaSystem&           cudaSystem;
         // Accelerators
         GPUBaseAcceleratorI&        baseAccelerator;
@@ -28,11 +28,11 @@ class RayCaster : public RayCasterI
     protected:
     public:
         // Constructors & Destructor
-                                    RayCaster(const GPUSceneI& gpuScene,
+                                    RayCasterCUDA(const GPUSceneI& gpuScene,
                                               const CudaSystem& system);
-                                    RayCaster(const RayCaster&) = delete;
-        RayCaster&                  operator=(const RayCaster&) = delete;
-                                    ~RayCaster() = default;
+                                    RayCasterCUDA(const RayCasterCUDA&) = delete;
+        RayCasterCUDA&              operator=(const RayCasterCUDA&) = delete;
+                                    ~RayCasterCUDA() = default;
 
         // Interface
         TracerError                 ConstructAccelerators(const GPUTransformI** dTransforms,
@@ -59,34 +59,34 @@ class RayCaster : public RayCasterI
         size_t                  UsedGPUMemory() const override;
 };
 
-inline uint32_t RayCaster::CurrentRayCount() const
+inline uint32_t RayCasterCUDA::CurrentRayCount() const
 {
     return currentRayCount;
 }
 
-inline void RayCaster::ResizeRayOut(uint32_t rayCount,
-                                    HitKey baseBoundMatKey)
+inline void RayCasterCUDA::ResizeRayOut(uint32_t rayCount,
+                                        HitKey baseBoundMatKey)
 {
     currentRayCount = rayCount;
     return rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
 }
 
-inline RayGMem* RayCaster::RaysOut()
+inline RayGMem* RayCasterCUDA::RaysOut()
 {
     return rayMemory.RaysOut();
 }
 
-inline const RayGMem* RayCaster::RaysIn()
+inline const RayGMem* RayCasterCUDA::RaysIn()
 {
     return rayMemory.Rays();
 }
 
-inline void RayCaster::SwapRays()
+inline void RayCasterCUDA::SwapRays()
 {
     rayMemory.SwapRays();
 }
 
-inline void RayCaster::OverrideWorkBits(const Vector2i newWorkBits)
+inline void RayCasterCUDA::OverrideWorkBits(const Vector2i newWorkBits)
 {
     maxWorkBits = newWorkBits;
 }

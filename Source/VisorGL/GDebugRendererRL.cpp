@@ -152,7 +152,7 @@ bool GDebugRendererRL::LoadLBVH(SurfaceLBVH& bvh,
     std::string fileMergedPath = Utility::MergeFileFolder(configPath, fileName);
     std::ifstream file(fileMergedPath, std::ios::binary);
     if(!file.good()) return false;
-    // Assume both architechtures are the same (writer, reader)
+    // Assume both architectures are the same (writer, reader)
     static_assert(sizeof(char) == sizeof(Byte), "\"Byte\" is not have sizeof(char)");
     // Read STree Start Offset
     file.read(reinterpret_cast<char*>(&bvh.rootIndex), sizeof(uint32_t));

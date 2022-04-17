@@ -17,6 +17,8 @@
 
 #include "AnisoSVO.cuh"
 
+static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
+
 struct WFPGTracerGlobalState
 {
     // Output Image
@@ -637,6 +639,32 @@ static void KCTraceSVO(// Output
     }
 }
 
+__device__ inline
+uint32_t GenerateLeafIndex(uint32_t leafIndex)
+{
+    static constexpr uint32_t LAST_BIT_UINT32 = 31;
+    uint32_t result = leafIndex;
+    result |= (1u << LAST_BIT_UINT32);
+    return result;
+}
+
+__device__ inline
+uint32_t GenerateNodeIndex(uint32_t nodeIndex)
+{
+    return nodeIndex;
+}
+
+__device__ inline
+bool ReadSVONodeId(uint32_t& nodeId, uint32_t packedData)
+{
+    static constexpr uint32_t LAST_BIT_UINT32 = 31;
+    static constexpr uint32_t INDEX_MASK = (1u << LAST_BIT_UINT32) - 1;
+
+    bool isLeaf = (packedData >> LAST_BIT_UINT32) & 0b1;
+    nodeId = packedData & INDEX_MASK;
+    return isLeaf;
+}
+
 __global__
 static void KCInitializeSVOBins(// Outpus
                                 RayAuxWFPG* gRayAux,
@@ -646,22 +674,73 @@ static void KCInitializeSVOBins(// Outpus
                                 AnisoSVOctreeGPU svo,
                                 uint32_t rayCount)
 {
-    // Traverse all 8 neighbours of the ray hit position
-    //
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < rayCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        const RayType rayType = gRayAux[threadId].type;
+        RayReg ray = RayReg(gRays, threadId);
+
+        // Skip NEE rays
+        // These either hit the light or not
+        // For both cases it is better to skip them
+        // Or if the ray is invalid
+        // It happens when a material does not write a ray
+        // to its available spot)
+        if(rayType == RayType::NEE_RAY || ray.IsInvalidRay())
+        {
+            gRayAux[threadId].binId = INVALID_BIN_ID;
+            continue;
+        }
+
+
+        // Hit Position
+        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
+
+        // Find the leaf
+        // Traverse all 8 neighbors of the ray hit position
+        // due to numerical inaccuracies
+        uint32_t leafIndex;
+        bool found = svo.LeafIndex(leafIndex, position, true);
+
+        // DEBUG
+        if(!found) printf("Leaf Not found!\n");
+
+        // Store the found leaf & increment the ray count
+        // for that leaf
+        if(found)
+        {
+            gRayAux[threadId].binId = GenerateLeafIndex(leafIndex);
+            // Increment the ray count on that leaf
+            svo.IncrementLeafRayCount(leafIndex);
+        }
+    }
 }
 
 __global__
-static void KCCheckReducedSVOBins(// Outpus
+static void KCCheckReducedSVOBins(// I-O
                                   RayAuxWFPG* gRayAux,
-                                  // Inputs
-                                  const RayGMem* gRays,
                                   // Constants
                                   AnisoSVOctreeGPU svo,
                                   uint32_t rayCount)
 {
-    // Directly go to the node using node Id
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < rayCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        // Skip if this ray is not used
+        if(gRayAux[threadId].binId == INVALID_BIN_ID)
+            continue;
 
-    // Traverse to the parent untill mark is found
+        uint32_t leafNodeId;
+        ReadSVONodeId(leafNodeId, gRayAux[threadId].binId);
 
-    // Set the node id again
+        bool isLeaf;
+        uint32_t newBinId = svo.FindBin(isLeaf, leafNodeId);
+
+        if(!isLeaf)
+        {
+            gRayAux[threadId].binId = newBinId;
+        }
+    }
 }

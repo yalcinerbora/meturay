@@ -29,6 +29,8 @@ class AnisoSVOctreeGPU
     using AnisoRadianceF = AnisoData<float>;
     using AnisoCount = AnisoData<uint32_t>;
 
+    static constexpr uint32_t LAST_BIT_UINT32 = (sizeof(uint32_t) * BYTE_BITS - 1);
+
     static constexpr uint64_t IS_LEAF_BIT_COUNT     = 1;
     static constexpr uint64_t CHILD_MASK_BIT_COUNT  = 8;
     static constexpr uint64_t PARENT_BIT_COUNT      = 28;
@@ -78,16 +80,21 @@ class AnisoSVOctreeGPU
     __device__ static Vector4uc DirectionToNeigVoxels(Vector2f& interp,
                                                       const Vector3f& direction);
 
+    // Bin info related packing operations
+    __device__ static bool      IsBinMarked(uint32_t binInfo);
+    __device__ static void      SetBinAsMarked(uint32_t& gNodeBinInfo);
+    __device__ static uint32_t  GetRayCount(uint32_t binInfo);
+
     private:
     // SVO Data
-    uint64_t*           dNodes;     // children ptr (28) parent ptr (27), child mask, leafBit
-    AnisoRadiance*      dRadiance;  // Anisotropic emitted radiance (normalized)
-    uint32_t*           dRayCounts; // MSB is "isCollapsed" bit
+    uint64_t*           dNodes;         // children ptr (28) parent ptr (27), child mask, leafBit
+    AnisoRadiance*      dRadianceRead;  // Anisotropic emitted radiance (normalized)
+    uint32_t*           dBinInfo;       // MSB is "isCollapsed" bit
     // Leaf Data (Leafs does not have nodes,
     // if leaf bit is set on parent children ptr points to these)
     uint32_t*           dLeafParents;
     AnisoRadiance*      dLeafRadianceRead;  // Anisotropic emitted radiance (normalized)
-    uint32_t*           dLeafRayCounts;     // MSB is "isCollapsed" bit
+    uint32_t*           dLeafBinInfo;       // MSB is "isCollapsed" bit
 
     // Actual average radiance for each location (used full precision here for running average)
     AnisoRadianceF*     dLeafRadianceWrite;
@@ -117,6 +124,9 @@ class AnisoSVOctreeGPU
     __device__
     bool                DepositRadiance(const Vector3f& worldPos, const Vector3f& outgoingDir,
                                         float radiance);
+    // Atomically Increment the ray count for that leafIndex
+    __device__
+    void                IncrementLeafRayCount(uint32_t leafIndex);
     // Return the leaf index of this position
     // Return false if no such leaf exists
     __device__
@@ -125,7 +135,7 @@ class AnisoSVOctreeGPU
     // Find the bin from the leaf
     // Bin is the node that is the highest non-collapsed node
     __device__
-    uint32_t            FindBin(bool& isLeaf, uint32_t upperLimit, uint32_t leafIndex)  const;
+    uint32_t            FindBin(bool& isLeaf, uint32_t initialLeafIndex)  const;
 
     __device__
     Vector3f            VoxelToWorld(const Vector3ui& denseIndex);
@@ -205,11 +215,11 @@ T AnisoSVOctreeGPU::AnisoData<T>::Read(uint8_t index) const
 __device__ inline
 AnisoSVOctreeGPU::AnisoSVOctreeGPU()
     : dNodes(nullptr)
-    , dRadiance(nullptr)
-    , dRayCounts(nullptr)
+    , dRadianceRead(nullptr)
+    , dBinInfo(nullptr)
     , dLeafParents(nullptr)
     , dLeafRadianceRead(nullptr)
-    , dLeafRayCounts(nullptr)
+    , dLeafBinInfo(nullptr)
     , dLeafRadianceWrite(nullptr)
     , dLeafSampleCountWrite(nullptr)
     , dBoundaryLight(nullptr)
@@ -377,6 +387,25 @@ Vector4uc AnisoSVOctreeGPU::DirectionToNeigVoxels(Vector2f& interp,
 
     interp = Vector2f(interpX, interpY);
     return TABULATED_LAYOUTS[indexYInt * 4 + indexXInt];
+}
+
+__device__ inline
+bool AnisoSVOctreeGPU::IsBinMarked(uint32_t rayCounts)
+{
+    return (rayCounts >> LAST_BIT_UINT32) & 0b1;
+}
+
+__device__ inline
+void AnisoSVOctreeGPU::SetBinAsMarked(uint32_t& gNodeRayCount)
+{
+    uint32_t expandedBoolean = (1u << LAST_BIT_UINT32);
+    gNodeRayCount |= expandedBoolean;
+}
+
+__device__ inline
+uint32_t AnisoSVOctreeGPU::GetRayCount(uint32_t binInfo)
+{
+    return binInfo & (LAST_BIT_UINT32 - 1);
 }
 
 __device__ inline
@@ -652,6 +681,12 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 }
 
 __device__ inline
+void AnisoSVOctreeGPU::IncrementLeafRayCount(uint32_t leafIndex)
+{
+    atomicAdd(dLeafBinInfo + leafIndex, 1u);
+}
+
+__device__ inline
 bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
                                  bool checkNeighbours) const
 {
@@ -709,7 +744,10 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
     // Shuffle the order as well
     // Smallest fraction (w.r.t 0.5f)
     lIndexFrac = Vector3f(0.5f) - (lIndexFrac - Vector3f(0.5f)).Abs();
-    //
+    // Classic bit traversal (for loop below)
+    // has XYZ axis ordering (X checked first etc.)
+    // we need to shuffle the order so that the closest axis will be checked
+    // first
     int minIndex0 = lIndexFrac.Min();
     int minIndex1 = Vector2f(lIndexFrac[(minIndex0 + 1) % 3],
                              lIndexFrac[(minIndex0 + 2) % 3]).Min();
@@ -721,7 +759,6 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
            minIndex1 >= 0 && minIndex1 < 3 &&
            minIndex2 >= 0 && minIndex2 < 3);
 
-    //printf("%d, %d, %d\n", minIndex0, minIndex1, minIndex2);
     // Initial Level index
     Vector3ui denseIndex = Vector3ui(lIndex[0], lIndex[1], lIndex[2]);
 
@@ -733,7 +770,7 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
         Vector3ui curIndex = Vector3ui(((i >> 0) & 0b1) ? 1 : 0,
                                        ((i >> 1) & 0b1) ? 1 : 0,
                                        ((i >> 2) & 0b1) ? 1 : 0);
-        // Shuffle the set values for the traversal
+        // Shuffle the iteration values for the traversal
         // Nearest nodes will be checked first
         Vector3ui curShfl;
         curShfl[minIndex0] = curIndex[0];
@@ -746,19 +783,30 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
 
         // Generate Morton code of the index
         uint64_t voxelMorton = MortonCode::Compose<uint64_t>(voxIndex);
-
-        // Traverse this
+        // Traverse this morton code
         found = Descend(voxelMorton);
-
+        // Terminate if we are only checking a single voxel
+        // or a voxel is found
         if(!checkNeighbours || found) break;
     }
     return found;
 }
 
 __device__ inline
-uint32_t AnisoSVOctreeGPU::FindBin(bool& isLeaf, uint32_t upperLimit, uint32_t leafIndex) const
+uint32_t AnisoSVOctreeGPU::FindBin(bool& isLeaf, uint32_t initialLeafIndex) const
 {
-    return UINT32_MAX;
+    isLeaf = true;
+    uint32_t binInfo = dLeafBinInfo[initialLeafIndex];
+    uint32_t parentIndex = dLeafParents[initialLeafIndex];
+
+    // Traverse towards parent terminate when marked bin is found
+    while(parentIndex != INVALID_PARENT && !IsBinMarked(binInfo))
+    {
+        parentIndex = dNodes[parentIndex];
+        binInfo = dBinInfo[parentIndex];
+        isLeaf = false;
+    }
+    return GetRayCount(binInfo);
 }
 
 __device__ inline

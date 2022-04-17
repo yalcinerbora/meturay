@@ -21,6 +21,9 @@ using RayPartitions = std::set<ArrayPortion<T>>;
 template<class T>
 using RayPartitionsMulti = std::set<MultiArrayPortion<T>>;
 
+template <class KeyType>
+using CustomKeySizeEnable = std::enable_if<sizeof(KeyType) == sizeof(HitKey)>::type;
+
 class RayMemory
 {
     private:
@@ -126,10 +129,20 @@ class RayMemory
                                              const Vector2i& bitRange);
         // Partitions the segments for multi-kernel calls
         RayPartitions<uint32_t>     Partition(uint32_t rayCount);
-        // Initialize HitIds and Indices
+        // Initialize HitIds and indices
         void                        FillMatIdsForSort(uint32_t rayCount);
-        // Mem Usage
+        // Memory Usage
         size_t                      UsedGPUMemory() const;
+
+        // Custom Partition Function
+        template <class KeyType, class FetchType,
+                  class FetchFunction,
+                  typename = CustomKeySizeEnable<KeyType>>
+        uint32_t                   CustomPartitionRays(DeviceMemory & partitions,
+                                                       const FetchType* dFetchData,
+                                                       FetchFunction f,
+                                                       uint32_t rayCount,
+                                                       const CudaSystem & system);
 };
 
 inline const CudaGPU& RayMemory::LeaderDevice() const
@@ -210,4 +223,25 @@ inline size_t RayMemory::UsedGPUMemory() const
     return (memIn.Size() +
             memOut.Size() +
             memHit.Size());
+}
+
+template <class KeyType, class FetchType, class FetchFunction>
+__global__ static
+void KCFetchKeys(KeyType* gKeys,
+                 const FetchType* gFetchData,
+                 FetchFunction f,
+                 uint32_t rayCount)
+{
+
+}
+
+template <class KeyType, class FetchType,
+          class FetchFunction, typename>
+uint32_t RayMemory::CustomPartitionRays(DeviceMemory& partitions,
+                                        const FetchType* dFetchData,
+                                        FetchFunction f,
+                                        uint32_t rayCount,
+                                        const CudaSystem& system)
+{
+
 }

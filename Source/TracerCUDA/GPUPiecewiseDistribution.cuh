@@ -15,7 +15,7 @@
 
 class CudaSystem;
 
-// One and Two Dimensional Piecewise-Cosntant
+// One and Two Dimensional Piecewise-Constant
 // Distributions
 // CPU class is a "Group" class meaning that
 // it holds multiple distributions on a single allocation
@@ -185,7 +185,7 @@ class PWCDistributionGroupCPU2D
 };
 
 // Piecewise-Constant Distributions
-// GPU-CPU clases
+// GPU-CPU classes
 // These classes are the specialized version
 // in which each distribution has the same sized data (N by M).
 // This implementation has algorithmic improvements
@@ -252,7 +252,7 @@ class PWCDistStaticCPU2D
 
         PWCDistStaticGPU2D          DistributionGPU() const;
         // Update Function can be called with device or host pointers
-        // with the appropirate memcpy enumeration
+        // with the appropriate memcpy enumeration
         void                        UpdateDistributions(const float* functionData,
                                                         bool factorSpherical,
                                                         const CudaSystem& system,

@@ -318,6 +318,91 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
     }
 }
 
+__global__
+void KCCollapseRayCounts(// I-O
+                         uint32_t* gBinInfo,
+                         // Input
+                         const uint64_t* gNodes,
+                         // Constants
+                         Vector2ui levelRange,
+                         uint32_t level,
+                         uint32_t minLevel,
+                         uint32_t minRayCount)
+{
+    uint32_t nodeCount = levelRange[1] - levelRange[0];
+
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < nodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint32_t nodeId = levelRange[0] + threadId;
+
+        // We are at the user option limit,
+        // Directly mark this node then leave
+        if(level == minLevel)
+        {
+            AnisoSVOctreeGPU::SetBinAsMarked(gBinInfo[nodeId]);
+            continue;
+        }
+        // Fetch Ray Count
+        uint32_t rayCount = AnisoSVOctreeGPU::GetRayCount(gBinInfo[nodeId]);
+        // If ray count is not enough on this voxel
+        // collaborate with the other children
+        if(rayCount < minRayCount)
+        {
+            uint32_t parent = AnisoSVOctreeGPU::ParentIndex(gNodes[threadId]);
+            atomicAdd(gBinInfo + parent, rayCount);
+        }
+        // We have enough rays in this node use it as is
+        else
+        {
+            AnisoSVOctreeGPU::SetBinAsMarked(gBinInfo[threadId]);
+        }
+    }
+}
+
+__global__
+void KCCollapseRayCountsLeaf(// I-O
+                             uint32_t* gLeafBinInfo,
+                             uint32_t* gBinInfo,
+                             // Input
+                             const uint32_t* gLeafParents,
+                             // Constants
+                             uint32_t leafCount,
+                             uint32_t level,
+                             uint32_t minLevel,
+                             uint32_t minRayCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < leafCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        // We are at the user option limit,
+        // Directly mark this node then leave
+        if(level == minLevel)
+        {
+            AnisoSVOctreeGPU::SetBinAsMarked(gLeafBinInfo[threadId]);
+            continue;
+        }
+        // Fetch Ray Count
+        uint32_t rayCount = AnisoSVOctreeGPU::GetRayCount(gLeafBinInfo[threadId]);
+        if(rayCount == 0) continue;
+
+        // If ray count is not enough on this voxel
+        // collaborate with the other childs
+        if(rayCount < minRayCount)
+        {
+            uint32_t parent = gLeafParents[threadId];
+            atomicAdd(gBinInfo + parent, rayCount);
+        }
+        // We have enough rays in this node use it as is
+        else
+        {
+            AnisoSVOctreeGPU::SetBinAsMarked(gLeafBinInfo[threadId]);
+        }
+    }
+}
+
 TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
                                         const AcceleratorBatchMap& accels,
                                         const GPULightI** dSceneLights,
@@ -622,12 +707,12 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // since we found out the total node count
     GPUMemFuncs::AllocateMultiData(std::tie(// Node Related,
                                             treeGPU.dNodes,
-                                            treeGPU.dRadiance,
-                                            treeGPU.dRayCounts,
+                                            treeGPU.dRadianceRead,
+                                            treeGPU.dBinInfo,
                                             // Leaf Related
                                             treeGPU.dLeafParents,
                                             treeGPU.dLeafRadianceRead,
-                                            treeGPU.dLeafRayCounts,
+                                            treeGPU.dLeafBinInfo,
                                             treeGPU.dLeafRadianceWrite,
                                             treeGPU.dLeafSampleCountWrite),
                                    octreeMem,
@@ -646,12 +731,12 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        treeGPU.dNodes,
                        AnisoSVOctreeGPU::INVALID_NODE,
                        totalNodeCount);
-    CUDA_CHECK(cudaMemset(treeGPU.dRadiance, 0x00, totalNodeCount * sizeof(uint64_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dRayCounts, 0x00, totalNodeCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dRadianceRead, 0x00, totalNodeCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, totalNodeCount * sizeof(uint64_t)));
 
     CUDA_CHECK(cudaMemset(treeGPU.dLeafParents, 0xFF, hUniqueVoxelCount * sizeof(uint64_t)));
     CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceRead, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafRayCounts, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
     CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
     CUDA_CHECK(cudaMemset(treeGPU.dLeafSampleCountWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
 
@@ -777,22 +862,45 @@ void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount
     // Assume that the ray counts are set for leaves
     const CudaGPU& bestGPU = system.BestGPU();
 
-    //// Leaf is implicit do it separately
-    //Vector2ui leafRange(0, treeGPU.leafCount);
-    //bestGPU.GridStrideKC_X(0, (cudaStream_t)0,
-    //                       leafRange[1],
+    // Leaf has different memory layout do it separately
+    bestGPU.GridStrideKC_X(0, (cudaStream_t)0, treeGPU.leafCount,
+                           //
+                           KCCollapseRayCountsLeaf,
+                           // I-O
+                           treeGPU.dLeafBinInfo,
+                           treeGPU.dBinInfo,
+                           // Input
+                           treeGPU.dLeafParents,
+                           // Constants
+                           treeGPU.leafCount,
+                           treeGPU.leafDepth,
+                           minLevel,
+                           minRayCount);
+    // Bottom-up process bins
+    int32_t bottomNodeLevel = static_cast<int32_t>(treeGPU.leafDepth - 1);
+    for(int32_t i = bottomNodeLevel; i >= static_cast<int32_t>(minLevel); i--)
+    {
+        Vector2ui range(levelNodeOffsets[i],
+                        levelNodeOffsets[i + 1]);
+        uint32_t nodeCount = range[1] - range[0];
 
-    //                       //
-    //                       );
-
-    //for(levelRanges)
-
-    // From leaf to root
-    // Accumulate children ray counts on the node
-    // If node has enough rays (has more than minRayCount rays)
-    // or node is on not on a certain level collapse the rays
-    // stop collapsing
+        bestGPU.GridStrideKC_X(0, (cudaStream_t)0, nodeCount,
+                               //
+                               KCCollapseRayCounts,
+                               // I-O
+                               treeGPU.dBinInfo,
+                               // Input
+                               treeGPU.dNodes,
+                               // Constants
+                               range,
+                               i,
+                               minLevel,
+                               minRayCount);
+    }
+    // Leaf->Parent chain now there is at least a single mark
+    // Rays will re-check and find their marked bin and set their id accordingly
 }
+
 
 void AnisoSVOctreeCPU::AccumulateRaidances(const PathGuidingNode* dPGNodes,
                                            uint32_t totalNodeCount,
@@ -814,6 +922,6 @@ void AnisoSVOctreeCPU::AccumulateRaidances(const PathGuidingNode* dPGNodes,
 
 void AnisoSVOctreeCPU::ClearRayCounts(const CudaSystem&)
 {
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafRayCounts, 0x00, sizeof(uint32_t) * treeGPU.leafCount));
-    CUDA_CHECK(cudaMemset(treeGPU.dRayCounts, 0x00, sizeof(uint32_t) * treeGPU.nodeCount));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, sizeof(uint32_t) * treeGPU.leafCount));
+    CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, sizeof(uint32_t) * treeGPU.nodeCount));
 }

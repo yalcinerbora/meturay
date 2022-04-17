@@ -58,6 +58,9 @@ void WFPGTracer::GenerateGuidedDirections()
     RayAuxWFPG* dRayAux = static_cast<RayAuxWFPG*>(*dAuxIn);
     uint32_t rayCount = rayCaster->CurrentRayCount();
 
+    // Zero out the ray counts from the previous iteration
+    svo.ClearRayCounts(cudaSystem);
+
     // Init ray bins
     gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
                        //
@@ -79,13 +82,15 @@ void WFPGTracer::GenerateGuidedDirections()
                        KCCheckReducedSVOBins,
                        //
                        dRayAux,
-                       dRays,
                        svo.TreeGPU(),
                        rayCount);
 
+    // Partition the generated rays wrt. to the svo nodeId
+    // Utilize the ray memory here
+    // However ray memory is encapsulated by the ray caster
+    // interface and we can't push
 
-    /*    RayGMem* dRays = rayMemory.Rays();
-    HitKey* dWorkKeys = rayMemory.WorkKeys();*/
+    // ....
 }
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,
@@ -372,8 +377,6 @@ bool WFPGTracer::Render()
     GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
 
     // Set Auxiliary Pointers
-    //for(auto pIt = workPartition.crbegin();
-    //    pIt != workPartition.crend(); pIt++)
     for(auto p : outPartitions)
     {
         // Skip if null batch or not found material
