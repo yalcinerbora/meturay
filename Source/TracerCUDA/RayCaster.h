@@ -66,6 +66,7 @@ class RayCaster : public RayCasterI
                                                  HitKey baseBoundMatKey) override;
         RayGMem*                    RaysOut() override;
         const RayGMem*              RaysIn() const override;
+        const RayId*                RayIds() const override;
         const HitKey*               WorkKeys() const override;
         void                        SwapRays() override;
         // Work Related
@@ -95,6 +96,11 @@ inline RayGMem* RayCaster::RaysOut()
 inline const RayGMem* RayCaster::RaysIn() const
 {
     return rayMemory.Rays();
+}
+
+inline const RayId* RayCaster::RayIds() const
+{
+    return rayMemory.CurrentIds();
 }
 
 inline const HitKey* RayCaster::WorkKeys() const

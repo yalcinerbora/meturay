@@ -190,13 +190,13 @@ uint32_t CudaGPU::MaxActiveBlockPerSM(uint32_t threadsPerBlock) const
     return static_cast<uint32_t>(props.maxThreadsPerMultiProcessor) / threadsPerBlock;
 }
 
-uint32_t CudaGPU::RecommendedBlockCountPerSM(void* kernelFunc,
+uint32_t CudaGPU::RecommendedBlockCountPerSM(const void* kernelPtr,
                                              uint32_t threadsPerBlock,
                                              uint32_t sharedSize) const
 {
     int32_t numBlocks = 0;
     CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks,
-                                                             kernelFunc,
+                                                             kernelPtr,
                                                              threadsPerBlock,
                                                              sharedSize));
     return static_cast<uint32_t>(numBlocks);
@@ -227,6 +227,20 @@ void CudaGPU::WaitMainStream() const
 bool CudaGPU::operator<(const CudaGPU& other) const
 {
     return deviceId < other.deviceId;
+}
+
+cudaFuncAttributes CudaGPU::GetKernelAttributes(const void* kernelPtr) const
+{
+    cudaFuncAttributes result;
+    CUDA_CHECK(cudaFuncGetAttributes(&result, kernelPtr));
+    return result;
+}
+bool CudaGPU::SetKernelShMemSize(const void* kernelPtr, int sharedMemConfigSize) const
+{
+    cudaError_t error = cudaFuncSetAttribute(kernelPtr,
+                                             cudaFuncAttributePreferredSharedMemoryCarveout,
+                                             sharedMemConfigSize);
+    return (error == cudaSuccess);
 }
 
 CudaError CudaSystem::Initialize()

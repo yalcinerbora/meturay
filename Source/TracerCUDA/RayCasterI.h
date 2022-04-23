@@ -49,6 +49,7 @@ class RayCasterI
 
         virtual RayGMem*                RaysOut() = 0;
         virtual const RayGMem*          RaysIn() const = 0;
+        virtual const RayId*            RayIds() const = 0;
         virtual const HitKey*           WorkKeys() const = 0;
         virtual void                    SwapRays() = 0;
         // Work Related

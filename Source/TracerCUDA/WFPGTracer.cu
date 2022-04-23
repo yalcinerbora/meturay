@@ -118,6 +118,32 @@ void WFPGTracer::GenerateGuidedDirections()
     // However ray memory is encapsulated by the ray caster
     // interface and we can't push
 
+    // Test mode
+    static constexpr uint32_t TPB = 512;
+    static constexpr uint32_t X = 32;
+    static constexpr uint32_t Y = 32;
+    constexpr auto KCSampleKernel = KCGenAndSampleDistribution<TPB, X, Y>;
+
+    auto data = gpu.GetKernelAttributes(KCSampleKernel);
+
+    float* a = nullptr;
+
+    gpu.ExactKC_X(0, (cudaStream_t)0,
+                  TPB, hPartitionCount,
+                  //
+                  KCSampleKernel,
+                  //
+                  a,
+                  a,
+                  a,
+                  a,
+                  dRayAux,
+                  dRays,
+                  rayCaster->RayIds(),
+                  dPartitionOffsets,
+                  dPartitionBinIds,
+                  svo.TreeGPU());
+
     // ....
 }
 
@@ -373,9 +399,8 @@ bool WFPGTracer::Render()
     // On voxel trace mode we just trace the rays without any material
     if(options.debugRender && options.voxTrace)
     {
-        // Just call the voxel trace kernel on a gpu and call it a day
+        // Just call the voxel trace kernel on a GPU and call it a day
         const auto& gpu = cudaSystem.BestGPU();
-
         uint32_t totalRayCount = rayCaster->CurrentRayCount();
         gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
                             //
@@ -448,9 +473,6 @@ bool WFPGTracer::Render()
 
 void WFPGTracer::Finalize()
 {
-    METU_LOG("==============");
-
-
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

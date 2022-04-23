@@ -152,7 +152,7 @@ class CudaGPU
 
         uint32_t                SMCount() const;
         uint32_t                MaxActiveBlockPerSM(uint32_t threadsPerBlock = StaticThreadPerBlock1D) const;
-        uint32_t                RecommendedBlockCountPerSM(void* kernkernelFuncelPtr,
+        uint32_t                RecommendedBlockCountPerSM(const void* kernelPtr,
                                                            uint32_t threadsPerBlock = StaticThreadPerBlock1D,
                                                            uint32_t sharedMemSize = 0) const;
         cudaStream_t            DetermineStream(uint32_t requiredSMCount = 0) const;
@@ -160,6 +160,10 @@ class CudaGPU
         void                    WaitMainStream() const;
 
         bool                    operator<(const CudaGPU&) const;
+
+        // Kernel Attribute Related Functions
+        cudaFuncAttributes      GetKernelAttributes(const void* kernelPtr) const;
+        bool                    SetKernelShMemSize(const void* kernelPtr, int sharedMemConfigSize) const;
 
         // Classic GPU Calls
         // Create just enough blocks according to work size
@@ -195,8 +199,7 @@ class CudaGPU
 
         // Smart GPU Calls
         // Automatic stream split
-        // Only for grid strided kernels,
-        // Material calls require different GPUs (texture sharing)
+        // Only for grid-stride kernels
         // TODO:
         template<class Function, class... Args>
         __host__ void           AsyncGridStrideKC_X(uint32_t sharedMemSize,

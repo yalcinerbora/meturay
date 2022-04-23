@@ -6,6 +6,7 @@
 #include "RayLib/AABB.h"
 #include "RayLib/TracerStructs.h"
 #include "RayLib/CoordinateConversion.h"
+#include "RayLib/HybridFunctions.h"
 
 #include "GPULightI.h"
 #include "DeviceMemory.h"
@@ -24,6 +25,8 @@ class AnisoSVOctreeGPU
 
         __device__ void AtomicAdd(uint8_t index, T value);
         __device__ T    Read(uint8_t index) const;
+        __device__ T    Read(const Vector4uc& indices,
+                             const Vector2f& interp) const;
     };
     using AnisoRadiance = AnisoData<half>;
     using AnisoRadianceF = AnisoData<float>;
@@ -124,6 +127,13 @@ class AnisoSVOctreeGPU
     __device__
     bool                DepositRadiance(const Vector3f& worldPos, const Vector3f& outgoingDir,
                                         float radiance);
+
+    // Read the radiance value from the specified node
+    // Result will be the bi-linear spherical interpolation of
+    // nearest samples
+    __device__
+    half                ReadRadiance(uint32_t nodeId, bool isLeaf,
+                                     const Vector3f& outgoingDir) const;
     // Atomically Increment the ray count for that leafIndex
     __device__
     void                IncrementLeafRayCount(uint32_t leafIndex);
@@ -209,7 +219,22 @@ T AnisoSVOctreeGPU::AnisoData<T>::Read(uint8_t index) const
 {
     uint8_t iMSB = index >> 2;
     uint8_t iLower = index & 0b11;
-    return  data[iMSB][iLower];
+    return data[iMSB][iLower];
+}
+
+template <class T>
+__device__ inline
+T AnisoSVOctreeGPU::AnisoData<T>::Read(const Vector4uc& indices,
+                                       const Vector2f& interp) const
+{
+    // Implicitly convert half to float for the operation
+    constexpr auto LerpHF = HybridFuncs::Lerp<float, float>;
+
+    // Bilinear interpolation
+    T a = LerpHF(Read(indices[0]), Read(indices[1]), interp[0]);
+    T b = LerpHF(Read(indices[2]), Read(indices[3]), interp[0]);
+    T result = LerpHF(a, b, interp[1]);
+    return result;
 }
 
 __device__ inline
@@ -653,6 +678,26 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     }
     // All Done!
     return tMin;
+}
+
+
+__device__ inline
+half AnisoSVOctreeGPU::ReadRadiance(uint32_t nodeId, bool isLeaf,
+                                    const Vector3f& outgoingDir) const
+{
+    if(nodeId == UINT32_MAX)
+    {
+        // TODO: sample the boundary light in this case
+        return 0.0f;
+    }
+
+    Vector2f interpValues;
+    Vector4uc neighbours = DirectionToNeigVoxels(interpValues,
+                                                 outgoingDir);
+
+    const AnisoRadiance* gRadRead = (isLeaf) ? dLeafRadianceRead
+                                             : dRadianceRead;
+    return gRadRead[nodeId].Read(neighbours, interpValues);
 }
 
 __device__ inline

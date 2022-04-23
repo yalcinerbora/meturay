@@ -92,7 +92,12 @@ set(SRC_GPU_ALGORITHMS_IMPLEMENTATIONS
     ${CURRENT_SOURCE_DIR}/ParallelScanVector.cu
     ${CURRENT_SOURCE_DIR}/ParallelRadixSort.cu)
 
+set(SRC_GPU_ALGORITHMS_BLOCK
+    ${CURRENT_SOURCE_DIR}/BlockSegmentedReduce.cuh
+    ${CURRENT_SOURCE_DIR}/BlockSegmentedScan.cuh)
+
 set(SRC_GPU_CLASSES
+    ${CURRENT_SOURCE_DIR}/GPUBlockPWCDistribution.cuh
     ${CURRENT_SOURCE_DIR}/GPUPiecewiseDistribution.cu
     ${CURRENT_SOURCE_DIR}/GPUPiecewiseDistribution.cuh
     ${CURRENT_SOURCE_DIR}/GPUSurface.h)
@@ -356,6 +361,7 @@ set(SRC_ALL
     ${SRC_GPU_ALGORITHMS_COMMON}
     ${SRC_GPU_ALGORITHMS_FUNCTIONS}
     ${SRC_GPU_ALGORITHMS_IMPLEMENTATIONS}
+    ${SRC_GPU_ALGORITHMS_BLOCK}
     ${SRC_GPU_CLASSES}
     ${SRC_GPU_INTERFACES}
     ${SRC_GPU_TEMPLATE_KERNELS}
@@ -403,6 +409,7 @@ source_group("Debug" FILES ${SRC_DEBUG})
 source_group("GPU Algorithms" FILES ${SRC_GPU_ALGORITHMS_COMMON})
 source_group("GPU Algorithms/Functions" FILES ${SRC_GPU_ALGORITHMS_FUNCTIONS})
 source_group("GPU Algorithms/Implementations" FILES ${SRC_GPU_ALGORITHMS_IMPLEMENTATIONS})
+source_group("GPU Algorithms/BlockAlgos" FILES ${SRC_GPU_ALGORITHMS_BLOCK})
 
 source_group("GPU Classes" FILES ${SRC_GPU_CLASSES})
 source_group("GPU Interfaces" FILES ${SRC_GPU_INTERFACES})

@@ -416,18 +416,17 @@ struct TriFunctions
         positions[1] = transform.LocalToWorld(positions[1]);
         positions[2] = transform.LocalToWorld(positions[2]);
 
+        //// Find the primitive
+        //float batchIndex;
+        //GPUFunctions::BinarySearchInBetween(batchIndex, primitiveId,
+        //                                    primData.primOffsets, primData.primBatchCount);
+        //uint32_t batchIndexInt = static_cast<uint32_t>(batchIndex);
+        //const GPUBitmap* alphaMap = primData.alphaMaps[batchIndexInt];
 
-                // Find the primitive
-        float batchIndex;
-        GPUFunctions::BinarySearchInBetween(batchIndex, primitiveId,
-                                            primData.primOffsets, primData.primBatchCount);
-        uint32_t batchIndexInt = static_cast<uint32_t>(batchIndex);
-        const GPUBitmap* alphaMap = primData.alphaMaps[batchIndexInt];
-
-        // Fetch UV's for potential alpha map check
-        Vector2f uv0 = primData.uvs[index0];
-        Vector2f uv1 = primData.uvs[index1];
-        Vector2f uv2 = primData.uvs[index2];
+        //// Fetch UV's for potential alpha map check
+        //Vector2f uv0 = primData.uvs[index0];
+        //Vector2f uv1 = primData.uvs[index1];
+        //Vector2f uv2 = primData.uvs[index2];
 
         // World Space Normal (Will be used to determine best projection plane)
         normal = Triangle::Normal(positions);

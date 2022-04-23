@@ -8,7 +8,10 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/T_PiecewiseDistribution.cu
     ${CURRENT_SOURCE_DIR}/T_RandomGPU.cu
     ${CURRENT_SOURCE_DIR}/T_STree.cu
-    ${CURRENT_SOURCE_DIR}/T_Texture.cu)
+    ${CURRENT_SOURCE_DIR}/T_Texture.cu
+    ${CURRENT_SOURCE_DIR}/T_BlockSegmentedReduce.cu
+    ${CURRENT_SOURCE_DIR}/T_BlockSegmentedScan.cu
+    ${CURRENT_SOURCE_DIR}/T_BlockPWCDistribution.cu)
 
 source_group("" FILES ${SRC_COMMON})
 

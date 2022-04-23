@@ -70,8 +70,8 @@ class PWCDistributionGPU2D
                                                             uint32_t countY);
                                     PWCDistributionGPU2D(const PWCDistributionGPU2D&) = default;
                                     PWCDistributionGPU2D(PWCDistributionGPU2D&&) = default;
-        PWCDistributionGPU2D&    operator=(const PWCDistributionGPU2D&) = default;
-        PWCDistributionGPU2D&    operator=(PWCDistributionGPU2D&&) = default;
+        PWCDistributionGPU2D&       operator=(const PWCDistributionGPU2D&) = default;
+        PWCDistributionGPU2D&       operator=(PWCDistributionGPU2D&&) = default;
                                     ~PWCDistributionGPU2D() = default;
 
         // Interface
@@ -93,15 +93,15 @@ class PWCDistributionGroupCPU1D
         using GPUDistList = std::vector<PWCDistributionGPU1D>;
 
     private:
-        DeviceMemory                                memory;
-        std::vector<PWCDistributionGPU1D>        gpuDistributions;
+        DeviceMemory                        memory;
+        std::vector<PWCDistributionGPU1D>   gpuDistributions;
 
-        std::vector<size_t>                         counts;
-        std::vector<const float*>                   dPDFs;
-        std::vector<const float*>                   dCDFs;
+        std::vector<size_t>                 counts;
+        std::vector<const float*>           dPDFs;
+        std::vector<const float*>           dCDFs;
 
-        void                                        GeneratePointers();
-        void                                        CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
+        void                                GeneratePointers();
+        void                                CopyPDFsConstructCDFs(const std::vector<const float*>& functionDataPtrs,
                                                                           const CudaSystem& system,
                                                                           cudaMemcpyKind copyKind);
 

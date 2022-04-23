@@ -16,6 +16,7 @@
 #include "RayLib/RandomColor.h"
 
 #include "AnisoSVO.cuh"
+#include "GPUBlockPWCDistribution.cuh"
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -665,6 +666,25 @@ bool ReadSVONodeId(uint32_t& nodeId, uint32_t packedData)
     return isLeaf;
 }
 
+__device__ inline
+Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
+                         const Vector2ui& dimensions)
+{
+    assert(dirXY < dimensions);
+    using namespace MathConstants;
+    // Spherical coordinate deltas
+    Vector2f deltaXY = Vector2f((2.0f * Pi) / static_cast<float>(dimensions[0]),
+                                Pi / static_cast<float>(dimensions[1]));
+
+    // Assume image space bottom left is (0,0)
+    // Center to the pixel as well
+    Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + Vector2f(0.5f);
+    Vector2f sphrCoords = Vector2f(dirXYFloat[0] * deltaXY[0],
+                                   Pi - dirXYFloat[1] * deltaXY[0]);
+
+    return Utility::SphericalToCartesianUnit(sphrCoords);
+}
+
 __global__
 static void KCInitializeSVOBins(// Outputs
                                 RayAuxWFPG* gRayAux,
@@ -749,4 +769,121 @@ static void KCCheckReducedSVOBins(// I-O
             gRayAux[threadId].binId = newBinId;
         }
     }
+}
+
+// Main directional distribution generation kernel
+// Each block is responsible of a single bin
+// Each block will trace the SVO to generate
+//  omni-directional distribution map.
+template <uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
+__global__ __launch_bounds__(THREAD_PER_BLOCK)
+static void KCGenAndSampleDistribution(// Output
+                                       float* gDebugPDFXOut,
+                                       float* gDebugCDFXOut,
+                                       float* gDebugPDFYOut,
+                                       float* gDebugCDFYOut,
+                                       RayAuxWFPG* gRayAux,
+                                       // Input
+                                       // Per-ray
+                                       const RayGMem* gRays,
+                                       const RayId* gRayIds,
+                                       // Per bin
+                                       const uint32_t* gBinOffsets,
+                                       const uint32_t* gNodeIds,
+                                       // Constants
+                                       const AnisoSVOctreeGPU svo)
+{
+    auto IsMainThread = []() -> bool
+    {
+        return threadIdx.x == 0;
+    };
+    const uint32_t BIN_ID = blockIdx.x;
+    const uint32_t THREAD_ID = threadIdx.x;
+
+    // Directional map shared memory requirements
+    //static constexpr uint32_t DIRECTION_COUNT = X * Y;
+    // How many rows can we process in parallel
+    static constexpr uint32_t ROW_PER_ITERATION = THREAD_PER_BLOCK / X;
+    // How many iterations the entire image would take
+    static constexpr uint32_t ROW_ITER_COUNT = Y / ROW_PER_ITERATION;
+    static_assert(THREAD_PER_BLOCK % X == 0, "TPB must be multiple of X");
+    static_assert(Y % ROW_PER_ITERATION == 0, "TPB must exactly iterate over X * Y");
+    // Ray tracing related
+    static constexpr uint32_t RT_ITER_COUNT = ROW_ITER_COUNT;
+    // PWC Distribution over the shared memory
+    using BlockPWC2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+
+    // Allocate shared memory for PWC Distribution
+    __shared__ typename BlockPWC2D::TempStorage sPWCMem;
+    // Starting positions of the rays (at most TPB)
+    __shared__ Vector3f sPositions[THREAD_PER_BLOCK];
+    // Bin parameters
+    __shared__ uint32_t sRayCount;
+    __shared__ uint32_t sOffsetStart;
+    __shared__ uint32_t sNodeId;
+    __shared__ uint32_t sPositionCount;
+
+    // Load Bin information
+    if(IsMainThread())
+    {
+        Vector2ui rayRange = Vector2ui(gBinOffsets[BIN_ID], gBinOffsets[BIN_ID + 1]);
+        sRayCount = rayRange[1] - rayRange[0];
+        sOffsetStart = rayRange[0];
+        sNodeId = gNodeIds[BIN_ID];
+        sPositionCount = min(THREAD_PER_BLOCK, sRayCount);
+    }
+    __syncthreads();
+
+    // Kill the entire block if Node Id is invalid
+    if(sNodeId == INVALID_BIN_ID) return;
+
+    // Load positions of the rays to the shared memory
+    // Try to load minimum of TPB or ray count
+    if(THREAD_ID < sPositionCount)
+    {
+        uint32_t rayId = gRayIds[sOffsetStart + THREAD_ID];
+        RayReg ray(gRays, rayId);
+        // Hit Position
+        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
+        sPositions[THREAD_ID] = position;
+    }
+    __syncthreads();
+
+    // Incoming radiance (result of the trace)
+    float incRadiances[RT_ITER_COUNT];
+
+    // Trace the rays
+    for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
+    {
+        // Determine your direction
+        uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
+        Vector2ui dirIdXY = Vector2ui(directionId % X,
+                                      directionId / X);
+        Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y));
+        // Get a random position from the pool
+        Vector3f position = sPositions[THREAD_ID % sPositionCount];
+
+        // Now this is the interesting part
+        // We need to offset the ray in order to prevent
+        // self intersections.
+        // However it is not easy since we use arbitrary locations
+        // over the voxel, most fool-proof (but inaccurate)
+        // way is to offset the ray with the current level voxel size.
+        // This will be highly inaccurate when current bin(node) level is low.
+        // TODO: Fix
+        float tMin = 8 * svo.LeafVoxelSize() * MathConstants::Sqrt3;
+
+        uint32_t leafId;
+        svo.TraceRay(leafId, RayF(worldDir, position),
+                     tMin, FLT_MAX);
+        incRadiances[i] = svo.ReadRadiance(leafId, true, -worldDir);
+    }
+
+    // Generate PWC Distribution over the radiances
+    BlockPWC2D dist2D(sPWCMem, incRadiances);
+
+    dist2D.DumpSharedMem(gDebugPDFXOut,
+                         gDebugCDFXOut,
+                         gDebugPDFYOut,
+                         gDebugCDFYOut);
 }

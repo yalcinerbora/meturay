@@ -7,7 +7,7 @@ namespace HybridFuncs
 {
     template <class T>
     __device__ __host__ HYBRID_INLINE
-    void    Swap(T&, T&);
+    void   Swap(T&, T&);
 
     template <class T>
     __device__ __host__ HYBRID_INLINE
