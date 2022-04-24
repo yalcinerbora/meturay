@@ -43,7 +43,7 @@ class BlockPWCDistribution2D
     };
 
     private:
-    TempStorage     sMem;
+    TempStorage&    sMem;
     const uint32_t  threadId;
     const bool      isColumnThread;
     const bool      isMainThread;
@@ -94,12 +94,9 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         BlockSScan(sMem.algo.sSScanTempStorage).InclusiveSum(cdfData, totalSum,
                                                              pdfData, 0.0f);
         __syncthreads();
-
-        printf("[%u] TotalSum %f\n", threadId, totalSum);
-
         // Row leader will do marginal PDF/CDF data
         // the Y Function value of this row
-        if(isRowLeader) sMem.sPDFY[i] = totalSum;
+        if(isRowLeader) sMem.sPDFY[rowId] = totalSum;
         // Now normalize the pdf/cdf with the dimension
         // Getting ready for the scan operation
         cdfData *= DELTA_X;
@@ -129,7 +126,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
     // Scan operation to generate CDF
     float cdfDataY;
     float totalSum;
-    BlockScan(sMem.algo.sScanTempStorage).ExclusiveSum(pdfDataY, cdfDataY, totalSum);
+    BlockScan(sMem.algo.sScanTempStorage).InclusiveSum(pdfDataY, cdfDataY, totalSum);
     __syncthreads();
     // Do the normalization for PDF and CDF
     if(totalSum != 0.0f)
@@ -141,7 +138,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         cdfDataY *= (1.0f / totalSum);
     }
     // Expand the pdf back
-    pdfDataY *= static_cast<float>(X);
+    pdfDataY *= Y_FLOAT;
 
     if(isColumnThread)
     {
@@ -186,18 +183,19 @@ void BlockPWCDistribution2D<TPB, X, Y>::DumpSharedMem(float* pdfX,
         uint32_t pixelId = (i * TPB) + threadId;
         uint32_t rowId = pixelId / X;
         uint32_t columnId = pixelId % X;
+        uint32_t cdfId = rowId * (X + 1) + (columnId + 1);
 
         pdfX[pixelId] = sMem.sPDFX[rowId][columnId];
-        cdfX[pixelId + 1] = sMem.sCDFX[rowId][columnId + 1];
+        cdfX[cdfId] = sMem.sCDFX[rowId][columnId + 1];
         // Don't forget to add the first data (which should be zero)
-        if(isRowLeader) cdfX[pixelId] = 0.0f;
+        if(isRowLeader) cdfX[rowId * (X + 1)] = sMem.sCDFX[rowId][0];
     }
     // Dump Marginal PDF / CDF
     if(isColumnThread)
     {
-        pdfY[threadId] = sMem.sCDFY[threadId];
-        cdfY[threadId + 1] = sMem.sPDFY[threadId + 1];
+        pdfY[threadId] = sMem.sPDFY[threadId];
+        cdfY[threadId + 1] = sMem.sCDFY[threadId + 1];
     }
     // Don't forget to write the first cdf y
-    if(isMainThread) cdfY[0] = 0.0f;
+    if(isMainThread) cdfY[0] = sMem.sCDFY[0];
 }
