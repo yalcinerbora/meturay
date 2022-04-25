@@ -360,9 +360,16 @@ bool RayMemory::PartitionRaysCustom(// Outputs
     // Find Split Locations
     // Read from dKeys -> dEmptyKeys
     uint32_t locCount = rayCount - 1;
-    leaderDevice.GridStrideKC_X(0, 0, locCount,
-                                KCMarkSplits<KeyType>,
-                                dSparseSplitIndices, dCurrentKeysT, locCount);
+    if(locCount == 0)
+        leaderDevice.GridStrideKC_X(0, 0, rayCount,
+                                    KCMemset<uint32_t>,
+                                    dSparseSplitIndices,
+                                    0u,
+                                    rayCount);
+    else
+        leaderDevice.GridStrideKC_X(0, 0, locCount,
+                                    KCMarkSplits<KeyType>,
+                                    dSparseSplitIndices, dCurrentKeysT, locCount);
 
     // Make Splits Dense
     // From dEmptyKeys -> dEmptyIds

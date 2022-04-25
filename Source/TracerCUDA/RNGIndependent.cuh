@@ -45,6 +45,9 @@ class RNGIndependentCPU : public RNGeneratorCPUI
                                               const CudaSystem&);
                             RNGIndependentCPU(uint32_t seed,
                                               const CudaGPU&);
+                            RNGIndependentCPU(uint32_t seed,
+                                              const CudaGPU&,
+                                              uint32_t rngCount);
                             RNGIndependentCPU(const RNGIndependentCPU&) = delete;
                             RNGIndependentCPU(RNGIndependentCPU&&) = default;
         RNGIndependentCPU&  operator=(const RNGIndependentCPU&) = delete;

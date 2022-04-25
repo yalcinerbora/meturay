@@ -116,8 +116,8 @@ class PWCDistributionGroupCPU1D
                                                                      const CudaSystem& system);
                                         PWCDistributionGroupCPU1D(const PWCDistributionGroupCPU1D&) = delete;
                                         PWCDistributionGroupCPU1D(PWCDistributionGroupCPU1D&&) = default;
-        PWCDistributionGroupCPU1D&   operator=(const PWCDistributionGroupCPU1D&) = delete;
-        PWCDistributionGroupCPU1D&   operator=(PWCDistributionGroupCPU1D&&) = default;
+        PWCDistributionGroupCPU1D&      operator=(const PWCDistributionGroupCPU1D&) = delete;
+        PWCDistributionGroupCPU1D&      operator=(PWCDistributionGroupCPU1D&&) = default;
                                         ~PWCDistributionGroupCPU1D() = default;
 
         const PWCDistributionGPU1D&  DistributionGPU(uint32_t index) const;
@@ -137,8 +137,8 @@ class PWCDistributionGroupCPU2D
             std::vector<const float*>       dXPDFs;
             std::vector<const float*>       dXCDFs;
 
-            const PWCDistributionGPU1D*  dXDists = nullptr;
-            PWCDistributionGPU1D         yDist;
+            const PWCDistributionGPU1D*     dXDists = nullptr;
+            PWCDistributionGPU1D            yDist;
         };
 
         using GPUDistList = std::vector<PWCDistributionGPU2D>;
@@ -169,11 +169,11 @@ class PWCDistributionGroupCPU2D
                                                                      const CudaSystem& system);
                                         PWCDistributionGroupCPU2D(const PWCDistributionGroupCPU2D&) = delete;
                                         PWCDistributionGroupCPU2D(PWCDistributionGroupCPU2D&&) = default;
-        PWCDistributionGroupCPU2D&   operator=(const PWCDistributionGroupCPU2D&) = delete;
-        PWCDistributionGroupCPU2D&   operator=(PWCDistributionGroupCPU2D&&) = default;
+        PWCDistributionGroupCPU2D&      operator=(const PWCDistributionGroupCPU2D&) = delete;
+        PWCDistributionGroupCPU2D&      operator=(PWCDistributionGroupCPU2D&&) = default;
                                         ~PWCDistributionGroupCPU2D() = default;
 
-        const PWCDistributionGPU2D&  DistributionGPU(uint32_t index) const;
+        const PWCDistributionGPU2D&     DistributionGPU(uint32_t index) const;
         const GPUDistList&              DistributionGPU() const;
 
         void                            UpdateDistributions(const std::vector<const float*>& functionDataPtrs,
@@ -203,7 +203,7 @@ class PWCDistStaticGPU2D
         Vector2ui       dim;
         uint32_t        distCount;
 
-        friend class PWCDistStaticCPU2D;
+        friend class    PWCDistStaticCPU2D;
 
     public:
         // Interface
@@ -246,8 +246,8 @@ class PWCDistStaticCPU2D
                                                         const CudaSystem& system);
                                     PWCDistStaticCPU2D(const PWCDistStaticCPU2D&) = delete;
                                     PWCDistStaticCPU2D(PWCDistStaticCPU2D&&) = default;
-        PWCDistStaticCPU2D&        operator=(const PWCDistStaticCPU2D&) = delete;
-        PWCDistStaticCPU2D&        operator=(PWCDistStaticCPU2D&&) = default;
+        PWCDistStaticCPU2D&         operator=(const PWCDistStaticCPU2D&) = delete;
+        PWCDistStaticCPU2D&         operator=(PWCDistStaticCPU2D&&) = default;
                                     ~PWCDistStaticCPU2D() = default;
 
         PWCDistStaticGPU2D          DistributionGPU() const;

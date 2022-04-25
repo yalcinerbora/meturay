@@ -131,6 +131,52 @@ RNGIndependentCPU::RNGIndependentCPU(uint32_t seed,
                        count);
 }
 
+RNGIndependentCPU::RNGIndependentCPU(uint32_t seed,
+                                     const CudaGPU& gpu,
+                                     uint32_t rngCount)
+{
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+
+    // CPU Mersenne Twister
+    std::mt19937 rng;
+    rng.seed(seed);
+    // Determine GPU
+    size_t offset = 0;
+    // Do Temp Alloc for a MT19937 seeds
+    DeviceMemory seeds(rngCount * sizeof(uint32_t));
+    // Before touching gpu mem from cpu do a sync
+    // since other initialization probably launched a kernel
+    CUDA_CHECK(cudaDeviceSynchronize());
+    std::for_each(static_cast<uint32_t*>(seeds),
+                  static_cast<uint32_t*>(seeds) + rngCount,
+                  [&](uint32_t& t) { t = rng(); });
+
+    const uint32_t* d_seeds = static_cast<const uint32_t*>(seeds);
+
+    // Actual Allocation
+    RNGIndependentGPU* dGenerators;
+    RNGeneratorGPUI** dGenPtrs;
+    GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
+                                   memRandom,
+                                   {rngCount, rngCount});
+
+    size_t totalOffset = 0;
+    uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
+    deviceGenerators.emplace(&gpu, dGenPtrs + totalOffset);
+    totalOffset += gpuRNGStateCount;
+    assert(rngCount == static_cast<uint32_t>(totalOffset));
+
+    // Initialize the States
+    gpu.GridStrideKC_X(0, 0, rngCount,
+                       //
+                       KCInitRNGStates,
+                       //
+                       dGenerators + offset,
+                       dGenPtrs + offset,
+                       d_seeds + offset,
+                       rngCount);
+}
+
 RNGeneratorGPUI** RNGIndependentCPU::GetGPUGenerators(const CudaGPU& gpu)
 {
     return deviceGenerators.at(&gpu);

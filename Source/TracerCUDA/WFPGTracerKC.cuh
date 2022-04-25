@@ -347,7 +347,7 @@ void WFPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_GuideSampleRatio = 0.5f;
+        constexpr float BxDF_GuideSampleRatio = 0.0f;
         float xi = rng.Uniform();
 
         bool selectedPDFZero = false;
@@ -775,14 +775,12 @@ static void KCCheckReducedSVOBins(// I-O
 // Each block is responsible of a single bin
 // Each block will trace the SVO to generate
 //  omni-directional distribution map.
-template <uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
+template <class RNG, uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
 __global__ __launch_bounds__(THREAD_PER_BLOCK)
 static void KCGenAndSampleDistribution(// Output
-                                       float* gDebugPDFXOut,
-                                       float* gDebugCDFXOut,
-                                       float* gDebugPDFYOut,
-                                       float* gDebugCDFYOut,
                                        RayAuxWFPG* gRayAux,
+                                       // I-O
+                                       RNGeneratorGPUI** gRNGs,
                                        // Input
                                        // Per-ray
                                        const RayGMem* gRays,
@@ -791,13 +789,14 @@ static void KCGenAndSampleDistribution(// Output
                                        const uint32_t* gBinOffsets,
                                        const uint32_t* gNodeIds,
                                        // Constants
-                                       const AnisoSVOctreeGPU svo)
+                                       const AnisoSVOctreeGPU svo,
+                                       uint32_t binCount)
 {
+    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     auto IsMainThread = []() -> bool
     {
         return threadIdx.x == 0;
     };
-    const uint32_t BIN_ID = blockIdx.x;
     const uint32_t THREAD_ID = threadIdx.x;
 
     // Directional map shared memory requirements
@@ -823,67 +822,90 @@ static void KCGenAndSampleDistribution(// Output
     __shared__ uint32_t sNodeId;
     __shared__ uint32_t sPositionCount;
 
-    // Load Bin information
-    if(IsMainThread())
+    // For each block (an "SM" works over a bin)
+    for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
+        binIndex += gridDim.x)
     {
-        Vector2ui rayRange = Vector2ui(gBinOffsets[BIN_ID], gBinOffsets[BIN_ID + 1]);
-        sRayCount = rayRange[1] - rayRange[0];
-        sOffsetStart = rayRange[0];
-        sNodeId = gNodeIds[BIN_ID];
-        sPositionCount = min(THREAD_PER_BLOCK, sRayCount);
+        // Load Bin information
+        if(IsMainThread())
+        {
+            Vector2ui rayRange = Vector2ui(gBinOffsets[binIndex], gBinOffsets[binIndex + 1]);
+            sRayCount = rayRange[1] - rayRange[0];
+            sOffsetStart = rayRange[0];
+            sNodeId = gNodeIds[binIndex];
+            sPositionCount = min(THREAD_PER_BLOCK, sRayCount);
+        }
+        __syncthreads();
+
+        // Kill the entire block if Node Id is invalid
+        if(sNodeId == INVALID_BIN_ID) continue;
+
+        // Load positions of the rays to the shared memory
+        // Try to load minimum of TPB or ray count
+        if(THREAD_ID < sPositionCount)
+        {
+            uint32_t rayId = gRayIds[sOffsetStart + THREAD_ID];
+            RayReg ray(gRays, rayId);
+            // Hit Position
+            Vector3 position = ray.ray.AdvancedPos(ray.tMax);
+            sPositions[THREAD_ID] = position;
+        }
+        __syncthreads();
+
+        // Incoming radiance (result of the trace)
+        float incRadiances[RT_ITER_COUNT];
+
+        // Trace the rays
+        for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
+        {
+            // Determine your direction
+            uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
+            Vector2ui dirIdXY = Vector2ui(directionId % X,
+                                          directionId / X);
+            Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y));
+            // Get a random position from the pool
+            Vector3f position = sPositions[THREAD_ID % sPositionCount];
+
+            // Now this is the interesting part
+            // We need to offset the ray in order to prevent
+            // self intersections.
+            // However it is not easy since we use arbitrary locations
+            // over the voxel, most fool-proof (but inaccurate)
+            // way is to offset the ray with the current level voxel size.
+            // This will be highly inaccurate when current bin(node) level is low.
+            // TODO: Fix
+            float tMin = 8 * svo.LeafVoxelSize() * MathConstants::Sqrt3;
+
+            uint32_t leafId;
+            svo.TraceRay(leafId, RayF(worldDir, position),
+                         tMin, FLT_MAX);
+            incRadiances[i] = svo.ReadRadiance(leafId, true, -worldDir);
+
+            // Debug
+            //if(incRadiances[i] == 0.0f)
+            //{
+            //    incRadiances[i] = 1.0f;
+            //}
+        }
+
+        // Generate PWC Distribution over the radiances
+        BlockPWC2D dist2D(sPWCMem, incRadiances);
+
+        // Block threads will loop over the every ray in this bin
+        for(uint32_t rayIndex = THREAD_ID; rayIndex < sRayCount;
+            rayIndex += THREAD_PER_BLOCK)
+        {
+            float pdf;
+            Vector2f index;
+            Vector2f uv = dist2D.Sample(pdf, index, rng);
+
+            uint32_t rayId = gRayIds[sOffsetStart + rayIndex];
+            // Store the sampled direction of the ray
+            gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
+            gRayAux[rayId].guidePDF = pdf;
+        }
+
+        // Sync every thread before processing another bin
+        __syncthreads();
     }
-    __syncthreads();
-
-    // Kill the entire block if Node Id is invalid
-    if(sNodeId == INVALID_BIN_ID) return;
-
-    // Load positions of the rays to the shared memory
-    // Try to load minimum of TPB or ray count
-    if(THREAD_ID < sPositionCount)
-    {
-        uint32_t rayId = gRayIds[sOffsetStart + THREAD_ID];
-        RayReg ray(gRays, rayId);
-        // Hit Position
-        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
-        sPositions[THREAD_ID] = position;
-    }
-    __syncthreads();
-
-    // Incoming radiance (result of the trace)
-    float incRadiances[RT_ITER_COUNT];
-
-    // Trace the rays
-    for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
-    {
-        // Determine your direction
-        uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
-        Vector2ui dirIdXY = Vector2ui(directionId % X,
-                                      directionId / X);
-        Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y));
-        // Get a random position from the pool
-        Vector3f position = sPositions[THREAD_ID % sPositionCount];
-
-        // Now this is the interesting part
-        // We need to offset the ray in order to prevent
-        // self intersections.
-        // However it is not easy since we use arbitrary locations
-        // over the voxel, most fool-proof (but inaccurate)
-        // way is to offset the ray with the current level voxel size.
-        // This will be highly inaccurate when current bin(node) level is low.
-        // TODO: Fix
-        float tMin = 8 * svo.LeafVoxelSize() * MathConstants::Sqrt3;
-
-        uint32_t leafId;
-        svo.TraceRay(leafId, RayF(worldDir, position),
-                     tMin, FLT_MAX);
-        incRadiances[i] = svo.ReadRadiance(leafId, true, -worldDir);
-    }
-
-    // Generate PWC Distribution over the radiances
-    BlockPWC2D dist2D(sPWCMem, incRadiances);
-
-    dist2D.DumpSharedMem(gDebugPDFXOut,
-                         gDebugCDFXOut,
-                         gDebugPDFYOut,
-                         gDebugCDFYOut);
 }

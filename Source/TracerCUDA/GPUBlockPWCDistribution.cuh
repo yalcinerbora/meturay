@@ -1,10 +1,12 @@
 #pragma once
 
-#include "TracerCUDA/BlockSegmentedScan.cuh"
 #include "cub/block/block_scan.cuh"
 
 #include "RayLib/Vector.h"
+
+#include "BlockSegmentedScan.cuh"
 #include "RNGenerator.h"
+#include "BinarySearch.cuh"
 
 template<uint32_t TPB,
          uint32_t X,
@@ -55,8 +57,11 @@ class BlockPWCDistribution2D
     __device__
                 BlockPWCDistribution2D(TempStorage& storage,
                                        const float(&data)[DATA_PER_THREAD]);
+
+    template <class RNG>
     __device__
-    Vector2f    Sample(float& pdf, Vector2f& index, RNGeneratorGPUI& rng) const;
+    Vector2f    Sample(float& pdf, Vector2f& index, RNG& rng) const;
+
     __device__
     float       Pdf(const Vector2f& index) const;
 
@@ -128,6 +133,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
     float totalSum;
     BlockScan(sMem.algo.sScanTempStorage).InclusiveSum(pdfDataY, cdfDataY, totalSum);
     __syncthreads();
+
     // Do the normalization for PDF and CDF
     if(totalSum != 0.0f)
     {
@@ -146,6 +152,25 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         sMem.sPDFY[threadId] = pdfDataY;
         if(isMainThread) sMem.sCDFY[0] = 0.0f;
     }
+    //if(isMainThread)
+    //{
+    //    printf("CDF\n"
+    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
+    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
+    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
+    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
+    //           "%f\n",
+    //           sMem.sCDFY[0], sMem.sCDFY[1], sMem.sCDFY[2], sMem.sCDFY[3],
+    //           sMem.sCDFY[4], sMem.sCDFY[5], sMem.sCDFY[6], sMem.sCDFY[7],
+    //           sMem.sCDFY[8], sMem.sCDFY[9], sMem.sCDFY[10], sMem.sCDFY[11],
+    //           sMem.sCDFY[12], sMem.sCDFY[13], sMem.sCDFY[14], sMem.sCDFY[15],
+    //           sMem.sCDFY[16], sMem.sCDFY[17], sMem.sCDFY[18], sMem.sCDFY[19],
+    //           sMem.sCDFY[20], sMem.sCDFY[21], sMem.sCDFY[22], sMem.sCDFY[23],
+    //           sMem.sCDFY[24], sMem.sCDFY[25], sMem.sCDFY[26], sMem.sCDFY[27],
+    //           sMem.sCDFY[28], sMem.sCDFY[29], sMem.sCDFY[30], sMem.sCDFY[31],
+    //           sMem.sCDFY[32]);
+    //}
+
     __syncthreads();
     // All CDF's and PDFs are generated
 }
@@ -153,11 +178,49 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
 template<uint32_t TPB,
          uint32_t X,
          uint32_t Y>
+template <class RNG>
 __device__ inline
-Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample(float& pdf, Vector2f& index,
-                                                   RNGeneratorGPUI& rng) const
+Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& index,
+                                                        RNG& rng) const
 {
+    static constexpr int32_t CDF_SIZE_Y = Y + 1;
+    static constexpr int32_t CDF_SIZE_X = X + 1;
 
+    Vector2f xi = rng.Uniform2D();
+    // If entire distribution is invalid
+    // Just sample uniformly
+    if(sMem.sCDFY[Y] == 0.0f)
+    {
+        index = xi * Vector2f(X, Y);
+        pdf = 1.0f;
+        return xi;
+    }
+
+    GPUFunctions::BinarySearchInBetween<float>(index[1], xi[1],
+                                               sMem.sCDFY, CDF_SIZE_Y);
+    int32_t indexYInt = static_cast<int32_t>(index[1]);
+    // Extremely rarely index becomes the light count
+    // although Uniform should return [0, 1)
+    // it still happens due to fp error i guess?
+    // if it happens just return the last light on the list
+    //if(indexYInt == CDF_SIZE_Y)
+    if(indexYInt == CDF_SIZE_Y)
+    {
+        KERNEL_DEBUG_LOG("CUDA Error: Illegal Index on PwC Sample [Y = %f]\n",
+                         index[1]);
+        indexYInt--;
+    }
+    const float* sRowCDF = sMem.sCDFX[indexYInt];
+    const float* sRowPDF = sMem.sPDFX[indexYInt];
+
+    GPUFunctions::BinarySearchInBetween<float>(index[0], xi[0],
+                                               sRowCDF, CDF_SIZE_X);
+    int32_t indexXInt = static_cast<int32_t>(index[0]);
+
+    // Samples are dependent so we need to multiply the pdf results
+    pdf = sMem.sPDFY[indexYInt] * sRowPDF[indexXInt];
+    // Return the index as a normalized coordinate as well
+    return index * Vector2f(DELTA_X, DELTA_Y);
 }
 
 template<uint32_t TPB,
@@ -166,7 +229,10 @@ template<uint32_t TPB,
 __device__ inline
 float BlockPWCDistribution2D<TPB, X, Y>::Pdf(const Vector2f& index) const
 {
+    Vector2ui indexInt = Vector2ui(static_cast<uint32_t>(index[0]),
+                                   static_cast<uint32_t>(index[1]));
 
+    return sMem.sPDFY[indexInt[1]] * sMem.sPDFX[indexInt[1]][indexInt[0]];
 }
 
 template<uint32_t TPB,

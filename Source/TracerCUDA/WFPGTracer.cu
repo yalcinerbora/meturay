@@ -14,6 +14,12 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
+// Currently These are compile time constants
+// sine most of the internal call rely on compile time constants
+static constexpr uint32_t PG_KERNEL_TPB = 512;
+static constexpr uint32_t PG_KERNEL_X = 32;
+static constexpr uint32_t PG_KERNEL_Y = 32;
+
 struct NodeIdFetchFunctor
 {
     __device__ inline
@@ -82,7 +88,7 @@ void WFPGTracer::GenerateGuidedDirections()
                        svo.TreeGPU(),
                        rayCount);
 
-    // Then call svo to reduce the bins
+    // Then call SVO to reduce the bins
     svo.CollapseRayCounts(options.minRayBinLevel,
                           options.binRayCount,
                           cudaSystem);
@@ -96,7 +102,7 @@ void WFPGTracer::GenerateGuidedDirections()
                        svo.TreeGPU(),
                        rayCount);
 
-    // Partition the generated rays wrt. to the svo nodeId
+    // Partition the generated rays wrt. to the SVO nodeId
     uint32_t hPartitionCount;
     uint32_t* dPartitionOffsets;
     uint32_t* dPartitionBinIds;
@@ -111,40 +117,45 @@ void WFPGTracer::GenerateGuidedDirections()
                                           rayCount,
                                           cudaSystem);
 
-    METU_LOG("Depth {:d} -> PartitionCount {:d}",
-             currentDepth, hPartitionCount);
-
-    // Utilize the ray memory here
-    // However ray memory is encapsulated by the ray caster
-    // interface and we can't push
-
-    // Test mode
-    static constexpr uint32_t TPB = 512;
-    static constexpr uint32_t X = 32;
-    static constexpr uint32_t Y = 32;
-    constexpr auto KCSampleKernel = KCGenAndSampleDistribution<TPB, X, Y>;
+    // Call the Trace and Sample Kernel
+    constexpr auto KCSampleKernel = KCGenAndSampleDistribution<RNGIndependentGPU,
+                                                               PG_KERNEL_TPB,
+                                                               PG_KERNEL_X,
+                                                               PG_KERNEL_Y>;
+    RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
     auto data = gpu.GetKernelAttributes(KCSampleKernel);
 
-    float* a = nullptr;
+    cudaEvent_t start, stop;
+    CUDA_CHECK(cudaEventCreate(&start));
+    CUDA_CHECK(cudaEventCreate(&stop));
 
+    CUDA_CHECK(cudaEventRecord(start));
     gpu.ExactKC_X(0, (cudaStream_t)0,
-                  TPB, hPartitionCount,
+                  PG_KERNEL_TPB, pgKernelBlockCount,
                   //
                   KCSampleKernel,
-                  //
-                  a,
-                  a,
-                  a,
-                  a,
+                  // Output
                   dRayAux,
+                  // I-O
+                  gpuGenerators,
+                  // Input
+                  // Per-ray
                   dRays,
                   rayCaster->RayIds(),
+                  // Per bin
                   dPartitionOffsets,
                   dPartitionBinIds,
-                  svo.TreeGPU());
+                  // Constants
+                  svo.TreeGPU(),
+                  hPartitionCount);
+    CUDA_CHECK(cudaEventRecord(stop));
 
-    // ....
+    float milliseconds = 0;
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
+    METU_LOG("Depth {:d} -> PartitionCount {:d} KernelTime {:f}ms",
+             currentDepth, hPartitionCount, milliseconds);
 }
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,
@@ -169,7 +180,7 @@ TracerError WFPGTracer::Initialize()
     if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
 
-    // Generate Light Sampler (for nee)
+    // Generate Light Sampler (for NEE)
     if((err = LightSamplerCommon::ConstructLightSampler(lightSamplerMemory,
                                                         dLightSampler,
                                                         options.lightSamplerType,
@@ -252,6 +263,15 @@ TracerError WFPGTracer::Initialize()
                             scene.BaseBoundaryMaterial(),
                             cudaSystem)) != TracerError::OK)
         return err;
+
+    // Generate a Scrambled Sobol Sampler for the
+    // Path Guide Sampling
+    const auto& gpu = cudaSystem.BestGPU();
+
+    uint32_t rngCount = (gpu.MaxActiveBlockPerSM(PG_KERNEL_TPB) *
+                         gpu.SMCount() * PG_KERNEL_TPB);
+    pgKernelBlockCount = rngCount / PG_KERNEL_TPB;
+    pgSampleRNG = RNGIndependentCPU(params.seed, gpu, rngCount);
 
     return TracerError::OK;
 }
@@ -473,6 +493,7 @@ bool WFPGTracer::Render()
 
 void WFPGTracer::Finalize()
 {
+    METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

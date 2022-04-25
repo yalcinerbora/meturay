@@ -81,8 +81,8 @@ Utility header for header only cuda vector and cpu vector implementations
     constexpr bool METU_DEBUG_BOOL = false;
     #define CUDA_CHECK_ERROR(err)
     #define CUDA_KERNEL_PRINTF()
-     #define CUDA_CHECK(func) func
-     #define CUDA_KERNEL_CHECK()
+    #define CUDA_CHECK(func) func
+    #define CUDA_KERNEL_CHECK()
     //#define CUDA_CHECK(func) GPUAssert((func), __FILE__, __LINE__)
     //#define CUDA_KERNEL_CHECK() \
     //           CUDA_CHECK(cudaDeviceSynchronize()); \

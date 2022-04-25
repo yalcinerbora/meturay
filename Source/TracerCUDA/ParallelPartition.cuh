@@ -7,6 +7,7 @@
 #include "ReduceFunctions.cuh"
 #include "DeviceMemory.h"
 #include "ParallelSequence.cuh"
+#include "ParallelMemset.cuh"
 
 #include "RayLib/ArrayPortion.h"
 #include "RayLib/Types.h"

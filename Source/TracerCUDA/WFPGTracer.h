@@ -5,7 +5,9 @@
 #include "GPULightI.h"
 #include "Tracers.h"
 #include "AnisoSVO.cuh"
-//#include "PathNode.cuh"
+
+#include "RNGSobol.cuh"
+#include "RNGIndependent.cuh"
 
 class GPUDirectLightSamplerI;
 
@@ -68,6 +70,10 @@ class WFPGTracer final : public RayTracer
         uint32_t                        treeDumpCount;
         // SVO
         AnisoSVOctreeCPU                svo;
+        // RNG and Guide Sample Related
+        //RNGScrSobolCPU                  pgSampleRNG;
+        RNGIndependentCPU               pgSampleRNG;
+        uint32_t                        pgKernelBlockCount;
         // Path Memory
         DeviceMemory                    pathMemory;
         PathGuidingNode*                dPathNodes;

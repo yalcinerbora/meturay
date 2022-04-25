@@ -434,6 +434,75 @@ RNGScrSobolCPU::RNGScrSobolCPU(uint32_t seed,
                        count);
 }
 
+RNGScrSobolCPU::RNGScrSobolCPU(uint32_t seed,
+                               const CudaGPU& gpu,
+                               uint32_t rngCount)
+{
+    CUDA_CHECK(cudaSetDevice(gpu.DeviceId()));
+    static constexpr uint32_t VECTOR_PER_THREAD = 32;
+
+    // CPU Mersenne Twister
+    std::mt19937 rng;
+    rng.seed(seed);
+    // Determine GPU
+    size_t offset = 0;
+    // Get Directions Vectors & Scramble Constants from
+    // CPU API
+    uint32_t* hScrambleConstants;
+    curandDirectionVectors32_t* hDirectionVectors;
+    curandStatus_t s = curandGetDirectionVectors32(&hDirectionVectors,
+                                                   CURAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6);
+    if(s != CURAND_STATUS_SUCCESS) assert(false);
+    s = curandGetScrambleConstants32(&hScrambleConstants);
+    if(s != CURAND_STATUS_SUCCESS) assert(false);
+    // Copy to temp memory
+    uint32_t* dOffsets;
+    uint32_t* dScrambleConstants;
+    curandDirectionVectors32_t* dDirectionVectors;
+    DeviceMemory tempMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dOffsets, dScrambleConstants,
+                                            dDirectionVectors),
+                                   tempMemory,
+                                   {rngCount, rngCount,
+                                   VECTOR_PER_THREAD * rngCount});
+    // Before touching gpu mem from cpu do a sync
+    // since other initialization probably launched a kernel
+    CUDA_CHECK(cudaDeviceSynchronize());
+    std::for_each(dOffsets, dOffsets + rngCount,
+                  [&](uint32_t& t) { t = rng(); });
+    // Rest is copied from host
+    CUDA_CHECK(cudaMemcpy(dScrambleConstants, hScrambleConstants,
+                          rngCount * sizeof(uint32_t),
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dDirectionVectors, hDirectionVectors,
+                          VECTOR_PER_THREAD * rngCount * sizeof(uint32_t),
+                          cudaMemcpyHostToDevice));
+    // Actual Allocation
+    RNGScrSobolGPU* dGenerators;
+    RNGeneratorGPUI** dGenPtrs;
+    GPUMemFuncs::AllocateMultiData(std::tie(dGenerators, dGenPtrs),
+                                   memRandom,
+                                   {rngCount, rngCount});
+
+    size_t totalOffset = 0;
+    uint32_t gpuRNGStateCount = gpu.MaxActiveBlockPerSM() * gpu.SMCount() * StaticThreadPerBlock1D;
+    deviceGenerators.emplace(&gpu, dGenPtrs + totalOffset);
+    totalOffset += gpuRNGStateCount;
+    assert(rngCount == static_cast<uint32_t>(totalOffset));
+
+    // Initialize the States
+    gpu.GridStrideKC_X(0, 0, rngCount,
+                       //
+                       KCInitRNGStatesScrSobol,
+                       //
+                       dGenerators + offset,
+                       dGenPtrs + offset,
+                       dDirectionVectors + offset,
+                       dOffsets + offset,
+                       dScrambleConstants + offset,
+                       rngCount);
+}
+
 RNGeneratorGPUI** RNGScrSobolCPU::GetGPUGenerators(const CudaGPU& gpu)
 {
     return deviceGenerators.at(&gpu);

@@ -22,7 +22,7 @@ class RNGSobolGPU final : public RNGeneratorGPUI
                                 RNGSobolGPU() = default;
         __device__              RNGSobolGPU(curandDirectionVectors32_t,
                                             curandDirectionVectors32_t,
-                                            curandDirectionVectors32_t,                                
+                                            curandDirectionVectors32_t,
                                             uint32_t offset);
                                 RNGSobolGPU(const RNGSobolGPU&) = delete;
         RNGSobolGPU&            operator=(const RNGSobolGPU&) = default;
@@ -110,9 +110,12 @@ class RNGScrSobolCPU : public RNGeneratorCPUI
         // Constructors & Destructor
                             RNGScrSobolCPU() = default;
                             RNGScrSobolCPU(uint32_t seed,
-                                        const CudaSystem&);
+                                           const CudaSystem&);
                             RNGScrSobolCPU(uint32_t seed,
-                                        const CudaGPU&);
+                                           const CudaGPU&);
+                            RNGScrSobolCPU(uint32_t seed,
+                                           const CudaGPU&,
+                                           uint32_t rngCount);
                             RNGScrSobolCPU(const RNGScrSobolCPU&) = delete;
                             RNGScrSobolCPU(RNGScrSobolCPU&&) = default;
         RNGScrSobolCPU&     operator=(const RNGScrSobolCPU&) = delete;
