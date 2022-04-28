@@ -11,6 +11,7 @@
 #include "GPULightI.h"
 #include "DeviceMemory.h"
 #include "MortonCode.cuh"
+#include "BinarySearch.cuh"
 
 struct PathGuidingNode;
 class CudaSystem;
@@ -89,6 +90,8 @@ class AnisoSVOctreeGPU
     __device__ static uint32_t  GetRayCount(uint32_t binInfo);
 
     private:
+    // Generic Data
+    uint32_t*           dLevelNodeOffsets;
     // SVO Data
     uint64_t*           dNodes;         // children ptr (28) parent ptr (27), child mask, leafBit
     AnisoRadiance*      dRadianceRead;  // Anisotropic emitted radiance (normalized)
@@ -111,6 +114,7 @@ class AnisoSVOctreeGPU
     uint32_t            nodeCount;
     uint32_t            leafCount;
     float               leafVoxelSize;
+    uint32_t            levelOffsetCount;
     // CPU class can only access and set the data
     friend class        AnisoSVOctreeCPU;
 
@@ -146,19 +150,24 @@ class AnisoSVOctreeGPU
     // Bin is the node that is the highest non-collapsed node
     __device__
     uint32_t            FindMarkedBin(bool& isLeaf, uint32_t initialLeafIndex)  const;
-
+    // Returns the center of the voxel as world space coordinates
     __device__
     Vector3f            VoxelToWorld(const Vector3ui& denseIndex);
+    // Returns the voxel size of the specified node index
+    __device__
+    float               NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const;
 
     // Accessors
     __device__
-    uint32_t            LeafVoxelSize() const;
+    float               LeafVoxelSize() const;
     __device__
     uint32_t            LeafCount() const;
     __device__
+    uint32_t            LeafDepth() const;
+    __device__
     uint32_t            NodeCount() const;
     __device__
-    float               VoxelResolution() const;
+    uint32_t            VoxelResolution() const;
     __device__
     AABB3f              OctreeAABB() const;
 };
@@ -239,7 +248,8 @@ T AnisoSVOctreeGPU::AnisoData<T>::Read(const Vector4uc& indices,
 
 __device__ inline
 AnisoSVOctreeGPU::AnisoSVOctreeGPU()
-    : dNodes(nullptr)
+    : dLevelNodeOffsets(nullptr)
+    , dNodes(nullptr)
     , dRadianceRead(nullptr)
     , dBinInfo(nullptr)
     , dLeafParents(nullptr)
@@ -868,7 +878,26 @@ Vector3f AnisoSVOctreeGPU::VoxelToWorld(const Vector3ui& denseIndex)
 }
 
 __device__ inline
-uint32_t AnisoSVOctreeGPU::LeafVoxelSize() const
+float AnisoSVOctreeGPU::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
+{
+    using namespace GPUFunctions;
+    static constexpr auto BinarySearch = GPUFunctions::BinarySearchInBetween<uint32_t>;
+
+    if(isLeaf) return leafVoxelSize;
+    // Binary search the node id from the offsets
+    float levelFloat;
+    [[maybe_unused]] bool found = BinarySearch(levelFloat, nodeIndex,
+                                               dLevelNodeOffsets,
+                                               leafDepth + 1);
+    assert(found);
+
+    uint32_t levelDiff = leafDepth - static_cast<uint32_t>(levelFloat);
+    float multiplier = static_cast<float>(1 << levelDiff);
+    return leafVoxelSize * multiplier;
+}
+
+__device__ inline
+float AnisoSVOctreeGPU::LeafVoxelSize() const
 {
     return leafVoxelSize;
 }
@@ -886,7 +915,13 @@ uint32_t AnisoSVOctreeGPU::NodeCount() const
 }
 
 __device__ inline
-float AnisoSVOctreeGPU::VoxelResolution() const
+uint32_t AnisoSVOctreeGPU::LeafDepth() const
+{
+    return leafDepth;
+}
+
+__device__ inline
+uint32_t AnisoSVOctreeGPU::VoxelResolution() const
 {
     return voxelResolution;
 }

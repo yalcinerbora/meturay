@@ -124,6 +124,16 @@ void WFPGTracer::GenerateGuidedDirections()
                                                                PG_KERNEL_Y>;
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
+    // Debug
+    uint32_t validRayStart;
+    uint32_t validRayEnd;
+    CUDA_CHECK(cudaMemcpy(&validRayStart, dPartitionOffsets + 1, sizeof(uint32_t),
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(&validRayEnd, dPartitionOffsets + hPartitionCount,
+                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
+    uint32_t validRayCount = validRayEnd - validRayStart;
+    float avgRayPerBin = static_cast<float>(validRayCount) / static_cast<float>(hPartitionCount - 1);
+
     auto data = gpu.GetKernelAttributes(KCSampleKernel);
 
     cudaEvent_t start, stop;
@@ -154,8 +164,8 @@ void WFPGTracer::GenerateGuidedDirections()
     float milliseconds = 0;
     CUDA_CHECK(cudaEventSynchronize(stop));
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
-    METU_LOG("Depth {:d} -> PartitionCount {:d} KernelTime {:f}ms",
-             currentDepth, hPartitionCount, milliseconds);
+    METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
+             currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
 }
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,

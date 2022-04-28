@@ -162,6 +162,15 @@ void WFPGTracerBoundaryWork(// Output
            pathIndex != 0)
         {
             // Accumulate Radiance from 2nd vertex (including this vertex) away
+            // S-> surface
+            // C-> camera
+            // L-> light
+            //
+            // C --- S --- S --- S --- L
+            //                   |     ^
+            //                   |     We are here (pathIndex points here)
+            //                   v
+            //                  we should accum-down from here
             uint8_t prevPathIndex = pathIndex - 1;
             gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
         }
@@ -506,7 +515,10 @@ void WFPGTracerPathWork(// Output
     node.prevNext[1] = PathGuidingNode::InvalidIndex;
     node.prevNext[0] = prevPathIndex;
     node.worldPosition = position;
-    node.radFactor = pathRadianceFactor;
+    // Unlike other techniques that holds incoming radiance
+    // WFPG holds outgoing radiance. To calculate that,
+    // previous paths throughput
+    node.radFactor = aux.radianceFactor;
     node.totalRadiance = Zero3;
     gLocalPathNodes[curPathIndex] = node;
     // Set Previous Path node's next index
@@ -821,8 +833,10 @@ static void KCGenAndSampleDistribution(// Output
     __shared__ uint32_t sOffsetStart;
     __shared__ uint32_t sNodeId;
     __shared__ uint32_t sPositionCount;
+    __shared__ uint32_t sBinVoxelSize;
 
-    // For each block (an "SM" works over a bin)
+    // For each block (we allocate enough blocks for the GPU)
+    // Each block will process multiple bins
     for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
         binIndex += gridDim.x)
     {
@@ -834,6 +848,11 @@ static void KCGenAndSampleDistribution(// Output
             sOffsetStart = rayRange[0];
             sNodeId = gNodeIds[binIndex];
             sPositionCount = min(THREAD_PER_BLOCK, sRayCount);
+
+            // Calculate the voxel size of the bin
+            uint32_t nodeId;
+            bool isLeaf = ReadSVONodeId(nodeId, sNodeId);
+            sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
         }
         __syncthreads();
 
@@ -874,23 +893,16 @@ static void KCGenAndSampleDistribution(// Output
             // way is to offset the ray with the current level voxel size.
             // This will be highly inaccurate when current bin(node) level is low.
             // TODO: Fix
-            float tMin = 8 * svo.LeafVoxelSize() * MathConstants::Sqrt3;
+            float tMin = sBinVoxelSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
 
             uint32_t leafId;
             svo.TraceRay(leafId, RayF(worldDir, position),
                          tMin, FLT_MAX);
             incRadiances[i] = svo.ReadRadiance(leafId, true, -worldDir);
-
-            // Debug
-            //if(incRadiances[i] == 0.0f)
-            //{
-            //    incRadiances[i] = 1.0f;
-            //}
         }
 
         // Generate PWC Distribution over the radiances
         BlockPWC2D dist2D(sPWCMem, incRadiances);
-
         // Block threads will loop over the every ray in this bin
         for(uint32_t rayIndex = THREAD_ID; rayIndex < sRayCount;
             rayIndex += THREAD_PER_BLOCK)
@@ -907,5 +919,25 @@ static void KCGenAndSampleDistribution(// Output
 
         // Sync every thread before processing another bin
         __syncthreads();
+
+        //for(uint32_t rayIndex = 0; rayIndex < sRayCount; rayIndex++)
+        //{
+        //    incRadiances[0] *= rayIndex * 10.f;
+        //    incRadiances[1] *= rayIndex * 10.f;
+        //    BlockPWC2D dist2D(sPWCMem, incRadiances);
+
+        //    if(IsMainThread())
+        //    {
+        //        float pdf;
+        //        Vector2f index;
+        //        Vector2f uv = dist2D.Sample(pdf, index, rng);
+
+        //        uint32_t rayId = gRayIds[sOffsetStart + rayIndex];
+        //        // Store the sampled direction of the ray
+        //        gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
+        //        gRayAux[rayId].guidePDF = pdf;
+        //    }
+        //    __syncthreads();
+        //}
     }
 }

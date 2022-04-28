@@ -17,11 +17,9 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
     , importer(i)
     , scene(nullptr)
     , extension(fileExt)
+    , filePath(Utility::MergeFileFolder(scenePath, node.Name()))
     , innerIds(node.AccessUIntRanged(InnerIdJSON))
 {
-    // Get File Name
-    const std::string filePath = Utility::MergeFileFolder(scenePath, node.Name());
-
     scene = importer.ReadFile(filePath,
                               // Generate Bounding Boxes
                               aiProcess_GenBoundingBoxes |

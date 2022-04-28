@@ -16,6 +16,7 @@ class AssimpMetaSurfaceLoader : public SurfaceLoader
         Assimp::Importer&                           importer;
         const aiScene*                              scene;
         const std::string&                          extension;
+        const std::string                           filePath;
 
         // Inner Ids
         const UIntList                              innerIds;

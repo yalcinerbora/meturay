@@ -1,0 +1,2522 @@
+{
+	"Cameras": [
+    {
+        // Overall Camera
+		"id": 0,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [60, 33.75],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+        "planes": [0.01, 200.0],
+        "gaze": [-1.261659, 1.569561, -1.215745],
+        "position": [1.211004, 1.804751, 3.852390],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+    "Lights":[
+        // Black Background
+        {"id": 0, "type": "Null"},
+        // Shelf Lights
+        {
+            "id": 1,
+            "type": "Primitive",
+            "primitive": 295,
+            "accelerator": 1,
+            "radiance" : [11.2212, 11.2212, 11.2212]
+        },
+        // Main Window Light
+        {
+            "id": 2,
+            "type": "Primitive",
+            "primitive": 295,
+            "accelerator": 1,
+            "radiance" : [16.032, 16.032, 16.032]
+        }
+    ],
+
+    "Mediums": [
+        {
+            "id" : 0,
+            "type" : "Vacuum"
+        },
+        {
+            // Glass Medium
+            "id": 1,
+            "type" : "Homogeneous",
+
+            "absorption": [0, 0 ,0],
+            "scattering": [0, 0, 0],
+            "ior": 1.5,
+            "phase": 0
+        }
+    ],
+
+    "Transforms":[
+        {"id": 0, "type": "Identity"},
+        // Shelf Light Transforms
+        {
+            "id": 1,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [-2.388427, 1.6129019, -1.048519],
+            "rotate": [0, 0, 180],
+            "scale": [0.058056, 1, 0.488602]
+        },
+        {
+            "id": 2,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [-2.388427, 1.6129019, -1.584973],
+            "rotate": [0, 0, 180],
+            "scale": [0.058056, 1, 0.488602]
+        },
+        {
+            "id": 3,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [-2.388427, 1.6129019, -2.142090],
+            "rotate": [0, 0, 180],
+            "scale": [0.058056, 1, 0.488602]
+        },
+        // Main Window Light Transform
+        {
+            "id": 4,
+            "type": "Single",
+
+            "layout": "trs",
+            "translate": [0.060314, 1.973789, -3.117299],
+            "rotate": [90, 0, 0],
+            "scale": [1.623527, 2.201273, 1]
+        }
+    ],
+
+    "Textures": [],
+
+    "Materials":[
+        {
+            // Lambert Gray & Black
+            "id": [0, 1],
+            "type": "Lambert",
+            "albedo": [
+                [0.5, 0.5, 0.5],
+                [0.01, 0.01, 0.01]
+            ]
+        }
+    ],
+
+    "Primitives": [
+        {
+            "id": 0,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh000_Mesh.obj"
+        },
+        {
+            "id": 1,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh001_Mesh.obj"
+        },
+        {
+            "id": 2,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh002_Mesh.obj"
+        },
+        {
+            "id": 3,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "cullFace": false,
+            "name": "../Surfaces/Kitchen/Mesh003_Mesh.obj"
+        },
+        {
+            "id": 4,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh004_Mesh.obj"
+        },
+        {
+            "id": 5,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh005_Mesh.obj"
+        },
+        {
+            "id": 6,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh006_Mesh.obj"
+        },
+        {
+            "id": 7,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh007_Mesh.obj"
+        },
+        {
+            "id": 8,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh008_Mesh.obj"
+        },
+        {
+            "id": 9,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh009_Mesh.obj"
+        },
+        {
+            "id": 10,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh010_Mesh.obj"
+        },
+        {
+            "id": 11,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh011_Mesh.obj"
+        },
+        {
+            "id": 12,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh012_Mesh.obj"
+        },
+        {
+            "id": 13,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh013_Mesh.obj"
+        },
+        {
+            "id": 14,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh014_Mesh.obj"
+        },
+        {
+            "id": 15,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh015_Mesh.obj"
+        },
+        {
+            "id": 16,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh016_Mesh.obj"
+        },
+        {
+            "id": 17,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh017_Mesh.obj"
+        },
+        {
+            "id": 18,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh018_Mesh.obj"
+        },
+        {
+            "id": 19,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh019_Mesh.obj"
+        },
+        {
+            "id": 20,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh020_Mesh.obj"
+        },
+        {
+            "id": 21,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh021_Mesh.obj"
+        },
+        {
+            "id": 22,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh022_Mesh.obj"
+        },
+        {
+            "id": 23,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh023_Mesh.obj"
+        },
+        {
+            "id": 24,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh024_Mesh.obj"
+        },
+        {
+            "id": 25,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh025_Mesh.obj"
+        },
+        {
+            "id": 26,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh026_Mesh.obj"
+        },
+        {
+            "id": 27,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh027_Mesh.obj"
+        },
+        {
+            "id": 28,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh028_Mesh.obj"
+        },
+        {
+            "id": 29,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh029_Mesh.obj"
+        },
+        {
+            "id": 30,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh030_Mesh.obj"
+        },
+        {
+            "id": 31,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh031_Mesh.obj"
+        },
+        {
+            "id": 32,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh032_Mesh.obj"
+        },
+        {
+            "id": 33,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh033_Mesh.obj"
+        },
+        {
+            "id": 34,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh034_Mesh.obj"
+        },
+        {
+            "id": 35,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh035_Mesh.obj"
+        },
+        {
+            "id": 36,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh036_Mesh.obj"
+        },
+        {
+            "id": 37,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh037_Mesh.obj"
+        },
+        {
+            "id": 38,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh038_Mesh.obj"
+        },
+        {
+            "id": 39,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh039_Mesh.obj"
+        },
+        {
+            "id": 40,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh040_Mesh.obj"
+        },
+        {
+            "id": 41,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh041_Mesh.obj"
+        },
+        {
+            "id": 42,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh042_Mesh.obj"
+        },
+        {
+            "id": 43,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh043_Mesh.obj"
+        },
+        {
+            "id": 44,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh044_Mesh.obj"
+        },
+        {
+            "id": 45,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh045_Mesh.obj"
+        },
+        {
+            "id": 46,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh046_Mesh.obj"
+        },
+        {
+            "id": 47,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh047_Mesh.obj"
+        },
+        {
+            "id": 48,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh048_Mesh.obj"
+        },
+        {
+            "id": 49,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh049_Mesh.obj"
+        },
+        {
+            "id": 50,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh050_Mesh.obj"
+        },
+        {
+            "id": 51,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh051_Mesh.obj"
+        },
+        {
+            "id": 52,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh052_Mesh.obj"
+        },
+        {
+            "id": 53,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh053_Mesh.obj"
+        },
+        {
+            "id": 54,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh054_Mesh.obj"
+        },
+        {
+            "id": 55,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh055_Mesh.obj"
+        },
+        {
+            "id": 56,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh056_Mesh.obj"
+        },
+        {
+            "id": 57,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh057_Mesh.obj"
+        },
+        {
+            "id": 58,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh058_Mesh.obj"
+        },
+        {
+            "id": 59,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh059_Mesh.obj"
+        },
+        {
+            "id": 60,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh060_Mesh.obj"
+        },
+        {
+            "id": 61,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh061_Mesh.obj"
+        },
+        {
+            "id": 62,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh062_Mesh.obj"
+        },
+        {
+            "id": 63,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh063_Mesh.obj"
+        },
+        {
+            "id": 64,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh064_Mesh.obj"
+        },
+        {
+            "id": 65,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh065_Mesh.obj"
+        },
+        {
+            "id": 66,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh066_Mesh.obj"
+        },
+        {
+            "id": 67,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh067_Mesh.obj"
+        },
+        {
+            "id": 68,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh068_Mesh.obj"
+        },
+        {
+            "id": 69,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh069_Mesh.obj"
+        },
+        {
+            "id": 70,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "cullFace": false,
+            "name": "../Surfaces/Kitchen/Mesh070_Mesh.obj"
+        },
+        {
+            "id": 71,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh071_Mesh.obj"
+        },
+        {
+            "id": 72,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh072_Mesh.obj"
+        },
+        {
+            "id": 73,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh073_Mesh.obj"
+        },
+        {
+            "id": 74,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh074_Mesh.obj"
+        },
+        {
+            "id": 75,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh075_Mesh.obj"
+        },
+        {
+            "id": 76,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh076_Mesh.obj"
+        },
+        {
+            "id": 77,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh077_Mesh.obj"
+        },
+        {
+            "id": 78,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh078_Mesh.obj"
+        },
+        {
+            "id": 79,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh079_Mesh.obj"
+        },
+        {
+            "id": 80,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh080_Mesh.obj"
+        },
+        {
+            "id": 81,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh081_Mesh.obj"
+        },
+        {
+            "id": 82,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh082_Mesh.obj"
+        },
+        {
+            "id": 83,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh083_Mesh.obj"
+        },
+        {
+            "id": 84,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh084_Mesh.obj"
+        },
+        {
+            "id": 85,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh085_Mesh.obj"
+        },
+        {
+            "id": 86,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh086_Mesh.obj"
+        },
+        {
+            "id": 87,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh087_Mesh.obj"
+        },
+        {
+            "id": 88,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh088_Mesh.obj"
+        },
+        {
+            "id": 89,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh089_Mesh.obj"
+        },
+        {
+            "id": 90,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh090_Mesh.obj"
+        },
+        {
+            "id": 91,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh091_Mesh.obj"
+        },
+        {
+            "id": 92,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh092_Mesh.obj"
+        },
+        {
+            "id": 93,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh093_Mesh.obj"
+        },
+        {
+            "id": 94,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh094_Mesh.obj"
+        },
+        {
+            "id": 95,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh095_Mesh.obj"
+        },
+        {
+            "id": 96,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh096_Mesh.obj"
+        },
+        {
+            "id": 97,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh097_Mesh.obj"
+        },
+        {
+            "id": 98,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh098_Mesh.obj"
+        },
+        {
+            "id": 99,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh099_Mesh.obj"
+        },
+        {
+            "id": 100,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh100_Mesh.obj"
+        },
+        {
+            "id": 101,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh101_Mesh.obj"
+        },
+        {
+            "id": 102,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh102_Mesh.obj"
+        },
+        {
+            "id": 103,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh103_Mesh.obj"
+        },
+        {
+            "id": 104,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh104_Mesh.obj"
+        },
+        {
+            "id": 105,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh105_Mesh.obj"
+        },
+        {
+            "id": 106,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh106_Mesh.obj"
+        },
+        {
+            "id": 107,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh107_Mesh.obj"
+        },
+        {
+            "id": 108,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh108_Mesh.obj"
+        },
+        {
+            "id": 109,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh109_Mesh.obj"
+        },
+        {
+            "id": 110,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh110_Mesh.obj"
+        },
+        {
+            "id": 111,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh111_Mesh.obj"
+        },
+        {
+            "id": 112,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh112_Mesh.obj"
+        },
+        {
+            "id": 113,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh113_Mesh.obj"
+        },
+        {
+            "id": 114,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh114_Mesh.obj"
+        },
+        {
+            "id": 115,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh115_Mesh.obj"
+        },
+        {
+            "id": 116,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh116_Mesh.obj"
+        },
+        {
+            "id": 117,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh117_Mesh.obj"
+        },
+        {
+            "id": 118,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh118_Mesh.obj"
+        },
+        {
+            "id": 119,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh119_Mesh.obj"
+        },
+        {
+            "id": 120,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh120_Mesh.obj"
+        },
+        {
+            "id": 121,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh121_Mesh.obj"
+        },
+        {
+            "id": 122,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh122_Mesh.obj"
+        },
+        {
+            "id": 123,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh123_Mesh.obj"
+        },
+        {
+            "id": 124,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh124_Mesh.obj"
+        },
+        {
+            "id": 125,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh125_Mesh.obj"
+        },
+        {
+            "id": 126,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh126_Mesh.obj"
+        },
+        {
+            "id": 127,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh127_Mesh.obj"
+        },
+        {
+            "id": 128,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh128_Mesh.obj"
+        },
+        {
+            "id": 129,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh129_Mesh.obj"
+        },
+        {
+            "id": 130,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh130_Mesh.obj"
+        },
+        {
+            "id": 131,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh131_Mesh.obj"
+        },
+        {
+            "id": 132,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh132_Mesh.obj"
+        },
+        {
+            "id": 133,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh133_Mesh.obj"
+        },
+        {
+            "id": 134,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh134_Mesh.obj"
+        },
+        {
+            "id": 135,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh135_Mesh.obj"
+        },
+        {
+            "id": 136,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh136_Mesh.obj"
+        },
+        {
+            "id": 137,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh137_Mesh.obj"
+        },
+        {
+            "id": 138,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh138_Mesh.obj"
+        },
+        {
+            "id": 139,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh139_Mesh.obj"
+        },
+        {
+            "id": 140,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh140_Mesh.obj"
+        },
+        {
+            "id": 141,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh141_Mesh.obj"
+        },
+        {
+            "id": 142,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh142_Mesh.obj"
+        },
+        {
+            "id": 143,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh143_Mesh.obj"
+        },
+        {
+            "id": 144,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh144_Mesh.obj"
+        },
+        {
+            "id": 145,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh145_Mesh.obj"
+        },
+        {
+            "id": 146,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh146_Mesh.obj"
+        },
+        {
+            "id": 147,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh147_Mesh.obj"
+        },
+        {
+            "id": 148,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh148_Mesh.obj"
+        },
+        {
+            "id": 149,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh149_Mesh.obj"
+        },
+        {
+            "id": 150,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh150_Mesh.obj"
+        },
+        {
+            "id": 151,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh151_Mesh.obj"
+        },
+        {
+            "id": 152,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh152_Mesh.obj"
+        },
+        {
+            "id": 153,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh153_Mesh.obj"
+        },
+        {
+            "id": 154,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh154_Mesh.obj"
+        },
+        {
+            "id": 155,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh155_Mesh.obj"
+        },
+        {
+            "id": 156,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh156_Mesh.obj"
+        },
+        {
+            "id": 157,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh157_Mesh.obj"
+        },
+        {
+            "id": 158,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh158_Mesh.obj"
+        },
+        {
+            "id": 159,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh159_Mesh.obj"
+        },
+        {
+            "id": 160,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh160_Mesh.obj"
+        },
+        {
+            "id": 161,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh161_Mesh.obj"
+        },
+        {
+            "id": 162,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh162_Mesh.obj"
+        },
+        {
+            "id": 163,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh163_Mesh.obj"
+        },
+        {
+            "id": 164,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh164_Mesh.obj"
+        },
+        {
+            "id": 165,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh165_Mesh.obj"
+        },
+        {
+            "id": 166,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh166_Mesh.obj"
+        },
+        {
+            "id": 167,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh167_Mesh.obj"
+        },
+        {
+            "id": 168,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh168_Mesh.obj"
+        },
+        {
+            "id": 169,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh169_Mesh.obj"
+        },
+        {
+            "id": 170,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh170_Mesh.obj"
+        },
+        {
+            "id": 171,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh171_Mesh.obj"
+        },
+        {
+            "id": 172,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh172_Mesh.obj"
+        },
+        {
+            "id": 173,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh173_Mesh.obj"
+        },
+        {
+            "id": 174,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh174_Mesh.obj"
+        },
+        {
+            "id": 175,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh175_Mesh.obj"
+        },
+        {
+            "id": 176,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh176_Mesh.obj"
+        },
+        {
+            "id": 177,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh177_Mesh.obj"
+        },
+        {
+            "id": 178,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh178_Mesh.obj"
+        },
+        {
+            "id": 179,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh179_Mesh.obj"
+        },
+        {
+            "id": 180,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh180_Mesh.obj"
+        },
+        {
+            "id": 181,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh181_Mesh.obj"
+        },
+        {
+            "id": 182,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh182_Mesh.obj"
+        },
+        {
+            "id": 183,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh183_Mesh.obj"
+        },
+        {
+            "id": 184,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh184_Mesh.obj"
+        },
+        {
+            "id": 185,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh185_Mesh.obj"
+        },
+        {
+            "id": 186,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh186_Mesh.obj"
+        },
+        {
+            "id": 187,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh187_Mesh.obj"
+        },
+        {
+            "id": 188,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh188_Mesh.obj"
+        },
+        {
+            "id": 189,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh189_Mesh.obj"
+        },
+        {
+            "id": 190,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh190_Mesh.obj"
+        },
+        {
+            "id": 191,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh191_Mesh.obj"
+        },
+        {
+            "id": 192,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh192_Mesh.obj"
+        },
+        {
+            "id": 193,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh193_Mesh.obj"
+        },
+        {
+            "id": 194,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh194_Mesh.obj"
+        },
+        {
+            "id": 195,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh195_Mesh.obj"
+        },
+        {
+            "id": 196,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh196_Mesh.obj"
+        },
+        {
+            "id": 197,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh197_Mesh.obj"
+        },
+        {
+            "id": 198,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh198_Mesh.obj"
+        },
+        {
+            "id": 199,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh199_Mesh.obj"
+        },
+        {
+            "id": 200,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh200_Mesh.obj"
+        },
+        {
+            "id": 201,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh201_Mesh.obj"
+        },
+        {
+            "id": 202,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh202_Mesh.obj"
+        },
+        {
+            "id": 203,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh203_Mesh.obj"
+        },
+        {
+            "id": 204,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh204_Mesh.obj"
+        },
+        {
+            "id": 205,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh205_Mesh.obj"
+        },
+        {
+            "id": 206,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh206_Mesh.obj"
+        },
+        {
+            "id": 207,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh207_Mesh.obj"
+        },
+        {
+            "id": 208,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh208_Mesh.obj"
+        },
+        {
+            "id": 209,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh209_Mesh.obj"
+        },
+        {
+            "id": 210,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh210_Mesh.obj"
+        },
+        {
+            "id": 211,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh211_Mesh.obj"
+        },
+        {
+            "id": 212,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh212_Mesh.obj"
+        },
+        {
+            "id": 213,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh213_Mesh.obj"
+        },
+        {
+            "id": 214,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh214_Mesh.obj"
+        },
+        {
+            "id": 215,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh215_Mesh.obj"
+        },
+        {
+            "id": 216,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh216_Mesh.obj"
+        },
+        {
+            "id": 217,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh217_Mesh.obj"
+        },
+        {
+            "id": 218,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh218_Mesh.obj"
+        },
+        {
+            "id": 219,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh219_Mesh.obj"
+        },
+        {
+            "id": 220,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh220_Mesh.obj"
+        },
+        {
+            "id": 221,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh221_Mesh.obj"
+        },
+        {
+            "id": 222,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh222_Mesh.obj"
+        },
+        {
+            "id": 223,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh223_Mesh.obj"
+        },
+        {
+            "id": 224,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh224_Mesh.obj"
+        },
+        {
+            "id": 225,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh225_Mesh.obj"
+        },
+        {
+            "id": 226,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh226_Mesh.obj"
+        },
+        {
+            "id": 227,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh227_Mesh.obj"
+        },
+        {
+            "id": 228,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh228_Mesh.obj"
+        },
+        {
+            "id": 229,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh229_Mesh.obj"
+        },
+        {
+            "id": 230,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh230_Mesh.obj"
+        },
+        {
+            "id": 231,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh231_Mesh.obj"
+        },
+        {
+            "id": 232,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh232_Mesh.obj"
+        },
+        {
+            "id": 233,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh233_Mesh.obj"
+        },
+        {
+            "id": 234,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh234_Mesh.obj"
+        },
+        {
+            "id": 235,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh235_Mesh.obj"
+        },
+        {
+            "id": 236,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh236_Mesh.obj"
+        },
+        {
+            "id": 237,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh237_Mesh.obj"
+        },
+        {
+            "id": 238,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh238_Mesh.obj"
+        },
+        {
+            "id": 239,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh239_Mesh.obj"
+        },
+        {
+            "id": 240,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh240_Mesh.obj"
+        },
+        {
+            "id": 241,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh241_Mesh.obj"
+        },
+        {
+            "id": 242,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh242_Mesh.obj"
+        },
+        {
+            "id": 243,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh243_Mesh.obj"
+        },
+        {
+            "id": 244,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh244_Mesh.obj"
+        },
+        {
+            "id": 245,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh245_Mesh.obj"
+        },
+        {
+            "id": 246,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh246_Mesh.obj"
+        },
+        {
+            "id": 247,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh247_Mesh.obj"
+        },
+        {
+            "id": 248,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh248_Mesh.obj"
+        },
+        {
+            "id": 249,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh249_Mesh.obj"
+        },
+        {
+            "id": 250,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh250_Mesh.obj"
+        },
+        {
+            "id": 251,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh251_Mesh.obj"
+        },
+        {
+            "id": 252,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh252_Mesh.obj"
+        },
+        {
+            "id": 253,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh253_Mesh.obj"
+        },
+        {
+            "id": 254,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh254_Mesh.obj"
+        },
+        {
+            "id": 255,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh255_Mesh.obj"
+        },
+        {
+            "id": 256,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh256_Mesh.obj"
+        },
+        {
+            "id": 257,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh257_Mesh.obj"
+        },
+        {
+            "id": 258,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh258_Mesh.obj"
+        },
+        {
+            "id": 259,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh259_Mesh.obj"
+        },
+        {
+            "id": 260,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh260_Mesh.obj"
+        },
+        {
+            "id": 261,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh261_Mesh.obj"
+        },
+        {
+            "id": 262,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh262_Mesh.obj"
+        },
+        {
+            "id": 263,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh263_Mesh.obj"
+        },
+        {
+            "id": 264,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh264_Mesh.obj"
+        },
+        {
+            "id": 265,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh265_Mesh.obj"
+        },
+        {
+            "id": 266,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh266_Mesh.obj"
+        },
+        {
+            "id": 267,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh267_Mesh.obj"
+        },
+        {
+            "id": 268,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh268_Mesh.obj"
+        },
+        {
+            "id": 269,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh269_Mesh.obj"
+        },
+        {
+            "id": 270,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh270_Mesh.obj"
+        },
+        {
+            "id": 271,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh271_Mesh.obj"
+        },
+        {
+            "id": 272,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh272_Mesh.obj"
+        },
+        {
+            "id": 273,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh273_Mesh.obj"
+        },
+        {
+            "id": 274,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh274_Mesh.obj"
+        },
+        {
+            "id": 275,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh275_Mesh.obj"
+        },
+        {
+            "id": 276,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh276_Mesh.obj"
+        },
+        {
+            "id": 277,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh277_Mesh.obj"
+        },
+        {
+            "id": 278,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh278_Mesh.obj"
+        },
+        {
+            "id": 279,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh279_Mesh.obj"
+        },
+        {
+            "id": 280,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh280_Mesh.obj"
+        },
+        {
+            "id": 281,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh281_Mesh.obj"
+        },
+        {
+            "id": 282,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh282_Mesh.obj"
+        },
+        {
+            "id": 283,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh283_Mesh.obj"
+        },
+        {
+            "id": 284,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh284_Mesh.obj"
+        },
+        {
+            "id": 285,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh285_Mesh.obj"
+        },
+        {
+            "id": 286,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh286_Mesh.obj"
+        },
+        {
+            "id": 287,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh287_Mesh.obj"
+        },
+        {
+            "id": 288,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh288_Mesh.obj"
+        },
+        {
+            "id": 289,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "cullFace": false,
+            "name": "../Surfaces/Kitchen/Mesh289_Mesh.obj"
+        },
+        {
+            "id": 290,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh290_Mesh.obj"
+        },
+        {
+            "id": 291,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh291_Mesh.obj"
+        },
+        {
+            "id": 292,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh292_Mesh.obj"
+        },
+        {
+            "id": 293,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh293_Mesh.obj"
+        },
+        {
+            "id": 294,
+            "type": "Triangle",
+            "tag": "assimp_",
+            "innerIndex": 0,
+            "name": "../Surfaces/Kitchen/Mesh294_Mesh.obj"
+        },
+        {
+            // Light Prim (Simple Quad)
+            "id": 295,
+            "type": "Triangle",
+            "name": ".nodeTriangleIndexed",
+            "position": [[-0.5, 0,  0.5],
+					     [ 0.5, 0,  0.5],
+					     [ 0.5, 0, -0.5],
+                         [-0.5, 0, -0.5]],
+		    "normal": [[0, 1, 0],
+                       [0, 1, 0],
+				       [0, 1, 0],
+                       [0, 1, 0]],
+		    "uv": [[0, 0], [1, 0], [1, 1], [0, 1]],
+            "index": [0, 1, 2, 0, 2, 3]
+        }
+    ],
+
+    "Accelerators":
+    [
+        {"id" : 0, "type" : "BasicBVH", "useStack": true},
+        {"id" : 1, "type" : "Linear"}
+    ],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryLight": 0,
+    "BaseBoundaryTransform": 0,
+	"BaseMedium" : 0,
+
+    "Surfaces": [
+        // All Surfaces
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 0},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 1},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 2},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 3},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 4},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 5},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 6},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 7},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 8},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 9},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 10},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 11},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 12},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 13},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 14},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 15},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 16},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 17},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 18},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 19},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 20},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 21},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 22},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 23},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 24},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 25},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 26},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 27},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 28},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 29},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 30},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 31},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 32},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 33},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 34},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 35},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 36},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 37},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 38},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 39},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 40},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 41},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 42},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 43},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 44},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 45},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 46},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 47},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 48},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 49},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 50},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 51},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 52},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 53},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 54},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 55},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 56},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 57},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 58},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 59},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 60},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 61},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 62},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 63},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 64},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 65},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 66},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 67},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 68},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 69},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 70},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 71},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 72},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 73},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 74},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 75},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 76},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 77},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 78},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 79},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 80},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 81},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 82},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 83},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 84},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 85},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 86},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 87},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 88},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 89},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 90},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 91},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 92},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 93},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 94},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 95},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 96},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 97},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 98},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 99},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 100},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 101},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 102},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 103},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 104},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 105},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 106},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 107},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 108},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 109},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 110},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 111},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 112},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 113},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 114},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 115},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 116},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 117},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 118},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 119},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 120},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 121},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 122},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 123},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 124},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 125},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 126},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 127},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 128},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 129},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 130},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 131},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 132},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 133},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 134},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 135},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 136},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 137},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 138},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 139},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 140},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 141},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 142},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 143},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 144},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 145},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 146},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 147},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 148},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 149},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 150},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 151},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 152},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 153},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 154},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 155},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 156},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 157},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 158},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 159},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 160},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 161},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 162},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 163},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 164},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 165},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 166},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 167},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 168},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 169},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 170},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 171},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 172},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 173},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 174},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 175},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 176},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 177},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 178},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 179},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 180},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 181},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 182},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 183},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 184},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 185},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 186},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 187},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 188},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 189},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 190},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 191},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 192},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 193},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 194},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 195},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 196},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 197},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 198},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 199},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 200},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 201},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 202},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 203},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 204},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 205},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 206},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 207},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 208},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 209},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 210},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 211},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 212},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 213},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 214},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 215},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 216},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 217},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 218},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 219},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 220},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 221},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 222},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 223},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 224},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 225},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 226},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 227},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 228},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 229},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 230},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 231},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 232},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 233},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 234},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 235},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 236},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 237},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 238},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 239},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 240},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 241},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 242},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 243},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 244},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 245},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 246},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 247},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 248},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 249},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 250},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 251},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 252},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 253},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 254},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 255},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 256},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 257},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 258},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 259},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 260},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 261},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 262},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 263},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 264},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 265},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 266},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 267},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 268},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 269},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 270},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 271},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 272},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 273},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 274},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 275},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 276},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 277},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 278},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 279},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 280},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 281},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 282},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 283},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 284},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 285},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 286},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 287},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 288},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 289},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 290},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 291},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 292},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 293},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 294}
+    ],
+
+     // Lights
+     "LightSurfaces": [
+        // Shelf Lights
+        { "light": 1, "transform": 1},
+        { "light": 1, "transform": 2},
+        { "light": 1, "transform": 3},
+        // Window Light
+        { "light": 2, "transform": 4}
+    ],
+    // Cameras
+    "CameraSurfaces": [{"camera": 0}]
+}

@@ -714,13 +714,15 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                             treeGPU.dLeafRadianceRead,
                                             treeGPU.dLeafBinInfo,
                                             treeGPU.dLeafRadianceWrite,
-                                            treeGPU.dLeafSampleCountWrite),
+                                            treeGPU.dLeafSampleCountWrite,
+                                            // Node Offsets
+                                            treeGPU.dLevelNodeOffsets),
                                    octreeMem,
                                    {totalNodeCount, totalNodeCount,
                                    totalNodeCount,
                                    hUniqueVoxelCount, hUniqueVoxelCount,
                                    hUniqueVoxelCount, hUniqueVoxelCount,
-                                   hUniqueVoxelCount});
+                                   hUniqueVoxelCount, levelNodeOffsets.size()});
 
     // Set Node and leaf parents to max to early catch errors
     // Rest is set to zero
@@ -739,6 +741,10 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
     CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
     CUDA_CHECK(cudaMemset(treeGPU.dLeafSampleCountWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
+
+    CUDA_CHECK(cudaMemcpy(treeGPU.dLevelNodeOffsets, levelNodeOffsets.data(),
+                          levelNodeOffsets.size() * sizeof(uint32_t),
+                          cudaMemcpyHostToDevice));
 
     // Top down-generate voxels
     // For each level save the node range for
@@ -904,10 +910,6 @@ void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount
                                i,
                                minLevel,
                                minRayCount);
-
-        //Debug::DumpMemToFile(std::to_string(i) + std::string("_binInfo"),
-        //                     treeGPU.dBinInfo + levelNodeOffsets[i],
-        //                     nodeCount, false, true);
     }
     // Leaf->Parent chain now there is at least a single mark
     // Rays will re-check and find their marked bin and set their id accordingly
