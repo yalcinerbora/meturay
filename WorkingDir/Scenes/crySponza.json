@@ -1,6 +1,6 @@
 {
-	"Cameras": [
-	{
+    "Cameras": [
+    {
 		"id": 0,
 		"type": "Pinhole",
 
@@ -8,76 +8,102 @@
 		"fov": [94.45, 53.13],
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 2, 0.0],
-		"planes": [0.1, 20.0],
-		"position": [0.0, 3.0, 7.0],
+		"planes": [1, 5000.0],
+		"gaze": [0.0, 0.0, 0.0],
+		"position": [177, 128, -25],
 		"up": [0.0, 1.0, 0.0]
 	}],
+
+	"Textures":
+	[
+		{ "id": 0, "file": "../Textures/ModernPool/kloppenheim_05_4k.exr"},
+		{
+			// Vase Plant
+			"id": [1, 2],
+			"file":
+			[
+				"../Textures/Sponza/vase_plant.png",
+				"../Textures/Sponza/vase_plant_mask.png"
+			]
+		},
+		{
+			// Vase
+			"id": [3, 4],
+			"file":
+			[
+				"../Textures/Sponza/vase_round.png",
+				"../Textures/Sponza/vase_round_normal.png"
+			]
+		}
+	],
 
 	"Lights": [
 	{
 		"id": 0,
-		"type": "Directional",
-
-		"material" : 1,
-		//"direction": [0, -1, 0],
-		"direction": [0.40825, -0.8165, 0.40825],
-		"power": [1.0, 1.0, 1.0]
+		"type": "SkySphere",
+		"radiance" : {"texture": 0, "channels": "rgb"}
 	}],
 
-    "Mediums": [{ "id" : 0, "type" : "Vacuum"}],
+	"Mediums": [
+	{
+		"id" : 0,
+		"type" : "Vacuum"
+	}],
 
-	"Transforms":[{"id": 0, "type": "Identity"}],
+	"Transforms":[
+		{"id": 0, "type": "Identity"}
+	],
 
 	"Materials":[
-	{
-        // General Boundary Material
-        // Black Background
-		"id": 0,
-        "type": "Emissive",
-		"radiance" : [0, 0, 0]
-    },
     {
-		// Light Boundary Material
-		"id": 1,
-		"type": "LightConstant",
-		"radiance" : [15, 15, 15]
-		//"radiance" : [9.5, 9.5, 9.5]
-		//"radiance" : [1.1, 1.1, 1.1]
-    },
-	{
-        // GFG Materials
-        // GFG File format is custom binary format
-        // for fast loading scenes
-        // It support basic materials (list of data and textures which is not standardized)
-        "id": ["2 - 27"],
-        "innerIndex": ["0-25"],
-        "type": "Phong",
-        "name": "../Surfaces/crytek_sponza.gfg"
-    }],
+		// Vase Leafs & Vase
+		"id": [1, 2],
+		"type": "Unreal",
+		"albedo" :
+		[
+			// 1 Vase Leafs
+			{"texture": 1, "channels": "rgb"},
+			// 2 Vase
+			{"texture": 3, "channels": "rgb"}
+		],
+		"normal":
+		[
+			"-",
+			{"texture": 4, "channels": "rgb"}
+		],
+		"specular": [0.1, 0.8],
+		"metallic": [0.1, 0.8],
+		"roughness":[0.9, 0.35]
+    }
+   	],
 
 	"Primitives":[
-	{
-		// GFG Primitives
-        "id": ["28 - 600"],
-        "innerIndex": ["0 - 600"],
+    {
+		// Vase Oject
+		"id": [0, 1],
 		"type": "Triangle",
-        "name": "../Surfaces/crytek_sponza.gfg"
+        "name": "../Surfaces/Sponza/sponza_vase.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1],
+		"cullFace": [false, true],
+		"alphaMap": [{"texture": 2, "channels": "a"}, "-"]
 	}],
 
-    // Accelerators and their options
-    "Accelerators":[{"id": 0, "type":"BasicBVH", "useStack": true}],
+	"Accelerators": [{"id" : 0, "type" : "Linear"}],
 
     //================================================//
     //        Actual Scene Related Declarations       //
     //================================================//
-    "BaseAccelerator": {"type": "BasicBVH"},
-    "BaseBoundaryMaterial": 0,
+    "BaseAccelerator": {"type": "Linear"},
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
-    // Surfaces
-	"Surfaces": ["crySponzaSurfaces.bin"],
+	"Surfaces":
+	[
+    	{"transform": 0, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]}
+    ],
 
-	"LightSurfaces": [{"light": 0, "material": 1}],
+	"LightSurfaces": [],
+
     "CameraSurfaces": [{"camera": 0}]
 }
