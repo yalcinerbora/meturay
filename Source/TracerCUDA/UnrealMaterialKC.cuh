@@ -86,11 +86,16 @@ struct UnrealDeviceFuncs
         Vector3 L = 2.0f * V.Dot(H) * H - V;
 
         // BRDF Calculation
-        float NdL = max(N.Dot(L), 0.0f);
-        float NdV = max(N.Dot(V), 0.0f);
-        float NdH = max(N.Dot(H), 0.0f);
-        float VdH = max(V.Dot(H), 0.0f);
-        float LdH = max(L.Dot(H), 0.0f);
+        //float NdL = max(N.Dot(L), 0.0f);
+        //float NdV = max(N.Dot(V), 0.0f);
+        //float NdH = max(N.Dot(H), 0.0f);
+        //float VdH = max(V.Dot(H), 0.0f);
+        //float LdH = max(L.Dot(H), 0.0f);
+        float NdL = abs(N.Dot(L));
+        float NdV = abs(N.Dot(V));
+        float NdH = abs(N.Dot(H));
+        float VdH = abs(V.Dot(H));
+        float LdH = abs(L.Dot(H));
 
         // Edge cases
         if(NdV == 0.0f || LdH == 0.0f)
@@ -122,7 +127,7 @@ struct UnrealDeviceFuncs
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = (isSpecular) ? f0 : TracerFunctions::FSchlick(VdH, f0);
 
-        //Vector3f F = Vector3f(1.0f);
+        //F = Vector3f(1.0f);
         //G = 1.0f;
         //D = 1.0f;
 

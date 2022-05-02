@@ -113,7 +113,8 @@
             "file": [
                 "../Textures/Kitchen/cushion-normal.png",
                 "../Textures/Kitchen/cushion-red.jpg"
-            ]
+            ],
+            "signed": [true, false]
         },
         // BreadBin
         {
@@ -121,7 +122,8 @@
             "file": [
                 "../Textures/Kitchen/bread-bin-front-normal.png",
                 "../Textures/Kitchen/Worktopt-light.jpg"
-            ]
+            ],
+            "signed": [true, false]
         },
         // Floor
         {"id": 9, "file": "../Textures/Kitchen/wood.jpg"},

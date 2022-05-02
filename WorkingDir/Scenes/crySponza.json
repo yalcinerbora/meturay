@@ -33,7 +33,104 @@
 			[
 				"../Textures/Sponza/vase_round.png",
 				"../Textures/Sponza/vase_round_normal.png"
+			],
+			"signed": [false, true]
+		},
+		{
+			// Walls
+			"id": [5, 6, 7],
+			"file":
+			[
+				"../Textures/Sponza/sponza_bricks_a_diff.png",
+				"../Textures/Sponza/sponza_bricks_a_normal.png",
+				"../Textures/Sponza/sponza_bricks_a_spec_inv.png"
+			],
+			"signed": [false, true, false]
+		},
+		// Roof
+		{ "id": 8, "file": "../Textures/Sponza/sponza_roof_diff.png" },
+		{
+			// Floor
+			"id": [9, 10, 11],
+			"file":
+			[
+				"../Textures/Sponza/sponza_floor_a_diff.png",
+				"../Textures/Sponza/sponza_floor_a_normal.png",
+				"../Textures/Sponza/sponza_floor_a_spec_inv.png"
+			],
+			"signed": [false, true, false]
+		},
+		{
+			// Ceiling
+			"id": [12, 13],
+			"file":
+			[
+				"../Textures/Sponza/sponza_ceiling_a_diff.png",
+				"../Textures/Sponza/sponza_ceiling_a_spec_inv.png"
 			]
+		},
+		{
+			// Arch
+			"id": [14, 15, 16],
+			"file":
+			[
+				"../Textures/Sponza/sponza_arch_diff.png",
+				"../Textures/Sponza/sponza_arch_normal.png",
+				"../Textures/Sponza/sponza_arch_spec_inv.png"
+			],
+			"signed": [false, true, false]
+		},
+		{
+			// Column C
+			"id": [17, 18, 19],
+			"file":
+			[
+				"../Textures/Sponza/sponza_column_c_diff.png",
+				"../Textures/Sponza/sponza_column_c_normal.png",
+				"../Textures/Sponza/sponza_column_c_spec_inv.png"
+			],
+			"signed": [false, true, false]
+		},
+		{
+			// Column A
+			"id": [20, 21, 22],
+			"file":
+			[
+				"../Textures/Sponza/sponza_column_a_diff.png",
+				"../Textures/Sponza/sponza_column_a_normal.png",
+				"../Textures/Sponza/sponza_column_a_spec_inv.png"
+			],
+			"signed": [false, true, false]
+		},
+		{
+			// Detail
+			"id": [23, 24],
+			"file":
+			[
+				"../Textures/Sponza/sponza_details_diff.png",
+				"../Textures/Sponza/sponza_details_spec_inv.png"
+			]
+		},
+		{
+			// Big Vase
+			"id": [25, 26],
+			"file":
+			[
+				"../Textures/Sponza/sponza_big_vase_diff.png",
+				"../Textures/Sponza/sponza_big_vase_normal.png"
+			],
+			"signed": [false, true]
+		},
+		{
+			// Column B
+			"id": [27, 28, 29],
+			"file":
+			[
+				"../Textures/Sponza/sponza_column_b_diff.png",
+				"../Textures/Sponza/sponza_column_b_normal.png",
+				"../Textures/Sponza/sponza_column_b_spec_inv.png"
+			],
+			"signed": [false, true, false]
 		}
 	],
 
@@ -51,7 +148,106 @@
 	}],
 
 	"Transforms":[
-		{"id": 0, "type": "Identity"}
+		{"id": 0, "type": "Identity"},
+		{
+			// Vase Transforms
+			"id": [1, 2, 3, 4, 5, 6, 7, 8],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[-965, -4, 150], [-245, -4, 150], [119, -4, 150], [833, -4, 150],
+				[-965, -4, -224], [-245, -4, -224], [119, -4, -224], [833, -4, -224]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Column C1 Transforms
+			"id": [9, 10, 11, 12, 13, 14, 15, 16],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[-618, 510, 206], [-249, 510, 206], [120, 510, 206], [492, 510, 206],
+				[-618, 510, -278], [-249, 510, -278], [120, 510, -278], [492, 510, -278]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Column C2 Transforms
+			"id": [17, 18, 19, 20],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[869, 507, 194], [869, 507, -267], [-997, 507, -267], [-997, 507, 194]
+			],
+            "rotate": [[0, 0, 0], [0, 90, 0], [0, 180, 0], [0, 270, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Column A1 Transforms
+			"id": [21, 22, 23, 24, 25, 26, 27, 28],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[-620, -2, -279], [-246, -2, -279], [122, -2, -279], [491, -2, -279],
+				[-620, -2, 206], [-246, -2, 206], [122, -2, 206], [491, -2, 206]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Column A2 Transforms
+			"id": [29, 30, 31, 32],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[-1003, -2, -262], [-1003, -2, 192], [871, -2, 192], [871, -2, -262]
+			],
+            "rotate": [[0, 0, 0], [0, 90, 0], [0, 180, 0], [0, 270, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Big Vase Transforms
+			"id": [33, 34, 35, 36],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[-1203, -1, -449], [1120, -1, -449], [1120, -1, 404], [-1203, -1, 404]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Column A1 Transforms
+			"id": [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[678, 507, 205], [306, 507, 205], [-63, 507, 205], [-443, 507, 205], [-805, 507, 205],
+				[678, 507, -280], [306, 507, -280], [-63, 507, -280], [-443, 507, -280], [-805, 507, 205],
+				[-1012, 507, -35], [881, 507, -35]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [0.89, 1.022, 0.861], [0.89, 1.022, 0.861]]
+		}
 	],
 
 	"Materials":[
@@ -71,10 +267,102 @@
 			"-",
 			{"texture": 4, "channels": "rgb"}
 		],
-		"specular": [0.1, 0.8],
+		"specular": [0.4, 0.5],
 		"metallic": [0.1, 0.8],
-		"roughness":[0.9, 0.35]
-    }
+		"roughness":[0.9, 0.32]
+    },
+	{
+		// Walls
+		"id": 3,
+		"type": "Unreal",
+		"albedo": {"texture": 5, "channels": "rgb"},
+		"normal": {"texture": 6, "channels": "rgb"},
+		"roughness": {"texture": 7, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.2
+	},
+	{
+		// Roof
+		"id": 4,
+		"type": "Lambert",
+		"albedo": {"texture": 8, "channels": "rgb"}
+	},
+	{
+		// Floor
+		"id": 5,
+		"type": "Unreal",
+		"albedo": {"texture": 9, "channels": "rgb"},
+		"normal": {"texture": 10, "channels": "rgb"},
+		"roughness": {"texture": 11, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.3
+	},
+	{
+		// Ceiling
+		"id": 6,
+		"type": "Unreal",
+		"albedo": {"texture": 12, "channels": "rgb"},
+		"roughness": {"texture": 13, "channels": "r"},
+		//"roughness": 1.0,
+		"specular": 0.8,
+		"metallic": 0.3
+	},
+	{
+		// Arch
+		"id": 7,
+		"type": "Unreal",
+		"albedo": {"texture": 14, "channels": "rgb"},
+		"normal": {"texture": 15, "channels": "rgb"},
+		"roughness": {"texture": 16, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.3
+	},
+	{
+		// Column C
+		"id": 8,
+		"type": "Unreal",
+		"albedo": {"texture": 17, "channels": "rgb"},
+		"normal": {"texture": 18, "channels": "rgb"},
+		"roughness": {"texture": 19, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.3
+	},
+	{
+		// Column A
+		"id": 9,
+		"type": "Unreal",
+		"albedo": {"texture": 20, "channels": "rgb"},
+		"normal": {"texture": 21, "channels": "rgb"},
+		"roughness": {"texture": 22, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.3
+	},
+	{
+		// Details
+		"id": 10,
+		"type": "Unreal",
+		"albedo": {"texture": 23, "channels": "rgb"},
+		"roughness": {"texture": 24, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.3
+	},
+	{
+		// Big Vase
+		"id": 11,
+		"type": "Lambert",
+		"albedo": {"texture": 25, "channels": "rgb"},
+		"normal": {"texture": 26, "channels": "rgb"}
+	},
+	{
+		// Column B
+		"id": 12,
+		"type": "Unreal",
+		"albedo": {"texture": 27, "channels": "rgb"},
+		"normal": {"texture": 28, "channels": "rgb"},
+		"roughness": {"texture": 29, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.3
+	}
    	],
 
 	"Primitives":[
@@ -87,7 +375,104 @@
 		"innerIndex": [0, 1],
 		"cullFace": [false, true],
 		"alphaMap": [{"texture": 2, "channels": "a"}, "-"]
-	}],
+	},
+	{
+		// Vase Oject
+		"id": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_walls.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+	},
+	{
+		// Roof
+		"id": [14, 15],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_roof.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1]
+	},
+	{
+		// Floor
+		"id": [16, 17],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_floors.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1]
+	},
+	{
+		// Ceiling
+		"id": [18, 19],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_ceiling.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1]
+	},
+	{
+		// Arches
+		"id": [20, 21, 22, 23, 24, 25, 26],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_arches.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3, 4, 5, 6]
+	},
+	{
+		// Column C1
+		"id": 27,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_pillar_c1.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Column C2
+		"id": 28,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_pillar_c2.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Column A1
+		"id": 29,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_pillar_a1.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Column A2
+		"id": 30,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_pillar_a2.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Detail Objects
+		"id": [31, 32, 33, 34, 35],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_details.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3, 4]
+	},
+	{
+		// Big Vase
+		"id": 36,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_big_vase.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Column B1
+		"id": [37, 38, 39, 40, 41, 42, 43],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_pillar_b1.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3, 4, 5, 6]
+	}
+	],
 
 	"Accelerators": [{"id" : 0, "type" : "Linear"}],
 
@@ -100,7 +485,98 @@
 
 	"Surfaces":
 	[
-    	{"transform": 0, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]}
+		// // Vases
+    	// {"transform": 1, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// {"transform": 2, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// {"transform": 3, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// {"transform": 4, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// {"transform": 5, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// {"transform": 6, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// {"transform": 7, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// {"transform": 8, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// // Walls
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 2},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 3},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 4},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 5},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 6},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 7},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 8},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 9},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 10},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 11},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 12},
+		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 13},
+		// // Roof
+		// {"transform": 0, "accelerator": 0, "material": 4, "primitive": 14},
+		// {"transform": 0, "accelerator": 0, "material": 4, "primitive": 15},
+		// // Floor
+		// {"transform": 0, "accelerator": 0, "material": 5, "primitive": 16},
+		// {"transform": 0, "accelerator": 0, "material": 5, "primitive": 17},
+		// // Ceiling
+		// {"transform": 0, "accelerator": 0, "material": 6, "primitive": 18},
+		// {"transform": 0, "accelerator": 0, "material": 6, "primitive": 19},
+		// // Arch
+		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 20},
+		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 21},
+		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 22},
+		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 23},
+		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 24},
+		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 25},
+		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 26},
+		// // Column C1
+		// {"transform": 9, "accelerator": 0, "material": 8, "primitive": 27},
+		// {"transform": 10, "accelerator": 0, "material": 8, "primitive": 27},
+		// {"transform": 11, "accelerator": 0, "material": 8, "primitive": 27},
+		// {"transform": 12, "accelerator": 0, "material": 8, "primitive": 27},
+		// {"transform": 13, "accelerator": 0, "material": 8, "primitive": 27},
+		// {"transform": 14, "accelerator": 0, "material": 8, "primitive": 27},
+		// {"transform": 15, "accelerator": 0, "material": 8, "primitive": 27},
+		// {"transform": 16, "accelerator": 0, "material": 8, "primitive": 27},
+		// // Column C2
+		// {"transform": 17, "accelerator": 0, "material": 8, "primitive": 28},
+		// {"transform": 18, "accelerator": 0, "material": 8, "primitive": 28},
+		// {"transform": 19, "accelerator": 0, "material": 8, "primitive": 28},
+		// {"transform": 20, "accelerator": 0, "material": 8, "primitive": 28},
+		// // Column A1
+		// {"transform": 21, "accelerator": 0, "material": 9, "primitive": 29},
+		// {"transform": 22, "accelerator": 0, "material": 9, "primitive": 29},
+		// {"transform": 23, "accelerator": 0, "material": 9, "primitive": 29},
+		// {"transform": 24, "accelerator": 0, "material": 9, "primitive": 29},
+		// {"transform": 25, "accelerator": 0, "material": 9, "primitive": 29},
+		// {"transform": 26, "accelerator": 0, "material": 9, "primitive": 29},
+		// {"transform": 27, "accelerator": 0, "material": 9, "primitive": 29},
+		// {"transform": 28, "accelerator": 0, "material": 9, "primitive": 29},
+		// // Column A2
+		// {"transform": 29, "accelerator": 0, "material": 9, "primitive": 30},
+		// {"transform": 30, "accelerator": 0, "material": 9, "primitive": 30},
+		// {"transform": 31, "accelerator": 0, "material": 9, "primitive": 30},
+		// {"transform": 32, "accelerator": 0, "material": 9, "primitive": 30},
+		// // Details
+		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 31},
+		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 32},
+		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 33},
+		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 34},
+		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 35},
+		// // Big Vase
+		// {"transform": 33, "accelerator": 0, "material": 11, "primitive": 36},
+		// {"transform": 34, "accelerator": 0, "material": 11, "primitive": 36},
+		// {"transform": 35, "accelerator": 0, "material": 11, "primitive": 36},
+		// {"transform": 36, "accelerator": 0, "material": 11, "primitive": 36},
+		// Pillar B
+		{"transform": 37, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 38, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 39, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 40, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 41, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 42, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 43, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 44, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 45, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 46, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 47, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		{"transform": 48, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]}
+
     ],
 
 	"LightSurfaces": [],
