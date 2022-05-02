@@ -105,7 +105,7 @@ namespace TracerFunctions
 
         // Pdf
         float ggxResult = DGGX(cosTheta, roughness);
-        pdf = ggxResult * cosTheta;
+        pdf = cosTheta * ggxResult;
         return ggxResult;
     }
 

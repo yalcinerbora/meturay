@@ -446,3 +446,56 @@ Vector<3, T> Ray<T>::AdvancedPos(T t) const
 {
     return position + t * direction;
 }
+
+template<>
+__device__ __host__ HYBRID_INLINE
+Ray<float> Ray<float>::Nudge(const Vector3f& dir) const
+{
+    // CPU code max/min is on std namespace but CUDA has its global namespace
+    #ifndef __CUDA_ARCH__
+    using namespace std;
+    #endif
+
+    static constexpr float INF_LOCAL = INFINITY;
+    static constexpr float NEG_INF_LOCAL = -INFINITY;
+
+    // Find the next floating point towards
+    // the direction
+    Vector3f nextPos;
+    nextPos[0] = nextafterf(position[0], (signbit(dir[0]) ? NEG_INF_LOCAL : INF_LOCAL));
+    nextPos[1] = nextafterf(position[1], (signbit(dir[1]) ? NEG_INF_LOCAL : INF_LOCAL));
+    nextPos[2] = nextafterf(position[2], (signbit(dir[2]) ? NEG_INF_LOCAL : INF_LOCAL));
+
+    return Ray(direction, nextPos);
+}
+
+template<>
+__device__ __host__ HYBRID_INLINE
+Ray<double> Ray<double>::Nudge(const Vector3d& dir) const
+{
+    // CPU code max/min is on std namespace but CUDA has its global namespace
+    #ifndef __CUDA_ARCH__
+    using namespace std;
+    #endif
+
+    static constexpr double INF_LOCAL = INFINITY;
+    static constexpr double NEG_INF_LOCAL = -INFINITY;
+
+    // Find the next floating point towards
+    // the direction
+    Vector3d nextPos;
+    nextPos[0] = nextafter(position[0], (signbit(dir[0]) ? NEG_INF_LOCAL : INF_LOCAL));
+    nextPos[1] = nextafter(position[1], (signbit(dir[1]) ? NEG_INF_LOCAL : INF_LOCAL));
+    nextPos[2] = nextafter(position[2], (signbit(dir[2]) ? NEG_INF_LOCAL : INF_LOCAL));
+
+    return Ray(direction, nextPos);
+}
+
+template<class T>
+__device__ __host__ HYBRID_INLINE
+Ray<T>& Ray<T>::NudgeSelf(const Vector<3, T>& dir)
+{
+    Ray<T> r = Nudge(dir);
+    (*this) = r;
+    return *this;
+}

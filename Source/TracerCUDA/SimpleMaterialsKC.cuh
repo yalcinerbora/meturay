@@ -133,7 +133,6 @@ struct ReflectMatFuncs
             // Singularity Just Reflect
             wo = RayF(wi, pos).Reflect(normal);
             wo.AdvanceSelf(MathConstants::Epsilon, normal);
-
             pdf = 1.0f;
             return albedo;
         }

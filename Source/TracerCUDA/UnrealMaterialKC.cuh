@@ -69,6 +69,7 @@ struct UnrealDeviceFuncs
         // Sample a H (Half Vector)
         Vector3 H;
         float D = TracerFunctions::DGGXSample(H, pdf, roughness, rng);
+
         // Before continue with H
         // Apply a rotation to it if there is a normal map
         // Is involved
@@ -80,6 +81,7 @@ struct UnrealDeviceFuncs
             QuatF normalRot = Quat::RotationBetweenZAxis(N);
             H = normalRot.ApplyRotation(H);
         }
+
         // Gen L (aka. wo)
         Vector3 L = 2.0f * V.Dot(H) * H - V;
 
@@ -119,24 +121,31 @@ struct UnrealDeviceFuncs
         // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = (isSpecular) ? f0 : TracerFunctions::FSchlick(VdH, f0);
-        // We need to slightly nudge the ray start
-        // to prevent self intersection
-        // Normal is on tangent space so convert it to world space
-        // Convert Normal to World Space
-        Vector3f normalWorld = GPUSurface::ToWorld(N, surface.worldToTangent);
-        // Same is true for wo(aka L)
-        Vector3f woDir = GPUSurface::ToWorld(L, surface.worldToTangent);
-        Vector3f woPos = pos + normalWorld * MathConstants::Epsilon;
 
-        // Calculate Radiance
+        //Vector3f F = Vector3f(1.0f);
+        //G = 1.0f;
+        //D = 1.0f;
+
+        //=======================//
+        // Calculate Reflectance //
+        //=======================//
         // Blend between albedo-black for metallic material
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
         // Notice that NdL terms are canceled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
-        // Ray Out
-        wo = RayF(woDir, pos);
+
+        //=======================//
+        //  Calculate Direction  //
+        //=======================//
+        // We need to slightly nudge the ray start
+        // to prevent self intersection
+        // Normal is on tangent space so convert it to world space
+        // Convert Normal to World Space
+        wo = RayF(GPUSurface::ToWorld(L, surface.worldToTangent), pos);
+        wo.AdvanceSelf(MathConstants::Epsilon,
+                       GPUSurface::ToWorld(N, surface.worldToTangent));
 
         // PDF is already written
         // Finally return Radiance

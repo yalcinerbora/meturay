@@ -8,6 +8,9 @@ Ray struct for convenient usability.
 #include "Vector.h"
 #include "Quaternion.h"
 #include "HybridFunctions.h"
+
+#include <limits>
+
 template<class T, typename = ArithmeticEnable<T>>
 class Ray;
 template<class T>
@@ -76,9 +79,9 @@ class Ray<T>
         __device__ __host__ Ray                     NormalizeDir() const;
         __device__ __host__ Ray&                    NormalizeDirSelf();
         __device__ __host__ Ray                     Advance(T) const;
-        __device__ __host__ Ray                     Advance(T t, const Vector<3,T>&) const;
+        __device__ __host__ Ray                     Advance(T t, const Vector<3,T>& direction) const;
         __device__ __host__ Ray&                    AdvanceSelf(T);
-        __device__ __host__ Ray&                    AdvanceSelf(T t, const Vector<3, T>&);
+        __device__ __host__ Ray&                    AdvanceSelf(T t, const Vector<3, T>& direction);
         __device__ __host__ Ray                     Transform(const Quaternion<T>&) const;
         __device__ __host__ Ray                     Transform(const Matrix<3, T>&) const;
         __device__ __host__ Ray                     Transform(const Matrix<4, T>&) const;
@@ -86,6 +89,8 @@ class Ray<T>
         __device__ __host__ Ray&                    TransformSelf(const Matrix<3, T>&);
         __device__ __host__ Ray&                    TransformSelf(const Matrix<4, T>&);
         __device__ __host__ Vector<3,T>             AdvancedPos(T t) const;
+        __device__ __host__ Ray                     Nudge(const Vector<3, T>& direction) const;
+        __device__ __host__ Ray&                    NudgeSelf(const Vector<3, T>& direction);
 };
 
 using RayF = Ray<float>;
