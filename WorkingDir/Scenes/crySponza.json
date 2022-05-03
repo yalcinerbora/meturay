@@ -9,8 +9,8 @@
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
 		"planes": [1, 5000.0],
-		"gaze": [0.0, 0.0, 0.0],
-		"position": [177, 128, -25],
+		"gaze": [964.531, 659.303, -160.483],
+		"position": [965.48, 659.598, -160.596],
 		"up": [0.0, 1.0, 0.0]
 	}],
 
@@ -131,6 +131,96 @@
 				"../Textures/Sponza/sponza_column_b_spec_inv.png"
 			],
 			"signed": [false, true, false]
+		},
+		{
+			// Thorns
+			"id": [30, 31, 32],
+			"file":
+			[
+				"../Textures/Sponza/sponza_thorn_diff.png",
+				"../Textures/Sponza/sponza_thorn_normal.png",
+				"../Textures/Sponza/sponza_thorn_spec_inv.png"
+			],
+			"signed": [false, true, false]
+		},
+		{
+			// Flag Pole
+			"id": [33, 34, 35],
+			"file":
+			[
+				"../Textures/Sponza/sponza_flagpole_diff.png",
+				"../Textures/Sponza/sponza_flagpole_normal.png",
+				"../Textures/Sponza/sponza_flagpole_spec_inv.png"
+			],
+			"signed": [false, true, false]
+		},
+		{
+			// Chain
+			"id": [36, 37],
+			"file":
+			[
+				"../Textures/Sponza/chain_diff.png",
+				"../Textures/Sponza/chain_normal.png"
+			],
+			"signed": [false, true]
+		},
+		{
+			// Hanging Vase
+			"id": [38, 39],
+			"file":
+			[
+				"../Textures/Sponza/vase_hanging_diff.png",
+				"../Textures/Sponza/vase_hanging_normal.png"
+			],
+			"signed": [false, true]
+		},
+		{
+			// Hanging Vase
+			"id": [40, 41],
+			"file":
+			[
+				"../Textures/Sponza/lion_back_diff.png",
+				"../Textures/Sponza/lion_back_normal.png"
+			],
+			"signed": [false, true]
+		},
+		{
+			// Hanging Vase
+			"id": [42, 43],
+			"file":
+			[
+				"../Textures/Sponza/lion_head_diff.png",
+				"../Textures/Sponza/lion_head_normal.png"
+			],
+			"signed": [false, true]
+		},
+		{
+			// Curtains
+			"id": [44, 45, 46, 47, 48, 49],
+			"file":
+			[
+				"../Textures/Sponza/sponza_curtain_red_diff.png",
+				"../Textures/Sponza/sponza_curtain_green_diff.png",
+				"../Textures/Sponza/sponza_curtain_blue_diff.png",
+				"../Textures/Sponza/sponza_curtain_spec.png",
+				"../Textures/Sponza/sponza_curtain_spec_inv.png",
+				"../Textures/Sponza/sponza_curtain_normal.png"
+			],
+			"signed": [false, false, false, false, false, true]
+		},
+		{
+			// Fabrics
+			"id": [50, 51, 52, 53, 54, 55],
+			"file":
+			[
+				"../Textures/Sponza/sponza_fabric_red_diff.png",
+				"../Textures/Sponza/sponza_fabric_green_diff.png",
+				"../Textures/Sponza/sponza_fabric_blue_diff.png",
+				"../Textures/Sponza/sponza_fabric_spec.png",
+				"../Textures/Sponza/sponza_fabric_spec_inv.png",
+				"../Textures/Sponza/sponza_fabric_normal.png"
+			],
+			"signed": [false, false, false, false, false, true]
 		}
 	],
 
@@ -238,7 +328,7 @@
 			"translate":
 			[
 				[678, 507, 205], [306, 507, 205], [-63, 507, 205], [-443, 507, 205], [-805, 507, 205],
-				[678, 507, -280], [306, 507, -280], [-63, 507, -280], [-443, 507, -280], [-805, 507, 205],
+				[678, 507, -280], [306, 507, -280], [-63, 507, -280], [-443, 507, -280], [-805, 507, -280],
 				[-1012, 507, -35], [881, 507, -35]
 			],
             "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
@@ -247,6 +337,138 @@
             "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
 					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
 					  [0.89, 1.022, 0.861], [0.89, 1.022, 0.861]]
+		},
+		{
+			// Pole A Transforms
+			"id": [49, 50, 51, 52, 53, 54, 55, 56, 57, 58],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[675, 282, -279], [307, 282, -279], [-62, 282, -279], [-434, 282, -279], [-803, 282, -279],
+				[675, 282, 199], [307, 282, 199], [-62, 282, 199], [-434, 282, 199], [-803, 282, 199]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Hanging Vase Transforms
+			"id": [59, 60, 61, 62],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[488, 215, 170], [-619, 215, 170], [488, 215, -247], [-619, 215, -247]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 180, 0], [0, 180, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Window A Transforms
+			"id": [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[677, 927, 186], [306, 927, 186], [-62, 927, 186], [-434, 927, 186], [-805, 927, 186],
+				[677, 927, -258], [306, 927, -258], [-62, 927, -258], [-434, 927, -258], [-805, 927, -258],
+				[-1013, 927, -34]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 180, 0], [0, 180, 0], [0, 180, 0], [0, 180, 0], [0, 180, 0],
+					   [0, 270, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1]]
+		},
+		{
+			// Window B Transforms
+			"id": [74, 75, 76, 77, 78, 79, 80, 81, 82],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[507, 1216, -253], [137, 1216, -253], [-265, 1216, -253], [-635, 1216, -253],
+				[507, 1216, 180], [137, 1216, 180], [-265, 1216, 180], [-635, 1216, 180],
+				[-1002, 1218, -35]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 180, 0], [0, 180, 0], [0, 180, 0], [0, 180, 0],
+					   [0, 90, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1]]
+		},
+		{
+			// Pole B Transforms
+			"id": [83, 84, 85, 86, 87, 88, 89, 90],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[493, 838, -260], [122, 838, -260], [-248, 838, -260], [-618, 838, -260],
+				[493, 838, 186], [122, 838, 186], [-248, 838, 186], [-618, 838, 186]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 180, 0], [0, 180, 0], [0, 180, 0], [0, 180, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Pillar Detail B Transform
+			"id": 91,
+			"type": "Single",
+			"layout": "trs",
+			"translate": [0, -477.762, 0],
+            "rotate": [0, 0, 0],
+            "scale": [1, 1, 1]
+		},
+		{
+			// Lion Transforms
+			"id": [92, 93, 94],
+			"type": "Single",
+			"layout": "trs",
+			"translate": [[1300, 42, -36], [-1429, 42, -36], [-1425, 494, -36]],
+            "rotate": [[0, 0, 0], [0, 180, 0], [0, 180, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Curtain Transforms
+			"id": [95, 96, 97, 98, 99, 100, 101, 102, 103, 104],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[676, 3, 201], [-61, 3, 201], [-803, 3, 201],
+				[676, 3, -277], [-61, 3, -277], [-803, 3, -277],
+				[304, 2, -283], [-434, 2, -283],
+				[304, 2, 196], [-434, 2, 196]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0],
+					   [0, 0, 0], [0, 0, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Fabric Transforms
+			"id": [105, 106, 107, 108, 109, 110, 111, 112],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[-619, 512, 205], [-250, 512, 205], [119, 512, 205], [487, 512, 205],
+				[-619, 512, -277], [-250, 512, -277], [119, 512, -277], [487, 512, -277]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+					   [0, 180, 0], [0, 180, 0], [0, 180, 0], [0, 180, 0]],
+            "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
 		}
 	],
 
@@ -362,6 +584,103 @@
 		"roughness": {"texture": 29, "channels": "r"},
 		"specular": 0.8,
 		"metallic": 0.3
+	},
+	{
+		// Thorns
+		"id": 13,
+		"type": "Unreal",
+		"albedo": {"texture": 30, "channels": "rgb"},
+		"normal": {"texture": 31, "channels": "rgb"},
+		"roughness": 0.5,
+		"specular": {"texture": 32, "channels": "r"},
+		"metallic": 0.1
+	},
+	{
+		// Flag Pole
+		"id": 14,
+		"type": "Unreal",
+		"albedo": {"texture": 33, "channels": "rgb"},
+		"normal": {"texture": 34, "channels": "rgb"},
+		"roughness": {"texture": 35, "channels": "r"},
+		"specular": 0.8,
+		"metallic": 0.1
+	},
+	{
+		// Chain
+		"id": 15,
+		"type": "Unreal",
+		"albedo": {"texture": 36, "channels": "rgb"},
+		"normal": {"texture": 37, "channels": "rgb"},
+		"roughness": 0.145,
+		"specular": 0.9,
+		"metallic": 1
+	},
+	{
+		// Hanging Vase
+		"id": 16,
+		"type": "Unreal",
+		"albedo": {"texture": 38, "channels": "rgb"},
+		"normal": {"texture": 39, "channels": "rgb"},
+		"roughness": 0.145,
+		"specular": 0.9,
+		"metallic": 0.2
+	},
+	{
+		// Lion Back
+		"id": 17,
+		"type": "Unreal",
+		"albedo": {"texture": 40, "channels": "rgb"},
+		"normal": {"texture": 41, "channels": "rgb"},
+		"roughness": 0.35,
+		"specular": 0.4,
+		"metallic": 0
+	},
+	{
+		// Lion Head
+		"id": 18,
+		"type": "Unreal",
+		"albedo": {"texture": 42, "channels": "rgb"},
+		"normal": {"texture": 43, "channels": "rgb"},
+		"roughness": 0.35,
+		"specular": 0.4,
+		"metallic": 0
+	},
+	{
+		// Curtain Red, Green Blue
+		"id": [19, 20, 21],
+		"type": "Unreal",
+		"albedo": [{"texture": 44, "channels": "rgb"},
+				   {"texture": 45, "channels": "rgb"},
+				   {"texture": 46, "channels": "rgb"}],
+		"normal": [{"texture": 49, "channels": "rgb"},
+				   {"texture": 49, "channels": "rgb"},
+				   {"texture": 49, "channels": "rgb"}],
+		"roughness": [{"texture": 48, "channels": "r"},
+			          {"texture": 48, "channels": "r"},
+			          {"texture": 48, "channels": "r"}],
+		//"roughness": [1, 1, 1],
+		"specular": [{"texture": 47, "channels": "r"},
+			         {"texture": 47, "channels": "r"},
+			         {"texture": 47, "channels": "r"}],
+		"metallic": [0, 0, 0]
+	},
+	{
+		// Fabric Red, Green Blue
+		"id": [22, 23, 24],
+		"type": "Unreal",
+		"albedo": [{"texture": 50, "channels": "rgb"},
+				   {"texture": 51, "channels": "rgb"},
+				   {"texture": 52, "channels": "rgb"}],
+		"normal": [{"texture": 55, "channels": "r"},
+				   {"texture": 55, "channels": "r"},
+				   {"texture": 55, "channels": "r"}],
+		"roughness": [{"texture": 54, "channels": "r"},
+			          {"texture": 54, "channels": "r"},
+			          {"texture": 54, "channels": "r"}],
+		"specular": [{"texture": 53, "channels": "r"},
+			         {"texture": 53, "channels": "r"},
+			         {"texture": 53, "channels": "r"}],
+		"metallic": [0, 0, 0]
 	}
    	],
 
@@ -471,98 +790,209 @@
         "name": "../Surfaces/Sponza/sponza_pillar_b1.obj",
         "tag": "assimp_",
 		"innerIndex": [0, 1, 2, 3, 4, 5, 6]
-	}
-	],
+	},
+	{
+		// Thorns
+		"id": [44, 45, 46, 47, 48, 49, 50, 51],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_thorns.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3, 4, 5, 6, 7],
+		"cullFace": [false, false, false, false, false, false, false, false],
+		"alphaMap": [{"texture": 30, "channels": "a"}, {"texture": 30, "channels": "a"},
+					 {"texture": 30, "channels": "a"}, {"texture": 30, "channels": "a"},
+					 {"texture": 30, "channels": "a"}, {"texture": 30, "channels": "a"},
+					 {"texture": 30, "channels": "a"}, {"texture": 30, "channels": "a"}]
+	},
+	{
+		// Sponza Pole A
+		"id": [52, 53, 54],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_pole_a.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1, 2]
+	},
+	{
+		// Sponza Hanging Vase
+		"id": [55, 56, 57, 58, 59, 60, 61, 62],
+		"type": "Triangle",
+        "name": "../Surfaces/Sponza/sponza_vase_hang.obj",
+        "tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3, 4, 5, 6, 7],
+		"cullFace": [false, false, false, false,
+					 true, true, true, true],
+		"alphaMap": [{"texture": 36, "channels": "a"}, {"texture": 36, "channels": "a"},
+					 {"texture": 36, "channels": "a"}, {"texture": 36, "channels": "a"},
+					 "-", "-", "-", "-"]
+	},
+	{
+		// Window A
+		"id": 63,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_window_a.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Window A
+		"id": 64,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_window_b.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Pole B
+		"id": [65, 66],
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_pole_b.obj",
+		"tag": "assimp_",
+		"innerIndex": [0, 1]
+	},
+	{
+		// Pillar Details A
+		"id": [67, 68, 69, 70, 71,
+			   72, 73, 74, 75, 76,
+			   77, 78, 79, 80, 81,
+			   82, 83, 84, 85, 86],
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_pillar_detail_a.obj",
+		"tag": "assimp_",
+		"innerIndex": [0, 1, 2, 3, 4,
+					   5, 6, 7, 8, 9,
+					   10, 11, 12, 13, 14,
+					   15, 16, 17, 18, 19]
+	},
+	{
+		// Lion Back
+		"id": 87,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_lion_back.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Lion
+		"id": 88,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_lion_head.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Curtain A
+		"id": 89,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_curtain_a.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Curtain B
+		"id": 90,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_curtain_b.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	},
+	{
+		// Fabric
+		"id": 91,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_fabric_2.obj",
+		"tag": "assimp_",
+		"innerIndex": 0
+	}],
 
-	"Accelerators": [{"id" : 0, "type" : "Linear"}],
+	"Accelerators": [{"id" : 0, "type" : "BasicBVH"}],
 
     //================================================//
     //        Actual Scene Related Declarations       //
     //================================================//
-    "BaseAccelerator": {"type": "Linear"},
+    "BaseAccelerator": {"type": "BasicBVH"},
     "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces":
 	[
-		// // Vases
-    	// {"transform": 1, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// {"transform": 2, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// {"transform": 3, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// {"transform": 4, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// {"transform": 5, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// {"transform": 6, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// {"transform": 7, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// {"transform": 8, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
-		// // Walls
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 2},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 3},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 4},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 5},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 6},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 7},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 8},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 9},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 10},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 11},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 12},
-		// {"transform": 0, "accelerator": 0, "material": 3, "primitive": 13},
-		// // Roof
-		// {"transform": 0, "accelerator": 0, "material": 4, "primitive": 14},
-		// {"transform": 0, "accelerator": 0, "material": 4, "primitive": 15},
-		// // Floor
-		// {"transform": 0, "accelerator": 0, "material": 5, "primitive": 16},
-		// {"transform": 0, "accelerator": 0, "material": 5, "primitive": 17},
-		// // Ceiling
-		// {"transform": 0, "accelerator": 0, "material": 6, "primitive": 18},
-		// {"transform": 0, "accelerator": 0, "material": 6, "primitive": 19},
-		// // Arch
-		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 20},
-		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 21},
-		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 22},
-		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 23},
-		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 24},
-		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 25},
-		// {"transform": 0, "accelerator": 0, "material": 7, "primitive": 26},
-		// // Column C1
-		// {"transform": 9, "accelerator": 0, "material": 8, "primitive": 27},
-		// {"transform": 10, "accelerator": 0, "material": 8, "primitive": 27},
-		// {"transform": 11, "accelerator": 0, "material": 8, "primitive": 27},
-		// {"transform": 12, "accelerator": 0, "material": 8, "primitive": 27},
-		// {"transform": 13, "accelerator": 0, "material": 8, "primitive": 27},
-		// {"transform": 14, "accelerator": 0, "material": 8, "primitive": 27},
-		// {"transform": 15, "accelerator": 0, "material": 8, "primitive": 27},
-		// {"transform": 16, "accelerator": 0, "material": 8, "primitive": 27},
-		// // Column C2
-		// {"transform": 17, "accelerator": 0, "material": 8, "primitive": 28},
-		// {"transform": 18, "accelerator": 0, "material": 8, "primitive": 28},
-		// {"transform": 19, "accelerator": 0, "material": 8, "primitive": 28},
-		// {"transform": 20, "accelerator": 0, "material": 8, "primitive": 28},
-		// // Column A1
-		// {"transform": 21, "accelerator": 0, "material": 9, "primitive": 29},
-		// {"transform": 22, "accelerator": 0, "material": 9, "primitive": 29},
-		// {"transform": 23, "accelerator": 0, "material": 9, "primitive": 29},
-		// {"transform": 24, "accelerator": 0, "material": 9, "primitive": 29},
-		// {"transform": 25, "accelerator": 0, "material": 9, "primitive": 29},
-		// {"transform": 26, "accelerator": 0, "material": 9, "primitive": 29},
-		// {"transform": 27, "accelerator": 0, "material": 9, "primitive": 29},
-		// {"transform": 28, "accelerator": 0, "material": 9, "primitive": 29},
-		// // Column A2
-		// {"transform": 29, "accelerator": 0, "material": 9, "primitive": 30},
-		// {"transform": 30, "accelerator": 0, "material": 9, "primitive": 30},
-		// {"transform": 31, "accelerator": 0, "material": 9, "primitive": 30},
-		// {"transform": 32, "accelerator": 0, "material": 9, "primitive": 30},
-		// // Details
-		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 31},
-		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 32},
-		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 33},
-		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 34},
-		// {"transform": 0, "accelerator": 0, "material": 10, "primitive": 35},
-		// // Big Vase
-		// {"transform": 33, "accelerator": 0, "material": 11, "primitive": 36},
-		// {"transform": 34, "accelerator": 0, "material": 11, "primitive": 36},
-		// {"transform": 35, "accelerator": 0, "material": 11, "primitive": 36},
-		// {"transform": 36, "accelerator": 0, "material": 11, "primitive": 36},
+		// Vases
+    	{"transform": 1, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		{"transform": 2, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		{"transform": 3, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		{"transform": 4, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		{"transform": 5, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		{"transform": 6, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		{"transform": 7, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		{"transform": 8, "accelerator": 0, "material": [1, 2], "primitive": [0, 1]},
+		// Walls
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 2},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 3},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 4},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 5},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 6},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 7},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 8},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 9},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 10},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 11},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 12},
+		{"transform": 0, "accelerator": 0, "material": 3, "primitive": 13},
+		// Roof
+		{"transform": 0, "accelerator": 0, "material": 4, "primitive": 14},
+		{"transform": 0, "accelerator": 0, "material": 4, "primitive": 15},
+		// Floor
+		{"transform": 0, "accelerator": 0, "material": 5, "primitive": 16},
+		{"transform": 0, "accelerator": 0, "material": 5, "primitive": 17},
+		// Ceiling
+		{"transform": 0, "accelerator": 0, "material": 6, "primitive": 18},
+		{"transform": 0, "accelerator": 0, "material": 6, "primitive": 19},
+		// Arch
+		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 20},
+		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 21},
+		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 22},
+		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 23},
+		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 24},
+		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 25},
+		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 26},
+		// Column C1
+		{"transform": 9, "accelerator": 0, "material": 8, "primitive": 27},
+		{"transform": 10, "accelerator": 0, "material": 8, "primitive": 27},
+		{"transform": 11, "accelerator": 0, "material": 8, "primitive": 27},
+		{"transform": 12, "accelerator": 0, "material": 8, "primitive": 27},
+		{"transform": 13, "accelerator": 0, "material": 8, "primitive": 27},
+		{"transform": 14, "accelerator": 0, "material": 8, "primitive": 27},
+		{"transform": 15, "accelerator": 0, "material": 8, "primitive": 27},
+		{"transform": 16, "accelerator": 0, "material": 8, "primitive": 27},
+		// Column C2
+		{"transform": 17, "accelerator": 0, "material": 8, "primitive": 28},
+		{"transform": 18, "accelerator": 0, "material": 8, "primitive": 28},
+		{"transform": 19, "accelerator": 0, "material": 8, "primitive": 28},
+		{"transform": 20, "accelerator": 0, "material": 8, "primitive": 28},
+		// Column A1
+		{"transform": 21, "accelerator": 0, "material": 9, "primitive": 29},
+		{"transform": 22, "accelerator": 0, "material": 9, "primitive": 29},
+		{"transform": 23, "accelerator": 0, "material": 9, "primitive": 29},
+		{"transform": 24, "accelerator": 0, "material": 9, "primitive": 29},
+		{"transform": 25, "accelerator": 0, "material": 9, "primitive": 29},
+		{"transform": 26, "accelerator": 0, "material": 9, "primitive": 29},
+		{"transform": 27, "accelerator": 0, "material": 9, "primitive": 29},
+		{"transform": 28, "accelerator": 0, "material": 9, "primitive": 29},
+		// Column A2
+		{"transform": 29, "accelerator": 0, "material": 9, "primitive": 30},
+		{"transform": 30, "accelerator": 0, "material": 9, "primitive": 30},
+		{"transform": 31, "accelerator": 0, "material": 9, "primitive": 30},
+		{"transform": 32, "accelerator": 0, "material": 9, "primitive": 30},
+		// Details
+		{"transform": 0, "accelerator": 0, "material": 10, "primitive": 31},
+		{"transform": 0, "accelerator": 0, "material": 10, "primitive": 32},
+		{"transform": 0, "accelerator": 0, "material": 10, "primitive": 33},
+		{"transform": 0, "accelerator": 0, "material": 10, "primitive": 34},
+		{"transform": 0, "accelerator": 0, "material": 10, "primitive": 35},
+		// Big Vase
+		{"transform": 33, "accelerator": 0, "material": 11, "primitive": 36},
+		{"transform": 34, "accelerator": 0, "material": 11, "primitive": 36},
+		{"transform": 35, "accelerator": 0, "material": 11, "primitive": 36},
+		{"transform": 36, "accelerator": 0, "material": 11, "primitive": 36},
 		// Pillar B
 		{"transform": 37, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
 		{"transform": 38, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
@@ -575,8 +1005,129 @@
 		{"transform": 45, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
 		{"transform": 46, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
 		{"transform": 47, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
-		{"transform": 48, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]}
-
+		{"transform": 48, "accelerator": 0, "material": [12, 12, 12, 12, 12, 12, 12], "primitive": [37, 38, 39, 40, 41, 42, 43]},
+		// Thorns
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 44},
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 45},
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 46},
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 47},
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 48},
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 49},
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 50},
+		{"transform": 0, "accelerator": 0, "material": 13, "primitive": 51},
+		// Pole A
+		{"transform": 49, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 50, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 51, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 52, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 53, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 54, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 55, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 56, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 57, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		{"transform": 58, "accelerator": 0, "material": [14, 14, 14], "primitive": [52, 53, 54]},
+		// Hanging Vase
+		{"transform": 59, "accelerator": 0, "material": [15, 15, 15, 15, 16, 16, 16, 16], "primitive": [55, 56, 57, 58, 59, 60, 61, 62]},
+		{"transform": 60, "accelerator": 0, "material": [15, 15, 15, 15, 16, 16, 16, 16], "primitive": [55, 56, 57, 58, 59, 60, 61, 62]},
+		{"transform": 61, "accelerator": 0, "material": [15, 15, 15, 15, 16, 16, 16, 16], "primitive": [55, 56, 57, 58, 59, 60, 61, 62]},
+		{"transform": 62, "accelerator": 0, "material": [15, 15, 15, 15, 16, 16, 16, 16], "primitive": [55, 56, 57, 58, 59, 60, 61, 62]},
+		// Window A
+		{"transform": 63, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 64, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 65, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 66, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 67, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 68, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 69, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 70, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 71, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 72, "accelerator": 0, "material": 7, "primitive": 63},
+		{"transform": 73, "accelerator": 0, "material": 7, "primitive": 63},
+		// Window B
+		{"transform": 74, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 75, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 76, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 77, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 78, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 79, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 80, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 81, "accelerator": 0, "material": 7, "primitive": 64},
+		{"transform": 82, "accelerator": 0, "material": 7, "primitive": 64},
+		// Pole B
+		{"transform": 83, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		{"transform": 84, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		{"transform": 85, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		{"transform": 86, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		{"transform": 87, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		{"transform": 88, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		{"transform": 89, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		{"transform": 90, "accelerator": 0, "material": [14, 14], "primitive": [65, 66]},
+		// Pillar Detail A
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 67},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 68},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 69},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 70},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 71},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 72},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 73},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 74},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 75},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 76},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 77},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 78},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 79},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 80},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 81},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 82},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 83},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 84},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 85},
+		{"transform": 0, "accelerator": 0, "material": 8, "primitive": 86},
+		// Pillar Detail B
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 67},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 68},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 69},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 70},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 71},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 72},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 73},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 74},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 75},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 76},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 77},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 78},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 79},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 80},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 81},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 82},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 83},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 84},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 85},
+		{"transform": 91, "accelerator": 0, "material": 8, "primitive": 86},
+		// Lions
+		{"transform": 92, "accelerator": 0, "material": [17, 18], "primitive": [87, 88]},
+		{"transform": 93, "accelerator": 0, "material": [17, 18], "primitive": [87, 88]},
+		{"transform": 94, "accelerator": 0, "material": 17, "primitive": 87},
+		// Curtains
+		{"transform": 95, "accelerator": 0, "material": 19, "primitive": 89},
+		{"transform": 96, "accelerator": 0, "material": 21, "primitive": 89},
+		{"transform": 97, "accelerator": 0, "material": 20, "primitive": 89},
+		{"transform": 98, "accelerator": 0, "material": 21, "primitive": 89},
+		{"transform": 99, "accelerator": 0, "material": 20, "primitive": 89},
+		{"transform": 100, "accelerator": 0, "material": 19, "primitive": 89},
+		{"transform": 101, "accelerator": 0, "material": 19, "primitive": 90},
+		{"transform": 102, "accelerator": 0, "material": 21, "primitive": 90},
+		{"transform": 103, "accelerator": 0, "material": 20, "primitive": 90},
+		{"transform": 104, "accelerator": 0, "material": 19, "primitive": 90},
+		// Fabrics
+		{"transform": 105, "accelerator": 0, "material": 23, "primitive": 91},
+		{"transform": 106, "accelerator": 0, "material": 24, "primitive": 91},
+		{"transform": 107, "accelerator": 0, "material": 22, "primitive": 91},
+		{"transform": 108, "accelerator": 0, "material": 23, "primitive": 91},
+		{"transform": 109, "accelerator": 0, "material": 24, "primitive": 91},
+		{"transform": 110, "accelerator": 0, "material": 22, "primitive": 91},
+		{"transform": 111, "accelerator": 0, "material": 23, "primitive": 91},
+		{"transform": 112, "accelerator": 0, "material": 24, "primitive": 91}
     ],
 
 	"LightSurfaces": [],
