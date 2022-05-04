@@ -101,17 +101,25 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
                              const Vector<3, T>* n,
                              const Vector<3, T>* t)
 {
-    Vector<3, T> b0 = Cross(n[0], t[0]);
-    Vector<3, T> b1 = Cross(n[1], t[1]);
-    Vector<3, T> b2 = Cross(n[2], t[2]);
+    Vector<3, T> t0 = t[0];
+    Vector<3, T> t1 = t[1];
+    Vector<3, T> t2 = t[2];
 
-    TransformGen::Space(q0, t[0], b0, n[0]);
-    TransformGen::Space(q1, t[1], b1, n[1]);
-    TransformGen::Space(q2, t[2], b2, n[2]);
+    // Gram-Schmidt orthonormalization
+    // This is required since normal may be skewed to hide
+    // edges (to create smooth lighting)
+    t0 = (t0 - n[0] * n[0].Dot(t0)).Normalize();
+    t1 = (t1 - n[1] * n[1].Dot(t1)).Normalize();
+    t2 = (t2 - n[2] * n[2].Dot(t2)).Normalize();
 
-    q0.ConjugateSelf();
-    q1.ConjugateSelf();
-    q2.ConjugateSelf();
+    // Generate bi-tangent
+    Vector<3, T> b0 = Cross(n[0], t0);
+    Vector<3, T> b1 = Cross(n[1], t1);
+    Vector<3, T> b2 = Cross(n[2], t2);
+
+    TransformGen::Space(q0, t0, b0, n[0]);
+    TransformGen::Space(q1, t1, b1, n[1]);
+    TransformGen::Space(q2, t2, b2, n[2]);
 }
 
 template <class T>

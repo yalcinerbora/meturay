@@ -12,6 +12,19 @@
 		"gaze": [964.531, 659.303, -160.483],
 		"position": [965.48, 659.598, -160.596],
 		"up": [0.0, 1.0, 0.0]
+	},
+	{
+		"id": 1,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"planes": [1, 5000.0],
+		"gaze": [-726.105, 107.282, -201.852],
+		"position": [-727.049, 107.424, -202.151],
+		"up": [0.0, 1.0, 0.0]
 	}],
 
 	"Textures":
@@ -516,8 +529,8 @@
 		"albedo": {"texture": 9, "channels": "rgb"},
 		"normal": {"texture": 10, "channels": "rgb"},
 		"roughness": {"texture": 11, "channels": "r"},
-		"specular": 0.8,
-		"metallic": 0.3
+		"specular": 1,
+		"metallic": 0.0
 	},
 	{
 		// Ceiling
@@ -525,7 +538,6 @@
 		"type": "Unreal",
 		"albedo": {"texture": 12, "channels": "rgb"},
 		"roughness": {"texture": 13, "channels": "r"},
-		//"roughness": 1.0,
 		"specular": 0.8,
 		"metallic": 0.3
 	},
@@ -658,7 +670,6 @@
 		"roughness": [{"texture": 48, "channels": "r"},
 			          {"texture": 48, "channels": "r"},
 			          {"texture": 48, "channels": "r"}],
-		//"roughness": [1, 1, 1],
 		"specular": [{"texture": 47, "channels": "r"},
 			         {"texture": 47, "channels": "r"},
 			         {"texture": 47, "channels": "r"}],
@@ -671,18 +682,17 @@
 		"albedo": [{"texture": 50, "channels": "rgb"},
 				   {"texture": 51, "channels": "rgb"},
 				   {"texture": 52, "channels": "rgb"}],
-		"normal": [{"texture": 55, "channels": "r"},
-				   {"texture": 55, "channels": "r"},
-				   {"texture": 55, "channels": "r"}],
+		"normal": [{"texture": 55, "channels": "rgb"},
+				   {"texture": 55, "channels": "rgb"},
+				   {"texture": 55, "channels": "rgb"}],
 		"roughness": [{"texture": 54, "channels": "r"},
 			          {"texture": 54, "channels": "r"},
 			          {"texture": 54, "channels": "r"}],
 		"specular": [{"texture": 53, "channels": "r"},
 			         {"texture": 53, "channels": "r"},
 			         {"texture": 53, "channels": "r"}],
-		"metallic": [0, 0, 0]
-	}
-   	],
+		"metallic": [0.1, 0.1, 0.1]
+	}],
 
 	"Primitives":[
     {
@@ -899,12 +909,13 @@
 		// Fabric
 		"id": 91,
 		"type": "Triangle",
-		"name": "../Surfaces/Sponza/sponza_fabric_2.obj",
+		"name": "../Surfaces/Sponza/sponza_fabric.fbx",
 		"tag": "assimp_",
-		"innerIndex": 0
+		"innerIndex": 0,
+		"cullFace": true
 	}],
 
-	"Accelerators": [{"id" : 0, "type" : "BasicBVH"}],
+	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
 
     //================================================//
     //        Actual Scene Related Declarations       //
@@ -1132,5 +1143,5 @@
 
 	"LightSurfaces": [],
 
-    "CameraSurfaces": [{"camera": 0}]
+    "CameraSurfaces": [{"camera": 0}, {"camera": 1}]
 }

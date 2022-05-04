@@ -252,11 +252,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                               tangents[1] = tangentsIn[indices[1]];
                               tangents[2] = tangentsIn[indices[2]];
 
-                              //Vector3 biTangents[3];
-                              //biTangents[0] = biTangentsIn[indices[0]];
-                              //biTangents[1] = biTangentsIn[indices[1]];
-                              //biTangents[2] = biTangentsIn[indices[2]];
-
                               // Generate rotations
                               QuatF q0, q1, q2;
                               Triangle::LocalRotation(q0, q1, q2, normals, tangents);

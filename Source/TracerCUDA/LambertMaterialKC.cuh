@@ -46,14 +46,9 @@ struct LambertMatFuncs
 
         // Cos Theta
         float nDotL = max(normal.Dot(direction), 0.0f);
-
         // Ray out
-        Vector3 gNnormalW = GPUSurface::NormalWorld(surface.worldToTangent);
-        Vector3 outPos = position + gNnormalW * MathConstants::Epsilon;
-        Vector3 outDir = GPUSurface::ToWorld(direction, surface.worldToTangent);
-
-        // Ray out
-        wo = RayF(outDir, outPos);
+        wo = RayF(GPUSurface::ToWorld(direction, surface.worldToTangent), position);
+        wo.AdvanceSelf(MathConstants::Epsilon, GPUSurface::NormalWorld(surface.worldToTangent));
 
         // Radiance Calculation
         const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
