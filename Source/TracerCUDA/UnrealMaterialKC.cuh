@@ -127,10 +127,6 @@ struct UnrealDeviceFuncs
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = (isSpecular) ? f0 : TracerFunctions::FSchlick(VdH, f0);
 
-        //F = Vector3f(1.0f);
-        //G = 1.0f;
-        //D = 1.0f;
-
         //=======================//
         // Calculate Reflectance //
         //=======================//

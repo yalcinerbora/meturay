@@ -382,7 +382,7 @@ void RLTracerPathWork(// Output
         {
             // Generate Ray
             RayF rayNEE = RayF(lDirection, position);
-            rayNEE.AdvanceSelf(MathConstants::Epsilon);
+            rayNEE.AdvanceSelf(MathConstants::Epsilon, surface.WorldNormal());
             RayReg rayOut;
             rayOut.ray = rayNEE;
             rayOut.tMin = 0.0f;
