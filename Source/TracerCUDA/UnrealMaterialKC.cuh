@@ -230,11 +230,16 @@ struct UnrealDeviceFuncs
         Vector3 V = GPUSurface::ToTangent(wi, surface.worldToTangent);
         Vector3 H = (L + V).Normalize();
         // BRDF Calculation
-        float NdL = max(N.Dot(L), 0.0f);
-        float NdV = max(N.Dot(V), 0.0f);
-        float NdH = max(N.Dot(H), 0.0f);
-        float VdH = max(V.Dot(H), 0.0f);
-        float LdH = max(L.Dot(H), 0.0f);
+        //float NdL = max(N.Dot(L), 0.0f);
+        //float NdV = max(N.Dot(V), 0.0f);
+        //float NdH = max(N.Dot(H), 0.0f);
+        //float VdH = max(V.Dot(H), 0.0f);
+        //float LdH = max(L.Dot(H), 0.0f);
+        float NdL = abs(N.Dot(L));
+        float NdV = abs(N.Dot(V));
+        float NdH = abs(N.Dot(H));
+        float VdH = abs(V.Dot(H));
+        float LdH = abs(L.Dot(H));
 
         // Edge cases
         if(NdV == 0.0f || LdH == 0.0f)

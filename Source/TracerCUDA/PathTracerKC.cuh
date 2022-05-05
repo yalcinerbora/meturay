@@ -275,7 +275,8 @@ void PathTracerPathWork(// Output
         {
             // Generate Ray
             RayF rayNEE = RayF(lDirection, position);
-            rayNEE.AdvanceSelf(MathConstants::Epsilon, surface.WorldNormal());
+            //rayNEE.AdvanceSelf(MathConstants::Epsilon, surface.WorldNormal());
+            rayNEE.AdvanceSelf(0.1f, surface.WorldNormal());
             RayReg rayOut;
             rayOut.ray = rayNEE;
             rayOut.tMin = 0.0f;

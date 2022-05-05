@@ -52,8 +52,9 @@ struct LambertConstFuncs
         float nDotL = max(normal.Dot(direction), 0.0f);
 
         // Ray out
-        Vector3 outPos = position + normal * MathConstants::Epsilon;
-        wo = RayF(direction, outPos);
+        wo = RayF(direction, position);
+        wo.AdvanceSelf(0.1f, normal);
+        //wo.AdvanceSelf(MathConstants::Epsilon, normal);
         // BSDF Calculation
         return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
     }

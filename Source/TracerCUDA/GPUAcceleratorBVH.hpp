@@ -563,8 +563,8 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             partitionQueue.emplace(SplitWork{false, splitLoc, current.end, nextSplit, nextParentId, current.depth + 1});
             maxDepth = static_cast<uint8_t>(current.depth + 1);
 
-            if((current.depth + 1) > MAX_BASE_DEPTH)
-                return TracerError::UNABLE_TO_CONSTRUCT_BASE_ACCELERATOR;
+            if((current.depth + 1) > MAX_DEPTH)
+                return TracerError::UNABLE_TO_CONSTRUCT_ACCELERATOR;
         }
     }
      // BVH cannot hold this surface return error

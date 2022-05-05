@@ -100,8 +100,8 @@ inline void AOWork(// Output
         float nDotL = max(normal.Dot(direction), 0.0f);
 
         // Ray out
-        Vector3 outPos = position + normal * MathConstants::Epsilon;
-        RayF ray = RayF(direction, outPos);
+        RayF ray = RayF(direction, position);
+        ray.AdvanceSelf(MathConstants::Epsilon, normal);
         // AO Calculation
         Vector3 aoMultiplier = Vector3(nDotL * MathConstants::InvPi);
         auxOut.aoFactor = aoMultiplier;
