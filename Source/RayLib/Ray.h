@@ -53,12 +53,12 @@ class Ray<T>
                                                                     const Vector<3, T>& planePos,
                                                                     const Vector<3, T>& normal);
         __device__ __host__ bool                    IntersectsAABB(const Vector<3, T>& min,
-                                                               const Vector<3, T>& max,
-                                                               const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
+                                                                   const Vector<3, T>& max,
+                                                                   const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
         __device__ __host__ bool                    IntersectsAABB(Vector<3,T>& pos, T& t,
-                                                               const Vector<3, T>& min,
-                                                               const Vector<3, T>& max,
-                                                               const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
+                                                                   const Vector<3, T>& min,
+                                                                   const Vector<3, T>& max,
+                                                                   const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
 
         // Utility
         __device__ __host__ Ray                     Reflect(const Vector<3, T>& normal) const;

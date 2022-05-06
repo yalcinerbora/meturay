@@ -178,7 +178,7 @@ bool Quaternion<T>::operator!=(const Quaternion& right) const
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Quaternion<T> Quaternion<T>::Normalize() const
 {
     return Quaternion(vec.Normalize());
@@ -207,7 +207,7 @@ T Quaternion<T>::LengthSqr() const
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Quaternion<T> Quaternion<T>::Conjugate() const
 {
     return Quaternion(vec[0], -vec[1], -vec[2], -vec[3]);
@@ -355,14 +355,13 @@ Quaternion<T> Quat::RotationBetweenZAxis(const Vector<3, T>& b)
     T z = zCrossD[2] * sin;
     T w = cos;
     // Handle singularities
-    if(abs(zDotD + 1) < MathConstants::Epsilon)
+    if(abs(zDotD + 1) < MathConstants::LargeEpsilon)
     {
         // Spaces are 180 degree apart
         // Define pi turn
-        return Quaternion<T>(static_cast<T>(MathConstants::Pi_d),
-                             Vector<3, T>(0, 1, 0));
+        return Quaternion<T>(0, 0, 1, 0);
     }
-    else if(abs(zDotD - 1) < MathConstants::Epsilon)
+    else if(abs(zDotD - 1) < MathConstants::LargeEpsilon)
     {
         // Spaces are nearly equivalent
         // Just turn identity

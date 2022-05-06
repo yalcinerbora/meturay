@@ -119,7 +119,9 @@ void KCWork(// Output
 
         // Generate surface data from hit
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
-        const Surface surface = SurfFunc(hit, transform, primitiveId, primData);
+        const Surface surface = SurfFunc(hit, transform,
+                                         ray.ray.getDirection(),
+                                         primitiveId, primData);
 
         // Determine Output Location
         // Make it locally indexable
@@ -227,7 +229,9 @@ void KCBoundaryWork(// Output
         // Generate surface data from hit
         const GPUTransformI& transform = *gTransforms[transformId];
         const HitData hit = gHitStructs.Ref<HitData>(rayId);
-        const Surface surface = SurfFunc(hit, transform, primitiveId, primData);
+        const Surface surface = SurfFunc(hit, transform,
+                                         ray.ray.getDirection(),
+                                         primitiveId, primData);
 
         // Determine Output Location
         // Make it locally indexable

@@ -603,27 +603,71 @@ struct TriangleSurfaceGenerator
     static BasicSurface GenBasicSurface(const TriangleHit& baryCoords,
                                         const GPUTransformI& transform,
                                         //
+                                        const Vector3f& rayDir,
+                                        //
                                         PrimitiveId primitiveId,
                                         const TriData& primData)
     {
+        // Check if the prim is two-sided
+        float batchIndex;
+        GPUFunctions::BinarySearchInBetween(batchIndex, primitiveId, primData.primOffsets, primData.primBatchCount);
+        uint32_t batchIndexInt = static_cast<uint32_t>(batchIndex);
+        bool twoSided = !primData.cullFace[batchIndexInt];
+
+        float a = baryCoords[0];
+        float b = baryCoords[1];
+        float c = 1.0f - a -  b;
+
         uint64_t i0 = primData.indexList[primitiveId * 3 + 0];
         uint64_t i1 = primData.indexList[primitiveId * 3 + 1];
         uint64_t i2 = primData.indexList[primitiveId * 3 + 2];
 
-        QuatF q0 = primData.tbnRotations[i0];//.Normalize();
-        QuatF q1 = primData.tbnRotations[i1];//.Normalize();
-        QuatF q2 = primData.tbnRotations[i2];//.Normalize();
+        // Tangent Space Rotation Query
+        QuatF q0 = primData.tbnRotations[i0];
+        QuatF q1 = primData.tbnRotations[i1];
+        QuatF q2 = primData.tbnRotations[i2];
         QuatF tbn = Quat::BarySLerp(q0, q1, q2,
-                                    baryCoords[0],
-                                    baryCoords[1]);
+                                    a, b);
         tbn.NormalizeSelf();
         tbn = tbn * transform.ToLocalRotation();
-        return BasicSurface{tbn};
+
+        // Position Query
+        Vector3f p0 = primData.positions[i0];
+        Vector3f p1 = primData.positions[i1];
+        Vector3f p2 = primData.positions[i2];
+        Vector3f pos = (p0 * a + p1 * b + p2 * c);
+        // Position should be in world space
+        pos = transform.LocalToWorld(pos);
+
+        // Calculate Geometric Normal
+        const Vector3f positions[3] = {p0, p1, p2};
+        Vector3f geoNormal = Triangle::Normal(positions);
+        // This also needs to be in world space
+        geoNormal = transform.LocalToWorld(geoNormal, true);
+
+        // If The requested primitive is two sided
+        // Flip the surface definitions (normal, geometric normal)
+        bool backSide = twoSided && (geoNormal.Dot(rayDir) > 0.0f);
+        if(backSide)
+        {
+            geoNormal = -geoNormal;
+            // Change the tbn rotation so that Z is on opposite direction
+            // TODO: here flipping Z would change the handedness of the
+            // coordinate system
+            // Just adding the 180degree rotation with the tangent axis
+            // to the end which should be fine I guess?
+            static constexpr QuatF TANGENT_ROT = QuatF(0, 1, 0, 0);
+            tbn = TANGENT_ROT * tbn;
+        }
+
+        return BasicSurface{pos, tbn, geoNormal, backSide};
     }
 
     __device__ inline
     static BarySurface GenBarySurface(const TriangleHit& baryCoords,
                                       const GPUTransformI&,
+                                      //
+                                      const Vector3f&,
                                       //
                                       PrimitiveId,
                                       const TriData&)
@@ -636,11 +680,14 @@ struct TriangleSurfaceGenerator
     static UVSurface GenUVSurface(const TriangleHit& baryCoords,
                                   const GPUTransformI& transform,
                                   //
+                                  const Vector3f& rayDir,
+                                  //
                                   PrimitiveId primitiveId,
                                   const TriData& primData)
     {
         BasicSurface bs = GenBasicSurface(baryCoords, transform,
-                                          primitiveId, primData);
+                                          rayDir, primitiveId,
+                                          primData);
 
         float c = 1 - baryCoords[0] - baryCoords[1];
 
@@ -656,7 +703,11 @@ struct TriangleSurfaceGenerator
                       uv1 * baryCoords[1] +
                       uv2 * c);
 
-        return UVSurface{bs.worldToTangent, uv};
+        return UVSurface
+        {
+            bs.worldPosition, bs.worldToTangent,
+            uv, bs.worldGeoNormal, bs.backSide
+        };
     }
 
     template <class Surface, SurfaceFunc<Surface, TriangleHit, TriData> SF>

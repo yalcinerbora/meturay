@@ -337,7 +337,7 @@ T Matrix<N, T>::Determinant() const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__
+__device__ __host__ [[nodiscard]]
 inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 {
     if constexpr(N == 2)
@@ -364,7 +364,7 @@ inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Matrix<N, T> Matrix<N, T>::Transpose() const
 {
     Matrix m;
@@ -400,7 +400,7 @@ Matrix<N, T>& Matrix<N, T>::TransposeSelf()
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxVal) const
 {
     Matrix m;
@@ -413,7 +413,7 @@ Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxVal) con
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Matrix<N, T> Matrix<N, T>::Clamp(T minVal, T maxVal) const
 {
     Matrix m;
@@ -451,7 +451,7 @@ Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 {
     Matrix m;
@@ -478,7 +478,7 @@ SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 {
     Matrix m;
@@ -505,7 +505,7 @@ FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 {
     Matrix m;
@@ -532,7 +532,7 @@ FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 {
     Matrix m;
@@ -558,7 +558,7 @@ FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
@@ -571,7 +571,7 @@ Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 {
     Matrix m;
@@ -584,7 +584,7 @@ Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
@@ -597,7 +597,7 @@ Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 {
     Matrix m;

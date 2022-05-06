@@ -56,7 +56,9 @@ static HitResult AcceptHit(// Output
                                          transform,
                                          leaf,
                                          primData);
-    bool closerHit = intersects && (newT < rayData.tMax);
+    bool closerHit = (intersects &&
+                      (newT >= rayData.tMin) &&
+                      (newT < rayData.tMax));
     // If intersected do alpha test as well
     if(closerHit)
     {

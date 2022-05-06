@@ -515,7 +515,7 @@ T Vector<N, T>::LengthSqr() const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
 {
     T lengthInv = static_cast<T>(1) / Length();
@@ -544,7 +544,7 @@ FloatEnable<Q, Vector<N, T>&> Vector<N, T>::NormalizeSelf()
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) const
 {
     // Clang min definition is only on std namespace
@@ -563,7 +563,7 @@ Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) con
 }
 
 template <int N, class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
 {
     // Clang min definition is only on std namespace
@@ -634,7 +634,7 @@ bool Vector<N, T>::HasNaN() const
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
 {
     Vector v;
@@ -661,7 +661,7 @@ SignedEnable<Q, Vector<N, T>&> Vector<N, T>::AbsSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 {
     Vector v;
@@ -688,7 +688,7 @@ FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 {
     Vector v;
@@ -715,7 +715,7 @@ FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 
 template <int N, class T>
 template <class Q>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 {
     Vector v;

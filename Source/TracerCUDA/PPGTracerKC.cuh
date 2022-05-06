@@ -99,7 +99,7 @@ void PPGTracerBoundaryWork(// Output
     float misWeight = 1.0f;
     if(isPathRayAsMISRay)
     {
-        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
+        Vector3 position = surface.WorldPosition();
         Vector3 direction = ray.ray.getDirection().Normalize();
 
         // Find out the pdf of the light
@@ -121,7 +121,7 @@ void PPGTracerBoundaryWork(// Output
 
     // Calculate the total contribution
     const RayF& r = ray.ray;
-    Vector3 position = r.AdvancedPos(ray.tMax);
+    Vector3 position = surface.WorldPosition();
     const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
 
     // Calculate Transmittance factor of the medium
@@ -221,7 +221,7 @@ void PPGTracerPathWork(// Output
     // Current Ray
     const RayF& r = ray.ray;
     // Hit Position
-    Vector3 position = r.AdvancedPos(ray.tMax);
+    Vector3 position = surface.WorldPosition();
     // Wi (direction is swapped as if it is coming out of the surface)
     Vector3 wi = -(r.getDirection().Normalize());
     // Current ray's medium
@@ -343,9 +343,8 @@ void PPGTracerPathWork(// Output
         {
             // Generate Ray
             RayF rayNEE = RayF(lDirection, position);
-            rayNEE.AdvanceSelf(MathConstants::Epsilon, surface.WorldNormal());
             RayReg rayOut;
-            rayOut.ray = rayNEE;
+            rayOut.ray = rayNEE.Nudge(surface.WorldGeoNormal());
             rayOut.tMin = 0.0f;
             rayOut.tMax = lDistance;
             // Aux
@@ -424,7 +423,7 @@ void PPGTracerPathWork(// Output
 
             // Generate a ray using the values
             rayPath = RayF(direction, position);
-            rayPath.AdvanceSelf(MathConstants::Epsilon);
+            rayPath.NudgeSelf(surface.WorldGeoNormal());
 
             if(pdfTree == 0.0f) selectedPDFZero = true;
         }

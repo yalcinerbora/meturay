@@ -48,7 +48,7 @@ struct LambertMatFuncs
         float nDotL = max(normal.Dot(direction), 0.0f);
         // Ray out
         wo = RayF(GPUSurface::ToWorld(direction, surface.worldToTangent), position);
-        wo.AdvanceSelf(MathConstants::Epsilon, GPUSurface::NormalWorld(surface.worldToTangent));
+        wo.NudgeSelf(surface.WorldGeoNormal());
 
         // Radiance Calculation
         const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);

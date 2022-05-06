@@ -138,10 +138,10 @@ add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
                     # Use fast math creates self intersection issues on
                     # some scenes. Thus, we only selectively enable
                     # some fp optimizations (culprit was prec-sqrt on some Unreal Materials)
-                    #$<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
+                    $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
                     #
-                    $<$<COMPILE_LANGUAGE:CUDA>:--fmad=true>
-                    $<$<COMPILE_LANGUAGE:CUDA>:--ftz=true>
+                    #$<$<COMPILE_LANGUAGE:CUDA>:--fmad=true>
+                    #$<$<COMPILE_LANGUAGE:CUDA>:--ftz=true>
                     #$<$<COMPILE_LANGUAGE:CUDA>:--prec-sqrt=false>
                     #$<$<COMPILE_LANGUAGE:CUDA>:--prec-div=false>
                     #

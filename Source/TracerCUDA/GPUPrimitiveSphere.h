@@ -240,9 +240,15 @@ struct SphereSurfaceGenerator
     static BasicSurface GenBasicSurface(const SphereHit& sphrCoords,
                                         const GPUTransformI& transform,
                                         //
-                                        PrimitiveId,
-                                        const SphereData&)
+                                        const Vector3f& rayDir,
+                                        //
+                                        PrimitiveId pId,
+                                        const SphereData& primData)
     {
+        Vector4f centerRadius = primData.centerRadius[pId];
+        Vector3f center = centerRadius;
+        float radius = centerRadius[3];
+
         // Convert spherical hit to cartesian
         Vector3 normal = Vector3(sin(sphrCoords[0]) * cos(sphrCoords[1]),
                                  sin(sphrCoords[0]) * sin(sphrCoords[1]),
@@ -251,13 +257,33 @@ struct SphereSurfaceGenerator
         // Align this normal to Z axis to define tangent space rotation
         QuatF tbn = Quat::RotationBetweenZAxis(normal).Conjugate();
         tbn = tbn * transform.ToLocalRotation();
+        // Calculate the world geometric normal
+        Vector3f geoNormal = transform.LocalToWorld(normal, true);
+        // Calculate world position using the normal
+        Vector3f pos = center + normal * radius;
+        pos = transform.LocalToWorld(pos);
 
-        return BasicSurface{tbn};
+        // Spheres are always two sided, check if we are inside
+        bool backSide = (geoNormal.Dot(rayDir) > 0.0f);
+        if(backSide)
+        {
+            geoNormal = -geoNormal;
+            // Change the tbn rotation so that Z is on opposite direction
+            // TODO: here flipping Z would change the handedness of the
+            // coordinate system
+            // Just adding the 180degree rotation with the tangent axis
+            // to the end which should be fine I guess?
+            static constexpr QuatF TANGENT_ROT = QuatF(0, 1, 0, 0);
+            tbn = TANGENT_ROT * tbn;
+        }
+        return BasicSurface{pos, tbn, normal, backSide};
     }
 
     __device__ inline
     static SphrSurface GenSphrSurface(const SphereHit& sphrCoords,
                                       const GPUTransformI&,
+                                      //
+                                      const Vector3f&,
                                       //
                                       PrimitiveId,
                                       const SphereData&)
@@ -269,11 +295,14 @@ struct SphereSurfaceGenerator
     static UVSurface GenUVSurface(const SphereHit& sphrCoords,
                                   const GPUTransformI& transform,
                                   //
+                                  const Vector3f& rayDir,
+                                  //
                                   PrimitiveId primitiveId,
                                   const SphereData& primData)
     {
         BasicSurface bs = GenBasicSurface(sphrCoords, transform,
-                                          primitiveId, primData);
+                                          rayDir, primitiveId,
+                                          primData);
 
         // Gen UV
         Vector2 uv = sphrCoords;
@@ -282,7 +311,11 @@ struct SphereSurfaceGenerator
         // phi is [-pi/2, pi/2], normalize
         uv[1] = uv[1] * MathConstants::InvPi + 0.5f;
 
-        return UVSurface{bs.worldToTangent, uv};
+        return UVSurface
+        {
+            bs.worldPosition, bs.worldToTangent,
+            uv, bs.worldGeoNormal, bs.backSide
+        };
     }
 
     template <class Surface, SurfaceFunc<Surface, SphereHit, SphereData> SF>

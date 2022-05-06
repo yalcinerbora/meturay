@@ -145,9 +145,7 @@ struct UnrealDeviceFuncs
         // Normal is on tangent space so convert it to world space
         // Convert Normal to World Space
         wo = RayF(GPUSurface::ToWorld(L, surface.worldToTangent), pos);
-        wo.AdvanceSelf(MathConstants::Epsilon,
-                       GPUSurface::ToWorld(N, surface.worldToTangent));
-
+        wo.NudgeSelf(surface.WorldGeoNormal());
         // PDF is already written
         // Finally return Radiance
         // All Done!

@@ -24,14 +24,14 @@ Ray<T>& Ray<T>::operator=(const Vector<3, T> vec[2])
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 const Vector<3, T>& Ray<T>::getDirection() const
 {
     return direction;
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 const Vector<3, T>& Ray<T>::getPosition() const
 {
     return position;
@@ -43,26 +43,51 @@ bool Ray<T>::IntersectsSphere(Vector<3, T>& intersectPos, T& t,
                               const Vector<3, T>& sphereCenter,
                               T sphereRadius) const
 {
-    // Geometric solution
+    // RayTracing Gems
+    // Chapter 7: Precision Improvements for Ray/Sphere Intersection
+    //Vector<3, T> dir = direction.Normalize();
     Vector<3, T> centerDir = sphereCenter - position;
-    T beamCenterDistance = centerDir.Dot(direction);
-    T beamNormalLengthSqr = centerDir.Dot(centerDir) -
-        beamCenterDistance * beamCenterDistance;
-    T beamHalfLengthSqr = sphereRadius * sphereRadius - beamNormalLengthSqr;
-    if(beamHalfLengthSqr > 0.0f)
+    T beamCenterDist = direction.Dot(centerDir);
+    T cDirLengthSqr = centerDir.LengthSqr();
+
+    // Below code is from the source
+    Vector<3, T> remedyTerm = centerDir - beamCenterDist * direction.Normalize();
+    T discriminant = sphereRadius * sphereRadius - remedyTerm.LengthSqr();
+    if(discriminant >= 0)
     {
-        // Inside Square
-        T beamHalfLength = sqrt(beamHalfLengthSqr);
-        T t0 = beamCenterDistance - beamHalfLength;
-        T t1 = beamCenterDistance + beamHalfLength;
-        if(t1 >= 0.0f)
-        {
-            t = (t0 >= 0.0f) ? t0 : t1;
-            intersectPos = position + t * direction;
-            return true;
-        }
+        T beamHalfLength = sqrt(discriminant);
+
+        T t0 = (beamCenterDist >= 0)
+                    ? (beamCenterDist + beamHalfLength)
+                    : (beamCenterDist - beamHalfLength);
+        T t1 = (cDirLengthSqr - sphereRadius * sphereRadius) / t0;
+
+        t = (fabs(t0) <= fabs(t1)) ? t0 : t1;
+        intersectPos = position + t * direction;
+        return true;
     }
     return false;
+
+    //// Geometric solution
+    //Vector<3, T> centerDir = sphereCenter - position;
+    //T beamCenterDistance = centerDir.Dot(direction);
+    //T beamNormalLengthSqr = centerDir.Dot(centerDir) -
+    //    beamCenterDistance * beamCenterDistance;
+    //T beamHalfLengthSqr = sphereRadius * sphereRadius - beamNormalLengthSqr;
+    //if(beamHalfLengthSqr > 0)
+    //{
+    //    // Inside Square
+    //    T beamHalfLength = sqrt(beamHalfLengthSqr);
+    //    T t0 = beamCenterDistance - beamHalfLength;
+    //    T t1 = beamCenterDistance + beamHalfLength;
+    //    if(t1 >= 0)
+    //    {
+    //        t = (t0 >= 0) ? t0 : t1;
+    //        intersectPos = position + t * direction;
+    //        return true;
+    //    }
+    //}
+    //return false;
 }
 
 template<class T>
@@ -249,7 +274,7 @@ bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, T& tOut,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::Reflect(const Vector<3, T>& normal) const
 {
     Vector<3, T> nDir = direction;
@@ -267,7 +292,7 @@ Ray<T>& Ray<T>::ReflectSelf(const Vector<3, T>& normal)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 bool Ray<T>::Refract(Ray& out, const Vector<3, T>& normal,
                      T fromMedium, T toMedium) const
 {
@@ -313,7 +338,7 @@ bool Ray<T>::RefractSelf(const Vector<3, T>& normal,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::RandomRayCosine(T xi0, T xi1,
                                const Vector<3, T>& normal,
                                const Vector<3, T>& position)
@@ -329,7 +354,7 @@ Ray<T> Ray<T>::RandomRayCosine(T xi0, T xi1,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::RandomRayUnfirom(T xi0, T xi1,
                                 const Vector<3, T>& normal,
                                 const Vector<3, T>& position)
@@ -345,7 +370,7 @@ Ray<T> Ray<T>::RandomRayUnfirom(T xi0, T xi1,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::NormalizeDir() const
 {
     return Ray(direction.Normalize(), position);
@@ -360,14 +385,14 @@ Ray<T>& Ray<T>::NormalizeDirSelf()
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::Advance(T t) const
 {
     return Ray(direction, position + t * direction);
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::Advance(T t, const Vector<3, T>& dir) const
 {
     return Ray(direction, position + t * dir);
@@ -390,7 +415,7 @@ Ray<T>& Ray<T>::AdvanceSelf(T t, const Vector<3, T>& dir)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::Transform(const Quaternion<T>& q) const
 {
     return Ray<T>(q.ApplyRotation(direction),
@@ -398,7 +423,7 @@ Ray<T> Ray<T>::Transform(const Quaternion<T>& q) const
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::Transform(const Matrix<3, T>& mat) const
 {
     return Ray<T>(mat * direction,
@@ -406,7 +431,7 @@ Ray<T> Ray<T>::Transform(const Matrix<3, T>& mat) const
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 {
     return Ray<T>(mat * Vector<4, T>(direction, static_cast<T>(0.0)),
@@ -441,30 +466,57 @@ Ray<T>& Ray<T>::TransformSelf(const Matrix<4, T>& mat)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Vector<3, T> Ray<T>::AdvancedPos(T t) const
 {
     return position + t * direction;
 }
 
 template<>
-__device__ __host__ HYBRID_INLINE
+__device__ __host__ HYBRID_INLINE [[nodiscard]]
 Ray<float> Ray<float>::Nudge(const Vector3f& dir) const
 {
-    // CPU code max/min is on std namespace but CUDA has its global namespace
-    #ifndef __CUDA_ARCH__
-    using namespace std;
+    // From RayTracing Gems I
+    // Chapter 6
+    static constexpr float ORIGIN = 1.0f / 32.0f;
+    static constexpr float FLOAT_SCALE = 1.0f / 65536.0f;
+    static constexpr float INT_SCALE = 256.0f;
+
+    const Vector3f& p = position;
+    Vector3i ofi = Vector3i(INT_SCALE * dir[0],
+                            INT_SCALE * dir[1],
+                            INT_SCALE * dir[2]);
+
+    Vector3f pointI;
+    #ifdef __CUDA_ARCH__
+        pointI[0] = __int_as_float(__float_as_int(p[0]) + ((p[0] < 0) ? -ofi[0] : ofi[0]));
+        pointI[1] = __int_as_float(__float_as_int(p[1]) + ((p[1] < 0) ? -ofi[1] : ofi[1]));
+        pointI[2] = __int_as_float(__float_as_int(p[2]) + ((p[2] < 0) ? -ofi[2] : ofi[2]));
+    #else
+        // CPU code (this will be optimized out)
+        // and it is not UBO
+        static_assert(sizeof(int32_t) == sizeof(float));
+        Vector3i pInt;
+        memcpy(&(pInt[0]), &(p[0]), sizeof(float));
+        memcpy(&(pInt[1]), &(p[1]), sizeof(float));
+        memcpy(&(pInt[2]), &(p[2]), sizeof(float));
+
+        pInt[0] += ((p[0] < 0) ? -ofi[0] : ofi[0]);
+        pInt[1] += ((p[1] < 0) ? -ofi[1] : ofi[1]);
+        pInt[2] += ((p[2] < 0) ? -ofi[2] : ofi[2]);
+
+        memcpy(&(pointI[0]), &(pInt[0]), sizeof(float));
+        memcpy(&(pointI[1]), &(pInt[1]), sizeof(float));
+        memcpy(&(pointI[2]), &(pInt[2]), sizeof(float));
     #endif
 
-    static constexpr float INF_LOCAL = INFINITY;
-    static constexpr float NEG_INF_LOCAL = -INFINITY;
-
     // Find the next floating point towards
-    // the direction
+    // Either use an epsilon (float_scale in this case)
+    // or use the calculated offset
     Vector3f nextPos;
-    nextPos[0] = nextafterf(position[0], (signbit(dir[0]) ? NEG_INF_LOCAL : INF_LOCAL));
-    nextPos[1] = nextafterf(position[1], (signbit(dir[1]) ? NEG_INF_LOCAL : INF_LOCAL));
-    nextPos[2] = nextafterf(position[2], (signbit(dir[2]) ? NEG_INF_LOCAL : INF_LOCAL));
+    nextPos[0] = (fabs(p[0]) < ORIGIN) ? (p[0] + FLOAT_SCALE * dir[0]) : pointI[0];
+    nextPos[1] = (fabs(p[1]) < ORIGIN) ? (p[1] + FLOAT_SCALE * dir[1]) : pointI[1];
+    nextPos[2] = (fabs(p[2]) < ORIGIN) ? (p[2] + FLOAT_SCALE * dir[2]) : pointI[2];
 
     return Ray(direction, nextPos);
 }
@@ -473,21 +525,42 @@ template<>
 __device__ __host__ HYBRID_INLINE
 Ray<double> Ray<double>::Nudge(const Vector3d& dir) const
 {
-    // CPU code max/min is on std namespace but CUDA has its global namespace
-    #ifndef __CUDA_ARCH__
-    using namespace std;
-    #endif
+    // From RayTracing Gems I
+    // Chapter 6
+    static constexpr double ORIGIN = 1.0 / 32.0;
+    static constexpr double FLOAT_SCALE = 1.0 / 65536.0;
+    static constexpr double INT_SCALE = 256.0;
 
-    static constexpr double INF_LOCAL = INFINITY;
-    static constexpr double NEG_INF_LOCAL = -INFINITY;
+    const Vector3d& p = position;
+
+    Vector<3, int64_t> ofi(INT_SCALE * dir[0],
+                           INT_SCALE * dir[1],
+                           INT_SCALE * dir[2]);
+
+    Vector3d pointI;
+    // Utilize memcpy here, it is not UBO
+    // and should be optimized since it is in register space
+    static_assert(sizeof(int64_t) == sizeof(double));
+    Vector<3, int64_t> pInt;
+    memcpy(&(pInt[0]), &(p[0]), sizeof(double));
+    memcpy(&(pInt[1]), &(p[1]), sizeof(double));
+    memcpy(&(pInt[2]), &(p[2]), sizeof(double));
+
+    pInt[0] += ((p[0] < 0) ? -ofi[0] : ofi[0]);
+    pInt[1] += ((p[1] < 0) ? -ofi[1] : ofi[1]);
+    pInt[2] += ((p[2] < 0) ? -ofi[2] : ofi[2]);
+
+    memcpy(&(pointI[0]), &(pInt[0]), sizeof(double));
+    memcpy(&(pointI[1]), &(pInt[1]), sizeof(double));
+    memcpy(&(pointI[2]), &(pInt[2]), sizeof(double));
 
     // Find the next floating point towards
-    // the direction
+    // Either use an epsilon (float_scale in this case)
+    // or use the calculated offset
     Vector3d nextPos;
-    nextPos[0] = nextafter(position[0], (signbit(dir[0]) ? NEG_INF_LOCAL : INF_LOCAL));
-    nextPos[1] = nextafter(position[1], (signbit(dir[1]) ? NEG_INF_LOCAL : INF_LOCAL));
-    nextPos[2] = nextafter(position[2], (signbit(dir[2]) ? NEG_INF_LOCAL : INF_LOCAL));
-
+    nextPos[0] = (fabs(p[0]) < ORIGIN) ? (p[0] + FLOAT_SCALE * dir[0]) : pointI[0];
+    nextPos[1] = (fabs(p[1]) < ORIGIN) ? (p[1] + FLOAT_SCALE * dir[1]) : pointI[1];
+    nextPos[2] = (fabs(p[2]) < ORIGIN) ? (p[2] + FLOAT_SCALE * dir[2]) : pointI[2];
     return Ray(direction, nextPos);
 }
 

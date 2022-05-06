@@ -155,7 +155,6 @@ struct NormalRenderMatFuncs
     {
         Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
         normal = 0.5f * normal + 0.5f;
-
         return normal;
     }
 

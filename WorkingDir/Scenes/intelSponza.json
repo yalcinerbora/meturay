@@ -52,25 +52,15 @@
     }],
 
     "Primitives":[
-    // {
-    //     // All Sponza Except Decals
-    //     "id": 0,
-    //     "type": "Triangle",
-    //     "name": "D:/IntelSponza/intel_sponza_all.obj",
-    //     "tag": "assimp_",
-    //     "innerIndex": 0,
-    //     "cullFace": false
-    // },
     {
         // All Sponza Except Decals
-        "id": 1,
+        "id": 0,
         "type": "Triangle",
-        "name": "D:/IntelSponza/curtains_only.obj",
+        "name": "D:/IntelSponza/intel_sponza_all.obj",
         "tag": "assimp_",
         "innerIndex": 0,
         "cullFace": false
-    }
-    ],
+    }],
 
     "Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
 
@@ -84,9 +74,7 @@
 	"Surfaces":
     [
         // All Sponza
-        //{ "transform": 0, "accelerator": 0, "material": 0, "primitive": 0}
-        // Curtains Only
-        { "transform": 0, "accelerator": 0, "material": 0, "primitive": 1}
+        { "transform": 0, "accelerator": 0, "material": 0, "primitive": 0}
 	],
 
 	"LightSurfaces": [],

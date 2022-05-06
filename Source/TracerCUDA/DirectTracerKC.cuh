@@ -59,7 +59,7 @@ void DirectBoundaryWork(// Output
                         const typename EGroup::GPUType& gLight)
 {
     const RayF& r = ray.ray;
-    Vector3 position = r.AdvancedPos(ray.tMax);
+    Vector3 position = surface.WorldPosition();
 
     Vector3 emission = gLight.Emit(// Input
                                    -r.getDirection(),
@@ -99,7 +99,7 @@ inline void DirectFurnaceWork(// Output
     RayF outRay; float pdf;
 
     Vector3 emission = MGroup::Emit(-r.getDirection(),
-                                    r.AdvancedPos(ray.tMax),
+                                    surface.WorldPosition(),
                                     m,
                                     //
                                     surface,
@@ -111,7 +111,7 @@ inline void DirectFurnaceWork(// Output
                                       outRay, pdf, outM,
                                       // Inputs
                                       -r.getDirection(),
-                                      r.AdvancedPos(ray.tMax),
+                                      surface.WorldPosition(),
                                       m,
                                       //
                                       surface,
@@ -151,8 +151,7 @@ inline void DirectPositionWork(// Output
 {
     static constexpr float C = 1.0f;
 
-    const RayF& r = ray.ray;
-    Vector4f worldPos = Vector4f(r.AdvancedPos(ray.tMax), 1.0f);
+    Vector4f worldPos = Vector4f(surface.WorldPosition(), 1.0f);
     switch(renderState.posRenderType)
     {
         case PositionRenderType::VECTOR3:

@@ -86,11 +86,11 @@ inline void AOWork(// Output
         // and write that ray. Also write missAO Material HitKey
         RayReg rayOut = {};
         RayAuxAO auxOut = aux;
-        Vector3 position = ray.ray.AdvancedPos(ray.tMax);
+        Vector3 position = surface.WorldPosition();
 
         float pdf;
         // We are at generation phase generate a ray
-        Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        Vector3 normal = surface.WorldNormal();
         Vector2 xi(rng.Uniform(), rng.Uniform());
         Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
         QuatF q = Quat::RotationBetweenZAxis(normal);
@@ -101,7 +101,7 @@ inline void AOWork(// Output
 
         // Ray out
         RayF ray = RayF(direction, position);
-        ray.AdvanceSelf(MathConstants::Epsilon, normal);
+        ray.NudgeSelf(surface.WorldGeoNormal());
         // AO Calculation
         Vector3 aoMultiplier = Vector3(nDotL * MathConstants::InvPi);
         auxOut.aoFactor = aoMultiplier;

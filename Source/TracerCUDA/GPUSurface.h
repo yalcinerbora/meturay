@@ -110,12 +110,21 @@ struct HasGetNormFunc <C,
     typename std::enable_if<std::is_same_v<decltype(&C::WorldNormal),
                                            Vector3f(C::*)() const>>::type
 > : public std::true_type {};
+// TODO:
+// I've added "worldPosition" "worldGeoNormal" functions
+// but don't want to clutter using SFINAE to mandate the availability
+// of the functions. Maybe after some time use concepts here
+// when NVCC supports it (maybe it already supports? 2022)
 
 
 struct EmptySurface
 {
     __device__
     Vector3f WorldNormal() const { return Zero3f; };
+    __device__
+    Vector3f WorldPosition() const { return Zero3f; };
+    __device__
+    Vector3f WorldGeoNormal() const { return Zero3f; };
 };
 
 struct BarySurface
@@ -124,6 +133,10 @@ struct BarySurface
 
     __device__
     Vector3f WorldNormal() const { return Zero3f; };
+    __device__
+    Vector3f WorldPosition() const { return Zero3f; };
+    __device__
+    Vector3f WorldGeoNormal() const { return Zero3f; };
 };
 
 struct SphrSurface
@@ -132,25 +145,42 @@ struct SphrSurface
 
     __device__
     Vector3f WorldNormal() const { return Zero3f; };
+    __device__
+    Vector3f WorldPosition() const { return Zero3f; };
+    __device__
+    Vector3f WorldGeoNormal() const { return Zero3f; };
 };
 
 struct BasicSurface
 {
-    // World to tangent space transformation
-    QuatF worldToTangent;
+    Vector3f    worldPosition;  // World surface location
+    QuatF       worldToTangent; // World to tangent space transformation
+    Vector3f    worldGeoNormal; // Geometric normal (useful when nudge the ray)
+    bool        backSide;       // Returning the side of the surface (used on transmissive materials)
 
     __device__
     Vector3f WorldNormal() const;
+    __device__
+    Vector3f WorldPosition() const;
+    __device__
+    Vector3f WorldGeoNormal() const;
 };
 
 struct UVSurface
 {
-    // World to tangent space transformation
-    QuatF   worldToTangent;
-    Vector2 uv;
+
+    Vector3f    worldPosition;  // World surface location
+    QuatF       worldToTangent; // World to tangent space transformation
+    Vector2     uv;             // Texture coordinates
+    Vector3f    worldGeoNormal; // Geometric normal (useful when nudge the ray)
+    bool        backSide;       // Returning the side of the surface (used on transmissive materials)
 
     __device__
     Vector3f WorldNormal() const;
+    __device__
+    Vector3f WorldPosition() const;
+    __device__
+    Vector3f WorldGeoNormal() const;
 };
 
 static_assert(HasGetNormFunc<EmptySurface>::value,
@@ -171,9 +201,33 @@ Vector3f BasicSurface::WorldNormal() const
 }
 
 __device__ inline
+Vector3f BasicSurface::WorldPosition() const
+{
+    return worldPosition;
+}
+
+__device__ inline
+Vector3f BasicSurface::WorldGeoNormal() const
+{
+    return worldGeoNormal;
+}
+
+__device__ inline
 Vector3f UVSurface::WorldNormal() const
 {
     return GPUSurface::NormalWorld(worldToTangent);
+}
+
+__device__ inline
+Vector3f UVSurface::WorldPosition() const
+{
+    return worldPosition;
+}
+
+__device__ inline
+Vector3f UVSurface::WorldGeoNormal() const
+{
+    return worldGeoNormal;
 }
 
 // Meta Functions
@@ -182,6 +236,7 @@ template <class HitData, class PrimData>
 __device__
 EmptySurface DefaultGenEmptySurface(const HitData&,
                                     const GPUTransformI&,
+                                    const Vector3f&,
                                     PrimitiveId,
                                     const PrimData&)
 {
@@ -192,18 +247,20 @@ template <class HitData, class PrimData>
 __device__
 BasicSurface DefaultGenBasicSurface(const HitData&,
                                     const GPUTransformI& t,
+                                    const Vector3f&,
                                     PrimitiveId,
                                     const PrimData&)
 {
-    return BasicSurface{t.ToLocalRotation()};
+    return BasicSurface{Zero3f, t.ToLocalRotation(), Zero3f};
 }
 
 template <class HitData, class PrimData>
 __device__
 UVSurface DefaultGenUvSurface(const HitData&,
                               const GPUTransformI& t,
+                              const Vector3f&,
                               PrimitiveId,
                               const PrimData&)
 {
-    return UVSurface{t.ToLocalRotation(), Zero2f};
+    return UVSurface{Zero3f, t.ToLocalRotation(), Zero2f, Zero3f};
 }

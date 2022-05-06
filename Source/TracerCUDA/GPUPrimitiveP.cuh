@@ -30,6 +30,7 @@ class GPUTransformI;
 template <class Surface, class HitData, class PrimitiveData>
 using SurfaceFunc = Surface(*)(const HitData&,
                                const GPUTransformI&,
+                               const Vector3f&,
                                PrimitiveId,
                                const PrimitiveData&);
 

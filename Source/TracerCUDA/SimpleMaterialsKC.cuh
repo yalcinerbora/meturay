@@ -53,8 +53,6 @@ struct LambertConstFuncs
 
         // Ray out
         wo = RayF(direction, position);
-        wo.AdvanceSelf(0.1f, normal);
-        //wo.AdvanceSelf(MathConstants::Epsilon, normal);
         // BSDF Calculation
         return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
     }
@@ -133,7 +131,7 @@ struct ReflectMatFuncs
         {
             // Singularity Just Reflect
             wo = RayF(wi, pos).Reflect(normal);
-            wo.AdvanceSelf(MathConstants::Epsilon, normal);
+            wo.NudgeSelf(surface.WorldGeoNormal());
             pdf = 1.0f;
             return albedo;
         }
@@ -196,18 +194,17 @@ struct RefractMatFuncs
         const Vector3& position = pos;
 
         // Check if we are exiting or entering
-        float nDotI = wi.Dot(normal);
-        bool entering = (nDotI >= 0.0f);
+        bool entering = !surface.backSide;
 
         // Determine medium index of refractions
         float fromMedium = m.IOR();
         float toMedium = (entering) ? iIOR : dIOR;
 
-        // Normal also needs to be on the same side of the surface for the funcs
-        // to work
-        Vector3 refNormal = (entering) ? normal : (-normal);
+        // Surface is aligned with the ray (N dot Dir is always positive)
+        Vector3 refNormal = normal;
         // Calculate Fresnel Term
-        float f = TracerFunctions::FrenelDielectric(abs(nDotI), fromMedium, toMedium);
+        float f = TracerFunctions::FrenelDielectric(fabs(wi.Dot(normal)),
+                                                    fromMedium, toMedium);
 
         //printf("[%s] P:(%f, %f, %f) Wi:(%f, %f, %f) N:(%f, %f, %f) - F %f, From %f, To %f\n",
         //       entering ? "entering" : "exiting",
@@ -222,7 +219,7 @@ struct RefractMatFuncs
         {
             // RNG choose to sample Reflection case
             wo = RayF(wi, position).Reflect(refNormal);
-            wo.AdvanceSelf(MathConstants::Epsilon, refNormal);
+            wo.NudgeSelf(surface.WorldGeoNormal());
             // Fresnel term is used to sample thus pdf is f
             pdf = f;
             // We reflected off of surface no medium change
@@ -246,7 +243,7 @@ struct RefractMatFuncs
             //       wo.getDirection()[0], wo.getDirection()[1], wo.getDirection()[2]);
 
             // Refraction is chosen
-            // Convert wi, refract func needs
+            // Convert wi, refract function needs
             // the direction to be towards surface
             RayF rayIn(wi, position);
             // Get refracted ray
@@ -267,7 +264,7 @@ struct RefractMatFuncs
 
             // We passed the boundary
             // advance towards opposite direction
-            wo.AdvanceSelf(MathConstants::Epsilon, -refNormal);
+            wo.NudgeSelf(-surface.WorldGeoNormal());
 
             // Factor in the radiance discrepancy due to refraction
             // Medium change causes rays to be scatter/focus
