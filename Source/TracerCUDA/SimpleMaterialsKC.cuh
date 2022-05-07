@@ -53,6 +53,7 @@ struct LambertConstFuncs
 
         // Ray out
         wo = RayF(direction, position);
+        wo.NudgeSelf(surface.WorldGeoNormal());
         // BSDF Calculation
         return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
     }
