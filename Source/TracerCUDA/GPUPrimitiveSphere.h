@@ -73,7 +73,7 @@ struct SphrFunctions
         normal = unitPos;
 
         sphrLoc = transform.LocalToWorld(sphrLoc);
-        normal = transform.LocalToWorld(normal, true);
+        normal = transform.LocalToWorld(normal, true).Normalize();
 
         return sphrLoc;
     }
@@ -154,13 +154,11 @@ struct SphrFunctions
         if(intersects)
         {
             newT = t;
-            // Gen Spherical Coords (R can be fetched using primitiveId later)
-            // Clamp acos input for singularity
-            Vector3 relativeCoord = pos - center;
-            float tethaCos = HybridFuncs::Clamp(relativeCoord[2] / radius, -1.0f, 1.0f);
-            float tetha = acos(tethaCos);
-            float phi = atan2(relativeCoord[1], relativeCoord[0]);
-            newHit = SphereHit(tetha, phi);
+            // Gen spherical coords as hit info
+            // (don't save R it can be fetched later)
+            Vector3 unitDir = (pos - center).Normalize();
+            Vector2f tethaPhi = Utility::CartesianToSphericalUnit(unitDir);
+            newHit = SphereHit(tethaPhi[0], tethaPhi[1]);
         }
         return intersects;
     }
@@ -250,18 +248,17 @@ struct SphereSurfaceGenerator
         float radius = centerRadius[3];
 
         // Convert spherical hit to cartesian
-        Vector3 normal = Vector3(sin(sphrCoords[0]) * cos(sphrCoords[1]),
-                                 sin(sphrCoords[0]) * sin(sphrCoords[1]),
-                                 cos(sphrCoords[0]));
-
+        Vector3 normal = Utility::SphericalToCartesianUnit(sphrCoords);
+        // Calculate local position using the normal
+        // then convert it to world position
+        Vector3f pos = center + normal * radius;
+        pos = transform.LocalToWorld(pos);
+        // Generate Geometric world space normal
+        // In sphere case it is equivalent to the normal
+        Vector3f geoNormal = transform.LocalToWorld(normal, true).Normalize();
         // Align this normal to Z axis to define tangent space rotation
         QuatF tbn = Quat::RotationBetweenZAxis(normal).Conjugate();
         tbn = tbn * transform.ToLocalRotation();
-        // Calculate the world geometric normal
-        Vector3f geoNormal = transform.LocalToWorld(normal, true);
-        // Calculate world position using the normal
-        Vector3f pos = center + normal * radius;
-        pos = transform.LocalToWorld(pos);
 
         // Spheres are always two sided, check if we are inside
         bool backSide = (geoNormal.Dot(rayDir) > 0.0f);
@@ -276,7 +273,7 @@ struct SphereSurfaceGenerator
             static constexpr QuatF TANGENT_ROT = QuatF(0, 1, 0, 0);
             tbn = TANGENT_ROT * tbn;
         }
-        return BasicSurface{pos, tbn, normal, backSide};
+        return BasicSurface{pos, tbn, geoNormal, backSide};
     }
 
     __device__ inline

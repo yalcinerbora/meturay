@@ -582,8 +582,21 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
     //METU_LOG("-------");
 
     // Before copying get roots AABB for base accelerator
-    AABB3f accAABB(bvhNodes[0].body.aabbMin,
-                   bvhNodes[0].body.aabbMax);
+
+    // Check if we have a single node in the BVH
+    // If yes get the AABB from the index
+    AABB3f accAABB;
+    if(!bvhNodes[0].isLeaf)
+    {
+        accAABB = AABB3f(bvhNodes[0].body.aabbMin,
+                         bvhNodes[0].body.aabbMax);
+    }
+    else
+    {
+        // Directly fetch it from the GPU memory
+        CUDA_CHECK(cudaDeviceSynchronize());
+        accAABB = dPrimAABBs[0];
+    }
 
     // If constant local primitive's transform requirement is
     // constant local transform,

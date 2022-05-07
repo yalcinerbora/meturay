@@ -151,7 +151,8 @@ inline void DirectPositionWork(// Output
 {
     static constexpr float C = 1.0f;
 
-    Vector4f worldPos = Vector4f(surface.WorldPosition(), 1.0f);
+    Vector4f worldPos = Vector4f(ray.ray.getPosition() + ray.ray.getDirection() * ray.tMax,
+                                 1.0f);
     switch(renderState.posRenderType)
     {
         case PositionRenderType::VECTOR3:

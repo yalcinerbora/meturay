@@ -482,6 +482,21 @@
 					   [0, 180, 0], [0, 180, 0], [0, 180, 0], [0, 180, 0]],
             "scale": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
 					  [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]
+		},
+		{
+			// Sphere Transforms
+			"id": [113, 114, 115, 116],
+			"type": "Single",
+			"layout": "trs",
+			"translate":
+			[
+				[-725, 561, -37], [-350, 561, -37], [16, 561, -37], [387, 561, -37]
+			],
+            "rotate": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "scale":
+			[
+				[40, 40, 40], [40, 40, 40], [40, 40, 40], [40, 40, 40]
+			]
 		}
 	],
 
@@ -692,6 +707,13 @@
 			         {"texture": 53, "channels": "r"},
 			         {"texture": 53, "channels": "r"}],
 		"metallic": [0.1, 0.1, 0.1]
+	},
+	{
+		// Perfect Mirror
+		"id": 25,
+		"type": "Reflect",
+		"albedo" : [1.0, 1.0, 1.0],
+		"roughness" : 0.0
 	}],
 
 	"Primitives":[
@@ -913,7 +935,16 @@
 		"tag": "assimp_",
 		"innerIndex": 0,
 		"cullFace": true
-	}],
+	},
+	{
+		// Unit sphere
+		"id": 92,
+		"type": "Sphere",
+		"name": ".nodeSphere",
+		"position": [0, 0, 0],
+		"radius": 1
+	}
+	],
 
 	"Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
 
@@ -1138,7 +1169,12 @@
 		{"transform": 109, "accelerator": 0, "material": 24, "primitive": 91},
 		{"transform": 110, "accelerator": 0, "material": 22, "primitive": 91},
 		{"transform": 111, "accelerator": 0, "material": 23, "primitive": 91},
-		{"transform": 112, "accelerator": 0, "material": 24, "primitive": 91}
+		{"transform": 112, "accelerator": 0, "material": 24, "primitive": 91},
+		// Spheres
+		{"transform": 113, "accelerator": 0, "material": 25, "primitive": 92},
+		{"transform": 114, "accelerator": 0, "material": 25, "primitive": 92},
+		{"transform": 115, "accelerator": 0, "material": 25, "primitive": 92},
+		{"transform": 116, "accelerator": 0, "material": 25, "primitive": 92}
     ],
 
 	"LightSurfaces": [],

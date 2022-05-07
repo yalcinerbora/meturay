@@ -22,6 +22,9 @@ template class DirectTracerFurnaceWork<LambertMat, GPUPrimitiveSphere>;
 
 template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveTriangle>;
 template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveSphere>;
+
+template class DirectTracerFurnaceWork<ReflectMat, GPUPrimitiveTriangle>;
+template class DirectTracerFurnaceWork<ReflectMat, GPUPrimitiveSphere>;
 // ===================================================
 template class DirectTracerNormalWork<GPUPrimitiveEmpty>;
 template class DirectTracerNormalWork<GPUPrimitiveTriangle>;

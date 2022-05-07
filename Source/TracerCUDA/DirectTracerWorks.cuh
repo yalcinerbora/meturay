@@ -192,6 +192,9 @@ extern template class DirectTracerFurnaceWork<LambertCMat, GPUPrimitiveSphere>;
 
 extern template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveSphere>;
+
+extern template class DirectTracerFurnaceWork<ReflectMat, GPUPrimitiveTriangle>;
+extern template class DirectTracerFurnaceWork<ReflectMat, GPUPrimitiveSphere>;
 // ===================================================
 extern template class DirectTracerNormalWork<GPUPrimitiveEmpty>;
 extern template class DirectTracerNormalWork<GPUPrimitiveTriangle>;
@@ -211,7 +214,9 @@ using DirectTracerFurnaceWorkerList = TypeList<DirectTracerFurnaceWork<Barycentr
                                                DirectTracerFurnaceWork<LambertCMat, GPUPrimitiveTriangle>,
                                                DirectTracerFurnaceWork<LambertCMat, GPUPrimitiveSphere>,
                                                DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveTriangle>,
-                                               DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveSphere>>;
+                                               DirectTracerFurnaceWork<UnrealMat, GPUPrimitiveSphere>,
+                                               DirectTracerFurnaceWork<ReflectMat, GPUPrimitiveTriangle>,
+                                               DirectTracerFurnaceWork<ReflectMat, GPUPrimitiveSphere>>;
 using DirectTracerNormalWorkerList = TypeList<DirectTracerNormalWork<GPUPrimitiveEmpty>,
                                               DirectTracerNormalWork<GPUPrimitiveTriangle>,
                                               DirectTracerNormalWork<GPUPrimitiveSphere>>;

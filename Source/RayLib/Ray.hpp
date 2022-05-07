@@ -43,15 +43,44 @@ bool Ray<T>::IntersectsSphere(Vector<3, T>& intersectPos, T& t,
                               const Vector<3, T>& sphereCenter,
                               T sphereRadius) const
 {
+    // Clang min definition is only on std namespace
+    // this is a crappy workaround
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     // RayTracing Gems
     // Chapter 7: Precision Improvements for Ray/Sphere Intersection
-    //Vector<3, T> dir = direction.Normalize();
+    // This is similar to the geometric solution below
+    // with two differences
+    //
+    // 1st: Beam half length square (discriminant variable)
+    // is calculated using two vector differences instead of
+    // Pythagorean theorem (r^2 - beamNormalLength^2).
+    // METUray almost always holds the direction vector
+    // normalized unless the ray is under inverse transformation
+    // of an object's local transformation
+    // (and that transformation has  a scale).
+    // So we need to normalize the direction vector to properly
+    // find out the discriminant
+    //
+    // 2nd: closer t value is calculated classically; however
+    // further t value is calculated differently which I could
+    // not explain geometrically probably a reduction of some
+    // algebraic expression which improves numerical accuracy
+    //
+    // First improvement, has higher accuracy when
+    // extremely large sphere is being intersected
+    //
+    // Second one is for spheres that is far away
+    T dirLengthInv = 1.0f / direction.Length();
+    Vector<3, T> dirNorm = direction * dirLengthInv;
     Vector<3, T> centerDir = sphereCenter - position;
-    T beamCenterDist = direction.Dot(centerDir);
+    T beamCenterDist = dirNorm.Dot(centerDir);
     T cDirLengthSqr = centerDir.LengthSqr();
 
     // Below code is from the source
-    Vector<3, T> remedyTerm = centerDir - beamCenterDist * direction.Normalize();
+    Vector<3, T> remedyTerm = centerDir - beamCenterDist * dirNorm;
     T discriminant = sphereRadius * sphereRadius - remedyTerm.LengthSqr();
     if(discriminant >= 0)
     {
@@ -62,17 +91,25 @@ bool Ray<T>::IntersectsSphere(Vector<3, T>& intersectPos, T& t,
                     : (beamCenterDist - beamHalfLength);
         T t1 = (cDirLengthSqr - sphereRadius * sphereRadius) / t0;
 
-        t = (fabs(t0) <= fabs(t1)) ? t0 : t1;
-        intersectPos = position + t * direction;
-        return true;
+        // TODO: is there a better way to do this?
+        // Select a T
+        t = FLT_MAX;
+        if(t0 > 0) t = min(t, t0);
+        if(t1 > 0) t = min(t, t1);
+        if(t != FLT_MAX)
+        {
+            t *= dirLengthInv;
+            intersectPos = position + t * direction;
+            return true;
+        }
     }
     return false;
 
-    //// Geometric solution
+    // Geometric solution
     //Vector<3, T> centerDir = sphereCenter - position;
     //T beamCenterDistance = centerDir.Dot(direction);
-    //T beamNormalLengthSqr = centerDir.Dot(centerDir) -
-    //    beamCenterDistance * beamCenterDistance;
+    //T beamNormalLengthSqr = (centerDir.Dot(centerDir) -
+    //                         beamCenterDistance * beamCenterDistance);
     //T beamHalfLengthSqr = sphereRadius * sphereRadius - beamNormalLengthSqr;
     //if(beamHalfLengthSqr > 0)
     //{
@@ -80,12 +117,10 @@ bool Ray<T>::IntersectsSphere(Vector<3, T>& intersectPos, T& t,
     //    T beamHalfLength = sqrt(beamHalfLengthSqr);
     //    T t0 = beamCenterDistance - beamHalfLength;
     //    T t1 = beamCenterDistance + beamHalfLength;
-    //    if(t1 >= 0)
-    //    {
-    //        t = (t0 >= 0) ? t0 : t1;
-    //        intersectPos = position + t * direction;
-    //        return true;
-    //    }
+
+    //    t = (fabs(t0) <= fabs(t1)) ? t0 : t1;
+    //    intersectPos = position + t * direction;
+    //    return true;
     //}
     //return false;
 }

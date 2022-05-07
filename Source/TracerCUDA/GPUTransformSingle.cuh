@@ -163,14 +163,15 @@ inline AABB3f GPUTransformSingle::WorldToLocal(const AABB3f& aabb) const
 	for(int i = 0; i < AABB3f::AABBVertexCount; i++)
 	{
 		Vector4f vertex;
-		vertex[0] = ((i >> 0 & 0x1) ? aabb.Max() : aabb.Min())[0];
-		vertex[1] = ((i >> 1 & 0x1) ? aabb.Max() : aabb.Min())[1];
-		vertex[2] = ((i >> 2 & 0x1) ? aabb.Max() : aabb.Min())[2];
+		vertex[0] = ((i >> 0) & 0b1) ? aabb.Max()[0] : aabb.Min()[0];
+		vertex[1] = ((i >> 1) & 0b1) ? aabb.Max()[1] : aabb.Min()[1];
+		vertex[2] = ((i >> 2) & 0b1) ? aabb.Max()[2] : aabb.Min()[2];
 		vertex[3] = 1.0f;
 
 		vertex = invTransform * vertex;
-		result.SetMax(Vector3f::Max(result.Max(), vertex));
-		result.SetMin(Vector3f::Min(result.Min(), vertex));
+
+		result.SetMax(Vector3f::Max(result.Max(), Vector3f(vertex)));
+		result.SetMin(Vector3f::Min(result.Min(), Vector3f(vertex)));
 	}
 	return result;
 }
@@ -190,15 +191,15 @@ inline AABB3f GPUTransformSingle::LocalToWorld(const AABB3f& aabb) const
 	for(int i = 0; i < AABB3f::AABBVertexCount; i++)
 	{
 		Vector4f vertex;
-		vertex[0] = ((i >> 0 & 0x1) ? aabb.Max() : aabb.Min())[0];
-		vertex[1] = ((i >> 1 & 0x1) ? aabb.Max() : aabb.Min())[1];
-		vertex[2] = ((i >> 2 & 0x1) ? aabb.Max() : aabb.Min())[2];
+		vertex[0] = ((i >> 0) & 0b1) ? aabb.Max()[0] : aabb.Min()[0];
+		vertex[1] = ((i >> 1) & 0b1) ? aabb.Max()[1] : aabb.Min()[1];
+		vertex[2] = ((i >> 2) & 0b1) ? aabb.Max()[2] : aabb.Min()[2];
 		vertex[3] = 1.0f;
 
 		vertex = transform * vertex;
 
-		result.SetMax(Vector3f::Max(result.Max(), vertex));
-		result.SetMin(Vector3f::Min(result.Min(), vertex));
+		result.SetMax(Vector3f::Max(result.Max(), Vector3f(vertex)));
+		result.SetMin(Vector3f::Min(result.Min(), Vector3f(vertex)));
 	}
 	return result;
 }

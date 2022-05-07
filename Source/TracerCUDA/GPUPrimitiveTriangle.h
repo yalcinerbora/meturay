@@ -107,7 +107,7 @@ struct TriFunctions
                             position1 * b +
                             position2 * c);
 
-        normal = transform.LocalToWorld(normal, true);
+        normal = transform.LocalToWorld(normal, true).Normalize();
         position = transform.LocalToWorld(position);
 
         return position;
@@ -643,7 +643,7 @@ struct TriangleSurfaceGenerator
         const Vector3f positions[3] = {p0, p1, p2};
         Vector3f geoNormal = Triangle::Normal(positions);
         // This also needs to be in world space
-        geoNormal = transform.LocalToWorld(geoNormal, true);
+        geoNormal = transform.LocalToWorld(geoNormal, true).Normalize();
 
         // If The requested primitive is two sided
         // Flip the surface definitions (normal, geometric normal)
