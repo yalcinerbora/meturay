@@ -52,12 +52,22 @@
     }],
 
     "Primitives":[
+    // {
+    //     // All Sponza Except Decals
+    //     "id": 0,
+    //     "type": "Triangle",
+    //     //"name": "D:/IntelSponza/intel_sponza_all.obj",
+    //     //"name": "D:/IntelSponza/sponza_roofs.obj",
+    //     "tag": "assimp_",
+    //     "innerIndex": 0,
+    //     "cullFace": false
+    // },
     {
-        // All Sponza Except Decals
+        // All Sponza GFG
         "id": 0,
         "type": "Triangle",
-        "name": "D:/IntelSponza/intel_sponza_all.obj",
-        "tag": "assimp_",
+        "name": "D:/IntelSponza/gfg_single_intel_sponza2.gfg",
+        "tag": "gfg_",
         "innerIndex": 0,
         "cullFace": false
     }],

@@ -417,7 +417,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     Vector3f span = sceneAABB.Span();
     int maxDimIndex = span.Max();
     float worldSizeXYZ = span[maxDimIndex];
-    float halfVoxelSize = (worldSizeXYZ / static_cast<float>(resolutionXYZ)) * 0.5f;
+    float halfVoxelSize = (worldSizeXYZ / static_cast<float>(resolutionXYZ)) * 0.5f * 2;
     treeGPU.svoAABB = AABB3f(sceneAABB.Min() - Vector3f(halfVoxelSize),
                              sceneAABB.Min() + Vector3f(halfVoxelSize + worldSizeXYZ));
     treeGPU.leafDepth = Utility::FindLastSet(resolutionXYZ);
@@ -707,22 +707,23 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // since we found out the total node count
     GPUMemFuncs::AllocateMultiData(std::tie(// Node Related,
                                             treeGPU.dNodes,
-                                            treeGPU.dRadianceRead,
+                                            //treeGPU.dRadianceRead,
                                             treeGPU.dBinInfo,
                                             // Leaf Related
                                             treeGPU.dLeafParents,
                                             treeGPU.dLeafRadianceRead,
                                             treeGPU.dLeafBinInfo,
-                                            treeGPU.dLeafRadianceWrite,
-                                            treeGPU.dLeafSampleCountWrite,
+                                            //treeGPU.dLeafRadianceWrite,
+                                            //treeGPU.dLeafSampleCountWrite,
                                             // Node Offsets
                                             treeGPU.dLevelNodeOffsets),
                                    octreeMem,
                                    {totalNodeCount, totalNodeCount,
-                                   totalNodeCount,
-                                   hUniqueVoxelCount, hUniqueVoxelCount,
-                                   hUniqueVoxelCount, hUniqueVoxelCount,
-                                   hUniqueVoxelCount, levelNodeOffsets.size()});
+                                    //totalNodeCount,
+                                    hUniqueVoxelCount, hUniqueVoxelCount,
+                                    hUniqueVoxelCount,
+                                    //hUniqueVoxelCount, hUniqueVoxelCount,
+                                    levelNodeOffsets.size()});
 
     // Set Node and leaf parents to max to early catch errors
     // Rest is set to zero
@@ -733,14 +734,14 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        treeGPU.dNodes,
                        AnisoSVOctreeGPU::INVALID_NODE,
                        totalNodeCount);
-    CUDA_CHECK(cudaMemset(treeGPU.dRadianceRead, 0x00, totalNodeCount * sizeof(uint64_t)));
+   // CUDA_CHECK(cudaMemset(treeGPU.dRadianceRead, 0x00, totalNodeCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance)));
     CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, totalNodeCount * sizeof(uint64_t)));
 
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafParents, 0xFF, hUniqueVoxelCount * sizeof(uint64_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceRead, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafSampleCountWrite, 0x00, hUniqueVoxelCount * sizeof(uint64_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafParents, 0xFF, hUniqueVoxelCount * sizeof(uint32_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceRead, 0x00, hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, hUniqueVoxelCount * sizeof(uint32_t)));
+//    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceWrite, 0x00, hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadianceF)));
+//    CUDA_CHECK(cudaMemset(treeGPU.dLeafSampleCountWrite, 0x00, hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoCount)));
 
     CUDA_CHECK(cudaMemcpy(treeGPU.dLevelNodeOffsets, levelNodeOffsets.data(),
                           levelNodeOffsets.size() * sizeof(uint32_t),

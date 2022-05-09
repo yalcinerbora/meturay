@@ -238,7 +238,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector3* tangentsIn = tangents.data();
 
             // Utilize tangent and normal for quat generation
-            std::for_each(std::execution::par_unseq,
+            std::for_each(//std::execution::par_unseq,
                           primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {

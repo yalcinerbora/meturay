@@ -195,6 +195,7 @@ add_subdirectory(RayLib)
 
 # DLLs
 add_subdirectory(AssimpSurfaceLoaders)
+add_subdirectory(GFGSurfaceLoader)
 add_subdirectory(ImageIO)
 add_subdirectory(TracerCUDA)
 add_subdirectory(VisorGL)

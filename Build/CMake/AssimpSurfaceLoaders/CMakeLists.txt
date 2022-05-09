@@ -34,7 +34,7 @@ target_link_libraries(AssimpSurfaceLoaders PRIVATE
                       RayLib
                       assimp)
 
-                      # Copy DLLS
+# Copy DLLS
 if(MSVC)
     add_custom_command(TARGET AssimpSurfaceLoaders POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different

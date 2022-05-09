@@ -895,17 +895,19 @@ static void KCGenAndSampleDistribution(// Output
         }
 
         // Generate PWC Distribution over the radiances
-        BlockPWC2D dist2D(sPWCMem, incRadiances);
+        //BlockPWC2D dist2D(sPWCMem, incRadiances);
         // Block threads will loop over the every ray in this bin
         for(uint32_t rayIndex = THREAD_ID; rayIndex < sRayCount;
             rayIndex += THREAD_PER_BLOCK)
         {
-            float pdf;
-            Vector2f index;
-            Vector2f uv = dist2D.Sample(pdf, index, rng);
+            //float pdf;
+            //Vector2f index;
+            //Vector2f uv = dist2D.Sample(pdf, index, rng);
+            Vector2f uv = Zero2f;
+            float pdf = 0.0f;
 
-            uint32_t rayId = gRayIds[sOffsetStart + rayIndex];
             // Store the sampled direction of the ray
+            uint32_t rayId = gRayIds[sOffsetStart + rayIndex];
             gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
             gRayAux[rayId].guidePDF = pdf;
         }

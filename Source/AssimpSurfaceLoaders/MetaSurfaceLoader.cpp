@@ -46,11 +46,12 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
     // Do some checking
     for(unsigned int innerId : innerIds)
     {
-        const auto& mesh = scene->mMeshes[innerId];
-
         if(innerId >= scene->mNumMeshes)
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
                                  "Assimp_loader: Inner index out of range");
+
+        const auto& mesh = scene->mMeshes[innerId];
+
         if(!mesh->HasNormals())
             throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
                                  "Assimp_loader: File does not have normals");
@@ -80,7 +81,6 @@ const char* AssimpMetaSurfaceLoader::SufaceDataFileExt() const
 
 SceneError AssimpMetaSurfaceLoader::AABB(std::vector<AABB3>& list) const
 {
-    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& aabb = scene->mMeshes[innerId]->mAABB;
@@ -98,7 +98,6 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& resu
 {
     // Self contain indices
     size_t prevOffset = 0;
-    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -122,7 +121,6 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveRanges(std::vector<Vector2ul>& resu
 SceneError AssimpMetaSurfaceLoader::PrimitiveCounts(std::vector<size_t>& result) const
 {
     // Self contain indices
-    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -132,6 +130,9 @@ SceneError AssimpMetaSurfaceLoader::PrimitiveCounts(std::vector<size_t>& result)
             const auto& face = mesh->mFaces[i];
             result.back() += face.mNumIndices;
         }
+        // Check if this is proper triangle
+        if(result.back() % 3 != 0) return SceneError::PRIMITIVE_TYPE_INTERNAL_ERROR;
+        result.back() /= 3;
     }
     return SceneError::OK;
 }
@@ -157,7 +158,6 @@ SceneError AssimpMetaSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveData
     // Self contain indices
     uint64_t offset = 0;
     Byte* meshStart = result;
-    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
@@ -253,7 +253,6 @@ SceneError AssimpMetaSurfaceLoader::HasPrimitiveData(bool& r, PrimitiveDataType 
 SceneError AssimpMetaSurfaceLoader::PrimitiveDataCount(size_t& total, PrimitiveDataType primitiveDataType) const
 {
     total = 0;
-    //const auto& innerIds = node.AccessUIntRanged(InnerIdJSON);
     for(unsigned int innerId : innerIds)
     {
         const auto& mesh = scene->mMeshes[innerId];
