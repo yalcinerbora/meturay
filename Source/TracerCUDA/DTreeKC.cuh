@@ -239,7 +239,7 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
         Vector2f gridOffset(((nextIndex >> 0) & 0b01) ? 0.5f : 0.0f,
                             ((nextIndex >> 1) & 0b01) ? 0.5f : 0.0f);
         discreteCoords += gridOffset * descentFactor;
-        descentFactor *= 0.5;
+        descentFactor *= 0.5f;
 
         //if(threadIdx.x == 0)
         //    printf("[%d] DC(%f, %f), pdf(%f), XI(%f, %f)\n",

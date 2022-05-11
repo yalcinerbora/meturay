@@ -344,7 +344,7 @@ void PPGTracerPathWork(// Output
             // Generate Ray
             RayF rayNEE = RayF(lDirection, position);
             RayReg rayOut;
-            rayOut.ray = rayNEE.Nudge(surface.WorldGeoNormal());
+            rayOut.ray = rayNEE.Nudge(surface.WorldGeoNormal(), surface.curvatureOffset);
             rayOut.tMin = 0.0f;
             rayOut.tMax = lDistance;
             // Aux
@@ -423,7 +423,7 @@ void PPGTracerPathWork(// Output
 
             // Generate a ray using the values
             rayPath = RayF(direction, position);
-            rayPath.NudgeSelf(surface.WorldGeoNormal());
+            rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
 
             if(pdfTree == 0.0f) selectedPDFZero = true;
         }

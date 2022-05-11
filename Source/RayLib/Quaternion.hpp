@@ -380,16 +380,21 @@ Quaternion<T> operator*(T t, const Quaternion<T>& q)
 template <class T>
 __device__ __host__
 void TransformGen::Space(Quaternion<T>& q,
-                         const Vector<3, T>& x,
+                         const Vector<3, T>& xIn,
                          const Vector<3, T>& y,
                          const Vector<3, T>& z)
 {
+    Vector<3, T> x = xIn;
+    if((Cross(x, y) - z).Abs() > Vector3(0.1f))
+    {
+        x = -x;
+    }
+
     // Coord Systems should match
     // both should be right-handed coord system
     //Vector3 crs = Cross(x, y);
     //Vector3 diff = crs - z;
-    assert((Cross(x, y) - z).Abs() <= Vector3(0.5));
-
+    assert((Cross(x, y) - z).Abs() <= Vector3(0.1));
 
     //// Converting a Rotation Matrix to a Quaternion
     //// Mike Day, Insomniac Games (2015)

@@ -202,7 +202,7 @@ SceneError GFGSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
             {
                 // We've checked that the data is compatible
                 // we can just copy here
-                gfgFile->MeshVertexComponentDataGroup(result, innerId,
+                gfgFile->MeshVertexComponentDataGroup(meshStart, innerId,
                                                       GFGVertexComponentLogic::POSITION);
 
                 size_t dataSize = gfgFile->MeshVertexComponentDataGroupSize(innerId, GFGVertexComponentLogic::POSITION);
@@ -217,7 +217,7 @@ SceneError GFGSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
             {
                 // We've checked that the data is compatible
                 // we can just copy here
-                gfgFile->MeshVertexComponentDataGroup(result, innerId,
+                gfgFile->MeshVertexComponentDataGroup(meshStart, innerId,
                                                       GFGVertexComponentLogic::NORMAL);
 
                 size_t dataSize = gfgFile->MeshVertexComponentDataGroupSize(innerId, GFGVertexComponentLogic::NORMAL);
@@ -232,7 +232,7 @@ SceneError GFGSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
             {
                 // We've checked that the data is compatible
                 // we can just copy here
-                gfgFile->MeshVertexComponentDataGroup(result, innerId,
+                gfgFile->MeshVertexComponentDataGroup(meshStart, innerId,
                                                       GFGVertexComponentLogic::TANGENT);
 
                 size_t dataSize = gfgFile->MeshVertexComponentDataGroupSize(innerId, GFGVertexComponentLogic::TANGENT);
@@ -247,7 +247,7 @@ SceneError GFGSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
             {
                 // We've checked that the data is compatible
                 // we can just copy here
-                gfgFile->MeshVertexComponentDataGroup(result, innerId,
+                gfgFile->MeshVertexComponentDataGroup(meshStart, innerId,
                                                       GFGVertexComponentLogic::BINORMAL);
 
                 size_t dataSize = gfgFile->MeshVertexComponentDataGroupSize(innerId, GFGVertexComponentLogic::BINORMAL);
@@ -262,7 +262,7 @@ SceneError GFGSurfaceLoader::GetPrimitiveData(Byte* result, PrimitiveDataType pr
             {
                 // We've checked that the data is compatible
                 // we can just copy here
-                gfgFile->MeshVertexComponentDataGroup(result, innerId,
+                gfgFile->MeshVertexComponentDataGroup(meshStart, innerId,
                                                       GFGVertexComponentLogic::UV);
 
                 size_t dataSize = gfgFile->MeshVertexComponentDataGroupSize(innerId, GFGVertexComponentLogic::UV);

@@ -231,7 +231,7 @@ __device__ float GPULight<PGroup>::Pdf(float distance,
     float pdf = PrimPosPdfHit(hitPosition, direction,
                               tbnRotation, gTransform,
                               primId, gPData);
-    Vector3f normal = GPUSurface::NormalWorld(tbnRotation);
+    Vector3f normal = GPUSurface::NormalToSpace(tbnRotation);
     float nDotL = abs(normal.Dot(-direction));
     return pdf * distance * distance / nDotL;
 }

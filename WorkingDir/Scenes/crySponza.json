@@ -2,20 +2,16 @@
     "Cameras": [
     {
 		"id": 0,
-		"type": "Spherical",
+		"type": "Pinhole",
 
 		// 16:9 FoV
-		//"fov": [94.45, 53.13],
-		"fov": [90, 45],
+		"fov": [94.45, 53.13],
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
 		"planes": [1, 5000.0],
 		"gaze": [964.531, 659.303, -160.483],
 		"position": [965.48, 659.598, -160.596],
-		"up": [0.0, 1.0, 0.0],
-
-		"pixelRatio": 1,
-		"direction": [1,0,0]
+		"up": [0.0, 1.0, 0.0]
 	},
 	{
 		"id": 1,
@@ -29,7 +25,22 @@
 		"gaze": [-726.105, 107.282, -201.852],
 		"position": [-727.049, 107.424, -202.151],
 		"up": [0.0, 1.0, 0.0]
-	}],
+	},
+	{
+		// Spherical Probe
+		"id": 2,
+		"type": "Spherical",
+
+		"planes": [1, 5000.0],
+		"position": [1094.24, 528.092, -655.032],
+		"up": [0.0, 1.0, 0.0],
+
+		"pixelRatio": 1,
+		// Direction is derived from this gaze
+		//"gaze": [1093.3, 528.157, -654.684],
+		"direction": [-0.94, 0.065, 0.384]
+	}
+],
 
 	"Textures":
 	[
@@ -1183,5 +1194,5 @@
 
 	"LightSurfaces": [],
 
-    "CameraSurfaces": [{"camera": 0}, {"camera": 1}]
+    "CameraSurfaces": [{"camera": 0}, {"camera": 1}, {"camera": 2}]
 }

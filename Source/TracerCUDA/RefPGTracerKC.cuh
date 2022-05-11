@@ -317,7 +317,7 @@ void RPGTracerPathWork(// Output
             // Generate Ray
             RayF rayNEE = RayF(lDirection, position);
             RayReg rayOut;
-            rayOut.ray = rayNEE.Nudge(surface.WorldGeoNormal());
+            rayOut.ray = rayNEE.Nudge(surface.WorldGeoNormal(), surface.curvatureOffset);
             rayOut.tMin = 0.0f;
             rayOut.tMax = lDistance;
             // Aux

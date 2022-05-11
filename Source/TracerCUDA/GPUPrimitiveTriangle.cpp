@@ -10,6 +10,7 @@
 #include "TextureFunctions.h"
 
 #include <execution>
+#include <ranges>
 
 struct IndexTriplet
 {
@@ -182,14 +183,11 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     std::vector<Byte> indexCPU(totalIndexCount * IndexSize);
 
     // Temporary buffers (re-allocated per batch)
-    std::vector<Vector3> tangents;
     std::vector<Vector3> normals;
 
     size_t i = 0;
     for(const auto& loader : loaders)
     {
-        //const SceneNodeI& node = loader->SceneNode();
-
         const size_t offsetVertex = loaderVOffsets[i];
         const size_t offsetIndex = loaderIOffsets[i];
         const size_t offsetIndexNext = loaderIOffsets[i + 1];
@@ -223,92 +221,122 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
 
         // Manipulate Ptrs of in/out
         QuatF* rotationsOut = reinterpret_cast<QuatF*>(rotationsCPU.data() + offsetVertex * RotationSize);
-        Vector3* normalsIn = normals.data();
-        if(hasTangent)
+        const Vector3* normalsIn = normals.data();
+
+        // Allocate Array of Vector3 atomics
+        std::vector<Vector3f> tangents(vertexCount, Zero3f);
+        // If object does not come with per-vertex tangents
+        // Calculate and average the values
+        if(!hasTangent)
         {
-            size_t tangentCount;
-            if((e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
-                return e;
-
-            tangents.resize(tangentCount);
-            if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(tangents.data()),
-                                             PrimitiveDataType::TANGENT)) != SceneError::OK)
-                return e;
-
-            Vector3* tangentsIn = tangents.data();
-
-            // Utilize tangent and normal for quat generation
-            std::for_each(//std::execution::par_unseq,
-                          primStart, primEnd,
-                          [&](IndexTriplet& indices)
-                          {
-                              Vector3 normals[3];
-                              normals[0] = normalsIn[indices[0]];
-                              normals[1] = normalsIn[indices[1]];
-                              normals[2] = normalsIn[indices[2]];
-
-                              Vector3 tangents[3];
-                              tangents[0] = tangentsIn[indices[0]];
-                              tangents[1] = tangentsIn[indices[1]];
-                              tangents[2] = tangentsIn[indices[2]];
-
-                              // Generate rotations
-                              QuatF q0, q1, q2;
-                              Triangle::LocalRotation(q0, q1, q2, normals, tangents);
-
-                              rotationsOut[indices[0]] = q0;
-                              rotationsOut[indices[1]] = q1;
-                              rotationsOut[indices[2]] = q2;
-
-                              // Finally accumulate offset for combined vertex buffer usage
-                              if(i != 0)
-                              {
-                                  indices[0] += offsetVertex;
-                                  indices[1] += offsetVertex;
-                                  indices[2] += offsetVertex;
-                              }
-                          });
-        }
-        else
-        {
-            Vector3* positionsIn = reinterpret_cast<Vector3*>(postitionsCPU.data() + offsetVertex * VertPosSize);
-            Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
+            const Vector3* positionsIn = reinterpret_cast<Vector3*>(postitionsCPU.data() + offsetVertex * VertPosSize);
+            const Vector2* uvsIn = reinterpret_cast<Vector2*>(uvsCPU.data() + offsetVertex * VertUVSize);
 
             // Utilize position and uv for quat generation
-            std::for_each(std::execution::par_unseq,
-                          primStart, primEnd,
+            std::for_each(primStart, primEnd,
                           [&](IndexTriplet& indices)
                           {
+                              using namespace Triangle;
+
                               Vector3 normals[3];
                               normals[0] = normalsIn[indices[0]];
                               normals[1] = normalsIn[indices[1]];
                               normals[2] = normalsIn[indices[2]];
 
-                              Vector3 positions[3];
-                              positions[0] = positionsIn[indices[0]];
-                              positions[1] = positionsIn[indices[1]];
-                              positions[2] = positionsIn[indices[2]];
+                              Vector3 pos[3];
+                              pos[0] = positionsIn[indices[0]];
+                              pos[1] = positionsIn[indices[1]];
+                              pos[2] = positionsIn[indices[2]];
 
                               Vector2 uvs[3];
                               uvs[0] = uvsIn[indices[0]];
                               uvs[1] = uvsIn[indices[1]];
                               uvs[2] = uvsIn[indices[2]];
 
-                              // Generate rotations
-                              QuatF q0, q1, q2;
-                              Triangle::LocalRotation(q0, q1, q2, positions, normals, uvs);
+                              // Generate the tangents for this triangle orientation
+                              Vector3f t0 = CalculateTangent(pos[0], pos[1], pos[2],
+                                                             uvs[0], uvs[1], uvs[2],
+                                                             normals[0]);
+                              Vector3f t1 = CalculateTangent(pos[1], pos[2], pos[0],
+                                                             uvs[1], uvs[2], uvs[0],
+                                                             normals[1]);
+                              Vector3f t2 = CalculateTangent(pos[2], pos[0], pos[1],
+                                                             uvs[2], uvs[0], uvs[1],
+                                                             normals[2]);
 
-                              rotationsOut[indices[0]] = q0;
-                              rotationsOut[indices[1]] = q1;
-                              rotationsOut[indices[2]] = q2;
+                              // Degenerate triangle is found,
+                              // (or uv's are degenerate)
+                              // arbitrarily find a tangent
+                              if(t0.HasNaN()) t0 = OrthogonalVector(normals[0]);
+                              if(t1.HasNaN()) t1 = OrthogonalVector(normals[1]);
+                              if(t2.HasNaN()) t2 = OrthogonalVector(normals[2]);
 
-                              // Finally accumulate offset for combined vertex buffer usage
-                              if(i != 0)
-                              {
-                                  indices[0] += offsetVertex;
-                                  indices[1] += offsetVertex;
-                                  indices[2] += offsetVertex;
-                              }
+                              tangents[indices[0]] += t0;
+                              tangents[indices[1]] += t1;
+                              tangents[indices[2]] += t2;
+                          });
+        }
+        else
+        {
+            // Primitive already have tangents just load it
+            size_t tangentCount;
+            if((e = loader->PrimitiveDataCount(tangentCount, PrimitiveDataType::TANGENT)) != SceneError::OK)
+                return e;
+
+            if((e = loader->GetPrimitiveData(reinterpret_cast<Byte*>(tangents.data()),
+                                             PrimitiveDataType::TANGENT)) != SceneError::OK)
+                return e;
+        }
+
+        // Generated (or loaded) the tangents
+        // Generate tangent space rotations
+        const Vector3* tangentsIn = tangents.data();
+
+        // Utilize tangent and normal for quat generation
+        std::ranges::iota_view vertIndices(size_t(0), vertexCount);
+        std::for_each(vertIndices.begin(),
+                      vertIndices.end(),
+                      [&](size_t index)
+                      {
+                          Vector3 n = normalsIn[index];
+                          Vector3 t = tangentsIn[index];
+
+                          // Neighboring vertices of the tangents
+                          // are canceled each other out
+                          // Just find an arbitrary tangent
+                          if(t.LengthSqr() < MathConstants::Epsilon)
+                              t = OrthogonalVector(n);
+
+                          // If tangents are generated
+                          // each triangle that shared this vertices
+                          // added its tangent, normalize it
+                          t.NormalizeSelf();
+
+                          // Gram-Schmidt orthonormalization
+                          // This is required since normal may be skewed to hide
+                          // edges (to create smooth lighting)
+                          Vector3f tNorm = (t - n * n.Dot(t)).Normalize();
+                          // Bitangent
+                          Vector3f b = Cross(n, tNorm);
+
+                          // Generate rotation
+                          QuatF q;
+                          TransformGen::Space(q, tNorm, b, n);
+
+                          rotationsOut[index] = q;
+                      });
+
+        // Offset the indices with respect to the GlobalPrimitive Buffer
+        // Don't offset for the very first mesh
+        if(i != 0)
+        {
+            std::for_each(std::execution::par_unseq,
+                          primStart, primEnd,
+                          [&](IndexTriplet& indices)
+                          {
+                              indices[0] += offsetVertex;
+                              indices[1] += offsetVertex;
+                              indices[2] += offsetVertex;
                           });
         }
         i++;

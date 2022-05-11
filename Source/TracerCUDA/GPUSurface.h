@@ -14,24 +14,24 @@ and surface generation functions for sample primitives
 namespace GPUSurface
 {
     __device__
-    inline Vector3 NormalWorld(const QuatF& toTangentTransform)
+    inline Vector3 NormalToSpace(const QuatF& spaceToTangentTransform)
     {
         Vector3 v = ZAxis;
-        return toTangentTransform.Conjugate().ApplyRotation(v);
+        return spaceToTangentTransform.Conjugate().ApplyRotation(v);
     }
 
     __device__
-    inline Vector3 TangentWorld(const QuatF& toTangentTransform)
+    inline Vector3 TangentToSpace(const QuatF& spaceToTangentTransform)
     {
         Vector3 v = YAxis;
-        return toTangentTransform.Conjugate().ApplyRotation(v);
+        return spaceToTangentTransform.Conjugate().ApplyRotation(v);
     }
 
     __device__
-    inline Vector3 BitangentWorld(const QuatF& toTangentTransform)
+    inline Vector3 BitangentToSpace(const QuatF& spaceToTangentTransform)
     {
         Vector3 v = XAxis;
-        return toTangentTransform.Conjugate().ApplyRotation(v);
+        return spaceToTangentTransform.Conjugate().ApplyRotation(v);
     }
 
     __device__
@@ -42,17 +42,17 @@ namespace GPUSurface
     }
 
     __device__
-    inline Vector3 ToWorld(const Vector3f& v,
-                           const QuatF& toTangentTransform)
+    inline Vector3 ToSpace(const Vector3f& v,
+                           const QuatF& spaceToTangentTransform)
     {
-        return toTangentTransform.Conjugate().ApplyRotation(v);
+        return spaceToTangentTransform.Conjugate().ApplyRotation(v);
     }
 
     __device__
-    inline RayF ToTangent(const RayF& r,
-                          const QuatF& toTangentTransform)
+    inline RayF ToSpace(const RayF& r,
+                        const QuatF& spaceToTangentTransform)
     {
-        return r.Transform(toTangentTransform);
+        return r.Transform(spaceToTangentTransform);
     }
 
     __device__
@@ -115,8 +115,6 @@ struct HasGetNormFunc <C,
 // but don't want to clutter using SFINAE to mandate the availability
 // of the functions. Maybe after some time use concepts here
 // when NVCC supports it (maybe it already supports? 2022)
-
-
 struct EmptySurface
 {
     __device__
@@ -153,10 +151,19 @@ struct SphrSurface
 
 struct BasicSurface
 {
-    Vector3f    worldPosition;  // World surface location
-    QuatF       worldToTangent; // World to tangent space transformation
-    Vector3f    worldGeoNormal; // Geometric normal (useful when nudge the ray)
-    bool        backSide;       // Returning the side of the surface (used on transmissive materials)
+    Vector3f    worldPosition;      // World surface location
+    QuatF       worldToTangent;     // World to tangent space transformation
+    Vector3f    worldGeoNormal;     // Geometric normal (useful when nudge the ray)
+    bool        backSide;           // Returning the side of the surface (used on transmissive materials)
+    // If a mesh does try to approximate a curved surface
+    // (by smoothed normals), sometimes ray geometrically hit the surface
+    // but in theory they shouldn't (actually this mesh is badly modeled but
+    // and rays should self-intersect with the mesh but w/e)
+    // this value approximates the curvature as a perfect sphere and creates
+    // and offset between the chord(mesh surface) and that sphere
+    // This is used to offset rays even more from the mesh
+    float       curvatureOffset;
+
 
     __device__
     Vector3f WorldNormal() const;
@@ -174,6 +181,14 @@ struct UVSurface
     Vector2     uv;             // Texture coordinates
     Vector3f    worldGeoNormal; // Geometric normal (useful when nudge the ray)
     bool        backSide;       // Returning the side of the surface (used on transmissive materials)
+        // If a mesh does try to approximate a curved surface
+    // (by smoothed normals), sometimes ray geometrically hit the surface
+    // but in theory they shouldn't (actually this mesh is badly modeled but
+    // and rays should self-intersect with the mesh but w/e)
+    // this value approximates the curvature as a perfect sphere and creates
+    // and offset between the chord(mesh surface) and that sphere
+    // This is used to offset rays even more from the mesh
+    float       curvatureOffset;
 
     __device__
     Vector3f WorldNormal() const;
@@ -197,7 +212,7 @@ static_assert(HasGetNormFunc<UVSurface>::value,
 __device__ inline
 Vector3f BasicSurface::WorldNormal() const
 {
-    return GPUSurface::NormalWorld(worldToTangent);
+    return GPUSurface::NormalToSpace(worldToTangent);
 }
 
 __device__ inline
@@ -215,7 +230,7 @@ Vector3f BasicSurface::WorldGeoNormal() const
 __device__ inline
 Vector3f UVSurface::WorldNormal() const
 {
-    return GPUSurface::NormalWorld(worldToTangent);
+    return GPUSurface::NormalToSpace(worldToTangent);
 }
 
 __device__ inline
@@ -251,7 +266,7 @@ BasicSurface DefaultGenBasicSurface(const HitData&,
                                     PrimitiveId,
                                     const PrimData&)
 {
-    return BasicSurface{Zero3f, t.ToLocalRotation(), Zero3f};
+    return BasicSurface{Zero3f, t.ToLocalRotation(), Zero3f, false, 0.0f};
 }
 
 template <class HitData, class PrimData>
@@ -262,5 +277,5 @@ UVSurface DefaultGenUvSurface(const HitData&,
                               PrimitiveId,
                               const PrimData&)
 {
-    return UVSurface{Zero3f, t.ToLocalRotation(), Zero2f, Zero3f};
+    return UVSurface{Zero3f, t.ToLocalRotation(), Zero2f, Zero3f, false, 0.0f};
 }

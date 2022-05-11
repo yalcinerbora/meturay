@@ -64,7 +64,22 @@
         "gaze": [28.7258, 13.9967, 31.0974],
         "position": [28.6742, 14.935, 31.439],
         "up": [0.0, 1.0, 0.0]
+    },
+    // Inside pool spherical camera
+    {
+        // Pool Camera
+		"id": 5,
+		"type": "Spherical",
+
+        "planes": [0.01, 2000.0],
+		"position": [27.1025, -18.91, 32.0518],
+		"up": [0.0, 1.0, 0.0],
+
+		"pixelRatio": 1,
+		"direction": [0.67, -0.01, -0.66]
+
     }
+
     ],
 
     "Lights":[
@@ -582,6 +597,8 @@
         // Reflection of Caustics Camera
         {"camera": 2},
         // Tree Shadow Camera
-        {"camera": 3}
+        {"camera": 3},
+        // Spherical Camera Inside Pool
+        {"camera": 5, "medium": 2}
     ]
 }

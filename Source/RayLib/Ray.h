@@ -89,8 +89,8 @@ class Ray<T>
         __device__ __host__ Ray&                    TransformSelf(const Matrix<3, T>&);
         __device__ __host__ Ray&                    TransformSelf(const Matrix<4, T>&);
         __device__ __host__ Vector<3,T>             AdvancedPos(T t) const;
-        __device__ __host__ Ray                     Nudge(const Vector<3, T>& direction) const;
-        __device__ __host__ Ray&                    NudgeSelf(const Vector<3, T>& direction);
+        __device__ __host__ Ray                     Nudge(const Vector<3, T>& direction, T curvatureOffset = T(0)) const;
+        __device__ __host__ Ray&                    NudgeSelf(const Vector<3, T>& direction, T curvatureOffset = T(0));
 };
 
 using RayF = Ray<float>;

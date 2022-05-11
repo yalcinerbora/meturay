@@ -135,7 +135,7 @@ struct NormalRenderMatFuncs
         pdf = 1.0f;
         wo = InvalidRayF;
 
-        Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        Vector3 normal = GPUSurface::NormalToSpace(surface.worldToTangent);
         normal = 0.5f * normal + 0.5f;
 
         return normal;
@@ -153,7 +153,7 @@ struct NormalRenderMatFuncs
                      const NullData& matData,
                      const HitKey::Type& matId)
     {
-        Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        Vector3 normal = GPUSurface::NormalToSpace(surface.worldToTangent);
         normal = 0.5f * normal + 0.5f;
         return normal;
     }

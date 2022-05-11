@@ -144,8 +144,8 @@ struct UnrealDeviceFuncs
         // to prevent self intersection
         // Normal is on tangent space so convert it to world space
         // Convert Normal to World Space
-        wo = RayF(GPUSurface::ToWorld(L, surface.worldToTangent), pos);
-        wo.NudgeSelf(surface.WorldGeoNormal());
+        wo = RayF(GPUSurface::ToSpace(L, surface.worldToTangent), pos);
+        wo.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
         // PDF is already written
         // Finally return Radiance
         // All Done!

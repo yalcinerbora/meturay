@@ -23,7 +23,9 @@ namespace Triangle
 
                                   const Vector<2, T>& uv0,
                                   const Vector<2, T>& uv1,
-                                  const Vector<2, T>& uv2);
+                                  const Vector<2, T>& uv2,
+
+                                  const Vector<3, T>& refNormal);
 
     template <class T>
     __device__ __host__ HYBRID_INLINE
@@ -74,7 +76,9 @@ Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
 
                                         const Vector<2, T>& uv0,
                                         const Vector<2, T>& uv1,
-                                        const Vector<2, T>& uv2)
+                                        const Vector<2, T>& uv2,
+
+                                        const Vector<3, T>& refNormal)
 {
     // Edges (Tri is CCW)
     Vector<3, T> vec0 = p1 - p0;
@@ -86,9 +90,21 @@ Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
     T t = (dUV0[0] * dUV1[1] -
            dUV1[0] * dUV0[1]);
 
-    Vector<3, T> tangent;
-    tangent = t * (dUV1[1] * vec0 - dUV0[1] * vec1);
-    tangent.NormalizeSelf();
+    // UVs are not set or bad just return NaN
+    if(t == 0.0f) return Vector3f(NAN);
+
+    // Calculate as normal
+    float r = 1.0f / t;
+
+    Vector<3, T> tangent = r * (dUV1[1] * vec0 - dUV0[1] * vec1);
+    Vector<3, T> bitangent = r * (dUV0[0] * vec1 - dUV1[0] * vec0);
+
+    // Check if the tangent, bi-tangent determine
+    // a right handed coordinate system
+    if(t < 0)
+    {
+        tangent = -tangent;
+    }
     return tangent;
 }
 
@@ -104,13 +120,6 @@ void Triangle::LocalRotation(Quaternion<T>& q0,
     Vector<3, T> t0 = t[0];
     Vector<3, T> t1 = t[1];
     Vector<3, T> t2 = t[2];
-
-    // Gram-Schmidt orthonormalization
-    // This is required since normal may be skewed to hide
-    // edges (to create smooth lighting)
-    t0 = (t0 - n[0] * n[0].Dot(t0)).Normalize();
-    t1 = (t1 - n[1] * n[1].Dot(t1)).Normalize();
-    t2 = (t2 - n[2] * n[2].Dot(t2)).Normalize();
 
     // Generate bi-tangent
     Vector<3, T> b0 = Cross(n[0], t0);

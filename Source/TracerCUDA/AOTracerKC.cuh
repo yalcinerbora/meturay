@@ -101,7 +101,7 @@ inline void AOWork(// Output
 
         // Ray out
         RayF ray = RayF(direction, position);
-        ray.NudgeSelf(surface.WorldGeoNormal());
+        ray.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
         // AO Calculation
         Vector3 aoMultiplier = Vector3(nDotL * MathConstants::InvPi);
         auxOut.aoFactor = aoMultiplier;

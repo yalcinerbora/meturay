@@ -273,7 +273,10 @@ struct SphereSurfaceGenerator
             static constexpr QuatF TANGENT_ROT = QuatF(0, 1, 0, 0);
             tbn = TANGENT_ROT * tbn;
         }
-        return BasicSurface{pos, tbn, geoNormal, backSide};
+        // There is no curvature discrepancy for spheres
+        // so set curvature offset to zero
+
+        return BasicSurface{pos, tbn, geoNormal, backSide, 0.0f};
     }
 
     __device__ inline
@@ -311,7 +314,8 @@ struct SphereSurfaceGenerator
         return UVSurface
         {
             bs.worldPosition, bs.worldToTangent,
-            uv, bs.worldGeoNormal, bs.backSide
+            uv, bs.worldGeoNormal, bs.backSide,
+            bs.curvatureOffset
         };
     }
 

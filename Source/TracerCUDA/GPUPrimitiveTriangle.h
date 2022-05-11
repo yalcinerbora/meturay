@@ -629,7 +629,7 @@ struct TriangleSurfaceGenerator
         QuatF tbn = Quat::BarySLerp(q0, q1, q2,
                                     a, b);
         tbn.NormalizeSelf();
-        tbn = tbn * transform.ToLocalRotation();
+        QuatF worldToTangent = tbn * transform.ToLocalRotation();
 
         // Position Query
         Vector3f p0 = primData.positions[i0];
@@ -651,16 +651,74 @@ struct TriangleSurfaceGenerator
         if(backSide)
         {
             geoNormal = -geoNormal;
-            // Change the tbn rotation so that Z is on opposite direction
+            // Change the worldToTangent rotation so that Z is on opposite direction
             // TODO: here flipping Z would change the handedness of the
             // coordinate system
             // Just adding the 180degree rotation with the tangent axis
             // to the end which should be fine I guess?
             static constexpr QuatF TANGENT_ROT = QuatF(0, 1, 0, 0);
-            tbn = TANGENT_ROT * tbn;
+            worldToTangent = TANGENT_ROT * worldToTangent;
         }
 
-        return BasicSurface{pos, tbn, geoNormal, backSide};
+        //// Calculate the curvature offset
+        //// https://computergraphics.stackexchange.com/questions/1718/what-is-the-simplest-way-to-compute-principal-curvature-for-a-mesh-triangle
+        //// Calculate curvature for each three edges then use the max
+        //auto CalculateCurvatureDistance = [&](const Vector3f& p0, const Vector3f& p1,
+        //                                      const Vector3f& n0, const Vector3f& n1,
+        //                                      const Vector3f& nPatch) -> float
+        //{
+        //    Vector3f pVec = (p1 - p0);
+        //    Vector3f nVec = (n1 - n0);
+
+        //    float curvature = pVec.Dot(nVec) / pVec.LengthSqr();
+        //    // For back faced surfaces curvature is inverse
+        //    if(backSide) curvature = -curvature;
+        //    // Just don't generate a negative offset, early terminate
+        //    if(curvature <= MathConstants::Epsilon) return 0.0f;
+        //    // Assume circle
+        //    float radius = (1.0f / curvature);
+        //    // Geometrically determine the distance between this square and
+        //    // the chord (which is current processed edge)
+        //    // alpha = half angle between normals
+        //    // beta = angle between center normal and the interpolating normal
+        //    //
+        //    //   N0   Ncenter    N1
+        //    //     ^     ^     ^
+        //    //      \____|____/
+        //    //       \   |   /
+        //    //        \  |  /
+        //    //         \ | /
+        //    //          \|/
+        //    // angle between = N0-N1 is alpha,
+        //    // (thus angle between Ncenter-N0 is alpha/2)
+        //    // angle between nPatch and nCenter is beta
+
+        //    Vector3f nCenter = (n0 * 0.5f + n1 * 0.5f).Normalize();
+        //    float cosAlphaHalf = nCenter.Dot(n0);
+        //    assert(fabsf(nCenter.Dot(n1) - cosAlphaHalf) < MathConstants::VeryLargeEpsilon);
+        //    float cosBeta = nPatch.Dot(nCenter);
+        //    float dist = radius * (cosBeta - cosAlphaHalf);
+        //    assert(dist >= 0);
+        //    return dist;
+        //};
+
+        //Vector3f nPatch = GPUSurface::NormalToSpace(tbn);
+        //float dist0 = CalculateCurvatureDistance(p0, p1,
+        //                                        GPUSurface::NormalToSpace(q0),
+        //                                        GPUSurface::NormalToSpace(q1),
+        //                                        nPatch);
+        //float dist1 = CalculateCurvatureDistance(p1, p2,
+        //                                        GPUSurface::NormalToSpace(q1),
+        //                                        GPUSurface::NormalToSpace(q2),
+        //                                        nPatch);
+        //float dist2 = CalculateCurvatureDistance(p2, p0,
+        //                                        GPUSurface::NormalToSpace(q2),
+        //                                        GPUSurface::NormalToSpace(q0),
+        //                                        nPatch);
+        //float curvatureOffset = fmax(fmax(dist0, dist1), dist2);
+
+
+        return BasicSurface{pos, worldToTangent, geoNormal, backSide, 0.0f};
     }
 
     __device__ inline

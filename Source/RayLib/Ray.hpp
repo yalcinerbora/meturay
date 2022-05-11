@@ -509,7 +509,7 @@ Vector<3, T> Ray<T>::AdvancedPos(T t) const
 
 template<>
 __device__ __host__ HYBRID_INLINE [[nodiscard]]
-Ray<float> Ray<float>::Nudge(const Vector3f& dir) const
+Ray<float> Ray<float>::Nudge(const Vector3f& dir, float curvatureOffset) const
 {
     // From RayTracing Gems I
     // Chapter 6
@@ -529,7 +529,7 @@ Ray<float> Ray<float>::Nudge(const Vector3f& dir) const
         pointI[2] = __int_as_float(__float_as_int(p[2]) + ((p[2] < 0) ? -ofi[2] : ofi[2]));
     #else
         // CPU code (this will be optimized out)
-        // and it is not UBO
+        // and it is not UB
         static_assert(sizeof(int32_t) == sizeof(float));
         Vector3i pInt;
         memcpy(&(pInt[0]), &(p[0]), sizeof(float));
@@ -553,12 +553,19 @@ Ray<float> Ray<float>::Nudge(const Vector3f& dir) const
     nextPos[1] = (fabs(p[1]) < ORIGIN) ? (p[1] + FLOAT_SCALE * dir[1]) : pointI[1];
     nextPos[2] = (fabs(p[2]) < ORIGIN) ? (p[2] + FLOAT_SCALE * dir[2]) : pointI[2];
 
+    if(curvatureOffset != 0.0f)
+    {
+        nextPos[0] = nextPos[0] + dir[0] * curvatureOffset;
+        nextPos[1] = nextPos[1] + dir[1] * curvatureOffset;
+        nextPos[2] = nextPos[2] + dir[2] * curvatureOffset;
+    }
+
     return Ray(direction, nextPos);
 }
 
 template<>
 __device__ __host__ HYBRID_INLINE
-Ray<double> Ray<double>::Nudge(const Vector3d& dir) const
+Ray<double> Ray<double>::Nudge(const Vector3d& dir, double curvatureOffset) const
 {
     // From RayTracing Gems I
     // Chapter 6
@@ -596,14 +603,21 @@ Ray<double> Ray<double>::Nudge(const Vector3d& dir) const
     nextPos[0] = (fabs(p[0]) < ORIGIN) ? (p[0] + FLOAT_SCALE * dir[0]) : pointI[0];
     nextPos[1] = (fabs(p[1]) < ORIGIN) ? (p[1] + FLOAT_SCALE * dir[1]) : pointI[1];
     nextPos[2] = (fabs(p[2]) < ORIGIN) ? (p[2] + FLOAT_SCALE * dir[2]) : pointI[2];
+
+    if(curvatureOffset != 0.0)
+    {
+        nextPos[0] = nextPos[0] + dir[0] * curvatureOffset;
+        nextPos[1] = nextPos[1] + dir[1] * curvatureOffset;
+        nextPos[2] = nextPos[2] + dir[2] * curvatureOffset;
+    }
     return Ray(direction, nextPos);
 }
 
 template<class T>
 __device__ __host__ HYBRID_INLINE
-Ray<T>& Ray<T>::NudgeSelf(const Vector<3, T>& dir)
+Ray<T>& Ray<T>::NudgeSelf(const Vector<3, T>& dir, T curvatureOffset)
 {
-    Ray<T> r = Nudge(dir);
+    Ray<T> r = Nudge(dir, curvatureOffset);
     (*this) = r;
     return *this;
 }

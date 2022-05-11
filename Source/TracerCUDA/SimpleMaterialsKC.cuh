@@ -37,10 +37,12 @@ struct LambertConstFuncs
         outMedium = &m;
         // Ray Selection
         const Vector3& position = pos;
-        const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        Vector3 normal = GPUSurface::NormalToSpace(surface.worldToTangent);
+        //Vector3 normal = surface.WorldGeoNormal();
         // Generate New Ray Direction
         Vector2 xi(rng.Uniform(), rng.Uniform());
-        Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
+        //Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
+        Vector3 direction = HemiDistribution::HemiUniformCDF(xi, pdf);
         direction.NormalizeSelf();
 
         // Generated direction vector is on surface space (hemispherical)
@@ -49,11 +51,11 @@ struct LambertConstFuncs
         direction = q.ApplyRotation(direction);
 
         // Cos Theta
-        float nDotL = max(normal.Dot(direction), 0.0f);
+        float nDotL = fabs(normal.Dot(direction));
 
         // Ray out
         wo = RayF(direction, position);
-        wo.NudgeSelf(surface.WorldGeoNormal());
+        wo.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
         // BSDF Calculation
         return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
     }
@@ -69,7 +71,8 @@ struct LambertConstFuncs
               const AlbedoMatData& matData,
               const HitKey::Type& matId)
     {
-        const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        Vector3 normal = GPUSurface::NormalToSpace(surface.worldToTangent);
+        //Vector3 normal = surface.WorldGeoNormal();
         float pdf = max(wo.Dot(normal), 0.0f);
 
         pdf *= MathConstants::InvPi;
@@ -88,7 +91,8 @@ struct LambertConstFuncs
                      const AlbedoMatData& matData,
                      const HitKey::Type& matId)
     {
-        Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        Vector3 normal = GPUSurface::NormalToSpace(surface.worldToTangent);
+        //const Vector3 normal = surface.WorldGeoNormal();
         float nDotL = max(normal.Dot(wo), 0.0f);
         return nDotL * matData.dAlbedo[matId] * MathConstants::InvPi;
     }
@@ -126,13 +130,13 @@ struct ReflectMatFuncs
         Vector3 albedo = data;
         float roughness = data[3];
 
-        const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        const Vector3 normal = GPUSurface::NormalToSpace(surface.worldToTangent);
         // Calculate Reflection
         if(roughness == 0.0f)
         {
             // Singularity Just Reflect
             wo = RayF(wi, pos).Reflect(normal);
-            wo.NudgeSelf(surface.WorldGeoNormal());
+            wo.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
             pdf = 1.0f;
             return albedo;
         }
@@ -191,7 +195,7 @@ struct RefractMatFuncs
         float iIOR = matData.dMediums[mediumIndex]->IOR();
         float dIOR = matData.dMediums[matData.baseMediumIndex]->IOR();
 
-        const Vector3 normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        const Vector3 normal = GPUSurface::NormalToSpace(surface.worldToTangent);
         const Vector3& position = pos;
 
         // Check if we are exiting or entering
@@ -220,7 +224,7 @@ struct RefractMatFuncs
         {
             // RNG choose to sample Reflection case
             wo = RayF(wi, position).Reflect(refNormal);
-            wo.NudgeSelf(surface.WorldGeoNormal());
+            wo.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
             // Fresnel term is used to sample thus pdf is f
             pdf = f;
             // We reflected off of surface no medium change
@@ -265,7 +269,7 @@ struct RefractMatFuncs
 
             // We passed the boundary
             // advance towards opposite direction
-            wo.NudgeSelf(-surface.WorldGeoNormal());
+            wo.NudgeSelf(-surface.WorldGeoNormal(), surface.curvatureOffset);
 
             // Factor in the radiance discrepancy due to refraction
             // Medium change causes rays to be scatter/focus

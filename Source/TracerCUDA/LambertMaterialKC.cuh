@@ -47,8 +47,8 @@ struct LambertMatFuncs
         // Cos Theta
         float nDotL = max(normal.Dot(direction), 0.0f);
         // Ray out
-        wo = RayF(GPUSurface::ToWorld(direction, surface.worldToTangent), position);
-        wo.NudgeSelf(surface.WorldGeoNormal());
+        wo = RayF(GPUSurface::ToSpace(direction, surface.worldToTangent), position);
+        wo.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
 
         // Radiance Calculation
         const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
@@ -70,7 +70,7 @@ struct LambertMatFuncs
         // Check if tangent space normal is avail
         if(matData.dNormal[matId])
             normal = (*matData.dNormal[matId])(surface.uv).Normalize();
-        normal = GPUSurface::NormalWorld(surface.worldToTangent);
+        normal = GPUSurface::NormalToSpace(surface.worldToTangent);
 
         float pdf = max(wo.Dot(normal), 0.0f);
         pdf *= MathConstants::InvPi;
@@ -96,7 +96,7 @@ struct LambertMatFuncs
 
         // Calculate lightning in world space since
         // wo is already in world space
-        normal = GPUSurface::ToWorld(normal, surface.worldToTangent);
+        normal = GPUSurface::ToSpace(normal, surface.worldToTangent);
 
         float nDotL = max(normal.Dot(wo), 0.0f);
         const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);

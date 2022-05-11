@@ -382,7 +382,7 @@ void RLTracerPathWork(// Output
         {
             // Generate Ray
             RayF rayNEE = RayF(lDirection, position);
-            rayNEE.NudgeSelf(surface.WorldGeoNormal());
+            rayNEE.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
             RayReg rayOut;
             rayOut.ray = rayNEE;
             rayOut.tMin = 0.0f;
@@ -468,7 +468,7 @@ void RLTracerPathWork(// Output
 
             // Generate a ray using the values
             rayPath = RayF(direction, position);
-            rayPath.NudgeSelf(surface.WorldGeoNormal());
+            rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
 
             if(pdfGuide == 0.0f) selectedPDFZero = true;
         }
