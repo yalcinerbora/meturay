@@ -14,11 +14,47 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
+#include <array>
+
 // Currently These are compile time constants
-// sine most of the internal call rely on compile time constants
-static constexpr uint32_t PG_KERNEL_TPB = 512;
-static constexpr uint32_t PG_KERNEL_X = 32;
-static constexpr uint32_t PG_KERNEL_Y = 32;
+// since most of the internal call rely on compile time constants
+static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
+
+using PathGuideKernelFunction = void (*)(// Output
+                                         RayAuxWFPG*,
+                                         // I-O
+                                         RNGeneratorGPUI**,
+                                         // Input
+                                         // Per-ray
+                                         const RayGMem*,
+                                         const RayId*,
+                                         // Per bin
+                                         const uint32_t*,
+                                         const uint32_t*,
+                                         // Constants
+                                         const AnisoSVOctreeGPU,
+                                         uint32_t);
+
+static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_TPB =
+{
+    1024,
+    512,
+    512,
+    128, //128,
+    128, //128,
+};
+
+static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegin(),
+                                                             PG_KERNEL_TPB.cend());
+
+static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KERNELS =
+{
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 32>,    // First bounce good approximation
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 64, 32>,    // Second bounce as well
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 32, 16>,    // Third bounce not so much
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce bad
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 16, 8>      // Fifth is bad as well
+};
 
 struct NodeIdFetchFunctor
 {
@@ -118,10 +154,9 @@ void WFPGTracer::GenerateGuidedDirections()
                                           cudaSystem);
 
     // Call the Trace and Sample Kernel
-    constexpr auto KCSampleKernel = KCGenAndSampleDistribution<RNGIndependentGPU,
-                                                               PG_KERNEL_TPB,
-                                                               PG_KERNEL_X,
-                                                               PG_KERNEL_Y>;
+    // Select the kernel depending on the depth
+    uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
+    auto KCSampleKernel = PG_KERNELS[kernelIndex];
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
     // Debug
@@ -142,7 +177,7 @@ void WFPGTracer::GenerateGuidedDirections()
 
     CUDA_CHECK(cudaEventRecord(start));
     gpu.ExactKC_X(0, (cudaStream_t)0,
-                  PG_KERNEL_TPB, pgKernelBlockCount,
+                  PG_KERNEL_TPB[kernelIndex], pgKernelBlockCount,
                   //
                   KCSampleKernel,
                   // Output
@@ -274,13 +309,13 @@ TracerError WFPGTracer::Initialize()
                             cudaSystem)) != TracerError::OK)
         return err;
 
-    // Generate a Scrambled Sobol Sampler for the
-    // Path Guide Sampling
+    // Generate a Sampler for the
+    // Path Guide Sampling (Conservatively generate maximum amount of RNGs)
     const auto& gpu = cudaSystem.BestGPU();
 
-    uint32_t rngCount = (gpu.MaxActiveBlockPerSM(PG_KERNEL_TPB) *
-                         gpu.SMCount() * PG_KERNEL_TPB);
-    pgKernelBlockCount = rngCount / PG_KERNEL_TPB;
+    uint32_t rngCount = (gpu.MaxActiveBlockPerSM(KERNEL_TBP_MAX) *
+                         gpu.SMCount() * KERNEL_TBP_MAX);
+    pgKernelBlockCount = rngCount / KERNEL_TBP_MAX;
     pgSampleRNG = RNGIndependentCPU(params.seed, gpu, rngCount);
 
     return TracerError::OK;

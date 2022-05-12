@@ -1,15 +1,28 @@
 
+#include <type_traits>
 #include <cub/warp/warp_scan.cuh>
 #include "RayLib/CudaCheck.h"
 
 // Segmented version of the Block-wide scan
 // function. Interface tried to be made similar
 // like cub interface
-
 template<class T,
-    uint32_t TPB_X,
-    uint32_t SEGMENT_SIZE>
-    class BlockSegmentedScan
+         uint32_t TPB_X,
+         uint32_t SEGMENT_SIZE,
+         typename = void>
+class BlockSegmentedScan;
+
+template<uint32_t SEGMENT_SIZE>
+using LargeSegmentEnable = std::enable_if_t<(SEGMENT_SIZE >= WARP_SIZE)>;
+
+template<uint32_t SEGMENT_SIZE>
+using SmallSegmentEnable = std::enable_if_t<(SEGMENT_SIZE < WARP_SIZE)>;
+
+// This is the version when SEGMENT_SIZE is greater than a warp
+template<class T,
+         uint32_t TPB_X,
+         uint32_t SEGMENT_SIZE>
+class BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE, typename LargeSegmentEnable<SEGMENT_SIZE>>
 {
     private:
     static constexpr uint32_t WARP_PER_SEGMENT = SEGMENT_SIZE / WARP_SIZE;
@@ -75,11 +88,20 @@ template<class T,
     //                                 ScanOp op);
 };
 
+//// This Version is when SEGMENT_SIZE is less than a warp
+//// It then segment size must be multiple of warp size
+//template<class T,
+//    uint32_t TPB_X,
+//    uint32_t SEGMENT_SIZE>
+//class BlockSegmentedScan<T, TBP_X, SEGMENT_SIZE, SmallSegmentEnable<SEGMENT_SIZE>>
+//{};
+
+
 template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
 __device__ __forceinline__
-BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE>::BlockSegmentedScan(TempStorage& smem)
+BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE, LargeSegmentEnable<SEGMENT_SIZE>>::BlockSegmentedScan(TempStorage& smem)
     : shMem(smem)
     , warpId(threadIdx.x / WARP_SIZE)
     , laneId(threadIdx.x % WARP_SIZE)
@@ -92,10 +114,11 @@ template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
 __device__ inline
-void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE>::InclusiveSum(T& scanResult,
-                                                              T& segmentAggregate,
-                                                              T threadData,
-                                                              T identityElement)
+void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE,
+                        LargeSegmentEnable<SEGMENT_SIZE>>::InclusiveSum(T& scanResult,
+                                                                        T& segmentAggregate,
+                                                                        T threadData,
+                                                                        T identityElement)
 {
     auto& sMem = shMem.shMem;
     // Do initial reduction
@@ -150,9 +173,10 @@ template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
 __device__ inline
-void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE>::InclusiveSum(T& scanResult,
-                                                              T threadData,
-                                                              T identityElement)
+void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE,
+                        LargeSegmentEnable<SEGMENT_SIZE>>::InclusiveSum(T& scanResult,
+                                                                        T threadData,
+                                                                        T identityElement)
 {
     T aggregate;
     InclusiveSum(scanResult,
@@ -165,10 +189,11 @@ template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
 __device__ inline
-void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE>::ExclusiveSum(T& scanResult,
-                                                              T& segmentAggregate,
-                                                              T threadData,
-                                                              T identityElement)
+void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE,
+                        LargeSegmentEnable<SEGMENT_SIZE>>::ExclusiveSum(T& scanResult,
+                                                                        T& segmentAggregate,
+                                                                        T threadData,
+                                                                        T identityElement)
 {
     auto& sMem = shMem.shMem;
     // Do initial reduction
@@ -223,9 +248,10 @@ template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
 __device__ inline
-void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE>::ExclusiveSum(T& scanResult,
-                                                              T threadData,
-                                                              T identityElement)
+void BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE,
+                        LargeSegmentEnable<SEGMENT_SIZE>>::ExclusiveSum(T& scanResult,
+                                                                        T threadData,
+                                                                        T identityElement)
 {
     T aggregate;
     ExclusiveSum(scanResult,

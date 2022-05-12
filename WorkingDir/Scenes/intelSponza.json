@@ -9,8 +9,8 @@
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
 		"planes": [1, 5000.0],
-		"gaze": [964.531, 659.303, -160.483],
-		"position": [965.48, 659.598, -160.596],
+		"gaze": [915.273, 680.246, -152.835],
+		"position": [916.24, 680.481, -152.94],
 		"up": [0.0, 1.0, 0.0]
 	},
 	{
@@ -36,29 +36,11 @@
         "radiance" : {"texture": 0, "channels": "rgb"}
     }],
 
-    "Textures":
-	[
-		{ "id": 0, "file": "../Textures/ModernPool/kloppenheim_05_4k.exr"},
-        { "id": 1, "file": "D:/IntelSponza/PKG_A_Curtains/textures/curtain_fabric_Normal.png", "signed": true},
-        { "id": 2, "file": "D:/IntelSponza/PKG_A_Curtains/textures/curtain_fabric_red_BaseColor.png"}
-
-    ],
+    "Textures": [{ "id": 0, "file": "../Textures/ModernPool/kloppenheim_05_4k.exr"}],
 
     "Mediums": [{"id" : 0, "type" : "Vacuum"}],
 
-    "Transforms":
-    [
-        {"id": 0, "type": "Identity"},
-        {
-			// Vase Transforms
-			"id": 1,
-			"type": "Single",
-			"layout": "trs",
-			"translate":[0, 0, 0],
-            "rotate": [90, 0, 0],
-            "scale": [1, 1, 1]
-		}
-    ],
+    "Transforms":[{"id": 0, "type": "Identity"}],
 
     "Materials": [
 	{
@@ -74,30 +56,30 @@
     }],
 
     "Primitives":[
-    // {
-    //     // All Sponza Except Decals
-    //     "id": 0,
-    //     "type": "Triangle",
-    //     //"name": "D:/IntelSponza/intel_sponza_all.obj",
-    //     //"name": "D:/IntelSponza/sponza_roofs.obj",
-    //     "tag": "assimp_",
-    //     "innerIndex": 0,
-    //     "cullFace": false
-    // },
     {
-        // All Sponza GFG
-        "id": [0, 1, 2],
+        // All Sponza Except Decals
+        "id": 0,
         "type": "Triangle",
-        //"name": "D:/IntelSponza/gfg_single_intel_sponza3.gfg",
-        "name": "D:/IntelSponza/curtains_all_single_no_tangent.gfg",
-        //"name": "D:/IntelSponza/test.obj",
-        //"name": "../Surfaces/Sponza/sponza_ceiling.obj",
-        //"tag": "assimp_",
+        "name": "D:/IntelSponza/intel_sponza_all.gfg",
         "tag": "gfg_",
-        "innerIndex": [0, 1, 2],
-        //"cullFace": [false, false, false]
-        "cullFace": [false, true, true]
-    }],
+        "innerIndex": 0,
+        "cullFace": false
+    }
+    // {
+    //     // All Sponza GFG
+    //     "id": [0, 1, 2],
+    //     "type": "Triangle",
+    //     //"name": "D:/IntelSponza/gfg_single_intel_sponza3.gfg",
+    //     "name": "D:/IntelSponza/intel_sponza_all.gfg",
+    //     //"name": "D:/IntelSponza/test.obj",
+    //     //"name": "../Surfaces/Sponza/sponza_ceiling.obj",
+    //     //"tag": "assimp_",
+    //     "tag": "gfg_",
+    //     "innerIndex": [0, 1, 2],
+    //     //"cullFace": [false, false, false]
+    //     "cullFace": [false, true, true]
+    // }
+],
 
     "Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
 
@@ -106,17 +88,12 @@
     //================================================//
     "BaseAccelerator": {"type": "BasicBVH"},
     "BaseBoundaryLight": 0,
-    //"BaseBoundaryTransform": 1,
     "BaseMedium" : 0,
 
 	"Surfaces":
     [
         // All Sponza
         { "transform": 0, "accelerator": 0, "material": 0, "primitive": 0}
-        // ,
-        // { "transform": 0, "accelerator": 0, "material": 0, "primitive": 1}
-        // ,
-        // { "transform": 0, "accelerator": 0, "material": 0, "primitive": 2}
 	],
 
 	"LightSurfaces": [],

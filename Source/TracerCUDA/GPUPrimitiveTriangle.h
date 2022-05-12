@@ -693,28 +693,47 @@ struct TriangleSurfaceGenerator
         //    // (thus angle between Ncenter-N0 is alpha/2)
         //    // angle between nPatch and nCenter is beta
 
-        //    Vector3f nCenter = (n0 * 0.5f + n1 * 0.5f).Normalize();
-        //    float cosAlphaHalf = nCenter.Dot(n0);
-        //    assert(fabsf(nCenter.Dot(n1) - cosAlphaHalf) < MathConstants::VeryLargeEpsilon);
+        //    Vector3f nCenter = (n0 + n1).Normalize();
+        //    float cosAlphaHalf = n0.Dot(nCenter);
+        //    assert(fabsf(n1.Dot(nCenter) - cosAlphaHalf) < MathConstants::VeryLargeEpsilon);
         //    float cosBeta = nPatch.Dot(nCenter);
         //    float dist = radius * (cosBeta - cosAlphaHalf);
+        //    // Numerical inaccuracies may put the angle beta outside of alpha
+        //    // which means the angles are extremely close just clamp it to zero
+        //    dist = fmax(dist, 0.0f);
+
         //    assert(dist >= 0);
         //    return dist;
         //};
 
         //Vector3f nPatch = GPUSurface::NormalToSpace(tbn);
+        //Vector3f n0 = GPUSurface::NormalToSpace(q0);
+        //Vector3f n1 = GPUSurface::NormalToSpace(q1);
+        //Vector3f n2 = GPUSurface::NormalToSpace(q2);
+
+        //auto Project = [](const Vector3f& a, const Vector3f& p0,
+        //                  const Vector3f& p1)
+        //{
+        //    Vector3f planeNormal = Cross(p0, p1);
+        //    Vector3f pNorm = planeNormal.Normalize();
+        //    if(planeNormal.LengthSqr() < MathConstants::VeryLargeEpsilon)
+        //    {
+        //        // Just return any of the two plane vectors
+        //        return p0;
+        //    }
+        //    // Project to the plane
+        //    return  a - pNorm.Dot(a) * pNorm;
+        //};
+
         //float dist0 = CalculateCurvatureDistance(p0, p1,
-        //                                        GPUSurface::NormalToSpace(q0),
-        //                                        GPUSurface::NormalToSpace(q1),
-        //                                        nPatch);
+        //                                         n0, n1,
+        //                                         Project(nPatch, n0, n1));
         //float dist1 = CalculateCurvatureDistance(p1, p2,
-        //                                        GPUSurface::NormalToSpace(q1),
-        //                                        GPUSurface::NormalToSpace(q2),
-        //                                        nPatch);
+        //                                         n1, n2,
+        //                                         Project(nPatch, n1, n2));
         //float dist2 = CalculateCurvatureDistance(p2, p0,
-        //                                        GPUSurface::NormalToSpace(q2),
-        //                                        GPUSurface::NormalToSpace(q0),
-        //                                        nPatch);
+        //                                         n2, n0,
+        //                                         Project(nPatch, n2, n0));
         //float curvatureOffset = fmax(fmax(dist0, dist1), dist2);
 
 

@@ -32,13 +32,27 @@
 		"type": "Spherical",
 
 		"planes": [1, 5000.0],
-		"position": [1094.24, 528.092, -655.032],
+		"position": [1004.67, 531.459, -640.642],
 		"up": [0.0, 1.0, 0.0],
 
 		"pixelRatio": 1,
 		// Direction is derived from this gaze
-		//"gaze": [1093.3, 528.157, -654.684],
-		"direction": [-0.94, 0.065, 0.384]
+		//"gaze": [1003.84, 531.491, -640.093],
+		"direction": [-0.83, 0.032, 0.549]
+	},
+	{
+		// Spherical Probe 2
+		"id": 3,
+		"type": "Spherical",
+
+		"planes": [1, 5000.0],
+		"position": [-465.203, 69.6616, 574.028],
+		"up": [0.0, 1.0, 0.0],
+
+		"pixelRatio": 1,
+		// Direction is derived from this gaze
+		//"gaze": [-465.716, 69.6771, 573.169],
+		"direction": [-0.513, 0.0155, -0.859]
 	}
 ],
 
@@ -743,12 +757,15 @@
 		"alphaMap": [{"texture": 2, "channels": "a"}, "-"]
 	},
 	{
-		// Vase Oject
+		// Walls
 		"id": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
 		"type": "Triangle",
         "name": "../Surfaces/Sponza/sponza_walls.obj",
         "tag": "assimp_",
-		"innerIndex": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+		"innerIndex": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+		"cullFace": [false, false, false, false, false,
+					 false, false, false, false, false,
+					 false, false]
 	},
 	{
 		// Roof
@@ -756,7 +773,8 @@
 		"type": "Triangle",
         "name": "../Surfaces/Sponza/sponza_roof.obj",
         "tag": "assimp_",
-		"innerIndex": [0, 1]
+		"innerIndex": [0, 1],
+		"cullFace": [false, false]
 	},
 	{
 		// Floor
@@ -764,7 +782,8 @@
 		"type": "Triangle",
         "name": "../Surfaces/Sponza/sponza_floors.obj",
         "tag": "assimp_",
-		"innerIndex": [0, 1]
+		"innerIndex": [0, 1],
+		"cullFace": [false, false]
 	},
 	{
 		// Ceiling
@@ -772,7 +791,9 @@
 		"type": "Triangle",
         "name": "../Surfaces/Sponza/sponza_ceiling.obj",
         "tag": "assimp_",
-		"innerIndex": [0, 1]
+		"innerIndex": [0, 1],
+		"cullFace": [false, false]
+
 	},
 	{
 		// Arches
@@ -820,7 +841,8 @@
 		"type": "Triangle",
         "name": "../Surfaces/Sponza/sponza_details.obj",
         "tag": "assimp_",
-		"innerIndex": [0, 1, 2, 3, 4]
+		"innerIndex": [0, 1, 2, 3, 4],
+		"cullFace": [false, false, false, false, false]
 	},
 	{
 		// Big Vase
@@ -1194,5 +1216,11 @@
 
 	"LightSurfaces": [],
 
-    "CameraSurfaces": [{"camera": 0}, {"camera": 1}, {"camera": 2}]
+    "CameraSurfaces":
+	[
+		{"camera": 0},
+		{"camera": 1},
+		{"camera": 2},
+		{"camera": 3}
+	]
 }
