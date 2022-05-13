@@ -8,6 +8,14 @@
 #include "RNGenerator.h"
 #include "BinarySearch.cuh"
 
+static constexpr bool TPBCheck(uint32_t TPB, uint32_t X, uint32_t Y)
+{
+    auto PIX_COUNT = (X * Y);
+    if (TPB > PIX_COUNT) return TPB % PIX_COUNT == 0;
+    if (TPB <= PIX_COUNT) return PIX_COUNT % TPB  == 0;
+    return false;
+}
+
 template<uint32_t TPB,
          uint32_t X,
          uint32_t Y>
@@ -15,21 +23,21 @@ class BlockPWCDistribution2D
 {
     private:
     // No SFINAE, just static assert
-    static_assert(TPB <= (X * Y), "TPB should be less than or equal of (X * Y)");
-    static_assert((X * Y) % TPB  == 0, "(X * Y) must be multiple of TPB");
+    static_assert(TPBCheck(TPB, X, Y),
+                  "TBP and (X * Y) must be divisible, (X*Y) / TBP or TBP / (X*Y)");
 
-    static constexpr uint32_t DATA_PER_THREAD = (X * Y) / TPB;
-
-
-    static constexpr float X_FLOAT = static_cast<float>(X);
-    static constexpr float Y_FLOAT = static_cast<float>(Y);
-    static constexpr float DELTA_X = 1.0f / X_FLOAT;
-    static constexpr float DELTA_Y = 1.0f / Y_FLOAT;
+    static constexpr float X_FLOAT          = static_cast<float>(X);
+    static constexpr float Y_FLOAT          = static_cast<float>(Y);
+    static constexpr float DELTA_X          = 1.0f / X_FLOAT;
+    static constexpr float DELTA_Y          = 1.0f / Y_FLOAT;
 
     using BlockSScan    = BlockSegmentedScan<float, TPB, X>;
     using BlockScan     = cub::BlockScan<float, Y>;
 
     public:
+    static constexpr uint32_t DATA_PER_THREAD   = std::max(1u, (X * Y) / TPB);
+    static constexpr uint32_t PIX_COUNT         = (X * Y);
+
     struct TempStorage
     {
         union
@@ -50,6 +58,7 @@ class BlockPWCDistribution2D
     const bool      isColumnThread;
     const bool      isMainThread;
     const bool      isRowLeader;
+    const bool      isValidThread;
 
     protected:
     public:
@@ -81,6 +90,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
     , isColumnThread(threadIdx.x < Y)
     , isMainThread(threadIdx.x == 0)
     , isRowLeader((threadIdx.x % X) == 0)
+    , isValidThread(threadIdx.x < PIX_COUNT)
 {
     // Initialize the CDF/PDF
     // Generate PWC Distribution over the date
@@ -94,6 +104,9 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         uint32_t columnId = pixelId % X;
 
         // Scan operation to generate CDF
+        // TODO: if entire warp is not contributing to the calculation
+        // cull it entirely. Currently these warps just scan an array of zero
+        // But also check if some synchronization may create a deadlock
         float cdfData;
         float totalSum;
         BlockSScan(sMem.algo.sSScanTempStorage).InclusiveSum(cdfData, totalSum,
@@ -101,7 +114,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         __syncthreads();
         // Row leader will do marginal PDF/CDF data
         // the Y Function value of this row
-        if(isRowLeader) sMem.sPDFY[rowId] = totalSum;
+        if(isRowLeader && rowId < Y) sMem.sPDFY[rowId] = totalSum;
         // Now normalize the pdf/cdf with the dimension
         // Getting ready for the scan operation
         cdfData *= DELTA_X;
@@ -115,9 +128,13 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
             pdfData *= (1.0f / totalSum);
             cdfData *= (1.0f / totalSum);
         }
-        sMem.sPDFX[rowId][columnId] = pdfData;
-        sMem.sCDFX[rowId][columnId + 1] = cdfData;
-        if(isRowLeader) sMem.sCDFX[rowId][0] = 0.0f;
+        // Only valid rows do the write
+        if(rowId < Y)
+        {
+            sMem.sPDFX[rowId][columnId] = pdfData;
+            sMem.sCDFX[rowId][columnId + 1] = cdfData;
+            if(isRowLeader) sMem.sCDFX[rowId][0] = 0.0f;
+        }
     }
     __syncthreads();
 
@@ -251,10 +268,14 @@ void BlockPWCDistribution2D<TPB, X, Y>::DumpSharedMem(float* pdfX,
         uint32_t columnId = pixelId % X;
         uint32_t cdfId = rowId * (X + 1) + (columnId + 1);
 
-        pdfX[pixelId] = sMem.sPDFX[rowId][columnId];
-        cdfX[cdfId] = sMem.sCDFX[rowId][columnId + 1];
-        // Don't forget to add the first data (which should be zero)
-        if(isRowLeader) cdfX[rowId * (X + 1)] = sMem.sCDFX[rowId][0];
+        // Only valid rows do the write
+        if(rowId < Y)
+        {
+            pdfX[pixelId] = sMem.sPDFX[rowId][columnId];
+            cdfX[cdfId] = sMem.sCDFX[rowId][columnId + 1];
+            // Don't forget to add the first data (which should be zero)
+            if(isRowLeader) cdfX[rowId * (X + 1)] = sMem.sCDFX[rowId][0];
+        }
     }
     // Dump Marginal PDF / CDF
     if(isColumnThread)

@@ -9,11 +9,7 @@
 #include <random>
 #include <numeric>
 
-static constexpr uint32_t TPB = 64;
-static constexpr uint32_t SEGMENT_SIZE = 32;
-static constexpr uint32_t SEGMENT_COUNT = TPB / SEGMENT_SIZE;
-
-template <class T>
+template <class T, uint32_t TPB, uint32_t SEGMENT_SIZE>
 __global__ __launch_bounds__(TPB)
 void KCSegmentedInclusiveScanTest(T* gOut,
                                   T* gSegmentAggregates,
@@ -37,7 +33,7 @@ void KCSegmentedInclusiveScanTest(T* gOut,
     gOut[globalId] = scanResult;
 }
 
-template <class T>
+template <class T, uint32_t TPB, uint32_t SEGMENT_SIZE>
 __global__ __launch_bounds__(TPB)
 void KCSegmentedExclusiveScanTest(T* gOut,
                                   T* gSegmentAggregates,
@@ -61,13 +57,35 @@ void KCSegmentedExclusiveScanTest(T* gOut,
     gOut[globalId] = scanResult;
 }
 
-TEST(BlockSegmentedScan, FloatInclusiveSumBasic)
+template <uint32_t TPB_VAL, uint32_t SEGMENT_SIZE_VAL>
+struct BlockScanTestParams
+{
+    static constexpr auto TPB           = TPB_VAL;
+    static constexpr auto SEGMENT_SIZE  = SEGMENT_SIZE_VAL;
+    static constexpr auto SEGMENT_COUNT = TPB / SEGMENT_SIZE;
+};
+
+template <class T>
+class BlockSegScanTest : public testing::Test
+{};
+
+using Implementations = ::testing::Types<BlockScanTestParams<64, 32>,
+                                         BlockScanTestParams<128, 64>,
+                                         BlockScanTestParams<64, 16>,
+                                         BlockScanTestParams<64, 8>>;
+
+TYPED_TEST_SUITE(BlockSegScanTest, Implementations);
+
+TYPED_TEST(BlockSegScanTest, FloatInclusiveSumBasic)
 {
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
 
+    constexpr auto TPB = TypeParam::TPB;
+    constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+
     // Copy all ones to GPU
-    std::vector<float> data(TPB, 1.0f);
+    std::vector<float> data(TypeParam::TPB, 1.0f);
 
     // GPU Allocations
     float* dData;
@@ -86,7 +104,7 @@ TEST(BlockSegmentedScan, FloatInclusiveSumBasic)
     const CudaGPU& bestGPU = system.BestGPU();
     bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                       //
-                      KCSegmentedInclusiveScanTest<float>,
+                      KCSegmentedInclusiveScanTest<float, TPB, SEGMENT_SIZE>,
                       //
                       dScanOutputs,
                       dSegmentAggregates,
@@ -118,9 +136,13 @@ TEST(BlockSegmentedScan, FloatInclusiveSumBasic)
     }
 }
 
-TEST(BlockSegmentedScan, FloatInclusiveSumStress)
+TYPED_TEST(BlockSegScanTest, FloatInclusiveSumStress)
 {
     static constexpr uint32_t ITERATION_COUNT = 100;
+
+    static constexpr auto TPB = TypeParam::TPB;
+    static constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+    static constexpr auto SEGMENT_COUNT = TypeParam::SEGMENT_COUNT;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -160,7 +182,7 @@ TEST(BlockSegmentedScan, FloatInclusiveSumStress)
         const CudaGPU& bestGPU = system.BestGPU();
         bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                           //
-                          KCSegmentedInclusiveScanTest<float>,
+                          KCSegmentedInclusiveScanTest<float, TPB, SEGMENT_SIZE>,
                           //
                           dScanOutputs,
                           dSegmentAggregates,
@@ -210,9 +232,13 @@ TEST(BlockSegmentedScan, FloatInclusiveSumStress)
     }
 }
 
-TEST(BlockSegmentedScan, IntInclusiveSumStress)
+TYPED_TEST(BlockSegScanTest, IntInclusiveSumStress)
 {
     static constexpr uint32_t ITERATION_COUNT = 100;
+
+    static constexpr auto TPB = TypeParam::TPB;
+    static constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+    static constexpr auto SEGMENT_COUNT = TypeParam::SEGMENT_COUNT;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -252,7 +278,7 @@ TEST(BlockSegmentedScan, IntInclusiveSumStress)
         const CudaGPU& bestGPU = system.BestGPU();
         bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                           //
-                          KCSegmentedInclusiveScanTest<uint32_t>,
+                          KCSegmentedInclusiveScanTest<uint32_t, TPB, SEGMENT_SIZE>,
                           //
                           dScanOutputs,
                           dSegmentAggregates,
@@ -302,10 +328,13 @@ TEST(BlockSegmentedScan, IntInclusiveSumStress)
     }
 }
 
-TEST(BlockSegmentedScan, FloatExclusiveSumBasic)
+TYPED_TEST(BlockSegScanTest, FloatExclusiveSumBasic)
 {
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
+
+    static constexpr auto TPB = TypeParam::TPB;
+    static constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
 
     // Copy all ones to GPU
     std::vector<float> data(TPB, 1.0f);
@@ -327,7 +356,7 @@ TEST(BlockSegmentedScan, FloatExclusiveSumBasic)
     const CudaGPU& bestGPU = system.BestGPU();
     bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                       //
-                      KCSegmentedExclusiveScanTest<float>,
+                      KCSegmentedExclusiveScanTest<float, TPB, SEGMENT_SIZE>,
                       //
                       dScanOutputs,
                       dSegmentAggregates,
@@ -359,9 +388,13 @@ TEST(BlockSegmentedScan, FloatExclusiveSumBasic)
     }
 }
 
-TEST(BlockSegmentedScan, FloatExclusiveSumStress)
+TYPED_TEST(BlockSegScanTest, FloatExclusiveSumStress)
 {
     static constexpr uint32_t ITERATION_COUNT = 100;
+
+    static constexpr auto TPB = TypeParam::TPB;
+    static constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+    static constexpr auto SEGMENT_COUNT = TypeParam::SEGMENT_COUNT;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -401,7 +434,7 @@ TEST(BlockSegmentedScan, FloatExclusiveSumStress)
         const CudaGPU& bestGPU = system.BestGPU();
         bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                           //
-                          KCSegmentedExclusiveScanTest<float>,
+                          KCSegmentedExclusiveScanTest<float, TPB, SEGMENT_SIZE>,
                           //
                           dScanOutputs,
                           dSegmentAggregates,
@@ -452,9 +485,12 @@ TEST(BlockSegmentedScan, FloatExclusiveSumStress)
     }
 }
 
-TEST(BlockSegmentedScan, IntExclusiveSumStress)
+TYPED_TEST(BlockSegScanTest, IntExclusiveSumStress)
 {
     static constexpr uint32_t ITERATION_COUNT = 100;
+    static constexpr auto TPB = TypeParam::TPB;
+    static constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+    static constexpr auto SEGMENT_COUNT = TypeParam::SEGMENT_COUNT;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -494,7 +530,7 @@ TEST(BlockSegmentedScan, IntExclusiveSumStress)
         const CudaGPU& bestGPU = system.BestGPU();
         bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                           //
-                          KCSegmentedExclusiveScanTest<uint32_t>,
+                          KCSegmentedExclusiveScanTest<uint32_t, TPB, SEGMENT_SIZE>,
                           //
                           dScanOutputs,
                           dSegmentAggregates,

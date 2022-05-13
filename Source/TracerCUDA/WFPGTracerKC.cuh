@@ -9,6 +9,7 @@
 #include "RayStructs.h"
 #include "ImageStructs.h"
 #include "WorkOutputWriter.cuh"
+#include "WFPGCommon.h"
 
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
@@ -621,6 +622,7 @@ static void KCTraceSVO(// Output
                        const RayGMem* gRays,
                        const RayAuxWFPG* gRayAux,
                        // Constants
+                       VoxelTraceMode mode,
                        uint32_t rayCount)
 {
     const AnisoSVOctreeGPU& svo = renderState.svo;
@@ -636,8 +638,18 @@ static void KCTraceSVO(// Output
         float tMin = svo.TraceRay(svoLeafIndex, ray.ray,
                                   ray.tMin, ray.tMax);
 
-        Vector3f locColor = (svoLeafIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoLeafIndex)
-                                                         : Vector3f(0.0f);
+        Vector3f locColor = Vector3f(1.0f, 0.0f, 1.0f);
+        if(mode == VoxelTraceMode::FALSE_COLOR)
+            locColor = (svoLeafIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoLeafIndex)
+                                                    : Vector3f(0.0f);
+        else if(mode == VoxelTraceMode::RADIANCE)
+        {
+            half radiance = svo.ReadRadiance(svoLeafIndex, true,
+                                             -ray.ray.getDirection());
+            float radianceF = radiance;
+            locColor = Vector3f(radianceF);
+        }
+
         // Accumulate the pixel
         ImageAccumulatePixel(renderState.gImage,
                              aux.pixelIndex,
@@ -804,14 +816,14 @@ static void KCGenAndSampleDistribution(// Output
     };
     const uint32_t THREAD_ID = threadIdx.x;
 
-    // Directional map shared memory requirements
-    //static constexpr uint32_t DIRECTION_COUNT = X * Y;
+    // Number of threads that contributes to the ray tracing operation
+    static constexpr uint32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X * Y) ? THREAD_PER_BLOCK : (X * Y);
     // How many rows can we process in parallel
-    static constexpr uint32_t ROW_PER_ITERATION = THREAD_PER_BLOCK / X;
+    static constexpr uint32_t ROW_PER_ITERATION = RT_CONTRIBUTING_THREAD_COUNT / X;
     // How many iterations the entire image would take
     static constexpr uint32_t ROW_ITER_COUNT = Y / ROW_PER_ITERATION;
-    static_assert(THREAD_PER_BLOCK % X == 0, "TPB must be multiple of X");
-    static_assert(Y % ROW_PER_ITERATION == 0, "TPB must exactly iterate over X * Y");
+    static_assert(RT_CONTRIBUTING_THREAD_COUNT % X == 0, "RT_THREADS must be multiple of X or vice versa.");
+    static_assert(Y % ROW_PER_ITERATION == 0, "RT_THREADS must exactly iterate over X * Y");
     // Ray tracing related
     static constexpr uint32_t RT_ITER_COUNT = ROW_ITER_COUNT;
     // PWC Distribution over the shared memory
@@ -870,6 +882,9 @@ static void KCGenAndSampleDistribution(// Output
         // Trace the rays
         for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
         {
+            // This case occurs only when there is more threads than pixels
+            if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
+
             // Determine your direction
             uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
             Vector2ui dirIdXY = Vector2ui(directionId % X,
@@ -893,6 +908,9 @@ static void KCGenAndSampleDistribution(// Output
                          tMin, FLT_MAX);
             incRadiances[i] = svo.ReadRadiance(leafId, true, -worldDir);
         }
+        // We finished tracing rays from the scene
+        // Now generate distribution from the data
+        // and sample for each ray
 
         // Generate PWC Distribution over the radiances
         BlockPWC2D dist2D(sPWCMem, incRadiances);

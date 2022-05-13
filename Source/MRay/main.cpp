@@ -18,37 +18,8 @@
 #include <CLI11.hpp>
 #include <array>
 
-
-template<typename T, uint32_t X, typename = void> struct Serializer;
-
-//template<>
-//struct Serializer<float>
-//{
-//    static float serialize(const float& a)
-//    {
-//        return float() - a;
-//    }
-//};
-
-template<typename T, uint32_t X>
-struct Serializer<T,  X, typename std::enable_if<std::is_same<T, int>::value>::type>
-{
-    static T serialize(const T& a)
-    {
-        return T() + T() + a;
-    }
-};
-
-
 int main(int argc, const char* argv[])
 {
-
-    Serializer<float> a;
-    Serializer<int> b;
-
-    a.serialize(3);
-    b.serialize(3);
-
     // Fancy CMD
     EnableVTMode();
 

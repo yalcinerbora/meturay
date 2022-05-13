@@ -5,6 +5,7 @@
 #include "GPULightI.h"
 #include "Tracers.h"
 #include "AnisoSVO.cuh"
+#include "WFPGCommon.h"
 
 #include "RNGSobol.cuh"
 #include "RNGIndependent.cuh"
@@ -27,6 +28,7 @@ class WFPGTracer final : public RayTracer
         static constexpr const char*    BIN_RAY_COUNT_NAME      = "BinRayCount";
 
         static constexpr const char*    VOX_TRACE_NAME          = "VoxelTrace";
+        static constexpr const char*    VOX_TRACE_MODE_NAME     = "VoxelTraceMode";
         static constexpr const char*    DEBUG_RENDER_NAME       = "DebugRender";
         static constexpr const char*    DUMP_DEBUG_NAME         = "DumpDebugData";
         static constexpr const char*    DUMP_INTERVAL_NAME      = "DataDumpIntervalExp";
@@ -49,6 +51,7 @@ class WFPGTracer final : public RayTracer
             bool                debugRender         = false;
             bool                voxTrace            = false;
             bool                dumpDebugData       = false;
+            VoxelTraceMode      traceMode           = VoxelTraceMode::FALSE_COLOR;
             uint32_t            svoDumpInterval     = 2;
         };
 

@@ -9,15 +9,7 @@
 #include <random>
 #include <numeric>
 
-static constexpr uint32_t TPB = 512;
-static constexpr uint32_t X = 32;
-static constexpr uint32_t Y = 32;
-static constexpr uint32_t PIX_COUNT = X * Y;
-static constexpr uint32_t DATA_PER_BLOCK = PIX_COUNT / TPB;
-
-static constexpr uint32_t X_CDF_COUNT = (X + 1) * Y;
-static constexpr uint32_t Y_CDF_COUNT = (Y + 1);
-
+template <uint32_t TPB, uint32_t X, uint32_t Y>
 __global__ __launch_bounds__(TPB)
 void KCPiecewiseConstDistInitCheck(float* gPDFXOut,
                                    float* gCDFXOut,
@@ -25,20 +17,24 @@ void KCPiecewiseConstDistInitCheck(float* gPDFXOut,
                                    float* gCDFYOut,
                                    const float* gData)
 {
-    const uint32_t threadId = threadIdx.x;
-
     using BlockPWC2D = BlockPWCDistribution2D<TPB, X, Y>;
+    static constexpr auto DATA_PER_THREAD = BlockPWC2D::DATA_PER_THREAD;
+    static constexpr auto PIXEL_COUNT = BlockPWC2D::PIX_COUNT;
+
     // Allocate shared memory for Block Operations
     __shared__ typename BlockPWC2D::TempStorage sPWCMem;
 
-    float data[DATA_PER_BLOCK];
-    for(uint32_t i = 0; i < DATA_PER_BLOCK; i++)
+    const uint32_t threadId = threadIdx.x;
+
+    float data[DATA_PER_THREAD];
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
     {
-        data[i] = gData[i * TPB + threadId];
+        data[i] = (threadId < PIXEL_COUNT) ?  gData[i * TPB + threadId] : 0.0f;
     }
 
+    // Init the class
     BlockPWC2D dist2D(sPWCMem, data);
-
+    // Directly dump the calculated PDF / CDF
     dist2D.DumpSharedMem(gPDFXOut,
                          gCDFXOut,
                          gPDFYOut,
@@ -46,10 +42,45 @@ void KCPiecewiseConstDistInitCheck(float* gPDFXOut,
 
 }
 
-TEST(BlockPWCDistribution2D, BasicInit)
+template <uint32_t TPB_VAL, uint32_t X_VAL, uint32_t Y_VAL>
+struct BlockPWC2DTestParams
+{
+    static constexpr uint32_t TPB               = TPB_VAL;
+    static constexpr uint32_t X                 = X_VAL;
+    static constexpr uint32_t Y                 = Y_VAL;
+    static constexpr uint32_t PIX_COUNT         = X * Y;
+    static constexpr uint32_t DATA_PER_BLOCK    = PIX_COUNT / TPB;
+    static constexpr uint32_t X_CDF_COUNT       = (X + 1) * Y;
+    static constexpr uint32_t Y_CDF_COUNT       = (Y + 1);
+
+};
+
+template <class T>
+class BlockPWC2DTest : public testing::Test
+{};
+
+using Implementations = ::testing::Types<BlockPWC2DTestParams<512, 64, 32>,
+                                         BlockPWC2DTestParams<512, 32, 32>,
+                                         BlockPWC2DTestParams<256, 32, 16>,
+                                         BlockPWC2DTestParams<256, 16, 16>,
+                                         BlockPWC2DTestParams<128, 16, 8>>;
+
+//using Implementations = ::testing::Types<BlockPWC2DTestParams<256, 16, 8>>;
+
+
+TYPED_TEST_SUITE(BlockPWC2DTest, Implementations);
+
+TYPED_TEST(BlockPWC2DTest, BasicInit)
 {
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
+
+    constexpr uint32_t TPB              = TypeParam::TPB;
+    constexpr uint32_t X                = TypeParam::X;
+    constexpr uint32_t Y                = TypeParam::Y;
+    constexpr uint32_t PIX_COUNT        = TypeParam::PIX_COUNT;
+    constexpr uint32_t X_CDF_COUNT      = TypeParam::X_CDF_COUNT;
+    constexpr uint32_t Y_CDF_COUNT      = TypeParam::Y_CDF_COUNT;
 
     // Copy all ones to GPU
     std::vector<float> data(PIX_COUNT, 1.0f);
@@ -79,7 +110,7 @@ TEST(BlockPWCDistribution2D, BasicInit)
     const CudaGPU& bestGPU = system.BestGPU();
     bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                       //
-                      KCPiecewiseConstDistInitCheck,
+                      KCPiecewiseConstDistInitCheck<TPB, X, Y>,
                       //
                       dPDFX,
                       dCDFX,
@@ -128,9 +159,15 @@ TEST(BlockPWCDistribution2D, BasicInit)
     }
 }
 
-TEST(BlockPWCDistribution2D, InitStree)
+TYPED_TEST(BlockPWC2DTest, Stress)
 {
     static constexpr uint32_t ITERATION_COUNT = 100;
+    constexpr uint32_t TPB              = TypeParam::TPB;
+    constexpr uint32_t X                = TypeParam::X;
+    constexpr uint32_t Y                = TypeParam::Y;
+    constexpr uint32_t PIX_COUNT        = TypeParam::PIX_COUNT;
+    constexpr uint32_t X_CDF_COUNT      = TypeParam::X_CDF_COUNT;
+    constexpr uint32_t Y_CDF_COUNT      = TypeParam::Y_CDF_COUNT;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -184,7 +221,7 @@ TEST(BlockPWCDistribution2D, InitStree)
         const CudaGPU& bestGPU = system.BestGPU();
         bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                           //
-                          KCPiecewiseConstDistInitCheck,
+                          KCPiecewiseConstDistInitCheck<TPB, X, Y>,
                           //
                           dPDFX,
                           dCDFX,

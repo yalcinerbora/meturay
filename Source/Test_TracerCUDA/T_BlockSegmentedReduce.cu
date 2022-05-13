@@ -9,11 +9,7 @@
 #include <random>
 #include <numeric>
 
-static constexpr uint32_t TPB = 512;
-static constexpr uint32_t SEGMENT_SIZE = 64;
-static constexpr uint32_t SEGMENT_COUNT = TPB / SEGMENT_SIZE;
-
-template <class T>
+template <class T, uint32_t TPB, uint32_t SEGMENT_SIZE>
 __global__ __launch_bounds__(TPB)
 void KCSegmentedReduceTest(T* gOut,
                            const T* gData)
@@ -42,10 +38,33 @@ void KCSegmentedReduceTest(T* gOut,
         gOut[SegmentId()] = reduceResult;
 }
 
-TEST(BlockSegmentedReduce, FloatSumBasic)
+template <uint32_t TPB_VAL, uint32_t SEGMENT_SIZE_VAL>
+struct BlockReduceTestParams
+{
+    static constexpr auto TPB = TPB_VAL;
+    static constexpr auto SEGMENT_SIZE = SEGMENT_SIZE_VAL;
+    static constexpr auto SEGMENT_COUNT = TPB / SEGMENT_SIZE;
+};
+
+template <class T>
+class BlockSegReduceTest : public testing::Test
+{};
+
+using Implementations = ::testing::Types<BlockReduceTestParams<64, 32>,
+                                         BlockReduceTestParams<128, 64>,
+                                         BlockReduceTestParams<64, 16>,
+                                         BlockReduceTestParams<64, 8>>;
+
+TYPED_TEST_SUITE(BlockSegReduceTest, Implementations);
+
+TYPED_TEST(BlockSegReduceTest, FloatSumBasic)
 {
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
+
+    constexpr auto TPB = TypeParam::TPB;
+    constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+    constexpr auto SEGMENT_COUNT = TypeParam::SEGMENT_COUNT;
 
     // Copy all ones to GPU
     std::vector<float> data(TPB, 1.0f);
@@ -64,7 +83,7 @@ TEST(BlockSegmentedReduce, FloatSumBasic)
     const CudaGPU& bestGPU = system.BestGPU();
     bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                       //
-                      KCSegmentedReduceTest<float>,
+                      KCSegmentedReduceTest<float, TPB, SEGMENT_SIZE>,
                       //
                       dReduceOutputs,
                       dData);
@@ -83,9 +102,12 @@ TEST(BlockSegmentedReduce, FloatSumBasic)
     }
 }
 
-TEST(BlockSegmentedReduce, FloatSumStress)
+TYPED_TEST(BlockSegReduceTest, FloatSumStress)
 {
     static constexpr uint32_t ITERATION_COUNT = 100;
+    constexpr auto TPB = TypeParam::TPB;
+    constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+    constexpr auto SEGMENT_COUNT = TypeParam::SEGMENT_COUNT;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -121,7 +143,7 @@ TEST(BlockSegmentedReduce, FloatSumStress)
         const CudaGPU& bestGPU = system.BestGPU();
         bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                           //
-                          KCSegmentedReduceTest<float>,
+                          KCSegmentedReduceTest<float, TPB, SEGMENT_SIZE>,
                           //
                           dReduceOutputs,
                           dData);
@@ -151,9 +173,12 @@ TEST(BlockSegmentedReduce, FloatSumStress)
     }
 }
 
-TEST(BlockSegmentedReduce, IntSumStress)
+TYPED_TEST(BlockSegReduceTest, IntSumStress)
 {
      static constexpr uint32_t ITERATION_COUNT = 100;
+     constexpr auto TPB = TypeParam::TPB;
+     constexpr auto SEGMENT_SIZE = TypeParam::SEGMENT_SIZE;
+     constexpr auto SEGMENT_COUNT = TypeParam::SEGMENT_COUNT;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -189,7 +214,7 @@ TEST(BlockSegmentedReduce, IntSumStress)
         const CudaGPU& bestGPU = system.BestGPU();
         bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
                           //
-                          KCSegmentedReduceTest<uint32_t>,
+                          KCSegmentedReduceTest<uint32_t, TPB, SEGMENT_SIZE>,
                           //
                           dReduceOutputs,
                           dData);

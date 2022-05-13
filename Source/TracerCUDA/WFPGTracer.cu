@@ -38,10 +38,10 @@ using PathGuideKernelFunction = void (*)(// Output
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_TPB =
 {
     1024,
+    1024,
     512,
-    512,
-    128, //128,
-    128, //128,
+    256,
+    256,
 };
 
 static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegin(),
@@ -49,11 +49,11 @@ static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegi
 
 static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KERNELS =
 {
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 32>,    // First bounce good approximation
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 64>,    // First bounce good approximation
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 64, 32>,    // Second bounce as well
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 32, 16>,    // Third bounce not so much
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce bad
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 16, 8>      // Fifth is bad as well
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>      // Fifth is bad as well
 };
 
 struct NodeIdFetchFunctor
@@ -355,6 +355,13 @@ TracerError WFPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.svoDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
         return err;
+
+    std::string voxelTraceModeString;
+    if((err = opts.GetString(voxelTraceModeString, VOX_TRACE_MODE_NAME)) != TracerError::OK)
+        return err;
+    if((err = StringToVoxelTraceMode(options.traceMode, lightSamplerTypeString)) != TracerError::OK)
+        return err;
+
     return TracerError::OK;
 }
 
@@ -372,6 +379,7 @@ void WFPGTracer::AskOptions()
     list.emplace(RAY_BIN_MIN_LEVEL_NAME, OptionVariable(options.minRayBinLevel));
     list.emplace(BIN_RAY_COUNT_NAME, OptionVariable(options.binRayCount));
     list.emplace(VOX_TRACE_NAME, OptionVariable(options.voxTrace));
+    list.emplace(VOX_TRACE_MODE_NAME, OptionVariable(VoxelTraceModeToString(options.traceMode)));
     list.emplace(DEBUG_RENDER_NAME, OptionVariable(options.debugRender));
     list.emplace(DUMP_DEBUG_NAME, OptionVariable(options.dumpDebugData));
     list.emplace(DUMP_INTERVAL_NAME, OptionVariable(options.svoDumpInterval));
@@ -469,12 +477,13 @@ bool WFPGTracer::Render()
         uint32_t totalRayCount = rayCaster->CurrentRayCount();
         gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
                             //
-                            KCTraceSVO,
-                            //
-                            globalData,
-                            rayCaster->RaysIn(),
-                            static_cast<RayAuxWFPG*>(*dAuxIn),
-                            totalRayCount);
+                           KCTraceSVO,
+                           //
+                           globalData,
+                           rayCaster->RaysIn(),
+                           static_cast<RayAuxWFPG*>(*dAuxIn),
+                           options.traceMode,
+                           totalRayCount);
         // Signal as if we finished processing
         return false;
     }
