@@ -143,10 +143,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
             Vector2ul currentPRange = primRange[i];
             currentPRange += Vector2ul(totalPrimitiveCount);
 
-            //Vector2ul currentDRange = dataRange[i];
-            //currentDRange += Vector2ul(totalDataCount);
-            //batchDataRanges.emplace(id, currentDRange);
-
             batchRanges.emplace(id, currentPRange);
             batchAABBs.emplace(id, aabbList[i]);
             batchOffsets.push_back(currentPRange[0]);
@@ -171,8 +167,6 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
     // Now allocate to CPU then GPU
     constexpr size_t VertPosSize = PrimitiveDataLayoutToSize(POS_LAYOUT);
     constexpr size_t VertUVSize = PrimitiveDataLayoutToSize(UV_LAYOUT);
-    //constexpr size_t VertTangentSize = PrimitiveDataLayoutToSize(TANGENT_LAYOUT);
-    //constexpr size_t VertNormSize = PrimitiveDataLayoutToSize(NORMAL_LAYOUT);
     constexpr size_t IndexSize = PrimitiveDataLayoutToSize(INDEX_LAYOUT);
     constexpr size_t RotationSize = sizeof(QuatF);
 

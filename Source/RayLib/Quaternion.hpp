@@ -396,95 +396,95 @@ void TransformGen::Space(Quaternion<T>& q,
     //Vector3 diff = crs - z;
     assert((Cross(x, y) - z).Abs() <= Vector3(0.1));
 
-    //// Converting a Rotation Matrix to a Quaternion
-    //// Mike Day, Insomniac Games (2015)
-    //// https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
-    //T t;
-    //if(z[2] < 0)
-    //{
-    //    if(x[0] > y[1])
-    //    {
-    //        t = 1 + x[0] - y[1] - z[2];
-    //        q = Quaternion<T>(y[2] - z[1],
-    //                          t,
-    //                          x[1] + y[0],
-    //                          z[0] + x[2]);
-    //    }
-    //    else
-    //    {
-    //        t = 1 - x[0] + y[1] - z[2];
-    //        q = Quaternion<T>(z[0] - x[2],
-    //                          x[1] + y[0],
-    //                          t,
-    //                          y[2] + z[1]);
-    //    }
-    //}
-    //else
-    //{
-    //    if(x[0] < -y[1])
-    //    {
-    //        t = 1 - x[0] - y[1] + z[2];
-    //        q = Quaternion<T>(x[1] - y[0],
-    //                          z[0] + x[2],
-    //                          y[2] + z[1],
-    //                          t);
-    //    }
-    //    else
-    //    {
-    //        t = 1 + x[0] + y[1] + z[2];
-    //        q = Quaternion<T>(t,
-    //                          y[2] - z[1],
-    //                          z[0] - x[2],
-    //                          x[1] - y[0]);
-    //    }
-    //}
-    //q *= static_cast<T>(0.5) / sqrt(t);
-    //q.NormalizeSelf();
-    //q.ConjugateSelf();
-
-    // Another implementation that i found in stack overflow
-    // https://stackoverflow.com/questions/63734840/how-to-convert-rotation-matrix-to-quaternion
-    // Clang min definition is only on std namespace
-    // this is a crappy workaround
-    #ifndef __CUDA_ARCH__
-        using namespace std;
-    #endif
-
-    // Our sign is one (according to the above link)
-    static constexpr T sign = 1;
-    T t = x[0] + y[1] + z[2];
-    T m = max(max(x[0], y[1]), max(z[2], t));
-    T qmax = static_cast<T>(0.5) * sqrt(1 - t + 2 * m);
-    T denom = static_cast<T>(0.25) * (1 / qmax);
-    if(m == x[0])
+    // Converting a Rotation Matrix to a Quaternion
+    // Mike Day, Insomniac Games (2015)
+    // https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf
+    T t;
+    if(z[2] < 0)
     {
-        q[1] = qmax;
-        q[2] = (x[1] + y[0]) * denom;
-        q[3] = (x[2] + z[0]) * denom;
-        q[0] = sign * (z[1] - y[2]) * denom;
-    }
-    else if(m == y[1])
-    {
-        q[1] = (x[1] + y[0]) * denom;
-        q[2] = qmax;
-        q[3] = (y[2] + z[1]) * denom;
-        q[0] = sign * (x[2] - z[0]) * denom;
-    }
-    else if(m == z[2])
-    {
-        q[1] = (x[2] + z[0]) * denom;
-        q[2] = (y[2] + z[1]) * denom;
-        q[3] = qmax;
-        q[0] = sign * (x[2] - z[0]) * denom;
+        if(x[0] > y[1])
+        {
+            t = 1 + x[0] - y[1] - z[2];
+            q = Quaternion<T>(y[2] - z[1],
+                              t,
+                              x[1] + y[0],
+                              z[0] + x[2]);
+        }
+        else
+        {
+            t = 1 - x[0] + y[1] - z[2];
+            q = Quaternion<T>(z[0] - x[2],
+                              x[1] + y[0],
+                              t,
+                              y[2] + z[1]);
+        }
     }
     else
     {
-        q[1] = sign * (z[1] - y[2]) * denom;
-        q[2] = sign * (x[2] - z[0]) * denom;
-        q[3] = sign * (y[0] - x[1]) * denom;
-        q[0] = qmax;
+        if(x[0] < -y[1])
+        {
+            t = 1 - x[0] - y[1] + z[2];
+            q = Quaternion<T>(x[1] - y[0],
+                              z[0] + x[2],
+                              y[2] + z[1],
+                              t);
+        }
+        else
+        {
+            t = 1 + x[0] + y[1] + z[2];
+            q = Quaternion<T>(t,
+                              y[2] - z[1],
+                              z[0] - x[2],
+                              x[1] - y[0]);
+        }
     }
+    q *= static_cast<T>(0.5) / sqrt(t);
     q.NormalizeSelf();
+    q.ConjugateSelf();
+
+    //// Another implementation that i found in stack overflow
+    //// https://stackoverflow.com/questions/63734840/how-to-convert-rotation-matrix-to-quaternion
+    //// Clang min definition is only on std namespace
+    //// this is a crappy workaround
+    //#ifndef __CUDA_ARCH__
+    //    using namespace std;
+    //#endif
+
+    //// Our sign is one (according to the above link)
+    //static constexpr T sign = 1;
+    //T t = x[0] + y[1] + z[2];
+    //T m = max(max(x[0], y[1]), max(z[2], t));
+    //T qmax = static_cast<T>(0.5) * sqrt(1 - t + 2 * m);
+    //T denom = static_cast<T>(0.25) * (1 / qmax);
+    //if(m == x[0])
+    //{
+    //    q[1] = qmax;
+    //    q[2] = (x[1] + y[0]) * denom;
+    //    q[3] = (x[2] + z[0]) * denom;
+    //    q[0] = sign * (z[1] - y[2]) * denom;
+    //}
+    //else if(m == y[1])
+    //{
+    //    q[1] = (x[1] + y[0]) * denom;
+    //    q[2] = qmax;
+    //    q[3] = (y[2] + z[1]) * denom;
+    //    q[0] = sign * (x[2] - z[0]) * denom;
+    //}
+    //else if(m == z[2])
+    //{
+    //    q[1] = (x[2] + z[0]) * denom;
+    //    q[2] = (y[2] + z[1]) * denom;
+    //    q[3] = qmax;
+    //    q[0] = sign * (x[2] - z[0]) * denom;
+    //}
+    //else
+    //{
+    //    q[1] = sign * (z[1] - y[2]) * denom;
+    //    q[2] = sign * (x[2] - z[0]) * denom;
+    //    q[3] = sign * (y[0] - x[1]) * denom;
+    //    q[0] = qmax;
+    //}
+    //q.NormalizeSelf();
 
 }
 

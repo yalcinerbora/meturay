@@ -1,0 +1,191 @@
+{
+    "Cameras": [
+    {
+		"id": 0,
+		"type" : "Pinhole",
+		// 16:9 FoV
+		"fov": [34.666, 19.5],
+		// 1:1 FoV
+		//"fov": [19.5,  19.5],
+		"planes": [0.5, 3000.0],
+
+        "gaze":  [44.4035, 199.831, 666.226],
+		"position": [44.4652, 199.983, 667.213],
+		"up": [0.0, 1.0, 0.0]
+	}],
+
+    "Lights": [
+	{
+		"id": 0,
+		"type": "SkySphere",
+		"radiance" : {"texture": 0, "channels": "rgb"}
+	}],
+
+    "Mediums": [
+        {"id" : 0, "type" : "Vacuum"},
+        {
+            "id" : 1,
+            "type" : "Homogeneous",
+            "absorption": [0, 0 ,0],
+		    "scattering": [0, 0, 0],
+		    "ior": 1.376,
+		    "phase": 0
+        }
+    ],
+
+    "Textures": [
+        { "id": 0, "file": "../Textures/NyraPose/autumn_forest_04_4k.hdr"},
+        {
+            "id": [1, 2, 3, 4, 5],
+            "file":
+            [
+                "../Textures/NyraPose/body_d.tga",
+                "../Textures/NyraPose/body_n.tga",
+                "../Textures/NyraPose/body_metallic.tga",
+                "../Textures/NyraPose/body_specular.tga",
+                "../Textures/NyraPose/body_rough.tga"
+            ],
+            "signed": [false, true, false, false, false]
+        },
+        {
+            "id": [6, 7, 8, 9, 10],
+            "file":
+            [
+                "../Textures/NyraPose/head_d.tga",
+                "../Textures/NyraPose/head_n.tga",
+                "../Textures/NyraPose/head_metallic.tga",
+                "../Textures/NyraPose/head_specular.tga",
+                "../Textures/NyraPose/head_rough.tga"
+            ],
+            "signed": [false, true, false, false, false]
+        }
+    ],
+
+    "Transforms": [{"id": 0, "type": "Identity"}],
+
+    "Materials": [
+    {
+        // Diffuse Materials
+		"id": 0,
+		"type": "Lambert",
+		"albedo" : [0.5, 0.5, 0.5]
+    },
+    {
+		// Nyra Body Mat
+		"id": 1,
+		"type": "Unreal",
+		"albedo" : {"texture": 1, "channels": "rgb"},
+        "normal": {"texture": 2, "channels": "rgb"},
+        "metallic": {"texture": 3, "channels": "r"},
+        "specular": {"texture": 4, "channels": "r"},
+        "roughness": {"texture": 5, "channels": "r"}
+    },
+    {
+        // Diffuse Materials
+		"id": 2,
+		"type": "Lambert",
+		"albedo" : {"texture": 6, "channels": "rgb"},
+        "normal": {"texture": 7, "channels": "rgb"},
+        "metallic": {"texture": 8, "channels": "r"},
+        "specular": {"texture": 9, "channels": "r"},
+        "roughness": {"texture": 10, "channels": "r"}
+    },
+    {
+        // Cornea
+        "id": 3,
+        "type": "Refract",
+        "albedo" : [1.0, 1.0, 1.0],
+        "medium" : 1
+    }],
+
+    "Primitives": [
+    {
+        // Floor
+        "id": 0,
+        "type": "Triangle",
+        "name": ".nodeTriangleIndexed",
+        "position": [[-1000, 0,  1000],
+                     [ 1000, 0,  1000],
+                     [ 1000, 0, -1000],
+                     [-1000, 0, -1000]],
+        "normal": [[0, 1, 0],
+                   [0, 1, 0],
+                   [0, 1, 0],
+                   [0, 1, 0]],
+        "uv": [[0, 0], [1, 0], [1, 1], [0, 1]],
+        "index": [0, 1, 2, 0, 2, 3]
+    },
+    {
+        // Nyra Body
+        "id": 1,
+        "type": "Triangle",
+        "name": "../Surfaces/NyraPose/nyra_body.obj",
+        "tag": "assimp_",
+        "innerIndex": 0,
+        "cullFace": false
+    },
+    {
+        // Nyra Skirt
+        "id": 2,
+        "type": "Triangle",
+        "name": "../Surfaces/NyraPose/nyra_skirt.obj",
+        "tag": "assimp_",
+        "innerIndex": 0,
+        "cullFace": false,
+        "alphaMap": {"texture": 1, "channels": "a"}
+    },
+    {
+        // Nyra Face
+        "id": 3,
+        "type": "Triangle",
+        "name": "../Surfaces/NyraPose/nyra_face.obj",
+        "tag": "assimp_",
+        "innerIndex": 0,
+        "cullFace": false
+    },
+    {
+        // Nyra Face
+        "id": 4,
+        "type": "Triangle",
+        "name": "../Surfaces/NyraPose/nyra_lash.obj",
+        "tag": "assimp_",
+        "innerIndex": 0,
+        "cullFace": false,
+        "alphaMap": {"texture": 6, "channels": "a"}
+    },
+    {
+        // Nyra Cornea
+        "id": 5,
+        "type": "Triangle",
+        "name": "../Surfaces/NyraPose/nyra_cornea.obj",
+        "tag": "assimp_",
+        "innerIndex": 0,
+        "cullFace": false
+    }],
+
+    "Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryLight": 0,
+    "BaseMedium" : 0,
+
+	"Surfaces":
+    [
+        // Floor
+        //{ "transform": 0, "accelerator": 0, "material": 0, "primitive": 0},
+        // Nyra Body & Skirt
+        { "transform": 0, "accelerator": 0, "material": 1, "primitive": 1},
+        { "transform": 0, "accelerator": 0, "material": 1, "primitive": 2},
+        // Nyra Face
+        { "transform": 0, "accelerator": 0, "material": 2, "primitive": 3},
+        { "transform": 0, "accelerator": 0, "material": 2, "primitive": 4},
+        { "transform": 0, "accelerator": 0, "material": 3, "primitive": 5}
+	],
+
+	"LightSurfaces": [],
+
+    "CameraSurfaces":[{"camera": 0}]
+}

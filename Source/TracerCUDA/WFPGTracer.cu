@@ -37,8 +37,8 @@ using PathGuideKernelFunction = void (*)(// Output
 
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_TPB =
 {
-    1024,
-    1024,
+    512,
+    512,
     512,
     256,
     256,
@@ -359,7 +359,7 @@ TracerError WFPGTracer::SetOptions(const TracerOptionsI& opts)
     std::string voxelTraceModeString;
     if((err = opts.GetString(voxelTraceModeString, VOX_TRACE_MODE_NAME)) != TracerError::OK)
         return err;
-    if((err = StringToVoxelTraceMode(options.traceMode, lightSamplerTypeString)) != TracerError::OK)
+    if((err = StringToVoxelTraceMode(options.traceMode, voxelTraceModeString)) != TracerError::OK)
         return err;
 
     return TracerError::OK;
