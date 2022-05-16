@@ -208,9 +208,13 @@ ImageIOError ImageIO::ConvertFreeImgFormat(PixelFormat& pf, FREE_IMAGE_TYPE t, u
             }
             break;
         }
-
-        // Skip these
         case FIT_UINT16:
+        {
+             if(bpp == 16)
+                 pf = PixelFormat::R16_UNORM;
+             break;
+        }
+        // Skip these
         case FIT_INT16:
         case FIT_UINT32:
         case FIT_INT32:

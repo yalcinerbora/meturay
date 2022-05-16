@@ -296,7 +296,7 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           Vector3 t = tangentsIn[index];
 
                           // Neighboring vertices of the tangents
-                          // are canceled each other out
+                          // are canceled each other out.
                           // Just find an arbitrary tangent
                           if(t.LengthSqr() < MathConstants::Epsilon)
                               t = OrthogonalVector(n);

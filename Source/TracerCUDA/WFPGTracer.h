@@ -27,9 +27,7 @@ class WFPGTracer final : public RayTracer
         static constexpr const char*    RAY_BIN_MIN_LEVEL_NAME  = "MinRayBinLevel";
         static constexpr const char*    BIN_RAY_COUNT_NAME      = "BinRayCount";
 
-        static constexpr const char*    VOX_TRACE_NAME          = "VoxelTrace";
-        static constexpr const char*    VOX_TRACE_MODE_NAME     = "VoxelTraceMode";
-        static constexpr const char*    DEBUG_RENDER_NAME       = "DebugRender";
+        static constexpr const char*    RENDER_MODE_NAME        = "RenderMode";
         static constexpr const char*    DUMP_DEBUG_NAME         = "DumpDebugData";
         static constexpr const char*    DUMP_INTERVAL_NAME      = "DataDumpIntervalExp";
 
@@ -48,10 +46,8 @@ class WFPGTracer final : public RayTracer
                                                             // even if they did not satisfy the ray bin count
             uint32_t            binRayCount         = 512;  // Amount of rays on each bin
             // Misc
-            bool                debugRender         = false;
-            bool                voxTrace            = false;
-            bool                dumpDebugData       = false;
-            VoxelTraceMode      traceMode           = VoxelTraceMode::FALSE_COLOR;
+            WFPGRenderMode      renderMode           = WFPGRenderMode::NORMAL;
+            bool                dumpDebugData = false;
             uint32_t            svoDumpInterval     = 2;
         };
 

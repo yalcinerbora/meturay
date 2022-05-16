@@ -134,3 +134,7 @@ namespace MathConstants
     static constexpr float LargeEpsilon = static_cast<float>(LargeEpsilon_d);
     static constexpr float VeryLargeEpsilon = static_cast<float>(VeryLargeEpsilon_d);
 }
+
+// TODO: Hopefully, these will be half and constexpr in future.
+#define MRAY_HALF_MAX 65504.0f
+#define MRAY_HALF_MIN 0.000000059604645f

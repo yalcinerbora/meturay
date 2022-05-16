@@ -81,7 +81,6 @@ OptiXSystem::OptiXSystem(const CudaSystem& system)
         // TODO: change this
         optixDeviceContextSetCacheEnabled(context, 0);
 
-        //optixDevices.emplace_back(std::make_pair(gpu, context));
         optixDevices.emplace_back(gpu, context);
     }
 }

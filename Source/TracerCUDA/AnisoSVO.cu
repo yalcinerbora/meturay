@@ -200,7 +200,7 @@ void KCSetParentOfLeafChildren(uint32_t* gLeafParents,
     }
 }
 
-__global__ //CUDA_LAUNCH_BOUNDS_1D
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCDepositInitialLightRadiance(// I-O
                                    AnisoSVOctreeGPU treeGPU,
                                    // Input
@@ -273,10 +273,10 @@ void KCDepositInitialLightRadiance(// I-O
             // TODO:
             // Emit function needs UV surface
             // Currently it is not used (neither normal or uv
-            // is needed for the implemented light sources.
+            // is needed for the implemented light sources).
             //
             // Also Emit function does not respect normal
-            // orientation it should
+            // orientation, it should
             Vector3f radiance = gLight->Emit(dir, worldPos,
                                              UVSurface{});
             float radianceF = Utility::RGBToLuminance(radiance);
@@ -310,15 +310,14 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
         float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
         unableToAccum |= !svo.DepositRadiance(gPathNode.worldPosition, wo, luminance);
     }
-
     // Debug
     if(unableToAccum)
     {
-        printf("Unable to accumulate radiance!");
+        printf("Unable to accumulate radiance!\n");
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCCollapseRayCounts(// I-O
                          uint32_t* gBinInfo,
                          // Input
@@ -361,7 +360,7 @@ void KCCollapseRayCounts(// I-O
     }
 }
 
-__global__
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCCollapseRayCountsLeaf(// I-O
                              uint32_t* gLeafBinInfo,
                              uint32_t* gBinInfo,
@@ -400,6 +399,39 @@ void KCCollapseRayCountsLeaf(// I-O
         {
             AnisoSVOctreeGPU::SetBinAsMarked(gLeafBinInfo[threadId]);
         }
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCCCopyRadianceToHalfBufferLeaf(// I-O
+                                     AnisoSVOctreeGPU::AnisoRadiance* dLeafRadianceRead,
+                                     // Input
+                                     const AnisoSVOctreeGPU::AnisoRadianceF* dLeafRadianceWrite,
+                                     const AnisoSVOctreeGPU::AnisoCount* dLeafSampleCountWrite,
+                                     // Constants
+                                     uint32_t leafCount,
+                                     float totalRadianceScene)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < leafCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        AnisoSVOctreeGPU::AnisoRadianceF anisoRad = dLeafRadianceWrite[threadId];
+        AnisoSVOctreeGPU::AnisoCount anisoCount = dLeafSampleCountWrite[threadId];
+        AnisoSVOctreeGPU::AnisoRadiance anisoOut;
+
+        for(int i = 0; i < AnisoSVOctreeGPU::VOXEL_DIR_DATA_COUNT; i++)
+        {
+            float radiance = anisoRad.Read(i);
+            uint32_t count = anisoCount.Read(i);
+
+            float avgRadiance = radiance / count;
+
+            // Normalize & Clamp the half range for now
+            float radClamped = fmax(MRAY_HALF_MAX, avgRadiance);
+            anisoOut.Write(i, radClamped);
+        }
+        dLeafRadianceRead[threadId] = anisoOut;
     }
 }
 
@@ -455,7 +487,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     std::inclusive_scan(primOffsets.cbegin(), primOffsets.cend(),
                         primOffsets.begin());
 
-    // Allocate Voxel Count memory (which will be used to allocate)
+    // Allocate Voxel Count memory
     uint64_t* dVoxelCounts;
     uint64_t* dVoxelOffsets;
     uint64_t* dPrimOffsets;
@@ -476,7 +508,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                           sizeof(uint64_t) * accels.size(),
                           cudaMemcpyHostToDevice));
 
-    // Ask each primitive for rasterize voxel count
+    // Ask each primitive for rasterized voxel count
     uint32_t i = 0;
     for(const auto [_, accel] : accels)
     {
@@ -492,7 +524,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                                          primOffsets.back() + 1,
                                                          0u);
 
-    // Reduce Per prim voxel count to total voxel count
+    // Acquire total voxel count (last element of scan operation)
     uint64_t hTotalVoxCount;
     CUDA_CHECK(cudaMemcpy(&hTotalVoxCount, dVoxelOffsets + primOffsets.back(),
                           sizeof(uint64_t), cudaMemcpyDeviceToHost));
@@ -528,7 +560,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
 
     // For each accelerator
     // Actually rasterize the primitives
-    // and push to the memory (find the light key if available here)
+    // and push to the memory (find the light key; if available, here)
     i = 0;
     for(const auto [_, accel] : accels)
     {
@@ -555,7 +587,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     dPrimOffsets = nullptr;
     dLightSortTempMem = nullptr;
 
-    //
+    // Cub operation temporary buffers
     size_t rleTempMemSize;
     size_t sortTempMemSize;
     size_t scanTempMemSize;
@@ -606,7 +638,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                                   dDuplicateCounts, dUniqueVoxelCount,
                                                   static_cast<uint32_t>(hTotalVoxCount)));
 
-    // Load the found unique voxel count to host memory for kernel calls
+    // Load the found unique voxel count (non-duplicate) to host memory for kernel calls
     uint32_t hUniqueVoxelCount;
     CUDA_CHECK(cudaMemcpy(&hUniqueVoxelCount, dUniqueVoxelCount, sizeof(uint32_t),
                           cudaMemcpyDeviceToHost));
@@ -632,12 +664,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     CUDA_CHECK(cudaMemcpy(dSortedVoxels, dVoxels,
                           sizeof(uint64_t) * hUniqueVoxelCount,
                           cudaMemcpyDeviceToDevice));
-
     // Rename the dVoxels array to sorted unique voxels
     uint64_t* dSortedUniqueVoxels = dSortedVoxels;
-
-    //Debug::DumpMemToFile("sortedVox", dSortedUniqueVoxels, hUniqueVoxelCount,
-    //                     false, true);
 
     // Now we can deallocate the large non-unique voxel buffers
     voxelMemory = DeviceMemory();
@@ -661,7 +689,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                    {hUniqueVoxelCount, hUniqueVoxelCount + 1,
                                    scanTempMemSize});
 
-    // Top-down find the required voxel counts by looking the morton codes
+    // Top-down find the required voxel counts by looking at morton codes
     assert(Utility::BitCount(resolutionXYZ) == 1);
     uint32_t levelCount = treeGPU.leafDepth;
     std::vector<uint32_t> levelNodeCounts(levelCount + 1, 0);
@@ -680,7 +708,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                            i,
                            levelCount);
 
-        // Reduce the marks to find
+        // Reduce the marks to find level node count
         ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>, cudaMemcpyDeviceToHost>
         (
             levelNodeCounts[i],
@@ -694,6 +722,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     }
     assert(levelNodeCounts.back() == hUniqueVoxelCount);
 
+    // Populate node offset buffer
     levelNodeOffsets.resize(levelCount + 2, 0);
     std::inclusive_scan(levelNodeCounts.cbegin(), levelNodeCounts.cend(),
                         levelNodeOffsets.begin() + 1);
@@ -822,6 +851,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
         }
     }
     // Only Direct light information deposition is left
+    // Call the kernel for it
     gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
                        //
                        KCDepositInitialLightRadiance,
@@ -841,9 +871,6 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        treeGPU.svoAABB,
                        resolutionXYZ);
 
-    // Create the node radiance map
-    //????
-
     //Debug::DumpMemToFile("leafParent", treeGPU.dLeafParents,
     //                     treeGPU.leafCount);
 
@@ -858,12 +885,30 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     return TracerError::OK;
 }
 
-void AnisoSVOctreeCPU::NormalizeAndFilterRadiance(const CudaSystem&)
+void AnisoSVOctreeCPU::NormalizeAndFilterRadiance(const CudaSystem& system)
 {
     // From leaf (leaf-write) to root
     // Average the radiance
-
     // Down-sample the radiance for lowest n levels as well maybe? (n= 2 or 3)
+
+
+
+
+    // Just copy it to for now
+    // Assume that the ray counts are set for leaves
+    const CudaGPU& bestGPU = system.BestGPU();
+    // Leaf has different memory layout do it separately
+    bestGPU.GridStrideKC_X(0, (cudaStream_t)0, treeGPU.leafCount,
+                           //
+                           KCCCopyRadianceToHalfBufferLeaf,
+                           // I-O
+                           treeGPU.dLeafRadianceRead,
+                           // Input
+                           treeGPU.dLeafRadianceWrite,
+                           treeGPU.dLeafSampleCountWrite,
+                           // Constants
+                           treeGPU.leafCount,
+                           1.0f);
 }
 
 void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount,

@@ -40,18 +40,13 @@ void GPUSceneJson::ExpandHitStructSize(const GPUPrimitiveGroupI& pg)
 
 SceneError GPUSceneJson::OpenFile(const std::u8string& filePath)
 {
-    // TODO: get a lightweight lexer and strip comments
-    // from json since json does not support comments
-    // now its only pure json iterating over a scene is
-    // not convenient without comments.
-
-    // Always assume filenames are UTF-8
     const auto path = std::filesystem::path(filePath);
     std::ifstream file(path);
 
     if(!file.is_open()) return SceneError(SceneError::FILE_NOT_FOUND, path.generic_string());
     // Parse Json
     sceneJson = std::make_unique<nlohmann::json>();
+    // nlohmann json now removes comments. Hooray!
     (*sceneJson) = nlohmann::json::parse(file, nullptr, true, true);
 
     return SceneError::OK;
@@ -96,8 +91,6 @@ SceneError GPUSceneJson::GenIdLookup(IndexLookup& result,
                                      const nlohmann::json& array,
                                      IdBasedNodeType t)
 {
-    //static constexpr uint32_t MAX_UINT32 = std::numeric_limits<uint32_t>::max();
-
     result.clear();
     uint32_t i = 0;
     for(const auto& jsn : array)

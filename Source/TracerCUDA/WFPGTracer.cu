@@ -245,15 +245,12 @@ TracerError WFPGTracer::Initialize()
 
         // Generic Path work
         GPUWorkBatchI* batch = nullptr;
-        if(options.debugRender)
+        if(options.renderMode == WFPGRenderMode::SVO_INITIAL_HIT_QUERY)
         {
-            if(options.debugRender)
-            {
-                WorkPool<>& wp = debugPathWorkPool;
-                if((err = wp.GenerateWorkBatch(batch, mg, pg,
-                                               dTransforms)) != TracerError::OK)
-                    return err;
-            }
+            WorkPool<>& wp = debugPathWorkPool;
+            if((err = wp.GenerateWorkBatch(batch, mg, pg,
+                                            dTransforms)) != TracerError::OK)
+                return err;
         }
         else
         {
@@ -281,7 +278,7 @@ TracerError WFPGTracer::Initialize()
 
         WorkBatchArray workBatchList;
         GPUWorkBatchI* batch = nullptr;
-        if(options.debugRender)
+        if(options.renderMode == WFPGRenderMode::SVO_INITIAL_HIT_QUERY)
         {
             BoundaryWorkPool<>& wp = debugBoundaryWorkPool;
             if((err = wp.GenerateWorkBatch(batch, eg,
@@ -347,19 +344,13 @@ TracerError WFPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.binRayCount, BIN_RAY_COUNT_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetBool(options.debugRender, DEBUG_RENDER_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetBool(options.voxTrace, VOX_TRACE_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
-        return err;
     if((err = opts.GetUInt(options.svoDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
         return err;
 
-    std::string voxelTraceModeString;
-    if((err = opts.GetString(voxelTraceModeString, VOX_TRACE_MODE_NAME)) != TracerError::OK)
+    std::string renderModeString;
+    if((err = opts.GetString(renderModeString, RENDER_MODE_NAME)) != TracerError::OK)
         return err;
-    if((err = StringToVoxelTraceMode(options.traceMode, voxelTraceModeString)) != TracerError::OK)
+    if((err = StringToWFPGRenderMode(options.renderMode, renderModeString)) != TracerError::OK)
         return err;
 
     return TracerError::OK;
@@ -378,9 +369,7 @@ void WFPGTracer::AskOptions()
     list.emplace(OCTREE_LEVEL_NAME, OptionVariable(options.octreeLevel));
     list.emplace(RAY_BIN_MIN_LEVEL_NAME, OptionVariable(options.minRayBinLevel));
     list.emplace(BIN_RAY_COUNT_NAME, OptionVariable(options.binRayCount));
-    list.emplace(VOX_TRACE_NAME, OptionVariable(options.voxTrace));
-    list.emplace(VOX_TRACE_MODE_NAME, OptionVariable(VoxelTraceModeToString(options.traceMode)));
-    list.emplace(DEBUG_RENDER_NAME, OptionVariable(options.debugRender));
+    list.emplace(RENDER_MODE_NAME, OptionVariable(WFPGRenderModeToString(options.renderMode)));
     list.emplace(DUMP_DEBUG_NAME, OptionVariable(options.dumpDebugData));
     list.emplace(DUMP_INTERVAL_NAME, OptionVariable(options.svoDumpInterval));
     if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
@@ -391,6 +380,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
+    bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
     (
         cameraIndex,
@@ -399,11 +390,12 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        !options.debugRender
+        enableAA
     );
 
     // On voxel trace mode we don't need paths
-    if(!(options.debugRender && options.voxTrace))
+    if(options.renderMode == WFPGRenderMode::NORMAL ||
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
         ResizeAndInitPathMemory();
 
     currentDepth = 0;
@@ -411,6 +403,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 
 void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
+    bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
     (
         t, cameraIndex, options.sampleCount,
@@ -418,16 +412,19 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        !options.debugRender
+        enableAA
     );
     // On voxel trace mode we don't need paths
-    if(!(options.debugRender && options.voxTrace))
+    if(options.renderMode == WFPGRenderMode::NORMAL ||
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
         ResizeAndInitPathMemory();
     currentDepth = 0;
 }
 
 void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
+    bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
     (
         dCam, options.sampleCount,
@@ -435,10 +432,11 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
                        options.sampleCount *
                        options.sampleCount),
         true,
-        !options.debugRender
+        enableAA
     );
     // On voxel trace mode we don't need paths
-    if(!(options.debugRender && options.voxTrace))
+    if(options.renderMode == WFPGRenderMode::NORMAL ||
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
         ResizeAndInitPathMemory();
     currentDepth = 0;
 }
@@ -470,7 +468,7 @@ bool WFPGTracer::Render()
     globalData.rrStart = options.rrStart;
 
     // On voxel trace mode we just trace the rays without any material
-    if(options.debugRender && options.voxTrace)
+    if(options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
     {
         // Just call the voxel trace kernel on a GPU and call it a day
         const auto& gpu = cudaSystem.BestGPU();
@@ -482,7 +480,7 @@ bool WFPGTracer::Render()
                            globalData,
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
-                           options.traceMode,
+                           WFPGRenderMode::SVO_FALSE_COLOR,
                            totalRayCount);
         // Signal as if we finished processing
         return false;
@@ -547,6 +545,12 @@ bool WFPGTracer::Render()
 
 void WFPGTracer::Finalize()
 {
+    // Deposit the radiances on the path chains
+    uint32_t totalPathNodeCount = TotalPathNodeCount();
+    svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
+                            MaximumPathNodePerPath(), cudaSystem);
+    svo.NormalizeAndFilterRadiance(cudaSystem);
+
     METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();

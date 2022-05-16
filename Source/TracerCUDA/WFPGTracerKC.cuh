@@ -622,7 +622,7 @@ static void KCTraceSVO(// Output
                        const RayGMem* gRays,
                        const RayAuxWFPG* gRayAux,
                        // Constants
-                       VoxelTraceMode mode,
+                       WFPGRenderMode mode,
                        uint32_t rayCount)
 {
     const AnisoSVOctreeGPU& svo = renderState.svo;
@@ -639,10 +639,10 @@ static void KCTraceSVO(// Output
                                   ray.tMin, ray.tMax);
 
         Vector3f locColor = Vector3f(1.0f, 0.0f, 1.0f);
-        if(mode == VoxelTraceMode::FALSE_COLOR)
+        if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
             locColor = (svoLeafIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoLeafIndex)
                                                     : Vector3f(0.0f);
-        else if(mode == VoxelTraceMode::RADIANCE)
+        else if(mode == WFPGRenderMode::SVO_RADIANCE)
         {
             half radiance = svo.ReadRadiance(svoLeafIndex, true,
                                              -ray.ray.getDirection());
@@ -900,7 +900,7 @@ static void KCGenAndSampleDistribution(// Output
             // over the voxel, most fool-proof (but inaccurate)
             // way is to offset the ray with the current level voxel size.
             // This will be highly inaccurate when current bin(node) level is low.
-            // TODO: Fix
+            // TODO: Change it to a better solution
             float tMin = sBinVoxelSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
 
             uint32_t leafId;

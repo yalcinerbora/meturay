@@ -18,12 +18,15 @@ class CudaSystem;
 
 class AnisoSVOctreeGPU
 {
-    private:
+    public:
+    static constexpr int VOXEL_DIR_DATA_COUNT = 8;
+
     template <class T>
     struct AnisoData
     {
         Vector<4, T> data[2];
 
+        __device__ void Write(uint8_t index, T value);
         __device__ void AtomicAdd(uint8_t index, T value);
         __device__ T    Read(uint8_t index) const;
         __device__ T    Read(const Vector4uc& indices,
@@ -33,6 +36,7 @@ class AnisoSVOctreeGPU
     using AnisoRadianceF = AnisoData<float>;
     using AnisoCount = AnisoData<uint32_t>;
 
+    private:
     static constexpr uint32_t LAST_BIT_UINT32 = (sizeof(uint32_t) * BYTE_BITS - 1);
 
     static constexpr uint64_t IS_LEAF_BIT_COUNT     = 1;
@@ -212,6 +216,15 @@ class AnisoSVOctreeCPU
     size_t                  UsedGPUMemory() const;
     size_t                  UsedCPUMemory() const;
 };
+
+template <class T>
+__device__ inline
+void AnisoSVOctreeGPU::AnisoData<T>::Write(uint8_t index, T value)
+{
+    uint8_t iMSB = index >> 2;
+    uint8_t iLower = index & 0b11;
+    data[iMSB][iLower] = value;
+}
 
 template <class T>
 __device__ inline
@@ -715,8 +728,10 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
                                        const Vector3f& outgoingDir,
                                        float radiance)
 {
+    // TODO: Add filtering here as well
     uint32_t lIndex;
-    bool leafFound = LeafIndex(lIndex, worldPos);
+    bool leafFound = LeafIndex(lIndex, worldPos, true);
+
     if(leafFound)
     {
         // Extrapolate the data to the all appropriate locations

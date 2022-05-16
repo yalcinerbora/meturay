@@ -41,9 +41,12 @@
             [
                 "../Textures/NyraPose/body_d.tga",
                 "../Textures/NyraPose/body_n.tga",
-                "../Textures/NyraPose/body_metallic.tga",
-                "../Textures/NyraPose/body_specular.tga",
-                "../Textures/NyraPose/body_rough.tga"
+                // "../Textures/NyraPose/body_metallic.tga",
+                // "../Textures/NyraPose/body_specular.tga",
+                // "../Textures/NyraPose/body_rough.tga"
+                "../Textures/NyraPose/body_metallic.png",
+                "../Textures/NyraPose/body_specular.png",
+                "../Textures/NyraPose/body_rough.png"
             ],
             "signed": [false, true, false, false, false]
         },
@@ -74,6 +77,7 @@
 		// Nyra Body Mat
 		"id": 1,
 		"type": "Unreal",
+        //"albedo" : [0.5, 0.5, 0.5],
 		"albedo" : {"texture": 1, "channels": "rgb"},
         "normal": {"texture": 2, "channels": "rgb"},
         "metallic": {"texture": 3, "channels": "r"},
@@ -81,9 +85,9 @@
         "roughness": {"texture": 5, "channels": "r"}
     },
     {
-        // Diffuse Materials
+        // Nyra Face Mat
 		"id": 2,
-		"type": "Lambert",
+		"type": "Unreal",
 		"albedo" : {"texture": 6, "channels": "rgb"},
         "normal": {"texture": 7, "channels": "rgb"},
         "metallic": {"texture": 8, "channels": "r"},
