@@ -30,7 +30,7 @@ class AnisoSVOctreeGPU
         __device__ void AtomicAdd(uint8_t index, T value);
         __device__ T    Read(uint8_t index) const;
         __device__ T    Read(const Vector4uc& indices,
-                             const Vector2f& interp) const;
+                             const Vector2h& interp) const;
     };
     using AnisoRadiance = AnisoData<half>;
     using AnisoRadianceF = AnisoData<float>;
@@ -85,8 +85,8 @@ class AnisoSVOctreeGPU
     __device__ static bool      HasChild(uint64_t packedData, uint32_t childId);
 
     __device__ static Vector3f  VoxelDirection(uint32_t directionId);
-    __device__ static Vector4uc DirectionToNeigVoxels(Vector2f& interp,
-                                                      const Vector3f& direction);
+    __device__ static Vector4uc DirectionToAnisoLocations(Vector2h& interp,
+                                                          const Vector3f& direction);
 
     // Bin info related packing operations
     __device__ static bool      IsBinMarked(uint32_t binInfo);
@@ -247,10 +247,20 @@ T AnisoSVOctreeGPU::AnisoData<T>::Read(uint8_t index) const
 template <class T>
 __device__ inline
 T AnisoSVOctreeGPU::AnisoData<T>::Read(const Vector4uc& indices,
-                                       const Vector2f& interp) const
+                                       const Vector2h& interp) const
 {
     // Implicitly convert half to float for the operation
-    constexpr auto LerpHF = HybridFuncs::Lerp<float, float>;
+    constexpr auto LerpHF = HybridFuncs::Lerp<half, half>;
+
+    //printf("Read op Interp(%f, %f) "
+    //       "Vals(%f, %f, %f, %f)"
+    //       "\n",
+    //       static_cast<float>(interp[0]),
+    //       static_cast<float>(interp[1]),
+    //       static_cast<float>(Read(indices[0])),
+    //       static_cast<float>(Read(indices[1])),
+    //       static_cast<float>(Read(indices[2])),
+    //       static_cast<float>(Read(indices[3])));
 
     // Bilinear interpolation
     T a = LerpHF(Read(indices[0]), Read(indices[1]), interp[0]);
@@ -398,14 +408,14 @@ Vector3f AnisoSVOctreeGPU::VoxelDirection(uint32_t directionId)
 }
 
 __device__ inline
-Vector4uc AnisoSVOctreeGPU::DirectionToNeigVoxels(Vector2f& interp,
-                                                  const Vector3f& direction)
+Vector4uc AnisoSVOctreeGPU::DirectionToAnisoLocations(Vector2h& interp,
+                                                      const Vector3f& direction)
 {
     // I couldn't comprehend this as a mathematical
     // representation so tabulated the output
     static constexpr Vector4uc TABULATED_LAYOUTS[12] =
     {
-        Vector4uc(3,2,0,1), Vector4uc(0,3,1,2),  Vector4uc(0,1,2,3), Vector4uc(2,1,3,0),
+        Vector4uc(3,2,0,1), Vector4uc(0,3,1,2),  Vector4uc(1,0,2,3), Vector4uc(2,1,3,0),
         Vector4uc(0,1,4,5), Vector4uc(1,2,5,6),  Vector4uc(2,3,6,7), Vector4uc(3,0,7,4),
         Vector4uc(4,5,7,6), Vector4uc(5,6,4,7),  Vector4uc(6,7,5,4), Vector4uc(7,4,6,5)
     };
@@ -433,7 +443,7 @@ Vector4uc AnisoSVOctreeGPU::DirectionToNeigVoxels(Vector2f& interp,
     float interpY = abs(modff(pixelY + 0.5f, &indexY));
     uint32_t indexYInt = static_cast<uint32_t>(indexX);
 
-    interp = Vector2f(interpX, interpY);
+    interp = Vector2h(interpX, interpY);
     return TABULATED_LAYOUTS[indexYInt * 4 + indexXInt];
 }
 
@@ -714,9 +724,9 @@ half AnisoSVOctreeGPU::ReadRadiance(uint32_t nodeId, bool isLeaf,
         return 0.0f;
     }
 
-    Vector2f interpValues;
-    Vector4uc neighbours = DirectionToNeigVoxels(interpValues,
-                                                 outgoingDir);
+    Vector2h interpValues;
+    Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
+                                                     outgoingDir);
 
     const AnisoRadiance* gRadRead = (isLeaf) ? dLeafRadianceRead
                                              : dRadianceRead;
@@ -735,9 +745,9 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
     if(leafFound)
     {
         // Extrapolate the data to the all appropriate locations
-        Vector2f interpValues;
-        Vector4uc neighbours = DirectionToNeigVoxels(interpValues,
-                                                     outgoingDir);
+        Vector2h interpValues;
+        Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
+                                                         outgoingDir);
         // Deposition should be done in a
         // Box filter like fashion
         #pragma unroll

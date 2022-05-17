@@ -40,7 +40,7 @@ enum class WFPGFilterMode
 
 static constexpr std::array<std::string_view, static_cast<size_t>(WFPGRenderMode::END)> WFPGRenderModeNames =
 {
-    "Normal"
+    "Normal",
     "SVOFalseColor",
     "SVOInitialHit",
     "SVORadiance"

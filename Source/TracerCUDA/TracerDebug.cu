@@ -208,6 +208,26 @@ std::ostream& operator<<(std::ostream& s, const PPGPathNode& n)
     return s;
 }
 
+std::ostream& operator<<(std::ostream& s, const PathGuidingNode& n)
+{
+    s << "W: { "
+        << n.worldPosition[0] << ", "
+        << n.worldPosition[1] << ", "
+        << n.worldPosition[2] << "} "
+        << "PN: {"
+        << static_cast<uint32_t>(n.prevNext[0]) << ", "
+        << static_cast<uint32_t>(n.prevNext[1]) << "} "
+        << "R: {"
+        << n.totalRadiance[0] << ", "
+        << n.totalRadiance[1] << ", "
+        << n.totalRadiance[2] << "} "
+        << "TP: {"
+        << n.radFactor[0] << ", "
+        << n.radFactor[1] << ", "
+        << n.radFactor[2] << "} ";
+    return s;
+}
+
 std::ostream& operator<<(std::ostream& s, const DTreeNode& n)
 {
     constexpr uint32_t UINT32_T_MAX = std::numeric_limits<uint32_t>::max();

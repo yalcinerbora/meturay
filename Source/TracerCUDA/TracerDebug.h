@@ -21,6 +21,7 @@ struct STreeGPU;
 struct DTreeNode;
 struct DTreeGPU;
 struct PPGPathNode;
+struct PathGuidingNode;
 
 namespace Debug
 {
@@ -93,6 +94,7 @@ extern std::ostream& operator<<(std::ostream& stream, const STreeNode&);
 extern std::ostream& operator<<(std::ostream& stream, const DTreeGPU&);
 extern std::ostream& operator<<(std::ostream& stream, const DTreeNode&);
 extern std::ostream& operator<<(std::ostream& stream, const PPGPathNode&);
+extern std::ostream& operator<<(std::ostream& stream, const PathGuidingNode&);
 
 template<class T>
 void Debug::DumpMemToFile(const std::string& fName,

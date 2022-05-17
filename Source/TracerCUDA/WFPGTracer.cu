@@ -16,6 +16,28 @@
 
 #include <array>
 
+
+__global__
+void KCSetCamPosToPathChain(// Output
+                            PathGuidingNode* gPathNodes,
+                            // Input
+                            const RayGMem* gRays,
+                            // Constants
+                            uint32_t maxPathNodePerRay,
+                            uint32_t totalNodeCount,
+                            uint32_t rayCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < rayCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        RayReg ray = RayReg(gRays, threadId);
+
+        const uint32_t pathStartIndex = threadId * maxPathNodePerRay;
+        gPathNodes[pathStartIndex].worldPosition = ray.ray.getPosition();
+    }
+}
+
 // Currently These are compile time constants
 // since most of the internal call rely on compile time constants
 static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
@@ -84,7 +106,24 @@ void WFPGTracer::ResizeAndInitPathMemory()
                      dPathNodes,
                      static_cast<uint32_t>(totalPathNodeCount));
 
-    //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
+    // Allocate the initial camera position in path chain
+    // Path chain does not store direction in order to calculate Wo
+    // wee need it
+    const RayGMem* dRays = rayCaster->RaysIn();
+    uint32_t rayCount = rayCaster->CurrentRayCount();
+    bestGPU.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                           //
+                           KCSetCamPosToPathChain,
+                           //
+                           // Output
+                           dPathNodes,
+                           // Input
+                           dRays,
+                           MaximumPathNodePerPath(),
+                           static_cast<uint32_t>(totalPathNodeCount),
+                           rayCount);
+
+    //Debug::DumpBatchedMemToFile("__PathNodes", dPathNodes,
     //                            MaximumPathNodePerPath(),
     //                            totalPathNodeCount);
 
@@ -392,6 +431,12 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
         true,
         enableAA
     );
+    // Save the camera if SVO RADIANCE Mode
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    {
+        currentCamera.type = CameraType::SCENE_CAMERA;
+        currentCamera.nonTransformedCamIndex = cameraIndex;
+    }
 
     // On voxel trace mode we don't need paths
     if(options.renderMode == WFPGRenderMode::NORMAL ||
@@ -414,6 +459,14 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
         true,
         enableAA
     );
+    // Save the camera if SVO RADIANCE Mode
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    {
+        currentCamera.type = CameraType::TRANSFORMED_SCENE_CAMERA;
+        currentCamera.transformedSceneCam.cameraIndex = cameraIndex;
+        currentCamera.transformedSceneCam.transform = t;
+    }
+
     // On voxel trace mode we don't need paths
     if(options.renderMode == WFPGRenderMode::NORMAL ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
@@ -434,6 +487,13 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
         true,
         enableAA
     );
+        // Save the camera if SVO RADIANCE Mode
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    {
+        currentCamera.type = CameraType::CUSTOM_CAMERA;
+        currentCamera.dCustomCamera = &dCam;
+    }
+
     // On voxel trace mode we don't need paths
     if(options.renderMode == WFPGRenderMode::NORMAL ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
@@ -477,7 +537,8 @@ bool WFPGTracer::Render()
                             //
                            KCTraceSVO,
                            //
-                           globalData,
+                           imgMemory.GMem<Vector4>(),
+                           svo.TreeGPU(),
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
                            WFPGRenderMode::SVO_FALSE_COLOR,
@@ -491,7 +552,12 @@ bool WFPGTracer::Render()
 
     // Before Material Evaluation
     // Generate guideDirection and PDF
-    GenerateGuidedDirections();
+    if(options.renderMode != WFPGRenderMode::SVO_INITIAL_HIT_QUERY)
+    // Change this
+    if(options.renderMode != WFPGRenderMode::SVO_RADIANCE)
+    {
+        GenerateGuidedDirections();
+    }
 
     // Generate output partitions wrt. materials
     const auto partitions = rayCaster->PartitionRaysWRTWork();
@@ -546,10 +612,90 @@ bool WFPGTracer::Render()
 void WFPGTracer::Finalize()
 {
     // Deposit the radiances on the path chains
-    uint32_t totalPathNodeCount = TotalPathNodeCount();
-    svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
-                            MaximumPathNodePerPath(), cudaSystem);
-    svo.NormalizeAndFilterRadiance(cudaSystem);
+    if(options.renderMode == WFPGRenderMode::NORMAL ||
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    {
+        uint32_t totalPathNodeCount = TotalPathNodeCount();
+        svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
+                                MaximumPathNodePerPath(), cudaSystem);
+        svo.NormalizeAndFilterRadiance(cudaSystem);
+    }
+
+    static int i = 0;
+    //Debug::DumpBatchedMemToFile(std::to_string(i) + "_PathNodes",
+    //                        dPathNodes,
+    //                        MaximumPathNodePerPath(), TotalPathNodeCount());
+    i++;
+
+    // On SVO_Radiance mode clear the image memory
+    // And trace the SVO from the camera and send the results
+    // On voxel trace mode we just trace the rays without any material
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    {
+        // Clear the image buffer
+        imgMemory.Reset(cudaSystem);
+
+        // Generate rays appropriate to the camera type
+        switch(currentCamera.type)
+        {
+            case SCENE_CAMERA:
+            {
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+                (
+                    currentCamera.nonTransformedCamIndex, options.sampleCount,
+                    RayAuxInitWFPG(InitialWFPGAux,
+                                   options.sampleCount *
+                                   options.sampleCount),
+                    true,
+                    true
+                );
+                break;
+            }
+            case CUSTOM_CAMERA:
+            {
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+                (
+                    *currentCamera.dCustomCamera, options.sampleCount,
+                    RayAuxInitWFPG(InitialWFPGAux,
+                                   options.sampleCount *
+                                   options.sampleCount),
+                    true,
+                    true
+                );
+                break;
+            }
+            case TRANSFORMED_SCENE_CAMERA:
+            {
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+                (
+                    currentCamera.transformedSceneCam.transform,
+                    currentCamera.transformedSceneCam.cameraIndex,
+                    options.sampleCount,
+                    RayAuxInitWFPG(InitialWFPGAux,
+                                   options.sampleCount *
+                                   options.sampleCount),
+                    true,
+                    true
+                );
+                break;
+            }
+
+        }
+
+        // Now call the voxel trace kernel
+        const auto& gpu = cudaSystem.BestGPU();
+        uint32_t totalRayCount = rayCaster->CurrentRayCount();
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
+                            //
+                           KCTraceSVO,
+                           //
+                           imgMemory.GMem<Vector4>(),
+                           svo.TreeGPU(),
+                           rayCaster->RaysIn(),
+                           static_cast<RayAuxWFPG*>(*dAuxIn),
+                           WFPGRenderMode::SVO_RADIANCE,
+                           totalRayCount);
+    }
 
     METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();

@@ -149,16 +149,6 @@ void ImageMemory::Reset(const CudaSystem&)
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     if(pixelCount != 0)
     {
-        // Pixel Count is relatively small single GPU should handle it
-        //const CudaGPU& gpu = system.BestGPU();
-        //// TODO: Do generic image handling
-        //gpu.GridStrideKC_X(0, (cudaStream_t)0,
-        //                   pixelCount,
-        //                   KCResetSamples,
-        //                   //
-        //                   GMem<Vector4f>(),
-        //                   pixelCount);
-
         size_t totalBytes = ImageIOI::FormatToPixelSize(format) * pixelCount +
                             sizeof(uint32_t) * pixelCount;
         CUDA_CHECK(cudaMemset(memory, 0x0, totalBytes));

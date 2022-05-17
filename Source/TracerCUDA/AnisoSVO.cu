@@ -313,7 +313,7 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
     // Debug
     if(unableToAccum)
     {
-        printf("Unable to accumulate radiance!\n");
+        printf("Unable to accumulate some radiance values!\n");
     }
 }
 
@@ -422,13 +422,15 @@ void KCCCopyRadianceToHalfBufferLeaf(// I-O
 
         for(int i = 0; i < AnisoSVOctreeGPU::VOXEL_DIR_DATA_COUNT; i++)
         {
-            float radiance = anisoRad.Read(i);
             uint32_t count = anisoCount.Read(i);
-
-            float avgRadiance = radiance / count;
-
-            // Normalize & Clamp the half range for now
-            float radClamped = fmax(MRAY_HALF_MAX, avgRadiance);
+            float radClamped = 0.0f;
+            if(count != 0)
+            {
+                float radiance = anisoRad.Read(i);
+                float avgRadiance = radiance / count;
+                // Normalize & Clamp the half range for now
+                radClamped = fmin(MRAY_HALF_MAX, avgRadiance);
+            }
             anisoOut.Write(i, radClamped);
         }
         dLeafRadianceRead[threadId] = anisoOut;

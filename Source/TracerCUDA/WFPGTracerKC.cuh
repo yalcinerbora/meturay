@@ -53,9 +53,9 @@ struct WFPGTracerLocalState
 };
 
 __device__ inline
-uint8_t DeterminePathIndex(uint8_t depth)
+uint8_t DeterminePathIndexWFPG(uint8_t depth)
 {
-    return depth - 1;
+    return depth;
 }
 
 template <class EGroup>
@@ -143,7 +143,7 @@ void WFPGTracerBoundaryWork(// Output
 
     // Previous Path's index
     int8_t prevDepth = aux.depth - 1;
-    uint8_t pathIndex = DeterminePathIndex(prevDepth);
+    uint8_t prevPathIndex = DeterminePathIndexWFPG(prevDepth);
 
     // Accumulate the contribution if
     if(isPathRayNEEOff   || // We hit a light with a path ray while NEE is off
@@ -158,9 +158,10 @@ void WFPGTracerBoundaryWork(// Output
                              Vector4f(total, 1.0f));
 
         // Also back propagate this radiance to the path nodes
-        if(aux.type != RayType::CAMERA_RAY &&
-           // If current path is the first vertex in the chain skip
-           pathIndex != 0)
+        if(aux.type != RayType::CAMERA_RAY)
+           // &&
+           //// If current path is the first vertex in the chain skip
+           //pathIndex != 0)
         {
             // Accumulate Radiance from 2nd vertex (including this vertex) away
             // S-> surface
@@ -172,7 +173,6 @@ void WFPGTracerBoundaryWork(// Output
             //                   |     We are here (pathIndex points here)
             //                   v
             //                  we should accum-down from here
-            uint8_t prevPathIndex = pathIndex - 1;
             gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
         }
     }
@@ -504,20 +504,20 @@ void WFPGTracerPathWork(// Output
         outputWriter.Write(PATH_RAY_INDEX, rayOut, auxOut);
     }
     // Record this intersection on path chain
-    uint8_t prevPathIndex = DeterminePathIndex(aux.depth - 1);
-    uint8_t curPathIndex = DeterminePathIndex(aux.depth);
+    uint8_t prevPathIndex = DeterminePathIndexWFPG(aux.depth - 1);
+    uint8_t curPathIndex = DeterminePathIndexWFPG(aux.depth);
 
     PathGuidingNode node;
-    //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u DT %u\n",
-    //       static_cast<uint32_t>(prevDepth), static_cast<uint32_t>(currentDepth),
+    //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u\n",
+    //       static_cast<uint32_t>(prevPathIndex), static_cast<uint32_t>(curPathIndex),
     //       position[0], position[1], position[2],
     //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
-    //       aux.pathIndex, dTreeIndex);
+    //       aux.pathIndex);
     node.prevNext[1] = PathGuidingNode::InvalidIndex;
     node.prevNext[0] = prevPathIndex;
     node.worldPosition = position;
     // Unlike other techniques that holds incoming radiance
-    // WFPG holds outgoing radiance. To calculate that,
+    // WFPG holds outgoing radiance. To calculate that, wee need to store
     // previous paths throughput
     node.radFactor = aux.radianceFactor;
     node.totalRadiance = Zero3;
@@ -617,16 +617,15 @@ void WFPGTracerDebugWork(// Output
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCTraceSVO(// Output
-                       WFPGTracerGlobalState renderState,
+                       ImageGMem<Vector4> gImage,
                        // Input
+                       const AnisoSVOctreeGPU svo,
                        const RayGMem* gRays,
                        const RayAuxWFPG* gRayAux,
                        // Constants
                        WFPGRenderMode mode,
                        uint32_t rayCount)
 {
-    const AnisoSVOctreeGPU& svo = renderState.svo;
-
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < rayCount;
         threadId += (blockDim.x * gridDim.x))
@@ -644,14 +643,19 @@ static void KCTraceSVO(// Output
                                                     : Vector3f(0.0f);
         else if(mode == WFPGRenderMode::SVO_RADIANCE)
         {
+
+
             half radiance = svo.ReadRadiance(svoLeafIndex, true,
                                              -ray.ray.getDirection());
             float radianceF = radiance;
-            locColor = Vector3f(radianceF);
+            if(svoLeafIndex != UINT32_MAX)
+                locColor = Vector3f(radianceF);
+            else
+                locColor = Vector3f(1.0f, 0.0f, 1.0f);
         }
 
         // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage,
+        ImageAccumulatePixel(gImage,
                              aux.pixelIndex,
                              Vector4f(locColor, 1.0f));
     }
@@ -906,7 +910,7 @@ static void KCGenAndSampleDistribution(// Output
             uint32_t leafId;
             svo.TraceRay(leafId, RayF(worldDir, position),
                          tMin, FLT_MAX);
-            incRadiances[i] = svo.ReadRadiance(leafId, true, -worldDir);
+            incRadiances[i] = 1.0f;// svo.ReadRadiance(leafId, true, -worldDir);
         }
         // We finished tracing rays from the scene
         // Now generate distribution from the data

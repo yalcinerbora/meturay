@@ -327,9 +327,9 @@ void PPGTracer::Finalize()
 
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
-    //Debug::DumpBatchedMemToFile(std::to_string(currentTreeIteration) + "PathNodes",
-    //                            dPathNodes,
-    //                            MaximumPathNodePerPath(), totalPathNodeCount);
+    Debug::DumpBatchedMemToFile(std::to_string(currentTreeIteration) + "PathNodes",
+                                dPathNodes,
+                                MaximumPathNodePerPath(), totalPathNodeCount);
 
     //if(currentTreeIteration == 0)
     //{
@@ -429,11 +429,9 @@ void PPGTracer::Finalize()
         ResetImage();
     }
 
-
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
-
 
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);
     if(options.alwaysSendSamples ||

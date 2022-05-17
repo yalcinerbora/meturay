@@ -52,7 +52,7 @@ struct PPGTracerLocalState
 };
 
 __device__ inline
-uint8_t DeterminePathIndex(uint8_t depth)
+uint8_t DeterminePathIndexPPG(uint8_t depth)
 {
     return depth - 1;
 }
@@ -142,7 +142,7 @@ void PPGTracerBoundaryWork(// Output
 
     // Previous Path's index
     int8_t prevDepth = aux.depth - 1;
-    uint8_t pathIndex = DeterminePathIndex(prevDepth);
+    uint8_t pathIndex = DeterminePathIndexPPG(prevDepth);
 
     // Accumulate the contribution if
     if(isPathRayNEEOff   || // We hit a light with a path ray while NEE is off
@@ -519,8 +519,8 @@ void PPGTracerPathWork(// Output
     //dWriteTree.AddSampleToLeaf(rayPath.getDirection());
 
     // Record this intersection on path chain
-    uint8_t prevPathIndex = DeterminePathIndex(aux.depth - 1);
-    uint8_t curPathIndex = DeterminePathIndex(aux.depth);
+    uint8_t prevPathIndex = DeterminePathIndexPPG(aux.depth - 1);
+    uint8_t curPathIndex = DeterminePathIndexPPG(aux.depth);
 
     PPGPathNode node;
     //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u DT %u\n",

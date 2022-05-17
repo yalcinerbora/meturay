@@ -154,7 +154,7 @@ static void KCInitializePPGPaths(PPGPathNode* gPathNodes,
         PPGPathNode node;
         node.dataStructIndex = UINT32_MAX;
         node.radFactor = Vector3f(1.0f);
-        node.prevNext = Vector<2, PPGPathNode::IndexType>(PPGPathNode::InvalidIndex);
+        node.prevNext = Vector<2, PathNode::IndexType>(PathNode::InvalidIndex);
         node.totalRadiance = Zero3;
         node.worldPosition = Zero3;
 
@@ -171,7 +171,7 @@ static void KCInitializePGPaths(PathGuidingNode* gPathNodes,
     {
         PathGuidingNode node;
         node.radFactor = Vector3f(1.0f);
-        node.prevNext = Vector<2, PPGPathNode::IndexType>(PPGPathNode::InvalidIndex);
+        node.prevNext = Vector<2, PathNode::IndexType>(PathNode::InvalidIndex);
         node.totalRadiance = Zero3;
         node.worldPosition = Zero3;
 

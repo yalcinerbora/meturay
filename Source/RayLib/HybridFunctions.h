@@ -45,6 +45,6 @@ template <class T, class F>
 __device__ __host__ HYBRID_INLINE
 T HybridFuncs::Lerp(const T& a, const T& b, const F& v)
 {
-    assert(v >= 0.0 && v <= 1);
-    return a * (1 - v) + b * v;
+    assert(v <= T(1) && v >= T(0));
+    return a * (T(1) - v) + b * v;
 }

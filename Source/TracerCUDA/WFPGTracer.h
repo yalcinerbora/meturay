@@ -46,8 +46,8 @@ class WFPGTracer final : public RayTracer
                                                             // even if they did not satisfy the ray bin count
             uint32_t            binRayCount         = 512;  // Amount of rays on each bin
             // Misc
-            WFPGRenderMode      renderMode           = WFPGRenderMode::NORMAL;
-            bool                dumpDebugData = false;
+            WFPGRenderMode      renderMode          = WFPGRenderMode::NORMAL;
+            bool                dumpDebugData       = false;
             uint32_t            svoDumpInterval     = 2;
         };
 
@@ -82,6 +82,31 @@ class WFPGTracer final : public RayTracer
         uint32_t                        MaximumPathNodePerPath() const;
 
         void                            GenerateGuidedDirections();
+
+        // TODO: Change
+        // Temporarily store the current camera
+        // For SVO_RADIANCE MOde
+        enum CameraType
+        {
+            SCENE_CAMERA,
+            CUSTOM_CAMERA,
+            TRANSFORMED_SCENE_CAMERA
+        };
+        struct
+        {
+            CameraType type;
+            union
+            {
+                const GPUCameraI* dCustomCamera;
+                struct
+                {
+                    uint32_t cameraIndex;
+                    VisorTransform transform;
+                } transformedSceneCam;
+                uint32_t nonTransformedCamIndex;
+            };
+        } currentCamera;
+
 
     protected:
     public:
