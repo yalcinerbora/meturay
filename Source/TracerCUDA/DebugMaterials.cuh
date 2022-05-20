@@ -87,6 +87,47 @@ class SphericalMat final
         std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
 };
 
+class SphericalAnisoTestMat final
+    : public GPUMaterialGroup<NullData, BasicSurface, SphericalAnisoTestFuncs>
+{
+    public:
+        static const char*      TypeName() { return "SphrAnisoTest"; }
+
+    private:
+    protected:
+    public:
+        // Constructors & Destructor
+                                SphericalAnisoTestMat(const CudaGPU& gpu)
+                                    : GPUMaterialGroup<NullData, BasicSurface,
+                                                       SphericalAnisoTestFuncs>(gpu) {}
+                                ~SphericalAnisoTestMat() = default;
+
+        // Interface
+        // Type (as string) of the primitive group
+        const char*             Type() const override { return TypeName(); }
+        // Allocates and Generates Data
+        SceneError              InitializeGroup(const NodeListing& materialNodes,
+                                                const TextureNodeMap& textures,
+                                                const std::map<uint32_t, uint32_t>& mediumIdIndexPairs,
+                                                double time, const std::string& scenePath) override;
+        SceneError              ChangeTime(const NodeListing&, double,
+                                           const std::string&) override {return SceneError::OK;}
+
+        // Material Queries
+        size_t                  UsedGPUMemory() const override { return 0; }
+        size_t                  UsedCPUMemory() const override { return 0; }
+        size_t                  UsedGPUMemory(uint32_t) const override { return 0; }
+        size_t                  UsedCPUMemory(uint32_t) const override { return 0; }
+
+        // NEE Related
+        bool                    CanBeSampled() const override { return false; }
+
+        uint8_t                 SampleStrategyCount() const override { return 0; };
+        // No Texture
+        uint8_t                 UsedTextureCount() const override { return 0; }
+        std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
+};
+
 class NormalRenderMat final
     : public GPUMaterialGroup<NullData, BasicSurface,
                               NormalRenderMatFuncs>

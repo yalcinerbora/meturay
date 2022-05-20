@@ -9,7 +9,9 @@ template class DirectTracerBoundaryWork<CPULightGroupSkySphere>;
 // ===================================================
 // Direct Tracer Work Batches
 template class DirectTracerFurnaceWork<BarycentricMat, GPUPrimitiveTriangle>;
+
 template class DirectTracerFurnaceWork<SphericalMat, GPUPrimitiveSphere>;
+template class DirectTracerFurnaceWork<SphericalAnisoTestMat, GPUPrimitiveSphere>;
 
 template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveTriangle>;
 template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveSphere>;

@@ -179,7 +179,9 @@ extern template class DirectTracerBoundaryWork<CPULightGroupSkySphere>;
 // ===================================================
 // Direct Tracer Work Batches
 extern template class DirectTracerFurnaceWork<BarycentricMat, GPUPrimitiveTriangle>;
+
 extern template class DirectTracerFurnaceWork<SphericalMat, GPUPrimitiveSphere>;
+extern template class DirectTracerFurnaceWork<SphericalAnisoTestMat, GPUPrimitiveSphere>;
 
 extern template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveTriangle>;
 extern template class DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveSphere>;
@@ -207,6 +209,7 @@ using DirectTracerBoundaryWorkerList = TypeList<DirectTracerBoundaryWork<CPULigh
                                                 DirectTracerBoundaryWork<CPULightGroupSkySphere>>;
 using DirectTracerFurnaceWorkerList = TypeList<DirectTracerFurnaceWork<BarycentricMat, GPUPrimitiveTriangle>,
                                                DirectTracerFurnaceWork<SphericalMat, GPUPrimitiveSphere>,
+                                               DirectTracerFurnaceWork<SphericalAnisoTestMat, GPUPrimitiveSphere>,
                                                DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveTriangle>,
                                                DirectTracerFurnaceWork<NormalRenderMat, GPUPrimitiveSphere>,
                                                DirectTracerFurnaceWork<LambertMat, GPUPrimitiveTriangle>,

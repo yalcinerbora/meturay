@@ -250,7 +250,7 @@ T AnisoSVOctreeGPU::AnisoData<T>::Read(const Vector4uc& indices,
                                        const Vector2h& interp) const
 {
     // Implicitly convert half to float for the operation
-    constexpr auto LerpHF = HybridFuncs::Lerp<half, half>;
+    constexpr auto LerpFunc = HybridFuncs::Lerp<T, T>;
 
     //printf("Read op Interp(%f, %f) "
     //       "Vals(%f, %f, %f, %f)"
@@ -262,10 +262,21 @@ T AnisoSVOctreeGPU::AnisoData<T>::Read(const Vector4uc& indices,
     //       static_cast<float>(Read(indices[2])),
     //       static_cast<float>(Read(indices[3])));
 
+    //Vector2ui nearest = Zero2ui;
+    //if(interp[0] >= half(0.5f))
+    //    nearest[0] = 1;
+    //if(interp[1] >= half(0.5f))
+    //    nearest[1] = 1;
+
+    //return half(0.25f) * (Read(indices[0]) + Read(indices[1]) +
+    //                      Read(indices[2]) + Read(indices[3]));
+
+    //return  Read(indices[2 * nearest[1] + nearest[0]]);
+
     // Bilinear interpolation
-    T a = LerpHF(Read(indices[0]), Read(indices[1]), interp[0]);
-    T b = LerpHF(Read(indices[2]), Read(indices[3]), interp[0]);
-    T result = LerpHF(a, b, interp[1]);
+    T a = LerpFunc(Read(indices[0]), Read(indices[1]), interp[0]);
+    T b = LerpFunc(Read(indices[2]), Read(indices[3]), interp[0]);
+    T result = LerpFunc(a, b, interp[1]);
     return result;
 }
 
@@ -415,15 +426,16 @@ Vector4uc AnisoSVOctreeGPU::DirectionToAnisoLocations(Vector2h& interp,
     // representation so tabulated the output
     static constexpr Vector4uc TABULATED_LAYOUTS[12] =
     {
-        Vector4uc(3,2,0,1), Vector4uc(0,3,1,2),  Vector4uc(1,0,2,3), Vector4uc(2,1,3,0),
+        Vector4uc(0,1,0,1), Vector4uc(1,2,1,2),  Vector4uc(2,3,2,3), Vector4uc(3,0,3,0),
         Vector4uc(0,1,4,5), Vector4uc(1,2,5,6),  Vector4uc(2,3,6,7), Vector4uc(3,0,7,4),
-        Vector4uc(4,5,7,6), Vector4uc(5,6,4,7),  Vector4uc(6,7,5,4), Vector4uc(7,4,6,5)
+        Vector4uc(4,5,4,5), Vector4uc(5,6,5,6),  Vector4uc(6,7,6,7), Vector4uc(7,4,7,4)
     };
 
     static constexpr float PIXEL_X = 4;
     static constexpr float PIXEL_Y = 2;
 
-    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(direction);
+    Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
+    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
     // Normalize to generate UV [0, 1]
     // theta range [-pi, pi]
     float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
@@ -435,13 +447,12 @@ Vector4uc AnisoSVOctreeGPU::DirectionToAnisoLocations(Vector2h& interp,
     float pixelY = v * PIXEL_Y;
 
     float indexX;
-    float interpX = modff(pixelX + 0.5f, &indexX);
-    indexX -= 1.0f;
-    uint32_t indexXInt = signbit(indexX) ? 3 : static_cast<uint32_t>(indexX);
+    float interpX = modff(pixelX, &indexX);
+    uint32_t indexXInt = (indexX >= 4) ? 0 : static_cast<uint32_t>(indexX);
 
     float indexY;
     float interpY = abs(modff(pixelY + 0.5f, &indexY));
-    uint32_t indexYInt = static_cast<uint32_t>(indexX);
+    uint32_t indexYInt = static_cast<uint32_t>(indexY);
 
     interp = Vector2h(interpX, interpY);
     return TABULATED_LAYOUTS[indexYInt * 4 + indexXInt];
@@ -727,6 +738,8 @@ half AnisoSVOctreeGPU::ReadRadiance(uint32_t nodeId, bool isLeaf,
     Vector2h interpValues;
     Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
                                                      outgoingDir);
+    //Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
+    //                                                 Vector3f(1.0f, 0.0f, 0.0f));
 
     const AnisoRadiance* gRadRead = (isLeaf) ? dLeafRadianceRead
                                              : dRadianceRead;
@@ -748,14 +761,23 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
         Vector2h interpValues;
         Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
                                                          outgoingDir);
-        // Deposition should be done in a
-        // Box filter like fashion
-        #pragma unroll
-        for(int i = 0; i < 4; i++)
-        {
-            dLeafRadianceWrite[lIndex].AtomicAdd(neighbours[i], radiance);
-            dLeafSampleCountWrite[lIndex].AtomicAdd(neighbours[i], 1);
-        }
+
+        // Find nearest
+        Vector2ui nY = (interpValues[1] < half(0.5f)) ? Vector2ui(neighbours[0], neighbours[1])
+                                                      : Vector2ui(neighbours[2], neighbours[3]);
+        uint32_t nX = (interpValues[0] < half(0.5f)) ? nY[0] : nY[1];
+
+        dLeafRadianceWrite[lIndex].AtomicAdd(nX, radiance);
+        dLeafSampleCountWrite[lIndex].AtomicAdd(nX, 1);
+
+        //// Deposition should be done in a
+        //// Box filter like fashion
+        //#pragma unroll
+        //for(int i = 0; i < 4; i++)
+        //{
+        //    dLeafRadianceWrite[lIndex].AtomicAdd(neighbours[i], radiance);
+        //    dLeafSampleCountWrite[lIndex].AtomicAdd(neighbours[i], 1);
+        //}
     }
     return leafFound;
 }

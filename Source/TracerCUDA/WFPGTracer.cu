@@ -392,6 +392,9 @@ TracerError WFPGTracer::SetOptions(const TracerOptionsI& opts)
     if((err = StringToWFPGRenderMode(options.renderMode, renderModeString)) != TracerError::OK)
         return err;
 
+    if((err = opts.GetUInt(options.svoRadRenderIter, SVO_DEBUG_ITER_NAME)) != TracerError::OK)
+        return err;
+
     return TracerError::OK;
 }
 
@@ -509,6 +512,11 @@ bool WFPGTracer::Render()
        currentDepth >= options.maximumDepth)
         return false;
 
+    // Don't do path tracing if debug render iteration is set
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE &&
+       iterationCount >= options.svoRadRenderIter)
+        return false;
+
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
@@ -611,6 +619,10 @@ bool WFPGTracer::Render()
 
 void WFPGTracer::Finalize()
 {
+    // Iteration count is used to when dump the entire svo
+    // to the disk etc.
+    iterationCount++;
+
     // Deposit the radiances on the path chains
     if(options.renderMode == WFPGRenderMode::NORMAL ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
@@ -647,7 +659,7 @@ void WFPGTracer::Finalize()
                                    options.sampleCount *
                                    options.sampleCount),
                     true,
-                    true
+                    false
                 );
                 break;
             }
@@ -660,7 +672,7 @@ void WFPGTracer::Finalize()
                                    options.sampleCount *
                                    options.sampleCount),
                     true,
-                    true
+                    false
                 );
                 break;
             }
@@ -675,7 +687,7 @@ void WFPGTracer::Finalize()
                                    options.sampleCount *
                                    options.sampleCount),
                     true,
-                    true
+                    false
                 );
                 break;
             }
@@ -697,7 +709,7 @@ void WFPGTracer::Finalize()
                            totalRayCount);
     }
 
-    METU_LOG("----------------");
+    //METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

@@ -68,7 +68,7 @@ class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
         // CPU Permanent Allocations
         PWCDistributionGroupCPU2D        hLuminanceDistributions;
 
-        DeviceMemory                        gpuDsitributionMem;
+        DeviceMemory                     gpuDsitributionMem;
         const PWCDistributionGPU2D*      dGPUDistributions;
 
 

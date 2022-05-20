@@ -144,6 +144,9 @@ TracerLogicGenerator::TracerLogicGenerator()
     matGroupGenerators.emplace(NormalRenderMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, NormalRenderMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(SphericalAnisoTestMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, SphericalAnisoTestMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
     // Basic Materials
     matGroupGenerators.emplace(LambertCMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, LambertCMat>,

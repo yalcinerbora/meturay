@@ -78,6 +78,19 @@
 		"pixelRatio": 1,
 		"direction": [0.67, -0.01, -0.66]
 
+    },
+    {
+        // Look-Down Pool Camera
+        "id": 6,
+        "type": "Pinhole",
+        // 16:9 FoV
+        "fov": [120, 67.5],
+        // 1:1 FoV
+        //"fov": [53.13, 53.13],
+        "planes": [0.01, 2000.0],
+        "gaze": [42.9697, -18.0319, -4.25102],
+        "position": [43.4931, -18.8607, -4.44898],
+        "up": [0.0, 1.0, 0.0]
     }
 
     ],
@@ -590,6 +603,8 @@
 
     // Cameras
     "CameraSurfaces": [
+        // Test 1
+        //{"camera": 6, "medium": 2},
         // Overall View
         {"camera": 0},
         // Pool Camera

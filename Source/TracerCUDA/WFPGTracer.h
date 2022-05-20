@@ -28,6 +28,7 @@ class WFPGTracer final : public RayTracer
         static constexpr const char*    BIN_RAY_COUNT_NAME      = "BinRayCount";
 
         static constexpr const char*    RENDER_MODE_NAME        = "RenderMode";
+        static constexpr const char*    SVO_DEBUG_ITER_NAME     = "SVODebugRenderIter";
         static constexpr const char*    DUMP_DEBUG_NAME         = "DumpDebugData";
         static constexpr const char*    DUMP_INTERVAL_NAME      = "DataDumpIntervalExp";
 
@@ -47,6 +48,7 @@ class WFPGTracer final : public RayTracer
             uint32_t            binRayCount         = 512;  // Amount of rays on each bin
             // Misc
             WFPGRenderMode      renderMode          = WFPGRenderMode::NORMAL;
+            uint32_t            svoRadRenderIter    = 2;
             bool                dumpDebugData       = false;
             uint32_t            svoDumpInterval     = 2;
         };
