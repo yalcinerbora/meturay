@@ -10,6 +10,7 @@ Ray struct for convenient usability.
 #include "HybridFunctions.h"
 
 #include <limits>
+#include <cfloat>
 
 template<class T, typename = ArithmeticEnable<T>>
 class Ray;

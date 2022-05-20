@@ -226,6 +226,9 @@ void WFPGTracer::GenerateGuidedDirections()
     CUDA_CHECK(cudaEventRecord(stop));
 
     float milliseconds = 0;
+    float avgRayPerBin = static_cast<float>(rayCount) /
+                         static_cast<float>(pgKernelBlockCount);
+
     CUDA_CHECK(cudaEventSynchronize(stop));
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
     METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",

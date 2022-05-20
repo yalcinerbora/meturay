@@ -78,7 +78,7 @@ Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
                                         const Vector<2, T>& uv1,
                                         const Vector<2, T>& uv2,
 
-                                        const Vector<3, T>& refNormal)
+                                        const Vector<3, T>&)
 {
     // Edges (Tri is CCW)
     Vector<3, T> vec0 = p1 - p0;
@@ -97,7 +97,7 @@ Vector<3, T> Triangle::CalculateTangent(const Vector<3, T>& p0,
     float r = 1.0f / t;
 
     Vector<3, T> tangent = r * (dUV1[1] * vec0 - dUV0[1] * vec1);
-    Vector<3, T> bitangent = r * (dUV0[0] * vec1 - dUV1[0] * vec0);
+    //Vector<3, T> bitangent = r * (dUV0[0] * vec1 - dUV1[0] * vec0);
 
     // Check if the tangent, bi-tangent determine
     // a right handed coordinate system

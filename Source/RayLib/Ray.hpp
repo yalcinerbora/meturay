@@ -24,14 +24,14 @@ Ray<T>& Ray<T>::operator=(const Vector<3, T> vec[2])
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 const Vector<3, T>& Ray<T>::getDirection() const
 {
     return direction;
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 const Vector<3, T>& Ray<T>::getPosition() const
 {
     return position;
@@ -309,7 +309,7 @@ bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, T& tOut,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Reflect(const Vector<3, T>& normal) const
 {
     Vector<3, T> nDir = direction;
@@ -327,7 +327,7 @@ Ray<T>& Ray<T>::ReflectSelf(const Vector<3, T>& normal)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 bool Ray<T>::Refract(Ray& out, const Vector<3, T>& normal,
                      T fromMedium, T toMedium) const
 {
@@ -373,7 +373,7 @@ bool Ray<T>::RefractSelf(const Vector<3, T>& normal,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::RandomRayCosine(T xi0, T xi1,
                                const Vector<3, T>& normal,
                                const Vector<3, T>& position)
@@ -389,7 +389,7 @@ Ray<T> Ray<T>::RandomRayCosine(T xi0, T xi1,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::RandomRayUnfirom(T xi0, T xi1,
                                 const Vector<3, T>& normal,
                                 const Vector<3, T>& position)
@@ -405,7 +405,7 @@ Ray<T> Ray<T>::RandomRayUnfirom(T xi0, T xi1,
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::NormalizeDir() const
 {
     return Ray(direction.Normalize(), position);
@@ -420,14 +420,14 @@ Ray<T>& Ray<T>::NormalizeDirSelf()
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Advance(T t) const
 {
     return Ray(direction, position + t * direction);
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Advance(T t, const Vector<3, T>& dir) const
 {
     return Ray(direction, position + t * dir);
@@ -450,7 +450,7 @@ Ray<T>& Ray<T>::AdvanceSelf(T t, const Vector<3, T>& dir)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Transform(const Quaternion<T>& q) const
 {
     return Ray<T>(q.ApplyRotation(direction),
@@ -458,7 +458,7 @@ Ray<T> Ray<T>::Transform(const Quaternion<T>& q) const
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Transform(const Matrix<3, T>& mat) const
 {
     return Ray<T>(mat * direction,
@@ -466,7 +466,7 @@ Ray<T> Ray<T>::Transform(const Matrix<3, T>& mat) const
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<T> Ray<T>::Transform(const Matrix<4, T>& mat) const
 {
     return Ray<T>(mat * Vector<4, T>(direction, static_cast<T>(0.0)),
@@ -501,14 +501,14 @@ Ray<T>& Ray<T>::TransformSelf(const Matrix<4, T>& mat)
 }
 
 template<class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Vector<3, T> Ray<T>::AdvancedPos(T t) const
 {
     return position + t * direction;
 }
 
 template<>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 Ray<float> Ray<float>::Nudge(const Vector3f& dir, float curvatureOffset) const
 {
     // From RayTracing Gems I

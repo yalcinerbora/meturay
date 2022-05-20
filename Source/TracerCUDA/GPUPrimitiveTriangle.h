@@ -783,7 +783,8 @@ struct TriangleSurfaceGenerator
         return UVSurface
         {
             bs.worldPosition, bs.worldToTangent,
-            uv, bs.worldGeoNormal, bs.backSide
+            uv, bs.worldGeoNormal, bs.backSide,
+            bs.curvatureOffset
         };
     }
 

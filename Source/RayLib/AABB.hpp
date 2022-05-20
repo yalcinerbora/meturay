@@ -82,7 +82,7 @@ Vector<N, T> AABB<N, T>::Centroid() const
 }
 
 template<int N, class T>
-__device__ __host__ HYBRID_INLINE [[nodiscard]]
+[[nodiscard]] __device__ __host__ HYBRID_INLINE
 AABB<N, T> AABB<N, T>::Union(const AABB<N, T>& aabb) const
 {
     return AABB<N, T>(Vector<N, T>::Min(min, aabb.min),
