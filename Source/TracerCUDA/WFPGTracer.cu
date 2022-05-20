@@ -198,17 +198,7 @@ void WFPGTracer::GenerateGuidedDirections()
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
-    // Debug
-    uint32_t validRayStart;
-    uint32_t validRayEnd;
-    CUDA_CHECK(cudaMemcpy(&validRayStart, dPartitionOffsets + 1, sizeof(uint32_t),
-                          cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(&validRayEnd, dPartitionOffsets + hPartitionCount,
-                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
-    uint32_t validRayCount = validRayEnd - validRayStart;
-    float avgRayPerBin = static_cast<float>(validRayCount) / static_cast<float>(hPartitionCount - 1);
-
-    auto data = gpu.GetKernelAttributes(KCSampleKernel);
+    auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
 
     cudaEvent_t start, stop;
     CUDA_CHECK(cudaEventCreate(&start));
