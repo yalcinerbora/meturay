@@ -105,18 +105,18 @@ GFGSurfaceLoader::GFGSurfaceLoader(const std::string& scenePath,
                                              "GFG Loader: Tangent data type must be float3");
                     break;
                 }
-
-                if(!hasNormals)
-                    throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                         "Assimp_loader: File does not have normals");
-                if(!hasUVs)
-                    throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                         "Assimp_loader: File does not have uvs");
-                if(!hasPos)
-                    throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
-                                         "Assimp_loader: File does not have positions");
+                default: break;
             }
         }
+        if(!hasNormals)
+            throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
+                                 "GFG Loader: File does not have normals");
+        if(!hasUVs)
+            throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
+                                 "GFG Loader: File does not have uvs");
+        if(!hasPos)
+            throw SceneException(SceneError::SURFACE_LOADER_INTERNAL_ERROR,
+                                 "GFG Loader: File does not have positions");
     }
 }
 

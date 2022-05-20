@@ -295,16 +295,16 @@ bool DefaultIntersects(// Output
 
 template <class PrimitiveData>
 __device__ inline
-static uint32_t DefaultVoxelize(uint64_t* gVoxMortonCodes,
-                                uint32_t voxIndMaxCount,
+static uint32_t DefaultVoxelize(uint64_t*,
+                                uint32_t,
                                 // Inputs
-                                bool onlyCalcSize,
-                                PrimitiveId primitiveId,
-                                const PrimitiveData& primData,
-                                const GPUTransformI& transform,
+                                bool,
+                                PrimitiveId,
+                                const PrimitiveData&,
+                                const GPUTransformI&,
                                 // Voxel Inputs
-                                const AABB3f& sceneAABB,
-                                uint32_t resolutionXYZ)
+                                const AABB3f&,
+                                uint32_t)
 {
     return 0;
 }

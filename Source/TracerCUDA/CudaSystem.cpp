@@ -109,7 +109,7 @@ void CudaGPU::WorkGroup::WaitMainStream() const
 uint32_t CudaGPU::DetermineGridStrideBlock(uint32_t sharedMemSize,
                                            uint32_t threadCount,
                                            size_t workCount,
-                                           void* func) const
+                                           const void* func) const
 {
     // TODO: Make better SM determination
     uint32_t blockPerSM = RecommendedBlockCountPerSM(func, threadCount, sharedMemSize);

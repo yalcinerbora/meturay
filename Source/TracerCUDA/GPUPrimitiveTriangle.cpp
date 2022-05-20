@@ -287,38 +287,35 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
         const Vector3* tangentsIn = tangents.data();
 
         // Utilize tangent and normal for quat generation
-        std::ranges::iota_view vertIndices(size_t(0), vertexCount);
-        std::for_each(vertIndices.begin(),
-                      vertIndices.end(),
-                      [&](size_t index)
-                      {
-                          Vector3 n = normalsIn[index];
-                          Vector3 t = tangentsIn[index];
+        for(size_t index = 0; index < vertexCount; index++)
+        {
+            Vector3 n = normalsIn[index];
+            Vector3 t = tangentsIn[index];
 
-                          // Neighboring vertices of the tangents
-                          // are canceled each other out.
-                          // Just find an arbitrary tangent
-                          if(t.LengthSqr() < MathConstants::Epsilon)
-                              t = OrthogonalVector(n);
+            // Neighboring vertices of the tangents
+            // are canceled each other out.
+            // Just find an arbitrary tangent
+            if(t.LengthSqr() < MathConstants::Epsilon)
+                t = OrthogonalVector(n);
 
-                          // If tangents are generated
-                          // each triangle that shared this vertices
-                          // added its tangent, normalize it
-                          t.NormalizeSelf();
+            // If tangents are generated
+            // each triangle that shared this vertices
+            // added its tangent, normalize it
+            t.NormalizeSelf();
 
-                          // Gram-Schmidt orthonormalization
-                          // This is required since normal may be skewed to hide
-                          // edges (to create smooth lighting)
-                          Vector3f tNorm = (t - n * n.Dot(t)).Normalize();
-                          // Bitangent
-                          Vector3f b = Cross(n, tNorm);
+            // Gram-Schmidt orthonormalization
+            // This is required since normal may be skewed to hide
+            // edges (to create smooth lighting)
+            Vector3f tNorm = (t - n * n.Dot(t)).Normalize();
+            // Bitangent
+            Vector3f b = Cross(n, tNorm);
 
-                          // Generate rotation
-                          QuatF q;
-                          TransformGen::Space(q, tNorm, b, n);
+            // Generate rotation
+            QuatF q;
+            TransformGen::Space(q, tNorm, b, n);
 
-                          rotationsOut[index] = q;
-                      });
+            rotationsOut[index] = q;
+        }
 
         // Offset the indices with respect to the GlobalPrimitive Buffer
         // Don't offset for the very first mesh

@@ -25,7 +25,7 @@ template<class T>
 using RayPartitionsMulti = std::set<MultiArrayPortion<T>>;
 
 template <class KeyType>
-using CustomKeySizeEnable = std::enable_if<sizeof(KeyType) == sizeof(HitKey)>::type;
+using CustomKeySizeEnable = typename std::enable_if<sizeof(KeyType) == sizeof(HitKey)>::type;
 
 class RayMemory
 {

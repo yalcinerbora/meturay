@@ -128,7 +128,7 @@ class CudaGPU
         uint32_t                DetermineGridStrideBlock(uint32_t sharedMemSize,
                                                          uint32_t threadCount,
                                                          size_t workCount,
-                                                         void* func) const;
+                                                         const void* func) const;
 
     protected:
     public:

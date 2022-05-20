@@ -171,7 +171,7 @@ bool GDebugRendererRL::LoadLBVH(SurfaceLBVH& bvh,
 GDebugRendererRL::GDebugRendererRL(const nlohmann::json& config,
                                    const TextureGL& gradientTexture,
                                    const std::string& configPath,
-                                   uint32_t depthCount)
+                                   uint32_t)
     : linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
     , gradientTexture(gradientTexture)

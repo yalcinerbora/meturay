@@ -21,7 +21,7 @@ using SmallSegmentEnable = std::enable_if_t<(SEGMENT_SIZE <= WARP_SIZE)>;
 template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
-class BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, typename LargeSegmentEnable<SEGMENT_SIZE>>
+class BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, LargeSegmentEnable<SEGMENT_SIZE>>
 {
     private:
     static constexpr uint32_t WARP_PER_SEGMENT = SEGMENT_SIZE / WARP_SIZE;
@@ -70,7 +70,7 @@ class BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, typename LargeSegmentEnable<S
 template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
-class BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, typename SmallSegmentEnable<SEGMENT_SIZE>>
+class BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, SmallSegmentEnable<SEGMENT_SIZE>>
 {
     private:
     static constexpr uint32_t LOGICAL_WARP_SIZE = SEGMENT_SIZE;
@@ -111,7 +111,7 @@ template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
 __device__ __forceinline__
-BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, typename LargeSegmentEnable<SEGMENT_SIZE>>::BlockSegmentedReduce(TempStorage& smem)
+BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, LargeSegmentEnable<SEGMENT_SIZE>>::BlockSegmentedReduce(TempStorage& smem)
     : shMem(smem)
     , linearLocalId(threadIdx.x % SEGMENT_SIZE)
     , warpId(threadIdx.x / WARP_SIZE)
@@ -125,8 +125,8 @@ template<class T,
          uint32_t SEGMENT_SIZE>
 __device__ inline
 T BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE,
-                       typename LargeSegmentEnable<SEGMENT_SIZE>>::Sum(T threadData,
-                                                                       T identityElement)
+                       LargeSegmentEnable<SEGMENT_SIZE>>::Sum(T threadData,
+                                                              T identityElement)
 {
     auto& sMem = shMem.shMem;
 
@@ -162,7 +162,7 @@ template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>
 __device__ __forceinline__
-BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, typename SmallSegmentEnable<SEGMENT_SIZE>>::BlockSegmentedReduce(TempStorage& smem)
+BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE, SmallSegmentEnable<SEGMENT_SIZE>>::BlockSegmentedReduce(TempStorage& smem)
     : shMem(smem)
     , warpId(threadIdx.x / WARP_SIZE)
     , segmentId(threadIdx.x / LOGICAL_WARP_SIZE)
@@ -174,8 +174,8 @@ template<class T,
          uint32_t SEGMENT_SIZE>
 __device__ inline
 T BlockSegmentedReduce<T, TPB_X, SEGMENT_SIZE,
-                       typename SmallSegmentEnable<SEGMENT_SIZE>>::Sum(T threadData,
-                                                                       T identityElement)
+                       SmallSegmentEnable<SEGMENT_SIZE>>::Sum(T threadData,
+                                                              T identityElement)
 {
     // Do initial reduction
     T reducedData = WarpReduce(shMem.sWarpTempMem[warpId]).Sum(threadData);
