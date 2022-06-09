@@ -10,6 +10,7 @@
 #include "ImageStructs.h"
 #include "WorkOutputWriter.cuh"
 #include "WFPGCommon.h"
+#include "RaceSketch.cuh"
 
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
@@ -18,6 +19,7 @@
 
 #include "AnisoSVO.cuh"
 #include "GPUBlockPWCDistribution.cuh"
+#include "RaceSketch.cuh"
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -34,6 +36,7 @@ struct WFPGTracerGlobalState
     uint32_t                        totalMediumCount;
     // Path Guiding Related
     AnisoSVOctreeGPU                svo;
+    RaceSketchGPU                   sketchGPU;
     // Path Related
     PathGuidingNode*                gPathNodes;
     uint32_t                        maximumPathNodePerRay;
@@ -163,6 +166,14 @@ void WFPGTracerBoundaryWork(// Output
            //// If current path is the first vertex in the chain skip
            //pathIndex != 0)
         {
+            // Generate Spherical Coordinates
+            Vector3f wi = ray.ray.getDirection().Normalize();
+            Vector3 dirZUp = Vector3(wi[2], wi[0], wi[1]);
+            Vector2f sphrCoords = Utility::CartesianToSphericalUnit(dirZUp);
+            // Add to the hash table
+            //renderState.sketchGPU.AtomicAddData(r.getPosition(), sphrCoords,
+            //                                    Utility::RGBToLuminance(emission));
+
             // Accumulate Radiance from 2nd vertex (including this vertex) away
             // S-> surface
             // C-> camera
@@ -173,7 +184,7 @@ void WFPGTracerBoundaryWork(// Output
             //                   |     We are here (pathIndex points here)
             //                   v
             //                  we should accum-down from here
-            gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
+            gLocalPathNodes[prevPathIndex - 1].AccumRadianceDownChain(total, gLocalPathNodes);
         }
     }
 }
@@ -519,7 +530,9 @@ void WFPGTracerPathWork(// Output
     // Unlike other techniques that holds incoming radiance
     // WFPG holds outgoing radiance. To calculate that, wee need to store
     // previous paths throughput
-    node.radFactor = aux.radianceFactor;
+    //node.radFactor = aux.radianceFactor;
+    node.radFactor = pathRadianceFactor;
+
     node.totalRadiance = Zero3;
     gLocalPathNodes[curPathIndex] = node;
     // Set Previous Path node's next index
@@ -527,6 +540,132 @@ void WFPGTracerPathWork(// Output
         gLocalPathNodes[prevPathIndex].prevNext[1] = curPathIndex;
 
     // All Done!
+}
+
+template <class MGroup>
+__device__ inline
+void WFPGTracerPhotonWork(// Output
+                          HitKey* gOutBoundKeys,
+                          RayGMem* gOutRays,
+                          RayAuxPhotonWFPG* gOutRayAux,
+                          const uint32_t maxOutRay,
+                          // Input as registers
+                          const RayReg& ray,
+                          const RayAuxPhotonWFPG& aux,
+                          const typename MGroup::Surface& surface,
+                          const RayId rayId,
+                          // I-O
+                          WFPGTracerLocalState& localState,
+                          WFPGTracerGlobalState& renderState,
+                          RNGeneratorGPUI& rng,
+                          // Constants
+                          const typename MGroup::Data& gMatData,
+                          const HitKey::Type matIndex)
+{
+    assert(maxOutRay == 1);
+
+    static constexpr Vector3 ZERO_3 = Zero3;
+    // TODO: change this currently only first strategy is sampled
+    static constexpr int PHOTON_RAY_INDEX = 0;
+    // Helper Class for better code readability
+    OutputWriter<RayAuxPhotonWFPG> outputWriter(gOutBoundKeys,
+                                                gOutRays,
+                                                gOutRayAux,
+                                                maxOutRay);
+
+    // Inputs
+    // Current Ray
+    const RayF& r = ray.ray;
+    // Hit Position
+    Vector3 position = surface.WorldPosition();
+    // Wi (direction is swapped as if it is coming out of the surface)
+    Vector3 wi = -(r.getDirection().Normalize());
+    // Current ray's medium
+    const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
+
+    // Calculate Transmittance factor of the medium
+    // And reduce the radiance wrt the medium transmittance
+    Vector3 transFactor = m.Transmittance(ray.tMax);
+    Vector3 photonReceivedPower = aux.power * transFactor;
+
+    // Check Material's specularity;
+    float specularity = MGroup::Specularity(surface, gMatData, matIndex);
+    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+
+    // Sample a path from material
+    RayF rayPath; float pdfPath; const GPUMediumI* outM;
+    Vector3 reflectance = MGroup::Sample(// Outputs
+                                         rayPath, pdfPath, outM,
+                                         // Inputs
+                                         wi,
+                                         position,
+                                         m,
+                                         //
+                                         surface,
+                                         // I-O
+                                         rng,
+                                         // Constants
+                                         gMatData,
+                                         matIndex,
+                                         0);
+
+    // Factor the radiance of the surface
+    Vector3f photonScatteredFactor = photonReceivedPower * reflectance;
+    // Check singularities
+    photonScatteredFactor = (pdfPath == 0.0f) ? Zero3 : (photonScatteredFactor / pdfPath);
+
+    // Check Russian Roulette
+    float avgThroughput = photonScatteredFactor.Dot(Vector3f(0.333f));
+    bool terminateRay = ((aux.depth > renderState.rrStart) &&
+                         TracerFunctions::RussianRoulette(photonScatteredFactor, avgThroughput, rng));
+
+
+    if(photonScatteredFactor.HasNaN() || photonReceivedPower.HasNaN() ||
+       isnan(pdfPath))
+        printf("NAN PHOTON R: %f %f %f = {%f %f %f} * {%f %f %f} / %f  \n",
+               photonScatteredFactor[0], photonScatteredFactor[1], photonScatteredFactor[2],
+               photonReceivedPower[0], photonReceivedPower[1], photonReceivedPower[2],
+               reflectance[0], reflectance[1], reflectance[2], pdfPath);
+
+    // Do not terminate rays ever for specular mats
+    if((!terminateRay || isSpecularMat) &&
+       // Do not waste rays on zero radiance paths
+       photonScatteredFactor != ZERO_3)
+    {
+        if(!isSpecularMat &&  // Only non-specular surfaces can hold photons
+           (aux.depth == 1))  // Don't store direct illumination photons
+                              // (we are concerned with indirect illumination guide)
+        {
+            // Store the photon power to the sketch
+            // "incoming direction towards this position"
+            // Generate Spherical Coordinates
+            Vector3f wi = ray.ray.getDirection().Normalize();
+            Vector3 dirZUp = Vector3(wi[2], wi[0], wi[1]);
+            Vector2f sphrCoords = Utility::CartesianToSphericalUnit(dirZUp);
+            // Store operation
+            float luminance = Utility::RGBToLuminance(photonReceivedPower);
+
+            // TEST Firefly elimination
+            if(luminance < 30.0f)
+                renderState.sketchGPU.AtomicAddData(position,
+                                                    sphrCoords,
+                                                    luminance);
+
+        };
+
+        // Ray
+        RayReg rayOut;
+        rayOut.ray = rayPath;
+        rayOut.tMin = 0.0f;
+        rayOut.tMax = FLT_MAX;
+        // Aux
+        RayAuxPhotonWFPG auxOut;
+        auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
+        auxOut.power = photonScatteredFactor;
+        auxOut.depth = aux.depth + 1;
+        // Write
+        outputWriter.Write(PHOTON_RAY_INDEX, rayOut, auxOut);
+    }
 }
 
 template <class EGroup>
@@ -643,8 +782,6 @@ static void KCTraceSVO(// Output
                                                     : Vector3f(0.0f);
         else if(mode == WFPGRenderMode::SVO_RADIANCE)
         {
-
-
             half radiance = svo.ReadRadiance(svoLeafIndex, true,
                                              -ray.ray.getDirection());
             float radianceF = radiance;
@@ -654,6 +791,45 @@ static void KCTraceSVO(// Output
                 locColor = Vector3f(1.0f, 0.0f, 1.0f);
         }
 
+        // Accumulate the pixel
+        ImageAccumulatePixel(gImage,
+                             aux.pixelIndex,
+                             Vector4f(locColor, 1.0f));
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+static void KCQuerySketch(// Output
+                          ImageGMem<Vector4> gImage,
+                          // Input
+                          const AnisoSVOctreeGPU svo,
+                          const RaceSketchGPU sketch,
+                          const RayGMem* gRays,
+                          const RayAuxWFPG* gRayAux,
+                          // Constants
+                          uint32_t rayCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < rayCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        RayReg ray = RayReg(gRays, threadId);
+        RayAuxWFPG aux = gRayAux[threadId];
+
+        //uint32_t svoLeafIndex;
+        //float tMin = svo.TraceRay(svoLeafIndex, ray.ray,
+        //                          ray.tMin, ray.tMax);
+
+        //Vector3f pos = ray.ray.AdvancedPos(tMin);
+        Vector3f pos = ray.ray.getPosition();
+
+        // Generate Spherical Coordinates
+        Vector3f wo = ray.ray.getDirection();
+        Vector3 dirZUp = Vector3(wo[2], wo[0], wo[1]);
+        Vector2f sphrCoords = Utility::CartesianToSphericalUnit(dirZUp);
+
+        float prob = sketch.Probability(pos, sphrCoords);
+        Vector3f locColor = Vector3f(prob);
         // Accumulate the pixel
         ImageAccumulatePixel(gImage,
                              aux.pixelIndex,

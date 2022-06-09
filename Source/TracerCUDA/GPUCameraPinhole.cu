@@ -77,6 +77,7 @@ SceneError CPUCameraGroupPinhole::ChangeTime(const NodeListing&, double,
 }
 
 TracerError CPUCameraGroupPinhole::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+                                                      const AABB3f&,
                                                       const CudaSystem& system)
 {
     // Gen Temporary Memory

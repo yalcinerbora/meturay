@@ -53,6 +53,15 @@ class GPULightSpot final  : public GPULightP
                                     const Vector3& direction,
                                     const QuatF& tbnRotation) const override;
 
+        // Photon Stuff
+        __device__ Vector3f     GeneratePhoton(// Output
+                                               RayReg& rayOut,
+                                               Vector3f& normal,
+                                               float& posPDF,
+                                               float& dirPDF,
+                                               // I-O
+                                               RNGeneratorGPUI&) const override;
+
         __device__ bool         CanBeSampled() const override;
 };
 
@@ -89,6 +98,7 @@ class CPULightGroupSpot final : public CPULightGroupP<GPULightSpot>
 		SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
 								    		   const std::string& scenePath) override;
         TracerError				    ConstructEndpoints(const GPUTransformI**,
+                                                       const AABB3f&,
                                                        const CudaSystem&) override;
 
 		size_t					    UsedCPUMemory() const override;
@@ -155,6 +165,19 @@ inline float GPULightSpot::Pdf(float,
                                const QuatF&) const
 {
     return 0.0f;
+}
+
+__device__
+inline Vector3f GPULightSpot::GeneratePhoton(// Output
+                                             RayReg& rayOut,
+                                             Vector3f& normal,
+                                             float& posPDF,
+                                             float& dirPDF,
+                                             // I-O
+                                             RNGeneratorGPUI& rng) const
+{
+    // TODO: Implement
+    return Zero3f;
 }
 
 __device__

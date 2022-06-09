@@ -529,7 +529,7 @@ struct TriFunctions
         const Vector2f e0 = positions2D[1] - positions2D[0];
         const Vector2f e1 = positions2D[2] - positions2D[0];
         const float denom = 1.0f / (e0[0] * e1[1] - e1[0] * e0[1]);
-        // Scan Line
+        // Scan Line Rasterization
         uint32_t writeIndex = 0;
         for(int y = yRangeInt[0]; y < yRangeInt[1]; y++)
         for(int x = xRangeInt[0]; x < xRangeInt[1]; x++)
@@ -542,10 +542,11 @@ struct TriFunctions
             Vector2f eCons2 = pos - positionsConsv2D[0];
             float b = (eCons2[0] * eCons1[1] - eCons1[0] * eCons2[1]) * denomCons;
             float c = (eCons0[0] * eCons2[1] - eCons2[0] * eCons0[1]) * denomCons;
-
+            float a = 1.0f - b - c;
             // If barycentrics are in range
             if(b >= 0.0f && b <= 1.0f &&
-               c >= 0.0f && c <= 1.0f)
+               c >= 0.0f && c <= 1.0f &&
+               a >= 0.0f && a <= 1.0f)
             {
                 // Find the Actual Bary Coords here
                 // Cramer's Rule
@@ -553,6 +554,12 @@ struct TriFunctions
                 float actualB = (e2[0] * e1[1] - e1[0] * e2[1]) * denom;
                 float actualC = (e0[0] * e2[1] - e2[0] * e0[1]) * denom;
                 float actualA = 1.0f - actualB - actualC;
+
+                // TODO:
+                // This code is not proper. You need to multi-sample
+                // or utilize proper mip-map level fetching
+                // METUray does not hold mipmapped alpha maps
+                // (in this case it should be conservative)
 
                 // Check alpha map if available
                 //bool isTransparent = false;

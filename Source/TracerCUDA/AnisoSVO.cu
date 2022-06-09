@@ -777,7 +777,6 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     CUDA_CHECK(cudaMemcpy(treeGPU.dLevelNodeOffsets, levelNodeOffsets.data(),
                           levelNodeOffsets.size() * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
-
     // Top down-generate voxels
     // For each level save the node range for
     // efficient kernel calls later (level by level kernel calls)
@@ -879,9 +878,14 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0f;
-    METU_LOG("Scene Aniso-SVO [N: {:d}, L: {:d}] Generated in {:f} seconds. ({:f} MiB)",
+    double radMemSize = static_cast<double>(totalNodeCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance) +
+                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance) +
+                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadianceF) +
+                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoCount)) / 1024.0 / 1024.0f;
+    METU_LOG("Scene Aniso-SVO [N: {:d}, L: {:d}] Generated in {:f} seconds. (Total {:.2f} MiB, Rad Cache {:.2f} MiB)",
              treeGPU.nodeCount, treeGPU.leafCount,
-             timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
+             timer.Elapsed<CPUTimeSeconds>(),
+             svoMemSize, radMemSize);
 
     // All Done!
     return TracerError::OK;

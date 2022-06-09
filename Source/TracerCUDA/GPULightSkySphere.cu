@@ -14,13 +14,15 @@ __global__ void KCConstructGPULightSkySphere(GPULightSkySphere* gLightLocations,
                                              const TransformId* gTransformIds,
                                              //
                                              const GPUTransformI** gTransforms,
-                                             uint32_t lightCount)
+                                             uint32_t lightCount,
+                                             const AABB3f sceneAABB)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < lightCount;
         globalId += blockDim.x * gridDim.x)
     {
-        new (gLightLocations + globalId) GPULightSkySphere(gLuminanceDistributions[globalId],
+        new (gLightLocations + globalId) GPULightSkySphere(sceneAABB,
+                                                           gLuminanceDistributions[globalId],
                                                            //
                                                            *gRads[globalId],
                                                            gMediumIndices[globalId],
@@ -91,6 +93,7 @@ SceneError CPULightGroupSkySphere::ChangeTime(const NodeListing&,
 }
 
 TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+                                                       const AABB3f& sceneAABB,
                                                        const CudaSystem& system)
 {
     TracerError e = TracerError::OK;
@@ -191,7 +194,8 @@ TracerError CPULightGroupSkySphere::ConstructEndpoints(const GPUTransformI** dGl
                        dTransformIds,
                        //
                        dGlobalTransformArray,
-                       lightCount);
+                       lightCount,
+                       sceneAABB);
 
     gpu.WaitMainStream();
 

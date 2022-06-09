@@ -10,6 +10,8 @@
 #include "RNGSobol.cuh"
 #include "RNGIndependent.cuh"
 
+#include "RaceSketch.cuh"
+
 class GPUDirectLightSamplerI;
 
 class WFPGTracer final : public RayTracer
@@ -46,6 +48,10 @@ class WFPGTracer final : public RayTracer
             uint32_t            minRayBinLevel      = 5;    // When rays are binned they cannot group
                                                             // even if they did not satisfy the ray bin count
             uint32_t            binRayCount         = 512;  // Amount of rays on each bin
+
+            // Photon
+            uint32_t            photonPerPass       = 1'000'000;
+
             // Misc
             WFPGRenderMode      renderMode          = WFPGRenderMode::NORMAL;
             uint32_t            svoRadRenderIter    = 2;
@@ -57,12 +63,16 @@ class WFPGTracer final : public RayTracer
         Options                         options;
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
+        WorkBatchMap                    photonWorkMap;
          // Work Pools
         BoundaryWorkPool<bool, bool>    boundaryWorkPool;
         WorkPool<bool, bool>            pathWorkPool;
         // Debug Works
         BoundaryWorkPool<>              debugBoundaryWorkPool;
         WorkPool<>                      debugPathWorkPool;
+        // Photon Works
+        WorkPool<>                      photonWorkPool;
+
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
@@ -71,6 +81,7 @@ class WFPGTracer final : public RayTracer
         uint32_t                        treeDumpCount;
         // SVO
         AnisoSVOctreeCPU                svo;
+        RaceSketchCPU                   sketch;
         // RNG and Guide Sample Related
         //RNGScrSobolCPU                  pgSampleRNG;
         RNGIndependentCPU               pgSampleRNG;
@@ -84,6 +95,7 @@ class WFPGTracer final : public RayTracer
         uint32_t                        MaximumPathNodePerPath() const;
 
         void                            GenerateGuidedDirections();
+        void                            TraceAndStorePhotons();
 
         // TODO: Change
         // Temporarily store the current camera
@@ -108,7 +120,6 @@ class WFPGTracer final : public RayTracer
                 uint32_t nonTransformedCamIndex;
             };
         } currentCamera;
-
 
     protected:
     public:

@@ -327,9 +327,9 @@ void PPGTracer::Finalize()
 
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
-    Debug::DumpBatchedMemToFile(std::to_string(currentTreeIteration) + "PathNodes",
-                                dPathNodes,
-                                MaximumPathNodePerPath(), totalPathNodeCount);
+    //Debug::DumpBatchedMemToFile(std::to_string(currentTreeIteration) + "PathNodes",
+    //                            dPathNodes,
+    //                            MaximumPathNodePerPath(), totalPathNodeCount);
 
     //if(currentTreeIteration == 0)
     //{

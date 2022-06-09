@@ -13,9 +13,87 @@
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
+#include "ParallelReduction.cuh"
 
 #include <array>
 
+
+template <class RNG>
+__global__
+void GeneratePhotons(// Output
+                     RayGMem* gRays,
+                     RayAuxPhotonWFPG* gAuxiliary,
+                     // I-O
+                     RNGeneratorGPUI** gRNGs,
+                     // Input
+                     const GPULightI** gLightList,
+                     uint32_t totalLightCount,
+                     // Constants
+                     uint32_t totalPhotonCount)
+{
+    // Get this Threads RNG
+    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
+
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalPhotonCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        // TODO: generate power CDF and use it instead
+        // Uniformly Sample Light
+        uint32_t index = static_cast<uint32_t>(rng.Uniform() * totalLightCount);
+        float pdf = 1.0f / static_cast<float>(totalLightCount);
+
+        float posPDF = 0.0f;
+        float dirPDF = 0.0f;
+        RayReg ray; Vector3f normal;
+        Vector3f power = gLightList[index]->GeneratePhoton(ray, normal,
+                                                           posPDF, dirPDF,
+                                                           rng);
+        uint16_t mediumIndex = gLightList[index]->MediumIndex();
+
+        // Divide by the sampling pdf
+        if(posPDF != 0 && dirPDF != 0 && pdf != 0)
+            power /= (posPDF * dirPDF * pdf);
+        else
+            power = Zero3f;
+
+        RayAuxPhotonWFPG aux;
+        aux.power = power;
+        aux.depth = 1;
+        aux.mediumIndex = mediumIndex;
+
+        // Store
+        ray.Update(gRays, threadId);
+        gAuxiliary[threadId] = aux;
+    }
+}
+
+__global__
+void KCNormalizeImage(// I-O
+                      Vector4f* dPixels,
+                      //
+                      Vector4f& dMax,
+                      Vector4f& dMin,
+                      //
+                      Vector2i imgRes)
+{
+    int totalPixSize = imgRes.Multiply();
+
+    Vector4f rangeRecip = Vector4f(1.0f) / (dMax - dMin);
+
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalPixSize;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        Vector4f pix = dPixels[threadId];
+        pix = (pix - dMin) * rangeRecip;
+
+        // Do not change the alpha
+        pix[3] = dMax[3];
+
+        dPixels[threadId] = pix;
+    }
+}
 
 __global__
 void KCSetCamPosToPathChain(// Output
@@ -154,85 +232,195 @@ void WFPGTracer::GenerateGuidedDirections()
     // Init ray bins
     gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
                        //
-                       KCInitializeSVOBins,
+KCInitializeSVOBins,
+//
+dRayAux,
+dRays,
+rayCaster->WorkKeys(),
+scene.BaseBoundaryMaterial(),
+svo.TreeGPU(),
+rayCount);
+
+// Then call SVO to reduce the bins
+svo.CollapseRayCounts(options.minRayBinLevel,
+                      options.binRayCount,
+                      cudaSystem);
+
+// Then rays check if their initial node is reduced
+gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                   //
+                   KCCheckReducedSVOBins,
+                   //
+                   dRayAux,
+                   svo.TreeGPU(),
+                   rayCount);
+
+// Partition the generated rays wrt. to the SVO nodeId
+uint32_t hPartitionCount;
+uint32_t* dPartitionOffsets;
+uint32_t* dPartitionBinIds;
+DeviceMemory partitionMemory;
+// Custom Ray Partition
+rayCaster->PartitionRaysWRTCustomData(hPartitionCount,
+                                      partitionMemory,
+                                      dPartitionOffsets,
+                                      dPartitionBinIds,
+                                      dRayAux,
+                                      NodeIdFetchFunctor(),
+                                      rayCount,
+                                      cudaSystem);
+
+// Call the Trace and Sample Kernel
+// Select the kernel depending on the depth
+uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
+auto KCSampleKernel = PG_KERNELS[kernelIndex];
+RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
+
+auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
+
+cudaEvent_t start, stop;
+CUDA_CHECK(cudaEventCreate(&start));
+CUDA_CHECK(cudaEventCreate(&stop));
+
+CUDA_CHECK(cudaEventRecord(start));
+gpu.ExactKC_X(0, (cudaStream_t)0,
+              PG_KERNEL_TPB[kernelIndex], pgKernelBlockCount,
+              //
+              KCSampleKernel,
+              // Output
+              dRayAux,
+              // I-O
+              gpuGenerators,
+              // Input
+              // Per-ray
+              dRays,
+              rayCaster->RayIds(),
+              // Per bin
+              dPartitionOffsets,
+              dPartitionBinIds,
+              // Constants
+              svo.TreeGPU(),
+              hPartitionCount);
+CUDA_CHECK(cudaEventRecord(stop));
+
+float milliseconds = 0;
+float avgRayPerBin = static_cast<float>(rayCount) /
+static_cast<float>(pgKernelBlockCount);
+
+CUDA_CHECK(cudaEventSynchronize(stop));
+CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
+METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
+         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
+}
+
+void WFPGTracer::TraceAndStorePhotons()
+{
+    // Generate Global Data Struct
+    WFPGTracerGlobalState globalData;
+    globalData.gImage = imgMemory.GMem<Vector4>();
+    globalData.gLightList = dLights;
+    globalData.totalLightCount = lightCount;
+    globalData.gLightSampler = dLightSampler;
+    globalData.mediumList = dMediums;
+    globalData.totalMediumCount = mediumCount;
+    //
+    globalData.svo = svo.TreeGPU();
+    globalData.gPathNodes = dPathNodes;
+    globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
+    globalData.rawPathGuiding = false;
+    globalData.sketchGPU = sketch.SketchGPU();
+    //
+    globalData.directLightMIS = options.directLightMIS;
+    globalData.nee = options.nextEventEstimation;
+    globalData.rrStart = options.rrStart;
+
+    // Generate Photons
+    const CudaGPU& gpu = cudaSystem.BestGPU();
+    // Allocate Ray & Aux Memory
+    size_t auxBufferSize = options.photonPerPass * sizeof(RayAuxPhotonWFPG);
+    rayCaster->ResizeRayOut(options.photonPerPass, scene.BaseBoundaryMaterial());
+    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
+    RayAuxPhotonWFPG* dRayAux = static_cast<RayAuxPhotonWFPG*>(*dAuxOut);
+
+    // Photon Generation Kernel Call
+    gpu.GridStrideKC_X(0, (cudaStream_t)0,
+                       options.photonPerPass,
                        //
+                       GeneratePhotons<RNGIndependentGPU>,
+                       // Output
+                       rayCaster->RaysOut(),
                        dRayAux,
-                       dRays,
-                       rayCaster->WorkKeys(),
-                       scene.BaseBoundaryMaterial(),
-                       svo.TreeGPU(),
-                       rayCount);
+                       // I-O
+                       rngCPU->GetGPUGenerators(gpu),
+                       // Input
+                       dLights,
+                       lightCount,
+                       // Constants
+                       options.photonPerPass);
 
-    // Then call SVO to reduce the bins
-    svo.CollapseRayCounts(options.minRayBinLevel,
-                          options.binRayCount,
-                          cudaSystem);
+    // Swap Auxiliary buffers and start photon tracing
+    SwapAuxBuffers();
+    rayCaster->SwapRays();
 
-    // Then rays check if their initial node is reduced
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
-                       //
-                       KCCheckReducedSVOBins,
-                       //
-                       dRayAux,
-                       svo.TreeGPU(),
-                       rayCount);
+    // Photon Bounce Loop
+    uint32_t depth = 0;
+    uint32_t rayCount = rayCaster->CurrentRayCount();
+    while(rayCaster->CurrentRayCount() != 0 &&
+          depth < options.maximumDepth)
+    {
+        // Hit Rays
+        rayCaster->HitRays();
 
-    // Partition the generated rays wrt. to the SVO nodeId
-    uint32_t hPartitionCount;
-    uint32_t* dPartitionOffsets;
-    uint32_t* dPartitionBinIds;
-    DeviceMemory partitionMemory;
-    // Custom Ray Partition
-    rayCaster->PartitionRaysWRTCustomData(hPartitionCount,
-                                          partitionMemory,
-                                          dPartitionOffsets,
-                                          dPartitionBinIds,
-                                          dRayAux,
-                                          NodeIdFetchFunctor(),
-                                          rayCount,
-                                          cudaSystem);
+         // Generate output partitions wrt. materials
+        const auto partitions = rayCaster->PartitionRaysWRTWork();
 
-    // Call the Trace and Sample Kernel
-    // Select the kernel depending on the depth
-    uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
-    auto KCSampleKernel = PG_KERNELS[kernelIndex];
-    RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
+        uint32_t totalOutRayCount = 0;
+        auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
+                                                             partitions,
+                                                             photonWorkMap);
+        // Allocate new auxiliary buffer
+        // to fit all potential ray outputs
+        size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPhotonWFPG);
+        GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
 
-    auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
+        // Set Auxiliary Pointers
+        for(auto p : outPartitions)
+        {
+            // Skip if null batch or not found material
+            if(p.portionId == HitKey::NullBatch) continue;
+            auto loc = photonWorkMap.find(p.portionId);
+            if(loc == photonWorkMap.end()) continue;
 
-    cudaEvent_t start, stop;
-    CUDA_CHECK(cudaEventCreate(&start));
-    CUDA_CHECK(cudaEventCreate(&stop));
+            // Set pointers
+            const RayAuxPhotonWFPG* dAuxInLocal = static_cast<const RayAuxPhotonWFPG*>(*dAuxIn);
+            using WorkData = GPUWorkBatchD<WFPGTracerGlobalState, RayAuxPhotonWFPG>;
+            int i = 0;
+            for(auto& work : loc->second)
+            {
+                RayAuxPhotonWFPG* dAuxOutLocal = static_cast<RayAuxPhotonWFPG*>(*dAuxOut) + p.offsets[i];
 
-    CUDA_CHECK(cudaEventRecord(start));
-    gpu.ExactKC_X(0, (cudaStream_t)0,
-                  PG_KERNEL_TPB[kernelIndex], pgKernelBlockCount,
-                  //
-                  KCSampleKernel,
-                  // Output
-                  dRayAux,
-                  // I-O
-                  gpuGenerators,
-                  // Input
-                  // Per-ray
-                  dRays,
-                  rayCaster->RayIds(),
-                  // Per bin
-                  dPartitionOffsets,
-                  dPartitionBinIds,
-                  // Constants
-                  svo.TreeGPU(),
-                  hPartitionCount);
-    CUDA_CHECK(cudaEventRecord(stop));
+                auto& wData = static_cast<WorkData&>(*work);
+                wData.SetGlobalData(globalData);
+                wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+                i++;
+            }
+        }
 
-    float milliseconds = 0;
-    float avgRayPerBin = static_cast<float>(rayCount) /
-                         static_cast<float>(pgKernelBlockCount);
+        // Launch Kernels
+        rayCaster->WorkRays(photonWorkMap, outPartitions,
+                            partitions,
+                            *rngCPU.get(),
+                            totalOutRayCount,
+                            scene.BaseBoundaryMaterial());
 
-    CUDA_CHECK(cudaEventSynchronize(stop));
-    CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
-    METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
-             currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
+        // Swap auxiliary buffers since output rays are now input rays
+        // for the next iteration
+        SwapAuxBuffers();
+        // Increase Depth
+        depth++;
+    }
+
+    // Now Photons are stored in the global sketch
 }
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,
@@ -240,10 +428,14 @@ WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
+    , sketch(512, 8192 * 8, 0.0004f, 0)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(WFPGBoundaryWorkerList{});
     pathWorkPool.AppendGenerators(WFPGPathWorkerList{});
+
+    // Photon mapping pool
+    photonWorkPool.AppendGenerators(WFPGPhotonWorkerList{});
 
     debugBoundaryWorkPool.AppendGenerators(WFPGDebugBoundaryWorkerList{});
     debugPathWorkPool.AppendGenerators(WFPGDebugPathWorkerList{});
@@ -271,12 +463,14 @@ TracerError WFPGTracer::Initialize()
     for(const auto& wInfo : infoList)
     {
         WorkBatchArray workBatchList;
+        WorkBatchArray workPhotonBatchList;
         uint32_t batchId = std::get<0>(wInfo);
         const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
         const GPUMaterialGroupI& mg = *std::get<2>(wInfo);
 
         // Generic Path work
         GPUWorkBatchI* batch = nullptr;
+        GPUWorkBatchI* photonBatch = nullptr;
         if(options.renderMode == WFPGRenderMode::SVO_INITIAL_HIT_QUERY)
         {
             WorkPool<>& wp = debugPathWorkPool;
@@ -292,7 +486,15 @@ TracerError WFPGTracer::Initialize()
                                                 options.nextEventEstimation,
                                                 options.directLightMIS)) != TracerError::OK)
                 return err;
+
+            // Generate Photon Work as well
+            if((err = photonWorkPool.GenerateWorkBatch(photonBatch, mg, pg,
+                                                       dTransforms)) != TracerError::OK)
+                return err;
         }
+
+        workPhotonBatchList.push_back(photonBatch);
+        photonWorkMap.emplace(batchId, workPhotonBatchList);
 
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
@@ -328,6 +530,9 @@ TracerError WFPGTracer::Initialize()
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
+
+    // Set Range for Sketch
+    sketch.SetSceneExtent(scene.BaseAccelerator()->SceneExtents());
 
     // Init SVO
     if((err = svo.Constrcut(scene.BaseAccelerator()->SceneExtents(),
@@ -412,6 +617,23 @@ void WFPGTracer::AskOptions()
 
 void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 {
+    //// TEST !!!
+    //// Equally partition the samples to all cameras
+    //if(iterationCount <= options.svoRadRenderIter)
+    //{
+    //    uint32_t cameraCount = scene.CameraCount();
+    //    int samplePerCam = options.svoRadRenderIter / cameraCount;
+    //    int i = iterationCount / samplePerCam;
+    //    cameraIndex += i;
+    //    cameraIndex %= cameraCount;
+    //}
+    //// TEST END !!!
+
+    // Before Generating Camera Rays do photon pass
+    //if(iterationCount < options.svoRadRenderIter &&
+    //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    //    TraceAndStorePhotons();
+
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
@@ -444,6 +666,11 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 
 void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
+    // Before Generating Camera Rays do photon pass
+    //if(iterationCount < options.svoRadRenderIter &&
+    //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    //    TraceAndStorePhotons();
+
     bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
@@ -472,6 +699,11 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 
 void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
+    // Before Generating Camera Rays do photon pass
+    //if(iterationCount < options.svoRadRenderIter &&
+    //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    //    TraceAndStorePhotons();
+
     bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
@@ -510,6 +742,11 @@ bool WFPGTracer::Render()
        iterationCount >= options.svoRadRenderIter)
         return false;
 
+    //// TODO: CHANGE
+    //// Do not do path trace at all if svo radiance mode is set
+    //if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    //    return false;
+
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
     globalData.gImage = imgMemory.GMem<Vector4>();
@@ -523,6 +760,7 @@ bool WFPGTracer::Render()
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
     globalData.rawPathGuiding = false;
+    globalData.sketchGPU = sketch.SketchGPU();
     //
     globalData.directLightMIS = options.directLightMIS;
     globalData.nee = options.nextEventEstimation;
@@ -616,6 +854,10 @@ void WFPGTracer::Finalize()
     // to the disk etc.
     iterationCount++;
 
+    //Debug::DumpBatchedMemToFile("PathNodes", dPathNodes,
+    //                            MaximumPathNodePerPath(),
+    //                            TotalPathNodeCount());
+
     // Deposit the radiances on the path chains
     if(options.renderMode == WFPGRenderMode::NORMAL ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
@@ -624,13 +866,26 @@ void WFPGTracer::Finalize()
         svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
                                 MaximumPathNodePerPath(), cudaSystem);
         svo.NormalizeAndFilterRadiance(cudaSystem);
+
+
+        if(iterationCount <= options.svoRadRenderIter)
+            sketch.HashRadianceAsPhotonDensity(dPathNodes, totalPathNodeCount,
+                                               MaximumPathNodePerPath(), cudaSystem);
     }
 
-    static int i = 0;
-    //Debug::DumpBatchedMemToFile(std::to_string(i) + "_PathNodes",
-    //                        dPathNodes,
-    //                        MaximumPathNodePerPath(), TotalPathNodeCount());
-    i++;
+    //static int i = 0;
+    //if(iterationCount >= options.svoRadRenderIter && i == 0)
+    //{
+    //    std::vector<uint32_t> sketchData;
+    //    uint64_t totalCount;
+    //    sketch.GetSketchToCPU(sketchData, totalCount);
+    //    Debug::DumpBatchedMemToFile("__Sketch",
+    //                                sketchData.data(),
+    //                                sketch.PartitionCount(),
+    //                                sketchData.size());
+    //    METU_LOG("TOTAL {}", totalCount);
+    //    i++;
+    //}
 
     // On SVO_Radiance mode clear the image memory
     // And trace the SVO from the camera and send the results
@@ -690,6 +945,8 @@ void WFPGTracer::Finalize()
         // Now call the voxel trace kernel
         const auto& gpu = cudaSystem.BestGPU();
         uint32_t totalRayCount = rayCaster->CurrentRayCount();
+
+
         gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
                             //
                            KCTraceSVO,
@@ -700,6 +957,60 @@ void WFPGTracer::Finalize()
                            static_cast<RayAuxWFPG*>(*dAuxIn),
                            WFPGRenderMode::SVO_RADIANCE,
                            totalRayCount);
+
+
+        //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
+        //                    //
+        //                   KCQuerySketch,
+        //                   //
+        //                   imgMemory.GMem<Vector4>(),
+        //                   svo.TreeGPU(),
+        //                   sketch.SketchGPU(),
+        //                   rayCaster->RaysIn(),
+        //                   static_cast<RayAuxWFPG*>(*dAuxIn),
+        //                   totalRayCount);
+
+        //// Normalize the sketch query
+        //Vector4f* dMax;
+        //Vector4f* dMin;
+        //DeviceMemory minMaxMem;
+        //GPUMemFuncs::AllocateMultiData(std::tie(dMax, dMin),
+        //                               minMaxMem,
+        //                               {1, 1});
+
+        //ReduceArrayGPU<Vector4f, ReduceMax<Vector4f>>
+        //(
+        //    *dMax,
+        //    imgMemory.GMem<Vector4f>().gPixels,
+        //    imgMemory.SegmentSize().Multiply(),
+        //    Vector4f(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX)
+        //);
+        //ReduceArrayGPU<Vector4f, ReduceMin<Vector4f>>
+        //(
+        //    *dMin,
+        //    imgMemory.GMem<Vector4>().gPixels,
+        //    imgMemory.SegmentSize().Multiply(),
+        //    Vector4f(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX)
+        //);
+
+        //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
+        //                   //
+        //                   KCNormalizeImage,
+        //                   //
+        //                   imgMemory.GMem<Vector4>().gPixels,
+        //                   *dMax,
+        //                   *dMin,
+        //                   //
+        //                   imgMemory.SegmentSize());
+
+        // Completely Reset the Image
+        // This is done to eliminate variance from prev samples
+        if(callbacks)
+        {
+            Vector2i start = imgMemory.SegmentOffset();
+            Vector2i end = start + imgMemory.SegmentSize();
+            callbacks->SendImageSectionReset(start, end);
+        }
     }
 
     //METU_LOG("----------------");

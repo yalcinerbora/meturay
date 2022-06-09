@@ -325,6 +325,10 @@ set(SRC_WFPG_TRACER
     ${CURRENT_SOURCE_DIR}/WFPGTracerWorks.cuh)
 
 set(SRC_WFPG_TRACER_AUX_CLASSES
+    ${CURRENT_SOURCE_DIR}/RaceSketch.cu
+    ${CURRENT_SOURCE_DIR}/RaceSketch.cuh
+    ${CURRENT_SOURCE_DIR}/L2HashGroup.cuh
+    ${CURRENT_SOURCE_DIR}/SRPHashGroup.cuh
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cu
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cuh)
 

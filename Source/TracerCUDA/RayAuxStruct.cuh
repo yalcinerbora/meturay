@@ -92,6 +92,14 @@ struct alignas(16) RayAuxWFPG
     half            guidePDF;       // Guided direction's sample pdf
 };
 
+struct alignas(16) RayAuxPhotonWFPG
+{
+    uint16_t        mediumIndex;    // Current Medium of the photon
+    uint8_t         depth;          // Current photon depth
+    Vector3f        power;          // Photon power
+
+};
+
 static const RayAuxBasic InitialBasicAux = RayAuxBasic
 {
     UINT32_MAX

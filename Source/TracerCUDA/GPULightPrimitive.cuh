@@ -66,6 +66,15 @@ class GPULight final : public GPULightP
                                     const Vector3& direction,
                                     const QuatF& tbnRotation) const override;
 
+        // Photon Stuff
+        __device__ Vector3f     GeneratePhoton(// Output
+                                               RayReg& rayOut,
+                                               Vector3f& normal,
+                                               float& posPDF,
+                                               float& dirPDF,
+                                               // I-O
+                                               RNGeneratorGPUI&) const override;
+
         __device__ bool         CanBeSampled() const override;
         __device__ bool         IsPrimitiveBackedLight() const override;
 };
@@ -104,6 +113,7 @@ class CPULightGroup final : public CPULightGroupP<GPULight<PGroup>, PGroup>
         SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
                                                const std::string& scenePath) override;
         TracerError				    ConstructEndpoints(const GPUTransformI**,
+                                                       const AABB3f&,
                                                        const CudaSystem&) override;
 
         const std::vector<HitKey>&  PackedHitKeys() const override;
@@ -234,6 +244,20 @@ __device__ float GPULight<PGroup>::Pdf(float distance,
     Vector3f normal = GPUSurface::NormalToSpace(tbnRotation);
     float nDotL = abs(normal.Dot(-direction));
     return pdf * distance * distance / nDotL;
+}
+
+template <class PGroup>
+__device__
+inline Vector3f GPULight<PGroup>::GeneratePhoton(// Output
+                                                 RayReg& rayOut,
+                                                 Vector3f& normal,
+                                                 float& posPDF,
+                                                 float& dirPDF,
+                                                 // I-O
+                                                 RNGeneratorGPUI& rng) const
+{
+    // TODO: Implement
+    return Zero3f;
 }
 
 template <class PGroup>

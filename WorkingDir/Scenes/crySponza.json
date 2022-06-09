@@ -76,8 +76,63 @@
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
 		"planes": [1, 5000.0],
-		"gaze": [728.848, 95.0128, -583.565],
-		"position": [729.827, 95.0623, -583.764],
+		"gaze": [691.532, 97.0381, -642.239],
+		"position": [692.194, 96.9703, -642.985],
+		"up": [0.0, 1.0, 0.0]
+	},
+	{
+		"id": 5,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"planes": [1, 5000.0],
+		"gaze": [-1008.77, 109.375, -642.701],
+		"position":[-1009.45, 109.326, -643.439],
+		"up": [0.0, 1.0, 0.0]
+	},
+	{
+		"id": 6,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"planes": [1, 5000.0],
+		"gaze": [-841.441, 181.848, -278.283],
+		"position": [-841.024, 181.968, -277.382],
+		"up": [0.0, 1.0, 0.0]
+	},
+	{
+		"id": 7,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		//"fov": [2, 1.125],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"planes": [1, 5000.0],
+		//"gaze": [469.852, 204.262, -363.737],
+		//"gaze": [469.866, 204.256, -363.755],
+		"gaze": [60.6151, 139.051, -642],
+		"position": [470.667, 204.379, -363.169],
+		"up": [0.0, 1.0, 0.0]
+	},
+	{
+		"id": 8,
+		"type": "Pinhole",
+
+		// 16:9 FoV
+		"fov": [94.45, 53.13],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"planes": [1, 5000.0],
+		"gaze": [60.1912, 139.069, -641.094],
+		"position": [60.6151, 139.051, -642],
 		"up": [0.0, 1.0, 0.0]
 	}
 ],
@@ -589,7 +644,8 @@
 	{
 		// Walls
 		"id": 3,
-		"type": "Unreal",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 5, "channels": "rgb"},
 		"normal": {"texture": 6, "channels": "rgb"},
 		"roughness": {"texture": 7, "channels": "r"},
@@ -1239,8 +1295,8 @@
 		{"transform": 99, "accelerator": 0, "material": 20, "primitive": 89},
 		{"transform": 100, "accelerator": 0, "material": 19, "primitive": 89},
 
-		//{"transform": 101, "accelerator": 0, "material": 19, "primitive": 90},
-		{"transform": 101, "accelerator": 0, "material": 26, "primitive": 90},
+		{"transform": 101, "accelerator": 0, "material": 19, "primitive": 90},
+		//{"transform": 101, "accelerator": 0, "material": 26, "primitive": 90},
 
 		{"transform": 102, "accelerator": 0, "material": 21, "primitive": 90},
 		{"transform": 103, "accelerator": 0, "material": 20, "primitive": 90},
@@ -1265,10 +1321,23 @@
 
     "CameraSurfaces":
 	[
+
 		{"camera": 0},
-		{"camera": 4},
 		{"camera": 1},
+
 		{"camera": 2},
-		{"camera": 3}
+		{"camera": 3},
+
+		{"camera": 4},
+
+		{"camera": 6},
+		{"camera": 5},
+
+		{"camera": 7},
+		{"camera": 8}
+
+
+
+
 	]
 }

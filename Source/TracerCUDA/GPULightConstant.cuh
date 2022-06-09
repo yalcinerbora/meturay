@@ -43,6 +43,14 @@ class GPULightConstant final : public GPULightP
                                     const Vector3& direction,
                                     const QuatF& tbnRotation) const override;
 
+        __device__ Vector3f     GeneratePhoton(// Output
+                                               RayReg& rayOut,
+                                               Vector3f& normal,
+                                               float& posPDF,
+                                               float& dirPDF,
+                                               // I-O
+                                               RNGeneratorGPUI& rng) const override;
+
         __device__ bool         CanBeSampled() const override;
 };
 
@@ -71,6 +79,7 @@ class CPULightGroupConstant final : public CPULightGroupP<GPULightConstant>
         SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
                                                const std::string& scenePath) override;
         TracerError				    ConstructEndpoints(const GPUTransformI**,
+                                                       const AABB3f&,
                                                        const CudaSystem&) override;
 };
 
@@ -123,6 +132,24 @@ inline float GPULightConstant::Pdf(float distance,
                                    const QuatF& tbnRotation) const
 {
     return 0.0f;
+}
+
+__device__
+inline Vector3f GPULightConstant::GeneratePhoton(// Output
+                                                 RayReg& rayOut,
+                                                 Vector3f& normal,
+                                                 float& posPDF,
+                                                 float& dirPDF,
+                                                 // I-O
+                                                 RNGeneratorGPUI& rng) const
+{
+    posPDF = 0.0f;
+    dirPDF = 0.0f;
+    normal = Zero3f;
+    rayOut.tMin = 0.0f;
+    rayOut.tMax = 0.0f;
+    rayOut.ray = RayF(Vector3f(0.0f), Vector3f(0.0f));
+    return Zero3f;
 }
 
 __device__
@@ -182,7 +209,7 @@ inline SceneError CPULightGroupConstant::InitializeGroup(const EndpointGroupData
     // This object does not expose GPU Groups to the system
     // since it is not clearly defined (it only returns radiance value)
     // its pdf / sample routines are not valid
-    // so NEE estimator etc. does not tries to sample this type of light
+    // so NEE estimator etc. should not utilize this type of light
     gpuLightList.clear();
     gpuEndpointList.clear();
 
@@ -197,6 +224,7 @@ inline SceneError CPULightGroupConstant::ChangeTime(const NodeListing&, double,
 }
 
 inline TracerError CPULightGroupConstant::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+                                                             const AABB3f&,
                                                              const CudaSystem&)
 {
     TracerError e = TracerError::OK;

@@ -123,7 +123,7 @@ Vector2i RefPGTracer::GlobalPixel2D() const
 void RefPGTracer::ResetIterationVariables()
 {
     doInitCameraCreation = true;
-    currentPixel = 0;
+    currentPixel = 665;
     currentSampleCount = 0;
     currentDepth = 0;
 }

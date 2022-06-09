@@ -18,20 +18,35 @@
 	},
 	{
 		"id": 1,
-		"type": "Spherical",
+		"type": "Pinhole",
 
-		// Ratio of the Pixels
-		"pixelRatio": 1.0,
-		// Camera Position
-		"position": [0.0, 2.5, 0],
-		// Near & Far Planes
-		"planes": [0.4, 100.0],
+		// 16:9 FoV
+		"fov": [53.13, 29.88],
+		// 1:1 FoV
+		//"fov": [53.13, 53.13],
+		"planes": [0.001, 100.0],
 
-		// These are to determine the transformation
-		// where the spherical coordinates start
-		"direction": [0.0, 0.0, -1.0],
+		"gaze": [-6.8595, 3.61322, 2.77964],
+		"position": [-7.64235, 3.74288, 3.3882],
 		"up": [0.0, 1.0, 0.0]
-	}],
+	}
+	// {
+	// 	"id": 1,
+	// 	"type": "Spherical",
+
+	// 	// Ratio of the Pixels
+	// 	"pixelRatio": 1.0,
+	// 	// Camera Position
+	// 	"position": [0.0, 2.5, 0],
+	// 	// Near & Far Planes
+	// 	"planes": [0.4, 100.0],
+
+	// 	// These are to determine the transformation
+	// 	// where the spherical coordinates start
+	// 	"direction": [0.0, 0.0, -1.0],
+	// 	"up": [0.0, 1.0, 0.0]
+	// }
+	],
 
 	"Lights": [
 		// Black Background
@@ -148,7 +163,7 @@
 	],
 
     "CameraSurfaces": [
-		{"camera": 0}
-		//{"camera": 1}
+		//{"camera": 0},
+		{"camera": 1}
 	]
 }

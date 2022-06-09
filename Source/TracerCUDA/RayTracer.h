@@ -8,7 +8,6 @@
 
 // Generic Ray Tracer Class
 class RayTracer : public GPUTracer
-
 {
     public:
         // Option Names

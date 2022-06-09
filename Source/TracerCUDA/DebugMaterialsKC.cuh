@@ -218,7 +218,6 @@ struct SphericalAnisoTestFuncs
 
 };
 
-
 struct NormalRenderMatFuncs
 {
     __device__ inline static

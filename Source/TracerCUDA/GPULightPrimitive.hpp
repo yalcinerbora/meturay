@@ -138,6 +138,7 @@ SceneError CPULightGroup<PGroup>::ChangeTime(const NodeListing&, double,
 
 template <class PGroup>
 TracerError CPULightGroup<PGroup>::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+                                                      const AABB3f&,
                                                       const CudaSystem&)
 {
     TracerError e = TracerError::OK;

@@ -603,10 +603,13 @@
 
     // Cameras
     "CameraSurfaces": [
-        // Test 1
-        //{"camera": 6, "medium": 2},
+
         // Overall View
         {"camera": 0},
+
+        // Test 1
+        {"camera": 6, "medium": 2},
+
         // Pool Camera
         {"camera": 1, "medium": 2},
         // Reflection of Caustics Camera

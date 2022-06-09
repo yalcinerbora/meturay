@@ -7,16 +7,21 @@
 #include "MangledNames.h"
 
 #include "RayLib/CoordinateConversion.h"
+#include "RayLib/Disk.h"
 
 class GPULightSkySphere final : public GPULightP
 {
     private:
         const PWCDistributionGPU2D&  distribution;
+        // Bounding Sphere of the scene (Generated from the Scene AABB)
+        Vector3f                     worldBoundSphereCenter;
+        float                        worldBoundSphereRadius;
 
     protected:
     public:
         // Constructors & Destructor
-        __device__              GPULightSkySphere(// Per Light Data
+        __device__              GPULightSkySphere(const AABB3f& sceneAABB,
+                                                  // Per Light Data
                                                   const PWCDistributionGPU2D&,
                                                   // Endpoint Related Data
                                                   const TextureRefI<2, Vector3f>& gRad,
@@ -50,11 +55,23 @@ class GPULightSkySphere final : public GPULightP
                                     const QuatF& tbnRotation) const override;
         __device__ bool         CanBeSampled() const override;
 
+        // Photon Stuff
+        __device__ Vector3f     GeneratePhoton(// Output
+                                               RayReg& rayOut,
+                                               Vector3f& normal,
+                                               float& posPDF,
+                                               float& dirPDF,
+                                               // I-O
+                                               RNGeneratorGPUI&) const override;
+
         // Specialize Emit
         __device__ Vector3f     Emit(const Vector3& wo,
                                      const Vector3& pos,
                                      //
                                      const UVSurface&) const override;
+
+        //
+        __device__ void         SetBoundingSphere(const AABB3f& sceneAABB);
 };
 
 class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
@@ -89,6 +106,7 @@ class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
 		SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
 								    		   const std::string& scenePath) override;
 		TracerError				    ConstructEndpoints(const GPUTransformI**,
+                                                       const AABB3f&,
                                                        const CudaSystem&) override;
 
         size_t					    UsedCPUMemory() const override;
@@ -96,7 +114,8 @@ class CPULightGroupSkySphere final : public CPULightGroupP<GPULightSkySphere>
 };
 
 __device__
-inline GPULightSkySphere::GPULightSkySphere(// Per Light Data
+inline GPULightSkySphere::GPULightSkySphere(const AABB3f& sceneAABB,
+                                            // Per Light Data
                                             const PWCDistributionGPU2D& dist,
                                             // Endpoint Related Data
                                             const TextureRefI<2, Vector3f>& gRad,
@@ -104,7 +123,12 @@ inline GPULightSkySphere::GPULightSkySphere(// Per Light Data
                                             const GPUTransformI& gTransform)
     : GPULightP(gRad, mediumIndex, hk, gTransform)
     , distribution(dist)
-{}
+{
+    // Generate Bounding Sphere from AABB
+    float radius = sceneAABB.Span().Length() * 0.5f;
+    worldBoundSphereCenter = sceneAABB.Centroid();
+    worldBoundSphereRadius = radius;
+}
 
 __device__
 inline void GPULightSkySphere::Sample(// Output
@@ -200,6 +224,56 @@ inline float GPULightSkySphere::Pdf(float distance,
 }
 
 __device__
+inline Vector3f GPULightSkySphere::GeneratePhoton(// Output
+                                                  RayReg& rayOut,
+                                                  Vector3f& normal,
+                                                  float& posPDF,
+                                                  float& dirPDF,
+                                                  // I-O
+                                                  RNGeneratorGPUI& rng) const
+{
+    // Sample a direction
+    Vector2f index;
+    Vector2f uv = distribution.Sample(dirPDF, index, rng);
+    Vector2f thetaPhi = Vector2f(// [-pi, pi]
+                                 (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
+                                  // [0, pi]
+                                 (1.0f - uv[1]) * MathConstants::Pi);
+    Vector3 dirZUp = Utility::SphericalToCartesianUnit(thetaPhi);
+    // Spherical Coords calculates as Z up change it to Y up
+    Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
+    // Transform Direction to World Space
+    Vector3f dir = -gTransform.LocalToWorld(dirYUp, true);
+
+    // Normal is always the direction for skysphere case (infinitely far)
+    normal = dir;
+
+    // Align the ray starting position to a far enough distance
+    Vector2f xi = rng.Uniform2D();
+    Vector3f pos = Disk::SamplePoint(worldBoundSphereCenter, normal,
+                                     worldBoundSphereRadius,
+                                     xi);
+    Vector3f rayPos = pos - normal * worldBoundSphereRadius;
+
+    // Generate the ray (tMax can be infinite)
+    rayOut.ray = RayF(rayPos, dir);
+    rayOut.tMin = 0.0f;
+    rayOut.tMax = FLT_MAX;
+
+    // Calculate the probabilities
+    // Directional
+    // Convert to solid angle pdf
+    // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
+    float sinPhi = sin(thetaPhi[1]);
+    if(sinPhi == 0.0f) dirPDF = 0.0f;
+    else dirPDF = dirPDF / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
+    // Positional
+    posPDF = MathConstants::InvPi * worldBoundSphereRadius * worldBoundSphereRadius;
+
+    return gRadianceRef(uv);
+}
+
+__device__
 inline bool GPULightSkySphere::CanBeSampled() const
 {
     return true;
@@ -227,6 +301,15 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
     // Gen Directional vector
     Vector2 uv = Vector2(u, v);
     return gRadianceRef(uv);
+}
+
+__device__
+inline void GPULightSkySphere::SetBoundingSphere(const AABB3f& sceneAABB)
+{
+    Vector3f extents = sceneAABB.Span();
+
+    worldBoundSphereCenter = sceneAABB.Centroid();
+    worldBoundSphereRadius = extents[extents.Max()];
 }
 
 inline CPULightGroupSkySphere::CPULightGroupSkySphere(const GPUPrimitiveGroupI* pg,

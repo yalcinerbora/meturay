@@ -37,6 +37,21 @@ template class WFPGWork<LambertMat, GPUPrimitiveSphere>;
 
 template class WFPGWork<UnrealMat, GPUPrimitiveTriangle>;
 template class WFPGWork<UnrealMat, GPUPrimitiveSphere>;
+// Photon
+template class WFPGPhotonWork<LambertCMat, GPUPrimitiveTriangle>;
+template class WFPGPhotonWork<LambertCMat, GPUPrimitiveSphere>;
+
+template class WFPGPhotonWork<ReflectMat, GPUPrimitiveTriangle>;
+template class WFPGPhotonWork<ReflectMat, GPUPrimitiveSphere>;
+
+template class WFPGPhotonWork<RefractMat, GPUPrimitiveTriangle>;
+template class WFPGPhotonWork<RefractMat, GPUPrimitiveSphere>;
+
+template class WFPGPhotonWork<LambertMat, GPUPrimitiveTriangle>;
+template class WFPGPhotonWork<LambertMat, GPUPrimitiveSphere>;
+
+template class WFPGPhotonWork<UnrealMat, GPUPrimitiveTriangle>;
+template class WFPGPhotonWork<UnrealMat, GPUPrimitiveSphere>;
 // Debug Path
 template class WFPGDebugWork<LambertCMat, GPUPrimitiveTriangle>;
 template class WFPGDebugWork<LambertCMat, GPUPrimitiveSphere>;

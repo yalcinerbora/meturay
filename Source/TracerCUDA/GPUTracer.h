@@ -53,6 +53,8 @@ class GPUTracer : public GPUTracerI
         const NamedList<CPULightGPtr>&              lights;
         const NamedList<CPUCameraGPtr>&             cameras;
         const WorkBatchCreationInfo&                workInfo;
+        // Base Accelerator Ref
+        const GPUBaseAcceleratorI&                  baseAccelerator;
         // Current camera index for copying the camera for transform
         uint32_t                                    currentCameraIndex;
         // GPU Memory

@@ -207,9 +207,9 @@ void VisorGL::RenderImage()
     Vector2i vpOffset;
     Vector2i vpSize;
     GenAspectCorrectVP(vpOffset, vpSize,
-                        viewportSize);
+                       viewportSize);
     glViewport(vpOffset[0], vpOffset[1],
-                vpSize[0], vpSize[1]);
+               vpSize[0], vpSize[1]);
 
     // Clear Buffer
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

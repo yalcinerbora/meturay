@@ -72,6 +72,7 @@ SceneError CPULightGroupSpot::ChangeTime(const NodeListing&, double,
 }
 
 TracerError CPULightGroupSpot::ConstructEndpoints(const GPUTransformI** dGlobalTransformArray,
+                                                  const AABB3f&,
                                                   const CudaSystem&)
 {
     TracerError e = TracerError::OK;

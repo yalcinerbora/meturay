@@ -23,8 +23,8 @@ Vector3f Disk::SamplePoint(const Vector<3, T>& center,
                            // 2 Uniform Samples
                            const Vector2f& xi)
 {
-    float r = xi * radius;
-    float tetha = xi * 2.0f * MathConstants::Pi;
+    float r = xi[0] * radius;
+    float tetha = xi[1] * 2.0f * MathConstants::Pi;
 
     // Aligned to Axis Z
     Vector3 diskPoint = Vector3(sqrt(r) * cos(tetha),

@@ -75,11 +75,12 @@ void KCSetLightIds(GPULightI** gLights,
 TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras,
                                    std::vector<const GPUEndpointI*>& dGPUEndpoints)
 {
+    AABB3f sceneAABB = baseAccelerator.SceneExtents();
     TracerError e = TracerError::OK;
     for(auto& camera : cameras)
     {
         CPUCameraGroupI& c = *(camera.second);
-        if((e = c.ConstructEndpoints(dTransforms, cudaSystem)) != TracerError::OK)
+        if((e = c.ConstructEndpoints(dTransforms, sceneAABB, cudaSystem)) != TracerError::OK)
             return e;
         const auto& dCList = c.GPUCameras();
         const auto& dEList = c.GPUEndpoints();
@@ -120,12 +121,12 @@ TracerError GPUTracer::LoadCameras(std::vector<const GPUCameraI*>& dGPUCameras,
 TracerError GPUTracer::LoadLights(std::vector<const GPULightI*>& dGPULights,
                                   std::vector<const GPUEndpointI*>& dGPUEndpoints)
 {
-
+    AABB3f sceneAABB = baseAccelerator.SceneExtents();
     TracerError e = TracerError::OK;
     for(auto& light : lights)
     {
         CPULightGroupI& l = *(light.second);
-        if((e = l.ConstructEndpoints(dTransforms, cudaSystem)) != TracerError::OK)
+        if((e = l.ConstructEndpoints(dTransforms, sceneAABB, cudaSystem)) != TracerError::OK)
             return e;
         const auto& dLList = l.GPULights();
         const auto& dEList = l.GPUEndpoints();
@@ -185,6 +186,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , lights(scene.Lights())
     , cameras(scene.Cameras())
     , workInfo(scene.WorkBatchInfo())
+    , baseAccelerator(*scene.BaseAccelerator().get())
     , currentCameraIndex(std::numeric_limits<uint32_t>::max())
     , sceneAnalytics(scene.AnalyticData())
     , cudaSystem(system)
@@ -473,7 +475,7 @@ void GPUTracer::Finalize()
     // Flush Devices and Get the Image
     cudaSystem.SyncAllGPUs();
     std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
-    //size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
+    size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 
     //Debug::DumpMemToFile("OutPixels",
     //                     reinterpret_cast<Vector4*>(imageData.data()),

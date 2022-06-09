@@ -118,6 +118,7 @@ class CPUCameraGroupSpherical final : public CPUCameraGroupP<GPUCameraSpherical>
         SceneError					    ChangeTime(const NodeListing& lightNodes, double time,
                                                    const std::string& scenePath) override;
         TracerError					    ConstructEndpoints(const GPUTransformI**,
+                                                           const AABB3f&,
                                                            const CudaSystem&) override;
         size_t						    UsedCPUMemory() const override;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RayLib/Vector.h"
+#include "RayLib/AABB.h"
 #include "RayLib/HitStructs.h"
 #include "RayLib/SceneStructs.h"
 
@@ -103,6 +104,7 @@ class CPUEndpointGroupI
 		virtual SceneError					ChangeTime(const NodeListing& lightNodes, double time,
 													   const std::string& scenePath) = 0;
 		virtual TracerError					ConstructEndpoints(const GPUTransformI**,
+                                                               const AABB3f& sceneAABB,
                                                                const CudaSystem&) = 0;
 		virtual uint32_t					EndpointCount() const = 0;
 

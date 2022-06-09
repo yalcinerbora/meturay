@@ -81,11 +81,12 @@ class CPULightGroupNull final : public CPULightGroupI
         SceneError				    ChangeTime(const NodeListing& lightNodes, double time,
                                                const std::string& scenePath) override;
         TracerError				    ConstructEndpoints(const GPUTransformI**,
+                                                       const AABB3f&,
                                                        const CudaSystem&) override;
         const GPULightList&         GPULights() const override { return lList; }
         const GPUEndpointList&      GPUEndpoints() const override {return epList;}
         const CudaGPU&              GPU() const override { return gpu; }
-        uint32_t				        EndpointCount() const override { return 0; }
+        uint32_t				    EndpointCount() const override { return 0; }
         const std::vector<HitKey>&  PackedHitKeys() const override { return hkList; }
         uint32_t                    MaxInnerId() const override { return 1; }
 
@@ -123,6 +124,7 @@ inline SceneError CPULightGroupNull::ChangeTime(const NodeListing&, double,
 }
 
 inline TracerError CPULightGroupNull::ConstructEndpoints(const GPUTransformI**,
+                                                         const AABB3f&,
                                                          const CudaSystem&)
 {
     return TracerError::OK;
