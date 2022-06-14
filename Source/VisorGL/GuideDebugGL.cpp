@@ -11,6 +11,7 @@
 // Debug Renderers
 #include "GDebugRendererPPG.h"
 #include "GDebugRendererRL.h"
+#include "GDebugRendererSVO.h"
 
 #include <filesystem>
 
@@ -44,6 +45,9 @@ GuideDebugGL::GuideDebugGL(const Vector2i& ws,
     gdbGenerators.emplace(GDebugRendererRL::TypeName,
                           GDBRendererGen(GDBRendererConstruct<GDebugRendererI,
                                                               GDebugRendererRL>));
+    gdbGenerators.emplace(GDebugRendererSVO::TypeName,
+                          GDBRendererGen(GDBRendererConstruct<GDebugRendererI,
+                                         GDebugRendererSVO>));
 
     bool configParsed = GuideDebug::ParseConfigFile(config, configFile);
     if(!configParsed) throw VisorException(VisorError::WINDOW_GENERATION_ERROR);

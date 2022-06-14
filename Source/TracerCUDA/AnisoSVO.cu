@@ -853,7 +853,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     }
     // Only Direct light information deposition is left
     // Call the kernel for it
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, hTotalVoxCount,
                        //
                        KCDepositInitialLightRadiance,
                        // I-O
@@ -871,21 +871,22 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        static_cast<uint32_t>(hTotalVoxCount),
                        treeGPU.svoAABB,
                        resolutionXYZ);
-
-    //Debug::DumpMemToFile("leafParent", treeGPU.dLeafParents,
-    //                     treeGPU.leafCount);
-
     // Log some stuff
     timer.Stop();
-    double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0f;
+    double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
     double radMemSize = static_cast<double>(totalNodeCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance) +
                                             hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance) +
                                             hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadianceF) +
-                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoCount)) / 1024.0 / 1024.0f;
-    METU_LOG("Scene Aniso-SVO [N: {:d}, L: {:d}] Generated in {:f} seconds. (Total {:.2f} MiB, Rad Cache {:.2f} MiB)",
+                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoCount)) / 1024.0 / 1024.0;
+    double irradMemSize = static_cast<double>(totalNodeCount * sizeof(half) +
+                                              hUniqueVoxelCount * sizeof(uint32_t) +
+                                              hUniqueVoxelCount * sizeof(float) +
+                                              hUniqueVoxelCount * sizeof(half)) / 1024.0 / 1024.0;
+
+    METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB, Rad Cache {:.2f} MiB, If Irrad {:.2f} MiB)",
              treeGPU.nodeCount, treeGPU.leafCount,
              timer.Elapsed<CPUTimeSeconds>(),
-             svoMemSize, radMemSize);
+             svoMemSize, radMemSize, irradMemSize);
 
     // All Done!
     return TracerError::OK;
@@ -898,8 +899,7 @@ void AnisoSVOctreeCPU::NormalizeAndFilterRadiance(const CudaSystem& system)
     // Down-sample the radiance for lowest n levels as well maybe? (n= 2 or 3)
 
 
-
-
+    // TODO: Do some proper filtering
     // Just copy it to for now
     // Assume that the ray counts are set for leaves
     const CudaGPU& bestGPU = system.BestGPU();
@@ -990,4 +990,53 @@ void AnisoSVOctreeCPU::ClearRayCounts(const CudaSystem&)
 {
     CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, sizeof(uint32_t) * treeGPU.leafCount));
     CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, sizeof(uint32_t) * treeGPU.nodeCount));
+}
+
+
+void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data) const
+{
+    using AnisoRadiance = AnisoSVOctreeGPU::AnisoRadiance;
+    using AnisoRadianceF = AnisoSVOctreeGPU::AnisoRadianceF;
+    using AnisoCount = AnisoSVOctreeGPU::AnisoCount;
+    // Get Sizes
+    std::array<size_t, 9> byteSizes;
+    byteSizes[0]  = levelNodeOffsets.size() * sizeof(uint32_t);   // dLevelOffsetSize
+    byteSizes[1]  = treeGPU.nodeCount * sizeof(uint64_t);            // dNodesSize
+    byteSizes[2]  = treeGPU.nodeCount * sizeof(AnisoRadiance);       // dRadianceReadSize
+    byteSizes[3]  = treeGPU.nodeCount * sizeof(uint32_t);            // dBinInfoSize
+    // Leaf Related
+    byteSizes[4] = treeGPU.leafCount * sizeof(uint32_t);          // dLeafParentSize
+    byteSizes[5] = treeGPU.leafCount * sizeof(AnisoRadiance);     // dLeafRadianceReadSize
+    byteSizes[6] = treeGPU.leafCount * sizeof(uint32_t);          // dLeafBinInfoSize
+
+    byteSizes[7] = treeGPU.leafCount * sizeof(AnisoRadianceF);    // dLeafRadianceWriteSize
+    byteSizes[8] = treeGPU.leafCount * sizeof(AnisoCount);        // dLeafSampleCountWriteSize
+
+    // Calculate the offsets and total size
+    std::array<size_t, 10> offsets;
+    std::inclusive_scan(byteSizes.cbegin(), byteSizes.cend(), offsets.begin() + 1);
+    offsets[0] = 0;
+    data.resize(offsets[9]);
+    // Memcpy the data from the memory
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[0], treeGPU.dLevelNodeOffsets,
+                          byteSizes[0], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[1], treeGPU.dNodes,
+                          byteSizes[1], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[2], treeGPU.dRadianceRead,
+                          byteSizes[2], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[3], treeGPU.dBinInfo,
+                          byteSizes[3], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[4], treeGPU.dLeafParents,
+                          byteSizes[4], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[5], treeGPU.dLeafRadianceRead,
+                          byteSizes[5], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[6], treeGPU.dLeafBinInfo,
+                          byteSizes[6], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[7], treeGPU.dLeafRadianceWrite,
+                          byteSizes[7], cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(data.data() + offsets[8], treeGPU.dLeafSampleCountWrite,
+                          byteSizes[8], cudaMemcpyDeviceToHost));
+
+    // Done!
+
 }

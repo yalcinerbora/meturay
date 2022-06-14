@@ -21,6 +21,8 @@ int main(int argc, const char* argv[])
     // Fancy CMD
     EnableVTMode();
 
+    std::locale::global(std::locale("en_US.UTF-8"));
+
     // Error structs
     DLLError dError = DLLError::OK;
 

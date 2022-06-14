@@ -153,7 +153,7 @@ static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KE
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 64, 32>,    // Second bounce as well
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 32, 16>,    // Third bounce not so much
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce bad
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>      // Fifth is bad as well
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>       // Fifth is bad as well
 };
 
 struct NodeIdFetchFunctor
@@ -444,6 +444,7 @@ WFPGTracer::WFPGTracer(const CudaSystem& s,
 TracerError WFPGTracer::Initialize()
 {
     iterationCount = 0;
+    treeDumpCount = 0;
 
     TracerError err = TracerError::OK;
     if((err = RayTracer::Initialize()) != TracerError::OK)
@@ -582,6 +583,8 @@ TracerError WFPGTracer::SetOptions(const TracerOptionsI& opts)
     if((err = opts.GetUInt(options.binRayCount, BIN_RAY_COUNT_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.svoDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
 
     std::string renderModeString;
@@ -867,25 +870,23 @@ void WFPGTracer::Finalize()
                                 MaximumPathNodePerPath(), cudaSystem);
         svo.NormalizeAndFilterRadiance(cudaSystem);
 
+        // Dump the SVO tree if requested
+        uint32_t dumpInterval = static_cast<uint32_t>(std::pow(options.svoDumpInterval, treeDumpCount));
+        if(options.dumpDebugData && iterationCount == dumpInterval)
+        {
+            std::vector<Byte> svoData;
+            svo.DumpSVOAsBinary(svoData);
+            std::string fName = fmt::format("{:d}_svoTree", iterationCount);
+            Utility::DumpStdVectorToFile(svoData, fName);
+            treeDumpCount++;
+        }
 
-        if(iterationCount <= options.svoRadRenderIter)
-            sketch.HashRadianceAsPhotonDensity(dPathNodes, totalPathNodeCount,
-                                               MaximumPathNodePerPath(), cudaSystem);
+        //if(iterationCount <= options.svoRadRenderIter)
+        //    sketch.HashRadianceAsPhotonDensity(dPathNodes, totalPathNodeCount,
+        //                                       MaximumPathNodePerPath(), cudaSystem);
     }
 
-    //static int i = 0;
-    //if(iterationCount >= options.svoRadRenderIter && i == 0)
-    //{
-    //    std::vector<uint32_t> sketchData;
-    //    uint64_t totalCount;
-    //    sketch.GetSketchToCPU(sketchData, totalCount);
-    //    Debug::DumpBatchedMemToFile("__Sketch",
-    //                                sketchData.data(),
-    //                                sketch.PartitionCount(),
-    //                                sketchData.size());
-    //    METU_LOG("TOTAL {}", totalCount);
-    //    i++;
-    //}
+
 
     // On SVO_Radiance mode clear the image memory
     // And trace the SVO from the camera and send the results

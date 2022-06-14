@@ -166,14 +166,6 @@ void WFPGTracerBoundaryWork(// Output
            //// If current path is the first vertex in the chain skip
            //pathIndex != 0)
         {
-            // Generate Spherical Coordinates
-            Vector3f wi = ray.ray.getDirection().Normalize();
-            Vector3 dirZUp = Vector3(wi[2], wi[0], wi[1]);
-            Vector2f sphrCoords = Utility::CartesianToSphericalUnit(dirZUp);
-            // Add to the hash table
-            //renderState.sketchGPU.AtomicAddData(r.getPosition(), sphrCoords,
-            //                                    Utility::RGBToLuminance(emission));
-
             // Accumulate Radiance from 2nd vertex (including this vertex) away
             // S-> surface
             // C-> camera
@@ -184,7 +176,7 @@ void WFPGTracerBoundaryWork(// Output
             //                   |     We are here (pathIndex points here)
             //                   v
             //                  we should accum-down from here
-            gLocalPathNodes[prevPathIndex - 1].AccumRadianceDownChain(total, gLocalPathNodes);
+            gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
         }
     }
 }
@@ -530,9 +522,7 @@ void WFPGTracerPathWork(// Output
     // Unlike other techniques that holds incoming radiance
     // WFPG holds outgoing radiance. To calculate that, wee need to store
     // previous paths throughput
-    //node.radFactor = aux.radianceFactor;
-    node.radFactor = pathRadianceFactor;
-
+    node.radFactor = aux.radianceFactor;
     node.totalRadiance = Zero3;
     gLocalPathNodes[curPathIndex] = node;
     // Set Previous Path node's next index

@@ -24,6 +24,7 @@ class RefPGTracer : public RayTracer
         static constexpr const char* LIGHT_SAMPLER_TYPE_NAME    = "NEESampler";
         static constexpr const char* MAX_SAMPLE_NAME            = "TotalSamplePerPixel";
         static constexpr const char* RESOLUTION_NAME            = "Resolution";
+        static constexpr const char* PIXEL_START_NAME           = "PixelStart";
         static constexpr const char* IMAGE_NAME                 = "ImageName";
 
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
@@ -40,6 +41,7 @@ class RefPGTracer : public RayTracer
 
             //
             Vector2i            resolution          = Vector2i(1024);
+            Vector2i            pixelStart          = Vector2i(0, 0);
             std::string         refPGOutputName     = "refPGOut";
 
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;

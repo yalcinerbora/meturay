@@ -123,7 +123,7 @@ Vector2i RefPGTracer::GlobalPixel2D() const
 void RefPGTracer::ResetIterationVariables()
 {
     doInitCameraCreation = true;
-    currentPixel = 665;
+    currentPixel = options.pixelStart[1] * options.resolution[0] + options.pixelStart[0];
     currentSampleCount = 0;
     currentDepth = 0;
 }
@@ -268,6 +268,8 @@ TracerError RefPGTracer::SetOptions(const TracerOptionsI& opts)
         return err;
 
     if((err = opts.GetVector2i(options.resolution, RESOLUTION_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetVector2i(options.pixelStart, PIXEL_START_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetString(options.refPGOutputName, IMAGE_NAME)) != TracerError::OK)
         return err;

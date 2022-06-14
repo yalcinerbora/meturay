@@ -56,6 +56,8 @@ set(GUIDE_DEBUG
 
 set(GUIDE_DEBUG_RENDERERS
     ${CURRENT_SOURCE_DIR}/GDebugRendererI.h
+    ${CURRENT_SOURCE_DIR}/GDebugRendererSVO.cpp
+    ${CURRENT_SOURCE_DIR}/GDebugRendererSVO.h
     ${CURRENT_SOURCE_DIR}/GDebugRendererPPG.cpp
     ${CURRENT_SOURCE_DIR}/GDebugRendererPPG.h
     ${CURRENT_SOURCE_DIR}/GDebugRendererRL.cpp

@@ -38,9 +38,9 @@ void KCLoadImgAsSketch(RaceSketchGPU sketchGPU,
         //uv -= Vector2f(1.0f);
         //uv -= (dimF * 0.5f);
 
-        Vector3f pix = gPixels[globalId];
-        float lum = pix.Sum() * 0.33f;
-        //float lum = Utility::RGBToLuminance(gPixels[globalId]);
+        //Vector3f pix = gPixels[globalId];
+        //float lum = pix.Sum() * 0.33f;
+        float lum = Utility::RGBToLuminance(gPixels[globalId]);
 
         if(lum <= 100)
             sketchGPU.AtomicAddData(ZERO, uv, lum);
@@ -77,8 +77,8 @@ void KCReadSketch(float* gPixels,
 
 TEST(RaceSketch2D, ImageApprox)
 {
-    static constexpr uint32_t HASH_COUNT = 128;
-    static constexpr uint32_t BIN_COUNT = 512;
+    static constexpr uint32_t HASH_COUNT = 4096;
+    static constexpr uint32_t BIN_COUNT = 64;
 
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
@@ -103,7 +103,7 @@ TEST(RaceSketch2D, ImageApprox)
     CUDA_CHECK(cudaMemcpy(dPixels, inPixels.data(), sizeof(Vector3f) * pixelCount,
                           cudaMemcpyHostToDevice));
 
-    RaceSketchCPU sketch(HASH_COUNT, BIN_COUNT, 5.5, 0);
+    RaceSketchCPU sketch(HASH_COUNT, BIN_COUNT, 15.5, 0);
     sketch.SetSceneExtent(AABB3f(Zero3f, Vector3f(1.0f)));
 
     const CudaGPU& gpu = system.BestGPU();
@@ -121,10 +121,17 @@ TEST(RaceSketch2D, ImageApprox)
                            dim);
     }
     uint64_t total;
-    std::vector<uint32_t> sketchData;
+    std::vector<float> sketchData;
     sketch.GetSketchToCPU(sketchData, total);
     //
-    METU_LOG("Total {}", total);
+    //METU_LOG("Total {}", total);
+    uint32_t zeroCount = 0;
+    for(float f : sketchData)
+        if(f == 0.0f)
+            zeroCount++;
+    METU_LOG("Zero Ratio %{:f}", static_cast<float>(zeroCount) / static_cast<float>(sketchData.size()));
+
+
     //for(int i = 0; i < HASH_COUNT; i++)
     //{
     //    METU_LOG("[{}] - [{}]",

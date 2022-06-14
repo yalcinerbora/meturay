@@ -64,7 +64,7 @@ class RaceSketchCPU
                                                     uint32_t maxPathNodePerRay,
                                                     const CudaSystem& system);
 
-        void            GetSketchToCPU(std::vector<uint32_t>& sketchList,
+        void            GetSketchToCPU(std::vector<float>& sketchList,
                                        uint64_t& totalSamples) const;
 
 

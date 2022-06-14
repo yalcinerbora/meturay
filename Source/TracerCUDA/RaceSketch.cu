@@ -98,13 +98,13 @@ void RaceSketchCPU::HashRadianceAsPhotonDensity(const PathGuidingNode* dPGNodes,
     bestGPU.WaitMainStream();
 }
 
-void RaceSketchCPU::GetSketchToCPU(std::vector<uint32_t>& sketchList,
+void RaceSketchCPU::GetSketchToCPU(std::vector<float>& sketchList,
                                    uint64_t& totalSamples) const
 {
     sketchList.resize(sketchGPU.numHash * sketchGPU.numPartition);
 
     CUDA_CHECK(cudaMemcpy(sketchList.data(), sketchGPU.gSketch,
-                          sizeof(uint32_t) * sketchList.size(),
+                          sizeof(float) * sketchList.size(),
                           cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(&totalSamples, sketchGPU.gTotalCount,
                           sizeof(uint64_t),
