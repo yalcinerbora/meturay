@@ -52,7 +52,6 @@ struct SVOctree
     static uint32_t  FindChildOffset(uint64_t packedData, uint32_t childId);
     static bool      HasChild(uint64_t packedData, uint32_t childId);
 
-    static Vector3f  VoxelDirection(uint32_t directionId);
     static Vector4uc DirectionToAnisoLocations(Vector2f& interp,
                                                const Vector3f& direction);
 
@@ -94,32 +93,41 @@ class GDebugRendererSVO : public GDebugRendererI
     public:
         static constexpr const char* TypeName = "WFPG-SVO";
 
+        // Shader Bind Points
+        // SSBOs
+        static constexpr GLuint     SSB_MAX_LUM = 0;
+        // UBOs
+        static constexpr GLuint     UB_MAX_LUM = 0;
+        // Uniforms
+        static constexpr GLuint     U_RES = 0;
+        static constexpr GLuint     U_LOG_ON = 1;
+        // Textures
+        static constexpr GLuint     T_IN_LUM_TEX = 0;
+        static constexpr GLuint     T_IN_GRAD_TEX = 1;
+        // Images
+        static constexpr GLuint     I_OUT_REF_IMAGE = 0;
+
     private:
         static constexpr const char* SVO_TREE_NAME = "svoTrees";
         static constexpr const char* MAP_SIZE_NAME = "mapSize";
 
-        const SamplerGL             linearSampler;
-        const TextureGL&            gradientTexture;
-        uint32_t                    curOctreeIndex;
+        const SamplerGL         linearSampler;
+        const TextureGL&        gradientTexture;
+        uint32_t                curOctreeIndex;
         // All SD Trees that are loaded
-        std::vector<SVOctree>       octrees;
+        std::vector<SVOctree>   octrees;
         // Name of the Guider (shown in GUI)
-        std::string                 name;
+        std::string             name;
         //
-        Vector2ui                   mapSize;
+        Vector2ui               mapSize;
         //
-        TextureGL                   currentTexture;
-        std::vector<float>          currentValues;
-        float                       maxValueDisplay;
-
-        // OGL Related
-
-        GLuint                  treeBuffer;
-        size_t                  treeBufferSize;
-
-        ShaderGL                compSVORadianceRender;
-        ShaderGL                compSVOPosRender;
-
+        TextureGL               currentTexture;
+        std::vector<float>      currentValues;
+        float                   maxValueDisplay;
+        // Shaders
+        ShaderGL                compReduction;
+        ShaderGL                compRefRender;
+      
         static bool             LoadOctree(SVOctree&,
                                            const nlohmann::json& config,
                                            const std::string& configPath,

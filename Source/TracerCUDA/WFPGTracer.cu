@@ -875,7 +875,7 @@ void WFPGTracer::Finalize()
         if(options.dumpDebugData && iterationCount == dumpInterval)
         {
             std::vector<Byte> svoData;
-            svo.DumpSVOAsBinary(svoData);
+            svo.DumpSVOAsBinary(svoData, cudaSystem);
             std::string fName = fmt::format("{:d}_svoTree", iterationCount);
             Utility::DumpStdVectorToFile(svoData, fName);
             treeDumpCount++;
@@ -885,8 +885,6 @@ void WFPGTracer::Finalize()
         //    sketch.HashRadianceAsPhotonDensity(dPathNodes, totalPathNodeCount,
         //                                       MaximumPathNodePerPath(), cudaSystem);
     }
-
-
 
     // On SVO_Radiance mode clear the image memory
     // And trace the SVO from the camera and send the results

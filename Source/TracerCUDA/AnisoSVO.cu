@@ -437,6 +437,33 @@ void KCCCopyRadianceToHalfBufferLeaf(// I-O
     }
 }
 
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCConvertToAnisoFloat(AnisoSVOctreeGPU::AnisoRadianceF* gAnisoOut,
+                           const AnisoSVOctreeGPU::AnisoRadiance* gAnisoIn,
+                           uint32_t anisoCount)
+{
+    using AnisoRadianceF = AnisoSVOctreeGPU::AnisoRadianceF;
+    using AnisoRadiance = AnisoSVOctreeGPU::AnisoRadiance;
+
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < anisoCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        AnisoRadianceF& gOut = gAnisoOut[threadId];
+        AnisoRadiance in = gAnisoIn[threadId];
+
+        gOut.data[0][0] = in.data[0][0];
+        gOut.data[0][1] = in.data[0][1];
+        gOut.data[0][2] = in.data[0][2];
+        gOut.data[0][3] = in.data[0][3];
+
+        gOut.data[1][0] = in.data[1][0];
+        gOut.data[1][1] = in.data[1][1];
+        gOut.data[1][2] = in.data[1][2];
+        gOut.data[1][3] = in.data[1][3];
+    }
+}
+
 TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
                                         const AcceleratorBatchMap& accels,
                                         const GPULightI** dSceneLights,
@@ -992,51 +1019,83 @@ void AnisoSVOctreeCPU::ClearRayCounts(const CudaSystem&)
     CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, sizeof(uint32_t) * treeGPU.nodeCount));
 }
 
-
-void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data) const
+void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
+                                       const CudaSystem& system) const
 {
-    using AnisoRadiance = AnisoSVOctreeGPU::AnisoRadiance;
     using AnisoRadianceF = AnisoSVOctreeGPU::AnisoRadianceF;
-    using AnisoCount = AnisoSVOctreeGPU::AnisoCount;
+    using AnisoRadiance = AnisoSVOctreeGPU::AnisoRadiance;
+
+    // Temp Float Buffer for Conversion
+    assert(treeGPU.leafCount >= treeGPU.nodeCount);
+    DeviceMemory halfConvertedMemory(treeGPU.leafCount * sizeof(AnisoRadianceF));
+
+    // Conversion Function
+    auto ConvertAnisoHalfToFloat = [&](const AnisoRadiance* dRadiance,
+                                       uint32_t totalSize)
+    {
+        const CudaGPU& gpu = system.BestGPU();
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalSize,
+                           //
+                           KCConvertToAnisoFloat,
+                           //
+                           static_cast<AnisoRadianceF*>(halfConvertedMemory),
+                           dRadiance,
+                           totalSize);
+    };
+
     // Get Sizes
-    std::array<size_t, 9> byteSizes;
-    byteSizes[0]  = levelNodeOffsets.size() * sizeof(uint32_t);   // dLevelOffsetSize
-    byteSizes[1]  = treeGPU.nodeCount * sizeof(uint64_t);            // dNodesSize
-    byteSizes[2]  = treeGPU.nodeCount * sizeof(AnisoRadiance);       // dRadianceReadSize
-    byteSizes[3]  = treeGPU.nodeCount * sizeof(uint32_t);            // dBinInfoSize
+    std::array<size_t, 4> byteSizes;
+    byteSizes[0]  = treeGPU.nodeCount * sizeof(uint64_t);       // dNodesSize
+    byteSizes[1]  = treeGPU.nodeCount * sizeof(AnisoRadianceF); // dRadianceReadSize
     // Leaf Related
-    byteSizes[4] = treeGPU.leafCount * sizeof(uint32_t);          // dLeafParentSize
-    byteSizes[5] = treeGPU.leafCount * sizeof(AnisoRadiance);     // dLeafRadianceReadSize
-    byteSizes[6] = treeGPU.leafCount * sizeof(uint32_t);          // dLeafBinInfoSize
-
-    byteSizes[7] = treeGPU.leafCount * sizeof(AnisoRadianceF);    // dLeafRadianceWriteSize
-    byteSizes[8] = treeGPU.leafCount * sizeof(AnisoCount);        // dLeafSampleCountWriteSize
-
+    byteSizes[2] = treeGPU.leafCount * sizeof(uint32_t);        // dLeafParentSize
+    byteSizes[3] = treeGPU.leafCount * sizeof(AnisoRadianceF);  // dLeafRadianceReadSize
     // Calculate the offsets and total size
-    std::array<size_t, 10> offsets;
-    std::inclusive_scan(byteSizes.cbegin(), byteSizes.cend(), offsets.begin() + 1);
-    offsets[0] = 0;
-    data.resize(offsets[9]);
+    size_t bufferTotalSize = std::reduce(byteSizes.cbegin(), byteSizes.cend(), 0);
+
+    size_t totalSize = (bufferTotalSize + sizeof(AABB3f) +
+                        5 * sizeof(uint32_t) + 
+                        sizeof(float));
+
+    data.resize(totalSize);
     // Memcpy the data from the memory
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[0], treeGPU.dLevelNodeOffsets,
+    size_t offset = 0;
+    std::memcpy(data.data() + offset, &treeGPU.svoAABB, sizeof(AABB3f));
+    offset += sizeof(AABB3f);
+    std::memcpy(data.data() + offset, &treeGPU.voxelResolution, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(data.data() + offset, &treeGPU.leafDepth, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(data.data() + offset, &treeGPU.nodeCount, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(data.data() + offset, &treeGPU.leafCount, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(data.data() + offset, &treeGPU.leafVoxelSize, sizeof(float));
+    offset += sizeof(float);
+    std::memcpy(data.data() + offset, &treeGPU.levelOffsetCount, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+    // Nodes
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.dNodes,
                           byteSizes[0], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[1], treeGPU.dNodes,
+    offset += byteSizes[0];
+    // Radiance Cache Node
+    ConvertAnisoHalfToFloat(treeGPU.dRadianceRead, treeGPU.nodeCount);
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, 
+                          static_cast<void*>(halfConvertedMemory),
                           byteSizes[1], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[2], treeGPU.dRadianceRead,
+    offset += byteSizes[1];
+    // Leaf Parents
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.dLeafParents,
                           byteSizes[2], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[3], treeGPU.dBinInfo,
+    offset += byteSizes[2];
+    // Radiance Cache Leaf
+    ConvertAnisoHalfToFloat(treeGPU.dLeafRadianceRead, treeGPU.leafCount);
+    CUDA_CHECK(cudaMemcpy(data.data() + offset,
+                          static_cast<void*>(halfConvertedMemory),
                           byteSizes[3], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[4], treeGPU.dLeafParents,
-                          byteSizes[4], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[5], treeGPU.dLeafRadianceRead,
-                          byteSizes[5], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[6], treeGPU.dLeafBinInfo,
-                          byteSizes[6], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[7], treeGPU.dLeafRadianceWrite,
-                          byteSizes[7], cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(data.data() + offsets[8], treeGPU.dLeafSampleCountWrite,
-                          byteSizes[8], cudaMemcpyDeviceToHost));
+    offset += byteSizes[3];
+    assert(offset == data.size());
 
-    // Done!
-
+    // All Done!
 }

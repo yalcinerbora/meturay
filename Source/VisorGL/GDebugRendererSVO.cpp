@@ -38,6 +38,33 @@ uint64_t ComposeMortonCode64(const Vector3ui& val)
     return ((x << 0) | (y << 1) | (z << 2));
 }
 
+Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
+                         const Vector2ui& dimensions)
+{
+    assert(dirXY < dimensions);
+    using namespace MathConstants;
+    // Spherical coordinate deltas
+    Vector2f deltaXY = Vector2f((2.0f * Pi) / static_cast<float>(dimensions[0]),
+                                Pi / static_cast<float>(dimensions[1]));
+
+    // Assume image space bottom left is (0,0)
+    // Center to the pixel as well
+    Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + Vector2f(0.5f);
+    Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
+                                   Pi - dirXYFloat[1] * deltaXY[1]);
+    Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
+    // Spherical Coords calculates as Z up change it to Y up
+    Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
+    //METU_LOG("Pixel [{}, {}], ThetaPhi [{}, {}], Dir[{}, {}, {}]",
+    //         dirXY[0], dirXY[1],
+    //         sphrCoords[0] * RadToDegCoef,
+    //         sphrCoords[1] * RadToDegCoef,
+    //         dirYUp[0], dirYUp[1], dirYUp[2]);
+
+    return dirYUp;
+}
+
 bool SVOctree::IsChildrenLeaf(uint64_t packedData)
 {
     return static_cast<bool>((packedData >> IS_LEAF_OFFSET) & IS_LEAF_BIT_COUNT);
@@ -82,26 +109,6 @@ bool SVOctree::HasChild(uint64_t packedData, uint32_t childId)
     return (childMask >> childId) & 0b1;
 }
 
-//
-//Vector3f SVOctree::VoxelDirection(uint32_t directionId)
-//{
-//    static constexpr Vector3f X_AXIS = XAxis;
-//    static constexpr Vector3f Y_AXIS = YAxis;
-//    static constexpr Vector3f Z_AXIS = ZAxis;
-//
-//    int8_t signX = (directionId >> 0) & 0b1;
-//    int8_t signY = (directionId >> 1) & 0b1;
-//    int8_t signZ = (directionId >> 2) & 0b1;
-//    signX = (1 - signX) * 2 - 1;
-//    signY = (1 - signY) * 2 - 1;
-//    signZ = (1 - signZ) * 2 - 1;
-//
-//    Vector3f dir = (X_AXIS * signX +
-//                    Y_AXIS * signY +
-//                    Z_AXIS * signZ);
-//    return dir.Normalize();
-//}
-//
 Vector4uc SVOctree::DirectionToAnisoLocations(Vector2f& interp,
                                               const Vector3f& direction)
 {
@@ -180,7 +187,7 @@ float SVOctree::TraceRay(uint32_t& leafId, const RayF& ray,
         //return __int_as_float(fVal);
 
         // This is the float version
-        return std::log2f(-static_cast<float>(power));
+        return std::exp2f(-static_cast<float>(power));
     };
     // Instead of holding a large stack for each thread,
     // we hold a bit stack which will hold the node morton Id
@@ -532,14 +539,17 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     : linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
     , gradientTexture(gradientTexture)
-    , currentTexture(GuideDebugGUIFuncs::PG_TEXTURE_SIZE, PixelFormat::RGB8_UNORM)
-    , currentValues(GuideDebugGUIFuncs::PG_TEXTURE_SIZE[0] * GuideDebugGUIFuncs::PG_TEXTURE_SIZE[1], 0.0f)
+    , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
+    , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
     , maxValueDisplay(0.0f)
-    , treeBuffer(0)
-    , treeBufferSize(0)
 {
     // Load the Name
-    name = config[GuideDebug::NAME];
+    name = config[GuideDebug::NAME];    
+    mapSize = SceneIO::LoadVector<2, uint32_t>(config[MAP_SIZE_NAME]);
+
+    // Load Exact Sized Texture
+    currentTexture = TextureGL(mapSize, PixelFormat::RGBA8_UNORM);
+
     // Load SDTrees to memory
     octrees.resize(depthCount);
     for(uint32_t i = 0; i < depthCount; i++)
@@ -553,7 +563,7 @@ GDebugRendererSVO::~GDebugRendererSVO()
 {
 }
 
-bool GDebugRendererSVO::LoadOctree(SVOctree& sdTree,
+bool GDebugRendererSVO::LoadOctree(SVOctree& octree,
                                    const nlohmann::json& config,
                                    const std::string& configPath,
                                    uint32_t depth)
@@ -568,12 +578,33 @@ bool GDebugRendererSVO::LoadOctree(SVOctree& sdTree,
     if(!file.good()) return false;
 
     static_assert(sizeof(char) == sizeof(Byte), "\"Byte\" is not have sizeof(char)");
-    // Read STree Start Offset
-    uint64_t sTreeOffset;
-    file.read(reinterpret_cast<char*>(&sTreeOffset), sizeof(uint64_t));
+    // Read Info First (Leaf Count AABB etc)
+    file.read(reinterpret_cast<char*>(&octree.svoAABB), sizeof(AABB3f));
+    file.read(reinterpret_cast<char*>(&octree.voxelResolution), sizeof(uint32_t));
+    file.read(reinterpret_cast<char*>(&octree.leafDepth), sizeof(uint32_t));
+    file.read(reinterpret_cast<char*>(&octree.nodeCount), sizeof(uint32_t));
+    file.read(reinterpret_cast<char*>(&octree.leafCount), sizeof(uint32_t));
+    file.read(reinterpret_cast<char*>(&octree.leafVoxelSize), sizeof(float));
+    file.read(reinterpret_cast<char*>(&octree.levelOffsetCount), sizeof(uint32_t));
 
     // Read SVO Buffers in order
+    octree.nodes.resize(octree.nodeCount);
+    file.read(reinterpret_cast<char*>(octree.nodes.data()),
+              octree.nodeCount * sizeof(uint64_t));
+    //
+    octree.radianceRead.resize(octree.nodeCount);
+    file.read(reinterpret_cast<char*>(octree.radianceRead.data()),
+              octree.nodeCount * sizeof(SVOctree::AnisoRadianceF));
+    //
+    octree.leafParents.resize(octree.leafCount);
+    file.read(reinterpret_cast<char*>(octree.leafParents.data()),
+              octree.leafCount * sizeof(uint32_t));
+    //
+    octree.leafRadianceRead.resize(octree.leafCount);
+    file.read(reinterpret_cast<char*>(octree.leafRadianceRead.data()),
+              octree.leafCount * sizeof(SVOctree::AnisoRadianceF));
 
+     // All of the Data is Loaded
     return true;
 }
 
@@ -634,17 +665,108 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                       const SVOctree& svo = octrees[depth];
 
                       // Calculate Direction
+                      Vector2ui pixelId(index % mapSize[0],
+                                        index / mapSize[0]);
+                      Vector3f direction = DirIdToWorldDir(pixelId, mapSize);
 
-                      RayF ray;// (worldPos);
+                      RayF ray(direction, pos);
 
                       uint32_t leafIndex;
-                      svo.TraceRay(leafIndex, ray, svo.leafVoxelSize * 0.5f,
+                      svo.TraceRay(leafIndex, ray, 
+                                   svo.leafVoxelSize * 3.05f,
                                    std::numeric_limits<float>::max());
 
-                      float radiance = svo.ReadRadiance(leafIndex, true, -ray.getDirection());
+                      //Vector3f locColor = (leafIndex != UINT32_MAX) 
+                      //                          ? Utility::RandomColorRGB(leafIndex)
+                      //                          : Vector3f(0.0f);
+                      //float radiance = Utility::RGBToLuminance(locColor);
 
+                      float radiance = svo.ReadRadiance(leafIndex, true, -ray.getDirection());
+                      //if(radiance == 0.0f && leafIndex != UINT32_MAX)
+                      //    radiance = 0.01f;
                       currentValues[index] = radiance;
                   });
+
+    // Normalize the indices
+    maxValueDisplay = std::reduce(std::execution::par_unseq,
+                                  currentValues.cbegin(), currentValues.cend(),
+                                  -std::numeric_limits<float>::max(),
+                                  [](float a, float b) { return std::max(a, b); });
+
+    // Copy the actual current values to a byte buffer to copy....
+    std::vector<Byte> tempCurValsForCopy;
+    tempCurValsForCopy.resize(mapSize.Multiply() * sizeof(float));
+    std::memcpy(tempCurValsForCopy.data(), currentValues.data(), 
+                mapSize.Multiply() * sizeof(float));
+
+    // Load temporarily to a texture
+    TextureGL curTexture = TextureGL(mapSize, PixelFormat::R_FLOAT);
+    curTexture.CopyToImage(tempCurValsForCopy, Zero2ui, mapSize, PixelFormat::R_FLOAT);
+
+    // ============================= //
+    //     Call Reduction Shader     //
+    // ============================= //
+    // Get a max luminance buffer;
+    float initalMaxData = 0.0f;
+    GLuint maxBuffer;
+    glGenBuffers(1, &maxBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBuffer);
+    glBufferStorage(GL_SHADER_STORAGE_BUFFER, 1 * sizeof(float), &initalMaxData, 0);
+
+    // Both of these compute shaders total work count is same
+    const GLuint workCount = curTexture.Size()[1] * curTexture.Size()[0];
+    // Some WG Definitions (statically defined in shader)
+    static constexpr GLuint WORK_GROUP_1D_X = 256;
+    static constexpr GLuint WORK_GROUP_2D_X = 16;
+    static constexpr GLuint WORK_GROUP_2D_Y = 16;
+    // =======================================================
+    // Set Max Shader
+    compReduction.Bind();
+    // Bind Uniforms
+    glUniform2ui(U_RES, curTexture.Size()[0], curTexture.Size()[1]);
+    // Bind SSBO
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, maxBuffer);
+    // Textures
+    curTexture.Bind(T_IN_LUM_TEX);
+    // Dispatch Max Shader
+    // Max shader is 1D shader set data accordingly
+    GLuint gridX_1D = (workCount + WORK_GROUP_1D_X - 1) / WORK_GROUP_1D_X;
+    glDispatchCompute(gridX_1D, 1, 1);
+    glMemoryBarrier(GL_UNIFORM_BARRIER_BIT |
+                    GL_SHADER_STORAGE_BARRIER_BIT);
+    // =======================================================
+    // Unbind SSBO just to be sure
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, 0);
+    // ============================= //
+    //     Call Reduction Shader     //
+    // ============================= //
+    // Set Render Shader
+    compRefRender.Bind();
+    // Bind Uniforms
+    glUniform2ui(U_RES, curTexture.Size()[0], curTexture.Size()[1]);
+    glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
+    //
+    // UBOs
+    glBindBufferBase(GL_UNIFORM_BUFFER, UB_MAX_LUM, maxBuffer);
+    // Textures
+    curTexture.Bind(T_IN_LUM_TEX);
+    gradientTexture.Bind(T_IN_GRAD_TEX);  linearSampler.Bind(T_IN_GRAD_TEX);
+    // Images
+    glBindImageTexture(I_OUT_REF_IMAGE, currentTexture.TexId(),
+                       0, false, 0, GL_WRITE_ONLY,
+                       PixelFormatToSizedGL(currentTexture.Format()));
+    // Dispatch Render Shader
+    // Max shader is 2D shader set data accordingly
+    GLuint gridX_2D = (curTexture.Size()[0] + WORK_GROUP_2D_X - 1) / WORK_GROUP_2D_X;
+    GLuint gridY_2D = (curTexture.Size()[1] + WORK_GROUP_2D_Y - 1) / WORK_GROUP_2D_Y;
+    glDispatchCompute(gridX_2D, gridY_2D, 1);
+    // =======================================================
+    // All done!!!
+
+    // Delete Temp Max Buffer
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glDeleteBuffers(1, &maxBuffer);
+
 }
 
 bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,

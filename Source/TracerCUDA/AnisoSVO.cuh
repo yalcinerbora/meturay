@@ -216,7 +216,8 @@ class AnisoSVOctreeCPU
     size_t                  UsedGPUMemory() const;
     size_t                  UsedCPUMemory() const;
 
-    void                    DumpSVOAsBinary(std::vector<Byte>& data) const;
+    void                    DumpSVOAsBinary(std::vector<Byte>& data,
+                                            const CudaSystem& system) const;
 };
 
 template <class T>

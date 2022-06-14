@@ -867,9 +867,12 @@ Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
     // Center to the pixel as well
     Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + Vector2f(0.5f);
     Vector2f sphrCoords = Vector2f(dirXYFloat[0] * deltaXY[0],
-                                   Pi - dirXYFloat[1] * deltaXY[0]);
+                                   Pi - dirXYFloat[1] * deltaXY[1]);
 
-    return Utility::SphericalToCartesianUnit(sphrCoords);
+    Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
+    // Spherical Coords calculates as Z up change it to Y up
+    Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+    return dirYUp;
 }
 
 __global__
