@@ -34,6 +34,6 @@ class TracerSystemCUDA final : public TracerSystemI
                                               SceneLoadFlags = {}) override;
         TracerError             GenerateTracer(GPUTracerPtr&,
                                                const TracerParameters&,
-                                               const TracerOptions&,
+                                               const Options&,
                                                const std::string& tracerType) override;
 };

@@ -75,7 +75,7 @@ class VisorWindowInput : public VisorInputI
         void                    SetSceneCameraCount(uint32_t) override;
         void                    SetSceneAnalyticData(const SceneAnalyticData&) override;
         void                    SetTracerAnalyticData(const TracerAnalyticData&) override;
-        void                    SetTracerOptions(const TracerOptions&) override;
+        void                    SetTracerOptions(const Options&) override;
         void                    SetTracerParams(const TracerParameters&) override;
 
         void                    RenderGUI() override;

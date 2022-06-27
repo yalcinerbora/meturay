@@ -154,7 +154,7 @@ void VisorGUI::SetTracerAnalyticData(const TracerAnalyticData& tad)
     tracerAnalyticData = tad;
 }
 
-void VisorGUI::SetTracerOptions(const TracerOptions& tOpts)
+void VisorGUI::SetTracerOptions(const Options& tOpts)
 {
     currentTOpts = tOpts;
 }

@@ -23,7 +23,7 @@ class VisorCallbacksI;
 struct VisorTransform;
 struct VisorError;
 
-class TracerOptions;
+class Options;
 struct TracerParameters;
 
 struct TracerAnalyticData;
@@ -97,6 +97,6 @@ class VisorI : public ImageSaverI
         virtual void                    Update(uint32_t sceneCameraCount) = 0;
         virtual void                    Update(const SceneAnalyticData&) = 0;
         virtual void                    Update(const TracerAnalyticData&) = 0;
-        virtual void                    Update(const TracerOptions&) = 0;
+        virtual void                    Update(const Options&) = 0;
         virtual void                    Update(const TracerParameters&) = 0;
 };

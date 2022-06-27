@@ -10,7 +10,7 @@
 
 #include "Vector.h"
 
-class TracerOptionsI
+class OptionsI
 {
     public:
         enum  OptionType
@@ -30,7 +30,7 @@ class TracerOptionsI
         };
 
     public:
-        virtual                 ~TracerOptionsI() = default;
+        virtual                 ~OptionsI() = default;
 
         // Interface
         virtual TracerError     GetType(OptionType&, const std::string&) const = 0;

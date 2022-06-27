@@ -1031,6 +1031,10 @@ static void KCGenAndSampleDistribution(// Output
             uint32_t nodeId;
             bool isLeaf = ReadSVONodeId(nodeId, sNodeId);
             sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
+
+            //// Roll a dice stochastically cull bin (TEST)
+            //if(rng.Uniform() < 0.5f)
+            //    sNodeId = INVALID_BIN_ID;
         }
         __syncthreads();
 

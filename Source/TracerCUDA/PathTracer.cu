@@ -9,7 +9,7 @@
 #include "GenerationKernels.cuh"
 #include "GPUWork.cuh"
 
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/TracerCallbacksI.h"
 
 //#include "TracerDebug.h"
@@ -110,7 +110,7 @@ TracerError PathTracer::Initialize()
     return TracerError::OK;
 }
 
-TracerError PathTracer::SetOptions(const TracerOptionsI& opts)
+TracerError PathTracer::SetOptions(const OptionsI& opts)
 {
     TracerError err = TracerError::OK;
     if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
@@ -297,5 +297,5 @@ void PathTracer::AskOptions()
     std::string lightSamplerTypeString = LightSamplerCommon::LightSamplerTypeToString(options.lightSamplerType);
     list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(lightSamplerTypeString));
 
-    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
+    if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }

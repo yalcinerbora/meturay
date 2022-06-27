@@ -2,7 +2,7 @@
 #include "Log.h"
 #include "SceneIO.h"
 #include "SharedLib.h"
-#include "TracerOptions.h"
+#include "Options.h"
 #include "StripComments.h"
 #include "EnumStringConversions.h"
 #include "MovementSchemes.h"
@@ -142,7 +142,7 @@ bool ConfigParser::ParseVisorOptions(// Visor Input Related
 }
 
 bool ConfigParser::ParseTracerOptions(// Tracer Related
-                                      TracerOptions& tracerOptions,
+                                      Options& tracerOptions,
                                       TracerParameters& tracerParameters,
                                       std::string& tracerTypeName,
                                       // Tracer DLL Related
@@ -171,40 +171,40 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
 
         name = SceneIO::LoadString(jsnObj[VARIANT_NAME]);
         std::string typeName = SceneIO::LoadString(jsnObj[VARIANT_TYPE_NAME]);
-        TracerOptionsI::OptionType optType = EnumStringConverter::StringToTracerOptionType(typeName);
+        OptionsI::OptionType optType = EnumStringConverter::StringToOptionType(typeName);
         const nlohmann::json& valJson = jsnObj[VARIANT_VAL_NAME];
 
         // TODO: Better way to do this?
         switch(optType)
         {
-            case TracerOptionsI::BOOL:
+            case OptionsI::BOOL:
                 var = SceneIO::LoadBool(valJson);
                 break;
-            case TracerOptionsI::INT32:
+            case OptionsI::INT32:
                 var = SceneIO::LoadNumber<int32_t>(valJson);
                 break;
-            case TracerOptionsI::UINT32:
+            case OptionsI::UINT32:
                 var = SceneIO::LoadNumber<uint32_t>(valJson);
                 break;
-            case TracerOptionsI::FLOAT:
+            case OptionsI::FLOAT:
                 var = SceneIO::LoadNumber<float>(valJson);
                 break;
-            case TracerOptionsI::VECTOR2I:
+            case OptionsI::VECTOR2I:
                 var = SceneIO::LoadVector<2, int32_t>(valJson);
                 break;
-            case TracerOptionsI::VECTOR2UI:
+            case OptionsI::VECTOR2UI:
                 var = SceneIO::LoadVector<2, uint32_t>(valJson);
                 break;
-            case TracerOptionsI::VECTOR2:
+            case OptionsI::VECTOR2:
                 var = SceneIO::LoadVector<2, float>(valJson);
                 break;
-            case TracerOptionsI::VECTOR3:
+            case OptionsI::VECTOR3:
                 var = SceneIO::LoadVector<3, float>(valJson);
                 break;
-            case TracerOptionsI::VECTOR4:
+            case OptionsI::VECTOR4:
                 var = SceneIO::LoadVector<4, float>(valJson);
                 break;
-            case TracerOptionsI::STRING:
+            case OptionsI::STRING:
                 var = SceneIO::LoadString(valJson);
                 break;
             default:
@@ -238,7 +238,7 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
 
             varList.emplace(varName, var);
         }
-        tracerOptions = TracerOptions(std::move(varList));
+        tracerOptions = Options(std::move(varList));
 
         // Load Tracer Parameters
         ParseTracerParameters(tracerParameters, configJson[TRACER_PARAMS_NAME]);

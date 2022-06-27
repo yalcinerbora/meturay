@@ -7,7 +7,7 @@
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/VisorTransform.h"
 
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/TracerCallbacksI.h"
 
 #include "AOTracerWork.cuh"
@@ -77,7 +77,7 @@ TracerError AOTracer::Initialize()
     return TracerError::OK;
 }
 
-TracerError AOTracer::SetOptions(const TracerOptionsI& opts)
+TracerError AOTracer::SetOptions(const OptionsI& opts)
 {
     TracerError err = TracerError::OK;
     if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
@@ -212,5 +212,5 @@ void AOTracer::AskOptions()
     VariableList list;
     list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
 
-    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
+    if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }

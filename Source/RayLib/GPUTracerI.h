@@ -20,7 +20,7 @@ It is also responsible for utilizing all GPUs on the computer.
 #include "Types.h"
 #include "Constants.h"
 #include "HitStructs.h"
-#include "TracerOptionsI.h"
+#include "OptionsI.h"
 
 struct VisorTransform;
 struct TracerError;
@@ -43,7 +43,7 @@ class GPUTracerI
         // ===================//
         virtual TracerError             Initialize()  = 0;
         // Option Related
-        virtual TracerError             SetOptions(const TracerOptionsI&) = 0;
+        virtual TracerError             SetOptions(const OptionsI&) = 0;
         virtual void                    SetParameters(const TracerParameters&) = 0;
         virtual void                    AskOptions() = 0;
         virtual void                    AskParameters() = 0;

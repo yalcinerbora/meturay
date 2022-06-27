@@ -544,7 +544,7 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     , maxValueDisplay(0.0f)
 {
     // Load the Name
-    name = config[GuideDebug::NAME];    
+    name = config[GuideDebug::NAME];
     mapSize = SceneIO::LoadVector<2, uint32_t>(config[MAP_SIZE_NAME]);
 
     // Load Exact Sized Texture
@@ -672,11 +672,11 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                       RayF ray(direction, pos);
 
                       uint32_t leafIndex;
-                      svo.TraceRay(leafIndex, ray, 
+                      svo.TraceRay(leafIndex, ray,
                                    svo.leafVoxelSize * 3.05f,
                                    std::numeric_limits<float>::max());
 
-                      //Vector3f locColor = (leafIndex != UINT32_MAX) 
+                      //Vector3f locColor = (leafIndex != UINT32_MAX)
                       //                          ? Utility::RandomColorRGB(leafIndex)
                       //                          : Vector3f(0.0f);
                       //float radiance = Utility::RGBToLuminance(locColor);
@@ -696,7 +696,7 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
     // Copy the actual current values to a byte buffer to copy....
     std::vector<Byte> tempCurValsForCopy;
     tempCurValsForCopy.resize(mapSize.Multiply() * sizeof(float));
-    std::memcpy(tempCurValsForCopy.data(), currentValues.data(), 
+    std::memcpy(tempCurValsForCopy.data(), currentValues.data(),
                 mapSize.Multiply() * sizeof(float));
 
     // Load temporarily to a texture

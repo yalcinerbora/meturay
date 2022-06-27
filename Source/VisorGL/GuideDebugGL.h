@@ -60,7 +60,7 @@ class GuideDebugGL : public VisorI
         void                    Update(uint32_t) override;
         void                    Update(const SceneAnalyticData&) override;
         void                    Update(const TracerAnalyticData&) override;
-        void                    Update(const TracerOptions&) override;
+        void                    Update(const Options&) override;
         void                    Update(const TracerParameters&) override;
 
     protected:
@@ -106,5 +106,5 @@ inline void GuideDebugGL::Update(const VisorTransform&) {}
 inline void GuideDebugGL::Update(uint32_t) {}
 inline void GuideDebugGL::Update(const SceneAnalyticData&) {}
 inline void GuideDebugGL::Update(const TracerAnalyticData&) {}
-inline void GuideDebugGL::Update(const TracerOptions&) {}
+inline void GuideDebugGL::Update(const Options&) {}
 inline void GuideDebugGL::Update(const TracerParameters&) {}

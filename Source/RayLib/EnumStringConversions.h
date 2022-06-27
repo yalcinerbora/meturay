@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "TracerOptionsI.h"
+#include "OptionsI.h"
 
 // Visor Related
 enum class KeyboardKeyType;
@@ -32,7 +32,7 @@ namespace EnumStringConverter
     std::string             ScenePartitionerTypeToString(ScenePartitionerType);
 
     // Tracer Option Related
-    std::string             TracerOptionTypeToString(TracerOptionsI::OptionType);
+    std::string             OptionTypeToString(OptionsI::OptionType);
 
     // General
     std::string             PixelFormatTypeToString(PixelFormat);
@@ -51,7 +51,7 @@ namespace EnumStringConverter
     ScenePartitionerType        StringToScenePartitionerType(const std::string&);
 
     // Tracer Option Related
-    TracerOptionsI::OptionType  StringToTracerOptionType(const std::string&);
+    OptionsI::OptionType        StringToOptionType(const std::string&);
 
     // General
     PixelFormat                 StringToPixelFormatType(const std::string&);

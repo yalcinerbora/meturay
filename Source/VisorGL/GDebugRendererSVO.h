@@ -127,7 +127,7 @@ class GDebugRendererSVO : public GDebugRendererI
         // Shaders
         ShaderGL                compReduction;
         ShaderGL                compRefRender;
-      
+
         static bool             LoadOctree(SVOctree&,
                                            const nlohmann::json& config,
                                            const std::string& configPath,

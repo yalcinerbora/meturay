@@ -275,6 +275,6 @@ void VisorWindowInput::SetSceneCameraCount(uint32_t camCount)
 
 void VisorWindowInput::SetSceneAnalyticData(const SceneAnalyticData&) {}
 void VisorWindowInput::SetTracerAnalyticData(const TracerAnalyticData&) {}
-void VisorWindowInput::SetTracerOptions(const TracerOptions&) {}
+void VisorWindowInput::SetTracerOptions(const Options&) {}
 void VisorWindowInput::SetTracerParams(const TracerParameters&) {}
 void VisorWindowInput::RenderGUI() {}

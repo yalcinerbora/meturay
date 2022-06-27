@@ -10,7 +10,7 @@
 #include "RayLib/MovementSchemes.h"
 #include "RayLib/VisorError.h"
 // Tracer
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/TracerSystemI.h"
 // Node
 #include "RayLib/SelfNode.h"
@@ -85,7 +85,8 @@ int main(int argc, const char* argv[])
     SharedLibPtr<GPUTracerI> tracer = {nullptr, nullptr};
 
     // Parse Tracer Config
-    TracerOptions tracerOptions;
+    Options filterOptions;
+    Options tracerOptions;
     TracerParameters tracerParameters;
     SharedLibArgs tracerDLLEntryFunctionNames;
     std::string tracerDLLName;

@@ -33,7 +33,7 @@ class SelfNode
     public:
         // Constructor & Destructor
                     SelfNode(VisorI&, TracerSystemI&,
-                             const TracerOptions&,
+                             const Options&,
                              const TracerParameters&,
                              const std::string& tracerTypeName,
                              const Vector2i& resolution);
@@ -64,7 +64,7 @@ class SelfNode
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-         void       SendCurrentOptions(TracerOptions) override;
+         void       SendCurrentOptions(Options) override;
          void       SendCurrentParameters(TracerParameters) override;
          void       SendCurrentTransform(VisorTransform) override;
          void       SendCurrentSceneCameraCount(uint32_t) override;

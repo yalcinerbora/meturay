@@ -2,7 +2,7 @@
 #include "RayTracer.hpp"
 
 #include "RayLib/GPUSceneI.h"
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/BitManipulation.h"
 #include "RayLib/FileUtility.h"
@@ -17,6 +17,45 @@
 
 #include <array>
 
+// Currently These are compile time constants
+// since most of the internal call rely on compile time constants
+static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
+
+using PathGuideKernelFunction = void (*)(// Output
+                                         RayAuxWFPG*,
+                                         // I-O
+                                         RNGeneratorGPUI**,
+                                         // Input
+                                         // Per-ray
+                                         const RayGMem*,
+                                         const RayId*,
+                                         // Per bin
+                                         const uint32_t*,
+                                         const uint32_t*,
+                                         // Constants
+                                         const AnisoSVOctreeGPU,
+                                         uint32_t);
+
+static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_TPB =
+{
+    512,
+    512,
+    512,
+    256,
+    256,
+};
+
+static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegin(),
+                                                             PG_KERNEL_TPB.cend());
+
+static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KERNELS =
+{
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 64>,    // First bounce good approximation
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 64, 32>,    // Second bounce as well
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 32, 16>,    // Third bounce not so much
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce bad
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>       // Fifth is bad as well
+};
 
 template <class RNG>
 __global__
@@ -116,46 +155,6 @@ void KCSetCamPosToPathChain(// Output
     }
 }
 
-// Currently These are compile time constants
-// since most of the internal call rely on compile time constants
-static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
-
-using PathGuideKernelFunction = void (*)(// Output
-                                         RayAuxWFPG*,
-                                         // I-O
-                                         RNGeneratorGPUI**,
-                                         // Input
-                                         // Per-ray
-                                         const RayGMem*,
-                                         const RayId*,
-                                         // Per bin
-                                         const uint32_t*,
-                                         const uint32_t*,
-                                         // Constants
-                                         const AnisoSVOctreeGPU,
-                                         uint32_t);
-
-static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_TPB =
-{
-    512,
-    512,
-    512,
-    256,
-    256,
-};
-
-static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegin(),
-                                                             PG_KERNEL_TPB.cend());
-
-static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KERNELS =
-{
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 64>,    // First bounce good approximation
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 64, 32>,    // Second bounce as well
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 32, 16>,    // Third bounce not so much
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce bad
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>       // Fifth is bad as well
-};
-
 struct NodeIdFetchFunctor
 {
     __device__ inline
@@ -232,85 +231,85 @@ void WFPGTracer::GenerateGuidedDirections()
     // Init ray bins
     gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
                        //
-KCInitializeSVOBins,
-//
-dRayAux,
-dRays,
-rayCaster->WorkKeys(),
-scene.BaseBoundaryMaterial(),
-svo.TreeGPU(),
-rayCount);
+                       KCInitializeSVOBins,
+                       //
+                       dRayAux,
+                       dRays,
+                       rayCaster->WorkKeys(),
+                       scene.BaseBoundaryMaterial(),
+                       svo.TreeGPU(),
+                       rayCount);
 
-// Then call SVO to reduce the bins
-svo.CollapseRayCounts(options.minRayBinLevel,
-                      options.binRayCount,
-                      cudaSystem);
+    // Then call SVO to reduce the bins
+    svo.CollapseRayCounts(options.minRayBinLevel,
+                          options.binRayCount,
+                          cudaSystem);
 
-// Then rays check if their initial node is reduced
-gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
-                   //
-                   KCCheckReducedSVOBins,
-                   //
-                   dRayAux,
-                   svo.TreeGPU(),
-                   rayCount);
+    // Then rays check if their initial node is reduced
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                       //
+                       KCCheckReducedSVOBins,
+                       //
+                       dRayAux,
+                       svo.TreeGPU(),
+                       rayCount);
 
-// Partition the generated rays wrt. to the SVO nodeId
-uint32_t hPartitionCount;
-uint32_t* dPartitionOffsets;
-uint32_t* dPartitionBinIds;
-DeviceMemory partitionMemory;
-// Custom Ray Partition
-rayCaster->PartitionRaysWRTCustomData(hPartitionCount,
-                                      partitionMemory,
-                                      dPartitionOffsets,
-                                      dPartitionBinIds,
-                                      dRayAux,
-                                      NodeIdFetchFunctor(),
-                                      rayCount,
-                                      cudaSystem);
+    // Partition the generated rays wrt. to the SVO nodeId
+    uint32_t hPartitionCount;
+    uint32_t* dPartitionOffsets;
+    uint32_t* dPartitionBinIds;
+    DeviceMemory partitionMemory;
+    // Custom Ray Partition
+    rayCaster->PartitionRaysWRTCustomData(hPartitionCount,
+                                          partitionMemory,
+                                          dPartitionOffsets,
+                                          dPartitionBinIds,
+                                          dRayAux,
+                                          NodeIdFetchFunctor(),
+                                          rayCount,
+                                          cudaSystem);
 
-// Call the Trace and Sample Kernel
-// Select the kernel depending on the depth
-uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
-auto KCSampleKernel = PG_KERNELS[kernelIndex];
-RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
+    // Call the Trace and Sample Kernel
+    // Select the kernel depending on the depth
+    uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
+    auto KCSampleKernel = PG_KERNELS[kernelIndex];
+    RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
-auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
+    auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
 
-cudaEvent_t start, stop;
-CUDA_CHECK(cudaEventCreate(&start));
-CUDA_CHECK(cudaEventCreate(&stop));
+    cudaEvent_t start, stop;
+    CUDA_CHECK(cudaEventCreate(&start));
+    CUDA_CHECK(cudaEventCreate(&stop));
 
-CUDA_CHECK(cudaEventRecord(start));
-gpu.ExactKC_X(0, (cudaStream_t)0,
-              PG_KERNEL_TPB[kernelIndex], pgKernelBlockCount,
-              //
-              KCSampleKernel,
-              // Output
-              dRayAux,
-              // I-O
-              gpuGenerators,
-              // Input
-              // Per-ray
-              dRays,
-              rayCaster->RayIds(),
-              // Per bin
-              dPartitionOffsets,
-              dPartitionBinIds,
-              // Constants
-              svo.TreeGPU(),
-              hPartitionCount);
-CUDA_CHECK(cudaEventRecord(stop));
+    CUDA_CHECK(cudaEventRecord(start));
+    gpu.ExactKC_X(0, (cudaStream_t)0,
+                  PG_KERNEL_TPB[kernelIndex], pgKernelBlockCount,
+                  //
+                  KCSampleKernel,
+                  // Output
+                  dRayAux,
+                  // I-O
+                  gpuGenerators,
+                  // Input
+                  // Per-ray
+                  dRays,
+                  rayCaster->RayIds(),
+                  // Per bin
+                  dPartitionOffsets,
+                  dPartitionBinIds,
+                  // Constants
+                  svo.TreeGPU(),
+                  hPartitionCount);
+    CUDA_CHECK(cudaEventRecord(stop));
 
-float milliseconds = 0;
-float avgRayPerBin = static_cast<float>(rayCount) /
-static_cast<float>(pgKernelBlockCount);
+    float milliseconds = 0;
+    float avgRayPerBin = (static_cast<float>(rayCount) /
+                          static_cast<float>(hPartitionCount));
 
-CUDA_CHECK(cudaEventSynchronize(stop));
-CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
-METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
-         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
+    METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
+             currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
 }
 
 void WFPGTracer::TraceAndStorePhotons()
@@ -556,7 +555,7 @@ TracerError WFPGTracer::Initialize()
     return TracerError::OK;
 }
 
-TracerError WFPGTracer::SetOptions(const TracerOptionsI& opts)
+TracerError WFPGTracer::SetOptions(const OptionsI& opts)
 {
     TracerError err = TracerError::OK;
     if((err = opts.GetUInt(options.maximumDepth, MAX_DEPTH_NAME)) != TracerError::OK)
@@ -615,7 +614,7 @@ void WFPGTracer::AskOptions()
     list.emplace(RENDER_MODE_NAME, OptionVariable(WFPGRenderModeToString(options.renderMode)));
     list.emplace(DUMP_DEBUG_NAME, OptionVariable(options.dumpDebugData));
     list.emplace(DUMP_INTERVAL_NAME, OptionVariable(options.svoDumpInterval));
-    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
+    if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }
 
 void WFPGTracer::GenerateWork(uint32_t cameraIndex)

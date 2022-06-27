@@ -57,7 +57,7 @@ void AtomicAddToSSBO(float val)
 	// CAS Atomic operation for Atomic Max for floats
 	// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
 	uint assumed;
-	uint old = outMaxLum;
+	uint old = outAvgLum;
 	do
 	{
 		assumed = old;

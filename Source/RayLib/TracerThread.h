@@ -6,7 +6,7 @@
 #include "VisorTransform.h"
 #include "ThreadVariable.h"
 #include "Constants.h"
-#include "TracerOptions.h"
+#include "Options.h"
 #include "Log.h"
 
 class TracerSystemI;
@@ -27,7 +27,7 @@ class TracerThread : public LoopingThreadI
 
         // Tracer Parameters & Options
         // In case of reloading of tracer
-        TracerOptions               tracerOptions;
+        Options                     tracerOptions;
         TracerParameters            tracerParameters;
         std::string                 tracerTypeName;
         TracerCallbacksI&           tracerCallbacks;
@@ -75,7 +75,7 @@ class TracerThread : public LoopingThreadI
     public:
         // Constructors & Destructor
                         TracerThread(TracerSystemI&,
-                                     const TracerOptions&,
+                                     const Options&,
                                      const TracerParameters&,
                                      TracerCallbacksI&,
                                      const std::string& tracerTypeName);

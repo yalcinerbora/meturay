@@ -11,7 +11,7 @@ static const EnumNameList<ScenePartitionerType> ScenePartitionerTypeNames =
     "MULTI_GPU"
 };
 
-static const EnumNameList<TracerOptionsI::OptionType> TracerOptionTypeNames =
+static const EnumNameList<OptionsI::OptionType> TracerOptionTypeNames =
 {
     "bool",
     "int",
@@ -275,7 +275,7 @@ std::string EnumStringConverter::ScenePartitionerTypeToString(ScenePartitionerTy
     return ScenePartitionerTypeNames[static_cast<uint32_t>(t)];
 }
 
-std::string EnumStringConverter::TracerOptionTypeToString(TracerOptionsI::OptionType t)
+std::string EnumStringConverter::OptionTypeToString(OptionsI::OptionType t)
 {
     return TracerOptionTypeNames[static_cast<uint32_t>(t)];
 }
@@ -310,9 +310,9 @@ ScenePartitionerType EnumStringConverter::StringToScenePartitionerType(const std
     return StrToEnum<ScenePartitionerType>(s, ScenePartitionerTypeNames);
 }
 
-TracerOptionsI::OptionType EnumStringConverter::StringToTracerOptionType(const std::string& s)
+OptionsI::OptionType EnumStringConverter::StringToOptionType(const std::string& s)
 {
-    return StrToEnum<TracerOptionsI::OptionType>(s, TracerOptionTypeNames);
+    return StrToEnum<OptionsI::OptionType>(s, TracerOptionTypeNames);
 }
 
 PixelFormat EnumStringConverter::StringToPixelFormatType(const std::string& s)

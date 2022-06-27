@@ -15,7 +15,42 @@
 		"up": [0.0, 1.0, 0.0]
 	}],
 
-	"Lights": [],
+	"Lights": [
+		// Black Background
+		{ "id" : 0, "type" : "Null", "radiance": [0, 0, 0]},
+		{
+            "id": 1,
+            "type": "Primitive",
+            "primitive": 5,
+            "accelerator": 1,
+            "radiance" : [94.9, 69.8, 82.0]
+			// "radiance" : [9.49, 6.98, 8.20]
+        },
+		{
+            "id": 2,
+            "type": "Primitive",
+            "primitive": 6,
+            "accelerator": 1,
+            "radiance" : [100, 91.4, 65.1]
+			// "radiance" : [10.0, 9.14, 6.51]
+        },
+		{
+            "id": 3,
+            "type": "Primitive",
+            "primitive": 7,
+            "accelerator": 1,
+            "radiance" : [79.2, 99.6, 66.7]
+			// "radiance" : [7.92, 9.96, 6.67]
+        },
+		{
+            "id": 4,
+            "type": "Primitive",
+            "primitive": 8,
+            "accelerator": 1,
+            "radiance" : [49.4, 67.8, 75.7]
+			// "radiance" : [4.94, 6.78, 7.57]
+        }
+	],
 
 	"Mediums": [{"id" : 0, "type" : "Vacuum"}],
 
@@ -24,12 +59,6 @@
     "Textures": [],
 
 	"Materials":[
-	{
-		// Black Background
-		"id": 0,
-		"type": "BConstant",
-		"radiance" : [0.0, 0.0, 0.0]
-	},
     {
 		// Gray Diffuse Mat
 		"id": 1,
@@ -45,15 +74,6 @@
         "roughness": [0.01, 0.05, 0.09, 0.15],
         "metallic": [1, 1, 1, 1],
         "specular": [1, 1, 1, 1]
-	},
-    {
-		// Lights
-		"id": [6, 7, 8, 9],
-		"type": "BConstant",
-		"radiance" : [[94.9, 69.8, 82.0], [100, 91.4, 65.1],
-                      [79.2, 99.6, 66.7], [49.4, 67.8, 75.7]]
-		// "radiance" : [[9.49, 6.98, 8.20], [10.0, 9.14, 6.51],
-        //               [7.92, 9.96, 6.67], [4.94, 6.78, 7.57]]
 	}],
 
 	"Primitives":[
@@ -69,7 +89,7 @@
 		// MIS Planes
 		"id": [1, 2, 3, 4],
 		"type": "Triangle",
-		"name": "../Surfaces/mis_planes2.obj",
+		"name": "../Surfaces/mis_planes.obj",
 		"tag": "assimp_",
 		"innerIndex": [0, 1, 2, 3],
         "cullFace": [false, false, false, false]
@@ -81,7 +101,7 @@
         "name": ".nodeSphere",
         "position": [[-15, 22, -30], [-5, 22, -30],
                      [5, 22, -30], [15, 22, -30]],
-        "radius": [0.2, 1, 2, 3]
+        "radius": [0.2, 0.75, 1.5, 3]
 
     }],
 
@@ -92,7 +112,7 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "BasicBVH"},
-    "BaseBoundaryMaterial": 0,
+    "BaseBoundaryLight": 0,
     "BaseMedium" : 0,
 
 	"Surfaces": [
@@ -109,14 +129,14 @@
 		"accelerator": 0,
 		"material": [2, 3, 4, 5],
         "primitive": [1, 2, 3, 4]
-	}
-],
+	}],
 
-	"LightSurfaces": [
-        {"primitive": 5, "accelerator": 1, "material": 6},
-        {"primitive": 6, "accelerator": 1, "material": 7},
-        {"primitive": 7, "accelerator": 1, "material": 8},
-        {"primitive": 8, "accelerator": 1, "material": 9}
+	"LightSurfaces":
+	[
+        {"light": 1},
+        {"light": 2},
+        {"light": 3},
+        {"light": 4}
     ],
 
     "CameraSurfaces": [{"camera": 0}]

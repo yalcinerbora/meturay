@@ -13,7 +13,7 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/TracerCallbacksI.h"
 
 #include "TracerDebug.h"
@@ -163,7 +163,7 @@ TracerError PPGTracer::Initialize()
     return TracerError::OK;
 }
 
-TracerError PPGTracer::SetOptions(const TracerOptionsI& opts)
+TracerError PPGTracer::SetOptions(const OptionsI& opts)
 {
     TracerError err = TracerError::OK;
     if((err = opts.GetUInt(options.maximumDepth, MAX_DEPTH_NAME)) != TracerError::OK)
@@ -505,5 +505,5 @@ void PPGTracer::AskOptions()
     list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
 
-    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
+    if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }

@@ -16,7 +16,7 @@ the VisorGL singleton.
 #include "RayLib/MPMCQueue.h"
 #include "RayLib/ThreadVariable.h"
 #include "RayLib/AnalyticData.h"
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/VisorI.h"
 
 #include "ShaderGL.h"
@@ -184,7 +184,7 @@ class VisorGL : public VisorI
         void                    Update(uint32_t sceneCameraCount) override;
         void                    Update(const SceneAnalyticData&) override;
         void                    Update(const TracerAnalyticData&) override;
-        void                    Update(const TracerOptions&) override;
+        void                    Update(const Options&) override;
         void                    Update(const TracerParameters&) override;
 
         // Setting rendering context on current thread

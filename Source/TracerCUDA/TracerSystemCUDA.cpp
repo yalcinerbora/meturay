@@ -3,7 +3,7 @@
 
 #include "RayLib/SurfaceLoaderGenerator.h"
 #include "RayLib/GPUTracerI.h"
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/Log.h"
 
 #include "ScenePartitioner.h"
@@ -79,7 +79,7 @@ void TracerSystemCUDA::GenerateScene(GPUSceneI*& newScene,
 
 TracerError TracerSystemCUDA::GenerateTracer(GPUTracerPtr& tracer,
                                              const TracerParameters& params,
-                                             const TracerOptions& opts,
+                                             const Options& opts,
                                              const std::string& tracerType)
 {
     SceneError scnE = logicGenerator->GenerateTracer(tracer,

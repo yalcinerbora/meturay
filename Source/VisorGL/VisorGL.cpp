@@ -487,7 +487,7 @@ void VisorGL::Update(const TracerAnalyticData& a)
     visorInput->SetTracerAnalyticData(a);
 }
 
-void VisorGL::Update(const TracerOptions& tOpts)
+void VisorGL::Update(const Options& tOpts)
 {
     visorInput->SetTracerOptions(tOpts);
 }

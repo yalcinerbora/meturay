@@ -1,12 +1,12 @@
 #include "SelfNode.h"
 
-#include "TracerOptions.h"
+#include "Options.h"
 #include "VisorTransform.h"
 #include "AnalyticData.h"
 #include "VisorI.h"
 
 SelfNode::SelfNode(VisorI& v, TracerSystemI& t,
-                   const TracerOptions& opts,
+                   const Options& opts,
                    const TracerParameters& params,
                    const std::string& tracerTypeName,
                    const Vector2i& resolution)
@@ -124,7 +124,7 @@ void SelfNode::SendImage(const std::vector<Byte> data,
     visor.AccumulatePortion(data, f, offset, start, end);
 }
 
-void SelfNode::SendCurrentOptions(TracerOptions tOpts)
+void SelfNode::SendCurrentOptions(Options tOpts)
 {
     visor.Update(tOpts);
 }

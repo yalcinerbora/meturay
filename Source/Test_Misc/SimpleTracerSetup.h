@@ -24,7 +24,7 @@
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/NodeI.h"
 #include "RayLib/AnalyticData.h"
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/TracerError.h"
 #include "RayLib/SceneError.h"
 
@@ -89,7 +89,7 @@ class MockNode
                               PixelFormat, size_t offset,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
-        void        SendCurrentOptions(TracerOptions) override {};
+        void        SendCurrentOptions(Options) override {};
         void        SendCurrentParameters(TracerParameters) override {};
         void        SendCurrentTransform(VisorTransform) override {};
         void        SendCurrentSceneCameraCount(uint32_t) override {};
@@ -194,7 +194,7 @@ class SimpleTracerSetup
         };
 
         static constexpr uint32_t MAX_S_TREE = std::numeric_limits<uint32_t>::max();
-        const TracerOptions opts = VariableList
+        const Options opts = VariableList
         {
             // Mixed
             {"Samples", OptionVariable(MockNode::SAMPLE_COUNT)},

@@ -10,7 +10,7 @@
 #include "RayLib/ImageIOError.h"
 
 TracerThread::TracerThread(TracerSystemI& t,
-                           const TracerOptions& opts,
+                           const Options& opts,
                            const TracerParameters& params,
                            TracerCallbacksI& tracerCallbacks,
                            const std::string& tracerTypeName)

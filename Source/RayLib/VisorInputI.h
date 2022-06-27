@@ -15,7 +15,7 @@ class VisorCallbacksI;
 struct VisorTransform;
 struct SceneAnalyticData;
 struct TracerAnalyticData;
-class TracerOptions;
+class Options;
 struct TracerParameters;
 
 using KeyCallbacks = std::multimap<std::pair<KeyboardKeyType, KeyAction>, std::function<void()>>;
@@ -74,7 +74,7 @@ class VisorInputI : public WindowInputI
         virtual void        SetSceneCameraCount(uint32_t) = 0;
         virtual void        SetSceneAnalyticData(const SceneAnalyticData&) = 0;
         virtual void        SetTracerAnalyticData(const TracerAnalyticData&) = 0;
-        virtual void        SetTracerOptions(const TracerOptions&) = 0;
+        virtual void        SetTracerOptions(const Options&) = 0;
         virtual void        SetTracerParams(const TracerParameters&) = 0;
 };
 

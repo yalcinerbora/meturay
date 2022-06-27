@@ -1051,10 +1051,10 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
     byteSizes[2] = treeGPU.leafCount * sizeof(uint32_t);        // dLeafParentSize
     byteSizes[3] = treeGPU.leafCount * sizeof(AnisoRadianceF);  // dLeafRadianceReadSize
     // Calculate the offsets and total size
-    size_t bufferTotalSize = std::reduce(byteSizes.cbegin(), byteSizes.cend(), 0);
+    size_t bufferTotalSize = std::reduce(byteSizes.cbegin(), byteSizes.cend(), 0ull);
 
     size_t totalSize = (bufferTotalSize + sizeof(AABB3f) +
-                        5 * sizeof(uint32_t) + 
+                        5 * sizeof(uint32_t) +
                         sizeof(float));
 
     data.resize(totalSize);
@@ -1081,7 +1081,7 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
     offset += byteSizes[0];
     // Radiance Cache Node
     ConvertAnisoHalfToFloat(treeGPU.dRadianceRead, treeGPU.nodeCount);
-    CUDA_CHECK(cudaMemcpy(data.data() + offset, 
+    CUDA_CHECK(cudaMemcpy(data.data() + offset,
                           static_cast<void*>(halfConvertedMemory),
                           byteSizes[1], cudaMemcpyDeviceToHost));
     offset += byteSizes[1];

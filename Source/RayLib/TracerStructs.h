@@ -58,7 +58,7 @@ using WorkBatchCreationInfo = std::vector<std::tuple<uint32_t,
 using BoundaryWorkBatchCreationInfo = std::vector<std::tuple<uint32_t, EndpointType, const CPUEndpointGroupI*>>;
 
 // Logic Independent parameters for tracer
-// Logic Dependent ones will be provided by TracerOptionsI
+// Logic Dependent ones will be provided by OptionsI
 struct TracerParameters
 {
     bool        forceOptiX; // Force use optix

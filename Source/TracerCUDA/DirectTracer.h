@@ -59,7 +59,7 @@ class DirectTracer : public RayTracer
                                 ~DirectTracer() = default;
 
         TracerError             Initialize() override;
-        TracerError             SetOptions(const TracerOptionsI&) override;
+        TracerError             SetOptions(const OptionsI&) override;
         void                    AskOptions() override;
         //
         void                    GenerateWork(uint32_t cameraIndex) override;

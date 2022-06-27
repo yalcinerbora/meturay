@@ -9,7 +9,7 @@
 #include "RayLib/Vector.h"
 #include "RayLib/VisorCallbacksI.h"
 #include "RayLib/AnalyticData.h"
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 
 struct GLFWwindow;
 
@@ -26,7 +26,7 @@ class VisorGUI : public VisorWindowInput
 
         TracerAnalyticData      tracerAnalyticData;
         SceneAnalyticData       sceneAnalyticData;
-        TracerOptions           currentTOpts;
+        Options                 currentTOpts;
         TracerParameters        currentTParams;
 
         // Read Only State
@@ -53,7 +53,7 @@ class VisorGUI : public VisorWindowInput
 
         void            SetSceneAnalyticData(const SceneAnalyticData&) override;
         void            SetTracerAnalyticData(const TracerAnalyticData&) override;
-        void            SetTracerOptions(const TracerOptions&) override;
+        void            SetTracerOptions(const Options&) override;
         void            SetTracerParams(const TracerParameters&) override;
 
 };

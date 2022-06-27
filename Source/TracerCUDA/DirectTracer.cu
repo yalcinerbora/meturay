@@ -8,7 +8,7 @@
 #include "RayLib/TracerCallbacksI.h"
 #include "RayLib/VisorTransform.h"
 
-#include "RayLib/TracerOptions.h"
+#include "RayLib/Options.h"
 #include "RayLib/TracerCallbacksI.h"
 
 //#include "TracerLib/TracerDebug.h"
@@ -63,7 +63,7 @@ std::string DirectTracer::RenderTypeToString(RenderType rt)
     return RenderTypeNames[static_cast<int>(rt)];
 }
 
-TracerError DirectTracer::SetOptions(const TracerOptionsI& opts)
+TracerError DirectTracer::SetOptions(const OptionsI& opts)
 {
     TracerError err = TracerError::OK;
     if((err = opts.GetInt(options.sampleCount, SAMPLE_NAME)) != TracerError::OK)
@@ -317,5 +317,5 @@ void DirectTracer::AskOptions()
     std::string renderTypeString = RenderTypeToString(options.renderType);
     list.emplace(RENDER_TYPE_NAME, OptionVariable(renderTypeString));
 
-    if(callbacks) callbacks->SendCurrentOptions(TracerOptions(std::move(list)));
+    if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }

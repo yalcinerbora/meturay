@@ -13,7 +13,7 @@ struct SceneAnalyticData;
 struct TracerParameters;
 struct VisorTransform;
 
-class TracerOptions;
+class Options;
 
 class TracerCallbacksI
 {
@@ -31,7 +31,7 @@ class TracerCallbacksI
                                   PixelFormat, size_t offset,
                                   Vector2i start = Zero2i,
                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
-        virtual void    SendCurrentOptions(TracerOptions) = 0;
+        virtual void    SendCurrentOptions(Options) = 0;
         virtual void    SendCurrentParameters(TracerParameters) = 0;
         virtual void    SendCurrentTransform(VisorTransform) = 0;
         virtual void    SendCurrentSceneCameraCount(uint32_t) = 0;

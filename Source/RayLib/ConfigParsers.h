@@ -6,7 +6,7 @@
 
 #include "VisorInputStructs.h"
 
-class TracerOptions;
+class Options;
 class MovementSchemeI;
 
 struct VisorOptions;
@@ -33,7 +33,7 @@ namespace ConfigParser
                            const std::string& configFileName);
 
     bool ParseTracerOptions(// Tracer Related
-                            TracerOptions& tracerOptions,
+                            Options& tracerOptions,
                             TracerParameters& tracerParameters,
                             std::string& tracerTypeName,
                             // Tracer DLL Related

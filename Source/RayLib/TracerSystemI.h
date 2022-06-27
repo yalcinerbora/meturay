@@ -12,7 +12,7 @@ struct TracerError;
 struct SceneError;
 
 class SurfaceLoaderGenerator;
-class TracerOptions;
+class Options;
 
 enum class ScenePartitionerType
 {
@@ -44,6 +44,6 @@ class TracerSystemI
                                                       SceneLoadFlags = {}) = 0;
         virtual TracerError             GenerateTracer(GPUTracerPtr&,
                                                        const TracerParameters&,
-                                                       const TracerOptions&,
+                                                       const Options&,
                                                        const std::string& tracerType) = 0;
 };

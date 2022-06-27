@@ -9,8 +9,9 @@
 #include <variant>
 #include <map>
 #include <string>
+#include <nlohmann/json_fwd.hpp>
 
-#include "TracerOptionsI.h"
+#include "OptionsI.h"
 
 // ORDER OF THIS SHOULD BE SAME AS THE "OPTION_TYPE" ENUM
 using OptionVariable = std::variant<bool, int32_t, uint32_t, float,
@@ -18,10 +19,9 @@ using OptionVariable = std::variant<bool, int32_t, uint32_t, float,
                                     Vector2, Vector3, Vector4,
                                     std::string>;
 // Cuda (nvcc) did not liked this :(
-
 using VariableList = std::map<std::string, OptionVariable>;
 
-class TracerOptions : public TracerOptionsI
+class Options : public OptionsI
 {
     private:
         VariableList    variables;
@@ -33,9 +33,10 @@ class TracerOptions : public TracerOptionsI
 
     public:
         // Constructors & Destructor
-                        TracerOptions();
-                        TracerOptions(VariableList&&);
-                        ~TracerOptions() = default;
+                        Options();
+                        Options(VariableList&&);
+                        Options(const nlohmann::json&);
+                        ~Options() = default;
 
         // Interface
         TracerError     GetType(OptionType&, const std::string&) const override;
@@ -69,15 +70,15 @@ class TracerOptions : public TracerOptionsI
         TracerError     SetVector2ui(const Vector2ui, const std::string&) override;
 };
 
-inline TracerOptions::TracerOptions()
+inline Options::Options()
 {}
 
-inline TracerOptions::TracerOptions(VariableList&& v)
+inline Options::Options(VariableList&& v)
  : variables(v)
 {}
 
 template <class T>
-TracerError TracerOptions::Get(T& v, const std::string& s) const
+TracerError Options::Get(T& v, const std::string& s) const
 {
     auto loc = variables.end();
     if((loc = variables.find(s)) == variables.end())
@@ -90,7 +91,7 @@ TracerError TracerOptions::Get(T& v, const std::string& s) const
 }
 
 template <class T>
-TracerError TracerOptions::Set(const T& v, const std::string& s)
+TracerError Options::Set(const T& v, const std::string& s)
 {
     auto loc = variables.end();
     if((loc = variables.find(s)) == variables.end())
@@ -105,7 +106,7 @@ TracerError TracerOptions::Set(const T& v, const std::string& s)
     return TracerError::OK;
 }
 
-inline TracerError TracerOptions::GetType(OptionType& t, const std::string& s) const
+inline TracerError Options::GetType(OptionType& t, const std::string& s) const
 {
     auto loc = variables.end();
     if((loc = variables.find(s)) == variables.end())
@@ -116,102 +117,102 @@ inline TracerError TracerOptions::GetType(OptionType& t, const std::string& s) c
     return TracerError::OK;
 }
 
-inline TracerError TracerOptions::GetBool(bool& v, const std::string& s) const
+inline TracerError Options::GetBool(bool& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetString(std::string& v, const std::string& s) const
+inline TracerError Options::GetString(std::string& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetFloat(float& v, const std::string& s) const
+inline TracerError Options::GetFloat(float& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetVector2(Vector2& v, const std::string& s) const
+inline TracerError Options::GetVector2(Vector2& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetVector3(Vector3& v, const std::string& s) const
+inline TracerError Options::GetVector3(Vector3& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetVector4(Vector4& v, const std::string& s) const
+inline TracerError Options::GetVector4(Vector4& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetInt(int32_t& v, const std::string& s) const
+inline TracerError Options::GetInt(int32_t& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetUInt(uint32_t& v, const std::string& s) const
+inline TracerError Options::GetUInt(uint32_t& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetVector2i(Vector2i& v, const std::string& s) const
+inline TracerError Options::GetVector2i(Vector2i& v, const std::string& s) const
 {
     return Get(v, s);
 }
 
-inline TracerError TracerOptions::GetVector2ui(Vector2ui& v, const std::string& s) const
+inline TracerError Options::GetVector2ui(Vector2ui& v, const std::string& s) const
 {
     return Get(v, s);
 }
 //==================================
-inline TracerError TracerOptions::SetBool(bool v, const std::string& s)
+inline TracerError Options::SetBool(bool v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetString(const std::string& v, const std::string& s)
+inline TracerError Options::SetString(const std::string& v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetFloat(float v, const std::string& s)
+inline TracerError Options::SetFloat(float v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetVector2(const Vector2& v, const std::string& s)
+inline TracerError Options::SetVector2(const Vector2& v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetVector3(const Vector3& v, const std::string& s)
+inline TracerError Options::SetVector3(const Vector3& v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetVector4(const Vector4& v, const std::string& s)
+inline TracerError Options::SetVector4(const Vector4& v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetInt(int32_t v, const std::string& s)
+inline TracerError Options::SetInt(int32_t v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetUInt(uint32_t v, const std::string& s)
+inline TracerError Options::SetUInt(uint32_t v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetVector2i(const Vector2i v, const std::string& s)
+inline TracerError Options::SetVector2i(const Vector2i v, const std::string& s)
 {
     return Set(v, s);
 }
 
-inline TracerError TracerOptions::SetVector2ui(const Vector2ui v, const std::string& s)
+inline TracerError Options::SetVector2ui(const Vector2ui v, const std::string& s)
 {
     return Set(v, s);
 }

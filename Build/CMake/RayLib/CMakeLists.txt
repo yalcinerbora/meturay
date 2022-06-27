@@ -40,7 +40,7 @@ set(SRC_INTERFACES
     ${CURRENT_SOURCE_DIR}/MovementSchemeI.h
     ${CURRENT_SOURCE_DIR}/NodeI.h
     ${CURRENT_SOURCE_DIR}/TracerCallbacksI.h
-    ${CURRENT_SOURCE_DIR}/TracerOptionsI.h
+    ${CURRENT_SOURCE_DIR}/OptionsI.h
     ${CURRENT_SOURCE_DIR}/TracerSystemI.h
     ${CURRENT_SOURCE_DIR}/VisorCallbacksI.h
     ${CURRENT_SOURCE_DIR}/VisorI.h
@@ -142,7 +142,8 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/CudaCheck.h
     ${CURRENT_SOURCE_DIR}/Log.h
     ${CURRENT_SOURCE_DIR}/PrimitiveDataTypes.h
-    ${CURRENT_SOURCE_DIR}/TracerOptions.h)
+    ${CURRENT_SOURCE_DIR}/Options.cpp
+    ${CURRENT_SOURCE_DIR}/Options.h)
 
 set(SRC_ALL
     ${SRC_CPU_CONTAINERS}
