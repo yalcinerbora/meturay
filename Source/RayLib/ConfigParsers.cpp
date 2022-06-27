@@ -162,57 +162,6 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
     static constexpr const char* TRACER_TYPE_NAME = "TracerTypeName";
     static constexpr const char* PARTITION_TYPE_NAME = "ScenePartitionType";
 
-    auto ParseVariantObject = [](std::string& name, OptionVariable& var,
-                                 const nlohmann::json& jsnObj) -> bool
-    {
-        static constexpr const char* VARIANT_NAME = "name";
-        static constexpr const char* VARIANT_TYPE_NAME = "type";
-        static constexpr const char* VARIANT_VAL_NAME = "val";
-
-        name = SceneIO::LoadString(jsnObj[VARIANT_NAME]);
-        std::string typeName = SceneIO::LoadString(jsnObj[VARIANT_TYPE_NAME]);
-        OptionsI::OptionType optType = EnumStringConverter::StringToOptionType(typeName);
-        const nlohmann::json& valJson = jsnObj[VARIANT_VAL_NAME];
-
-        // TODO: Better way to do this?
-        switch(optType)
-        {
-            case OptionsI::BOOL:
-                var = SceneIO::LoadBool(valJson);
-                break;
-            case OptionsI::INT32:
-                var = SceneIO::LoadNumber<int32_t>(valJson);
-                break;
-            case OptionsI::UINT32:
-                var = SceneIO::LoadNumber<uint32_t>(valJson);
-                break;
-            case OptionsI::FLOAT:
-                var = SceneIO::LoadNumber<float>(valJson);
-                break;
-            case OptionsI::VECTOR2I:
-                var = SceneIO::LoadVector<2, int32_t>(valJson);
-                break;
-            case OptionsI::VECTOR2UI:
-                var = SceneIO::LoadVector<2, uint32_t>(valJson);
-                break;
-            case OptionsI::VECTOR2:
-                var = SceneIO::LoadVector<2, float>(valJson);
-                break;
-            case OptionsI::VECTOR3:
-                var = SceneIO::LoadVector<3, float>(valJson);
-                break;
-            case OptionsI::VECTOR4:
-                var = SceneIO::LoadVector<4, float>(valJson);
-                break;
-            case OptionsI::STRING:
-                var = SceneIO::LoadString(valJson);
-                break;
-            default:
-                return false;
-        }
-        return true;
-    };
-
     try
     {
         // Always assume filenames are UTF-8
@@ -224,21 +173,8 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
         nlohmann::json configJson = nlohmann::json::parse(file, nullptr,
                                                           true, true);
         // Json is Loaded
-
         // Load Tracer Options
-        VariableList varList;
-        const auto& tOptsJson = configJson[TRACER_OPTS_NAME];
-        for(const auto& optsNode : tOptsJson)
-        {
-            OptionVariable var;
-            std::string varName;
-
-            if(!ParseVariantObject(varName, var, optsNode))
-                return false;
-
-            varList.emplace(varName, var);
-        }
-        tracerOptions = Options(std::move(varList));
+        tracerOptions = Options(configJson[TRACER_OPTS_NAME]);
 
         // Load Tracer Parameters
         ParseTracerParameters(tracerParameters, configJson[TRACER_PARAMS_NAME]);

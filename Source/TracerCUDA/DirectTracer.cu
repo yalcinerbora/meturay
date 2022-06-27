@@ -313,7 +313,7 @@ void DirectTracer::AskOptions()
 {
     // Generate Tracer Object
     VariableList list;
-    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+    list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.sampleCount)));
     std::string renderTypeString = RenderTypeToString(options.renderType);
     list.emplace(RENDER_TYPE_NAME, OptionVariable(renderTypeString));
 

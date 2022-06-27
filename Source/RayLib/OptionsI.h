@@ -16,11 +16,9 @@ class OptionsI
         enum  OptionType
         {
             BOOL,
-            INT32,
-            UINT32,
+            INT64,
             FLOAT,
-            VECTOR2I,
-            VECTOR2UI,
+            VECTOR2L,
             VECTOR2,
             VECTOR3,
             VECTOR4,

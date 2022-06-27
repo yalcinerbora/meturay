@@ -288,11 +288,11 @@ void PathTracer::AskOptions()
 {
     // Generate Tracer Object
     VariableList list;
-    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
-    list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
+    list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.sampleCount)));
+    list.emplace(MAX_DEPTH_NAME, OptionVariable(static_cast<int64_t>(options.maximumDepth)));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
     list.emplace(DIRECT_LIGHT_MIS_NAME, OptionVariable(options.directLightMIS));
-    list.emplace(RR_START_NAME, OptionVariable(options.rrStart));
+    list.emplace(RR_START_NAME, OptionVariable(static_cast<int64_t>(options.rrStart)));
 
     std::string lightSamplerTypeString = LightSamplerCommon::LightSamplerTypeToString(options.lightSamplerType);
     list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(lightSamplerTypeString));

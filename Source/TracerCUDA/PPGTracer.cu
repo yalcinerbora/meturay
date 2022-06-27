@@ -501,8 +501,8 @@ void PPGTracer::AskOptions()
 {
     // Generate Tracer Object
     VariableList list;
-    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
-    list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
+    list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.sampleCount)));
+    list.emplace(MAX_DEPTH_NAME, OptionVariable(static_cast<int64_t>(options.maximumDepth)));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
 
     if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));

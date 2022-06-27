@@ -602,18 +602,18 @@ void WFPGTracer::AskOptions()
 {
     VariableList list;
 
-    list.emplace(MAX_DEPTH_NAME, OptionVariable(options.maximumDepth));
-    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
-    list.emplace(RR_START_NAME, OptionVariable(options.rrStart));
+    list.emplace(MAX_DEPTH_NAME, OptionVariable(static_cast<int64_t>(options.maximumDepth)));
+    list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.sampleCount)));
+    list.emplace(RR_START_NAME, OptionVariable(static_cast<int64_t>(options.rrStart)));
     list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(LightSamplerCommon::LightSamplerTypeToString(options.lightSamplerType)));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
     list.emplace(DIRECT_LIGHT_MIS_NAME, OptionVariable(options.directLightMIS));
-    list.emplace(OCTREE_LEVEL_NAME, OptionVariable(options.octreeLevel));
-    list.emplace(RAY_BIN_MIN_LEVEL_NAME, OptionVariable(options.minRayBinLevel));
-    list.emplace(BIN_RAY_COUNT_NAME, OptionVariable(options.binRayCount));
+    list.emplace(OCTREE_LEVEL_NAME, OptionVariable(static_cast<int64_t>(options.octreeLevel)));
+    list.emplace(RAY_BIN_MIN_LEVEL_NAME, OptionVariable(static_cast<int64_t>(options.minRayBinLevel)));
+    list.emplace(BIN_RAY_COUNT_NAME, OptionVariable(static_cast<int64_t>(options.binRayCount)));
     list.emplace(RENDER_MODE_NAME, OptionVariable(WFPGRenderModeToString(options.renderMode)));
     list.emplace(DUMP_DEBUG_NAME, OptionVariable(options.dumpDebugData));
-    list.emplace(DUMP_INTERVAL_NAME, OptionVariable(options.svoDumpInterval));
+    list.emplace(DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.svoDumpInterval)));
     if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }
 

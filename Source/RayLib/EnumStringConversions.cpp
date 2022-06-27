@@ -15,10 +15,8 @@ static const EnumNameList<OptionsI::OptionType> TracerOptionTypeNames =
 {
     "bool",
     "int",
-    "uint",
     "float",
-    "vec2i",
-    "vec2ui",
+    "vec2l",
     "vec2",
     "vec3",
     "vec4",

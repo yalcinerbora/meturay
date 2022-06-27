@@ -210,7 +210,7 @@ void AOTracer::AskOptions()
 {
     // Generate Tracer Object
     VariableList list;
-    list.emplace(SAMPLE_NAME, OptionVariable(options.sampleCount));
+    list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.sampleCount)));
 
     if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }

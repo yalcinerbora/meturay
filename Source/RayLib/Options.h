@@ -14,8 +14,8 @@
 #include "OptionsI.h"
 
 // ORDER OF THIS SHOULD BE SAME AS THE "OPTION_TYPE" ENUM
-using OptionVariable = std::variant<bool, int32_t, uint32_t, float,
-                                    Vector2i, Vector2ui,
+using OptionVariable = std::variant<bool, int64_t, float,
+                                    Vector2l,
                                     Vector2, Vector3, Vector4,
                                     std::string>;
 // Cuda (nvcc) did not liked this :(
@@ -149,22 +149,66 @@ inline TracerError Options::GetVector4(Vector4& v, const std::string& s) const
 
 inline TracerError Options::GetInt(int32_t& v, const std::string& s) const
 {
-    return Get(v, s);
+    int64_t val;
+    TracerError e = TracerError::OK;
+
+    if((e = Get(val, s)) != TracerError::OK)
+       return e;
+
+    if(val < std::numeric_limits<int32_t>::min() ||
+       val > std::numeric_limits<int32_t>::max())
+        return TracerError::OPTION_TYPE_MISMATCH;
+
+    v = static_cast<int32_t>(val);
+    return e;
 }
 
 inline TracerError Options::GetUInt(uint32_t& v, const std::string& s) const
 {
-    return Get(v, s);
+    int64_t val;
+    TracerError e = TracerError::OK;
+
+    if((e = Get(val, s)) != TracerError::OK)
+       return e;
+
+    if(val < std::numeric_limits<uint32_t>::min() ||
+       val > std::numeric_limits<uint32_t>::max())
+        return TracerError::OPTION_TYPE_MISMATCH;
+
+    v = static_cast<uint32_t>(val);
+    return e;
 }
 
 inline TracerError Options::GetVector2i(Vector2i& v, const std::string& s) const
 {
-    return Get(v, s);
+    Vector2l val;
+    TracerError e = TracerError::OK;
+
+    if((e = Get(val, s)) != TracerError::OK)
+        return e;
+
+    if(val < Vector2l(std::numeric_limits<int32_t>::min()) ||
+       val > Vector2l(std::numeric_limits<int32_t>::max()))
+        return TracerError::OPTION_TYPE_MISMATCH;
+
+    v = Vector2i(val[0], val[1]);
+    return e;
 }
 
 inline TracerError Options::GetVector2ui(Vector2ui& v, const std::string& s) const
 {
-    return Get(v, s);
+    Vector2l val;
+    TracerError e = TracerError::OK;
+
+    if((e = Get(val, s)) != TracerError::OK)
+        return e;
+
+    if(val < Vector2l(std::numeric_limits<uint32_t>::min()) ||
+       val > Vector2l(std::numeric_limits<uint32_t>::max()))
+        return TracerError::OPTION_TYPE_MISMATCH;
+
+    v = Vector2ui(val[0], val[1]);
+    return e;
 }
 //==================================
 inline TracerError Options::SetBool(bool v, const std::string& s)
@@ -199,20 +243,20 @@ inline TracerError Options::SetVector4(const Vector4& v, const std::string& s)
 
 inline TracerError Options::SetInt(int32_t v, const std::string& s)
 {
-    return Set(v, s);
+    return Set(static_cast<int64_t>(v), s);
 }
 
 inline TracerError Options::SetUInt(uint32_t v, const std::string& s)
 {
-    return Set(v, s);
+    return Set(static_cast<int64_t>(v), s);
 }
 
 inline TracerError Options::SetVector2i(const Vector2i v, const std::string& s)
 {
-    return Set(v, s);
+    return Set(Vector2l(v), s);
 }
 
 inline TracerError Options::SetVector2ui(const Vector2ui v, const std::string& s)
 {
-    return Set(v, s);
+    return Set(Vector2l(v), s);
 }
