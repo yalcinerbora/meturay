@@ -120,7 +120,7 @@ void ImageMemory::Reportion(Vector2i start,
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     size_t sizeOfPixels = ImageIOI::FormatToPixelSize(format) * pixelCount;
     sizeOfPixels = Memory::AlignSize(sizeOfPixels);
-    size_t sizeOfPixelCounts = sizeof(uint32_t) * pixelCount;
+    size_t sizeOfPixelCounts = sizeof(float) * pixelCount;
 
     if(pixelCount != 0)
     {
@@ -130,7 +130,7 @@ void ImageMemory::Reportion(Vector2i start,
         std::uint8_t* dMem = static_cast<uint8_t*>(memory);
         dPixels = dMem + offset;
         offset += sizeOfPixels;
-        dSampleCounts = reinterpret_cast<uint32_t*>(dMem + offset);
+        dSampleCounts = reinterpret_cast<float*>(dMem + offset);
         offset += sizeOfPixelCounts;
         assert(offset == (sizeOfPixels + sizeOfPixelCounts));
 
@@ -150,7 +150,7 @@ void ImageMemory::Reset(const CudaSystem&)
     if(pixelCount != 0)
     {
         size_t totalBytes = ImageIOI::FormatToPixelSize(format) * pixelCount +
-                            sizeof(uint32_t) * pixelCount;
+                            sizeof(float) * pixelCount;
         CUDA_CHECK(cudaMemset(memory, 0x0, totalBytes));
     }
 }
@@ -159,7 +159,7 @@ std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)
 {
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     size_t totalBytes = ImageIOI::FormatToPixelSize(format) * pixelCount +
-                        sizeof(uint32_t) * pixelCount;
+                        sizeof(float) * pixelCount;
     size_t sampleStart = ImageIOI::FormatToPixelSize(format) * pixelCount;
 
     if(pixelCount != 0)
@@ -188,7 +188,7 @@ std::vector<Byte> ImageMemory::GetImageToCPU(const CudaSystem& system)
     // Copy Sample Counts
     CUDA_CHECK(cudaMemcpy(result.data() + sampleStart,
                           dSampleCounts,
-                          sizeof(uint32_t) * pixelCount,
+                          sizeof(float) * pixelCount,
                           cudaMemcpyDeviceToHost));
 
     // Reset the image(all data is transferred)

@@ -11,11 +11,11 @@ void ImageAccumulatePixel(ImageGMem<T>&, uint32_t location, const T& data);
 
 template<class T>
 __device__ inline
-void ImageSetSample(ImageGMem<T>&, uint32_t location, uint32_t sampleCount);
+void ImageSetSample(ImageGMem<T>&, uint32_t location, float sampleCount);
 
 template<class T>
 __device__ inline
-void ImageAddSample(ImageGMem<T>&, uint32_t location, uint32_t sampleCount);
+void ImageAddSample(ImageGMem<T>&, uint32_t location, float sampleCount);
 
 template<>
 __device__ inline
@@ -43,19 +43,19 @@ __device__ inline
 void ImageAccumulatePixel(ImageGMem<float>& img, uint32_t location, const float& data)
 {
 	// Add value
-	atomicAdd(&img.gPixels[location], data);	
+	atomicAdd(&img.gPixels[location], data);
 }
 
 template<class T>
 __device__
-void ImageSetSample<T>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
+void ImageSetSample<T>(ImageGMem<T>& img, uint32_t location, float sampleCount)
 {
 	img.gSampleCounts[location] = sampleCount;
 }
 
 template<class T>
 __device__
-void ImageAddSample<T>(ImageGMem<T>& img, uint32_t location, uint32_t sampleCount)
+void ImageAddSample<T>(ImageGMem<T>& img, uint32_t location, float sampleCount)
 {
 	atomicAdd(&img.gSampleCounts[location], sampleCount);
 }

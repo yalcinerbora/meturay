@@ -19,16 +19,16 @@ class CudaSystem;
 class ImageMemory
 {
     private:
-        DeviceMemory         memory;
-        PixelFormat          format;
-        int                  pixelSize;
+        DeviceMemory        memory;
+        PixelFormat         format;
+        int                 pixelSize;
 
-        Vector2i             segmentSize;
-        Vector2i             segmentOffset;
-        Vector2i             resolution;
+        Vector2i            segmentSize;
+        Vector2i            segmentOffset;
+        Vector2i            resolution;
 
-        void*                dPixels;
-        uint32_t*            dSampleCounts;
+        void*               dPixels;
+        float*              dSampleCounts;
 
     protected:
     public:

@@ -65,6 +65,13 @@ set(SRC_DEBUG
     ${CURRENT_SOURCE_DIR}/TracerDebug.cu
     ${CURRENT_SOURCE_DIR}/TracerDebug.h)
 
+set(SRC_FILTERS
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterBox.cu
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterBox.h
+    #${CURRENT_SOURCE_DIR}/GPUReconFilterTent.cu
+    #${CURRENT_SOURCE_DIR}/GPUReconFilterTent.h
+)
+
 set(SRC_GPU_ALGORITHMS_COMMON
     ${CURRENT_SOURCE_DIR}/MortonCode.cuh
     ${CURRENT_SOURCE_DIR}/BinarySearch.cuh
@@ -112,7 +119,8 @@ set(SRC_GPU_INTERFACES
     ${CURRENT_SOURCE_DIR}/GPUMediumI.h
     ${CURRENT_SOURCE_DIR}/GPUPrimitiveI.h
     ${CURRENT_SOURCE_DIR}/GPUTransformI.h
-    ${CURRENT_SOURCE_DIR}/GPUWorkI.h)
+    ${CURRENT_SOURCE_DIR}/GPUWorkI.h
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterI.h)
 
 set(SRC_GPU_TEMPLATE_KERNELS
     ${CURRENT_SOURCE_DIR}/AuxiliaryDataKernels.cuh

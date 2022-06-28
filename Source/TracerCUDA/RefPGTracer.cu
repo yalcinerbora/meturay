@@ -63,7 +63,7 @@ void RefPGTracer::SendPixel() const
     // Do Parallel Reduction over the image
     size_t pixelSize = ImageIOI::FormatToPixelSize(iPixelFormat);
     float accumPixel;
-    uint32_t totalSamples;
+    float totalSamples;
     // Reduction Kernels
     CUDA_CHECK(cudaSetDevice(cudaSystem.BestGPU().DeviceId()));
     ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
@@ -72,11 +72,11 @@ void RefPGTracer::SendPixel() const
         imgMemory.GMem<float>().gPixels,
         workCount, 0.0f
     );
-    ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>, cudaMemcpyDeviceToHost>
+    ReduceArrayGPU<float, ReduceAdd<float>, cudaMemcpyDeviceToHost>
     (
         totalSamples,
         imgMemory.GMem<float>().gSampleCounts,
-        workCount, 0u
+        workCount, 0.0f
     );
     CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
 
@@ -99,10 +99,10 @@ void RefPGTracer::SendPixel() const
     }
 
     // Copy data to the vector
-    std::vector<Byte> convertedData(pixelSize + sizeof(uint32_t));
+    std::vector<Byte> convertedData(pixelSize + sizeof(float));
     std::memcpy(convertedData.data(), convertedPixel.data(), pixelSize);
     std::memcpy(convertedData.data() + pixelSize,
-                &totalSamples, sizeof(uint32_t));
+                &totalSamples, sizeof(float));
 
     if(callbacks) callbacks->SendImage(std::move(convertedData),
                                        iPixelFormat,

@@ -41,7 +41,7 @@ void VisorGL::ReallocImages()
     glDeleteTextures(1, &sampleCountTexture);
     glGenTextures(1, &sampleCountTexture);
     glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI,
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F,
                    imageSize[0], imageSize[1]);
     // Buffer input texture
     glDeleteTextures(1, &bufferTexture);
@@ -53,7 +53,7 @@ void VisorGL::ReallocImages()
     glDeleteTextures(1, &sampleTexture);
     glGenTextures(1, &sampleTexture);
     glBindTexture(GL_TEXTURE_2D, sampleTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI,
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F,
                    imageSize[0], imageSize[1]);
     // SDR Texture
     glDeleteTextures(1, &sdrTexture);
@@ -81,11 +81,11 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         case VisorGLCommand::RESET_IMAGE:
         {
             // Just clear the sample count to zero
-            const GLuint clearDataInt = 0;
+            const float clearDataInt = 0.0f;
             glClearTexSubImage(sampleCountTexture, 0,
                                c.start[0], c.start[1], 0,
                                inSize[0], inSize[1], 1,
-                               GL_RED_INTEGER, GL_UNSIGNED_INT, &clearDataInt);
+                               GL_RED, GL_FLOAT, &clearDataInt);
             break;
         }
         case VisorGLCommand::SET_PORTION:
@@ -95,8 +95,8 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glTexSubImage2D(GL_TEXTURE_2D, 0,
                             0, 0,
                             inSize[0], inSize[1],
-                            GL_RED_INTEGER,
-                            GL_UNSIGNED_INT,
+                            GL_RED,
+                            GL_FLOAT,
                             c.data.data() + c.offset);
             glBindTexture(GL_TEXTURE_2D, bufferTexture);
             glTexSubImage2D(GL_TEXTURE_2D, 0,
@@ -123,7 +123,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
 
             // Images
             glBindImageTexture(I_SAMPLE, sampleCountTexture,
-                               0, false, 0, GL_READ_WRITE, GL_R32UI);
+                               0, false, 0, GL_READ_WRITE, GL_R32F);
             glBindImageTexture(I_OUT_COLOR, outTexture,
                                0, false, 0, GL_WRITE_ONLY,
                                PixelFormatToSizedGL(imagePixFormat));
