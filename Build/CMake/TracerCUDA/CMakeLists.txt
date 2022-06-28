@@ -68,6 +68,7 @@ set(SRC_DEBUG
 set(SRC_FILTERS
     ${CURRENT_SOURCE_DIR}/GPUReconFilterBox.cu
     ${CURRENT_SOURCE_DIR}/GPUReconFilterBox.h
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterKC.cuh
     #${CURRENT_SOURCE_DIR}/GPUReconFilterTent.cu
     #${CURRENT_SOURCE_DIR}/GPUReconFilterTent.h
 )
@@ -371,6 +372,7 @@ set(SRC_ALL
     ${SRC_CAMERAS}
     ${SRC_CUDA_SYSTEM}
     ${SRC_DEBUG}
+    ${SRC_FILTERS}
     ${SRC_GPU_ALGORITHMS_COMMON}
     ${SRC_GPU_ALGORITHMS_FUNCTIONS}
     ${SRC_GPU_ALGORITHMS_IMPLEMENTATIONS}
@@ -418,6 +420,8 @@ source_group("Accelerators/Linear" FILES ${SRC_ACCELS_LINEAR})
 source_group("Cameras" FILES ${SRC_CAMERAS})
 source_group("CudaSystem" FILES ${SRC_CUDA_SYSTEM})
 source_group("Debug" FILES ${SRC_DEBUG})
+
+source_group("Filters" FILES ${SRC_FILTERS})
 
 source_group("GPU Algorithms" FILES ${SRC_GPU_ALGORITHMS_COMMON})
 source_group("GPU Algorithms/Functions" FILES ${SRC_GPU_ALGORITHMS_FUNCTIONS})
