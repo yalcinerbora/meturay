@@ -4,34 +4,94 @@
 
 #include "RayLib/Vector.h"
 #include "ImageStructs.h"
+#include "CudaSystem.h"
 
-__global__
-void KCAffectedPixCount(uint32_t* gPixCounts,
-                        const Vector2f* gImgCoords)
+__global__ CUDA_LAUNCH_BOUNDS_1D
+static void KCExpandSamplesToPixels(// Outputs
+                                    uint32_t* gPixelIds,
+                                    uint32_t* gSampelIndices,
+                                    // Inputs
+                                    const Vector2f* gImgCoords,
+                                    // Constants
+                                    uint32_t maxPixelPerSample,
+                                    uint32_t totalSampleCount,
+                                    float filterRadius,
+                                    Vector2i imgResolution)
 {
+    // Conservative range of pixels
+    const uint32_t rangeInt = static_cast<int>(ceil(filterRadius));
+    const Vector2i rangeXY = Vector2i(-(rangeInt * 2), rangeInt * 2);
 
-    //...
+    // Grid Stride Loop
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < totalSampleCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint32_t* gLocalPixIds = gPixelIds + maxPixelPerSample * threadId;
+        uint32_t* gLocalsampleIndices = gSampelIndices + maxPixelPerSample * threadId;
 
+        // TODO: Change the parallel logic to
+        // One warp per sample here
+        // Currently it is one thread per sample
+        // (It may be faster?)
+        // Load img coordinates for this sample
+        Vector2f samplePixId2D;
+        Vector2f imgCoords = gImgCoords[threadId];
+        Vector2f relImgCoords = Vector2f(modf(imgCoords[0],
+                                              &(samplePixId2D[0])),
+                                         modf(imgCoords[1],
+                                              &(samplePixId2D[1])));
+        Vector2i samplePixId2DInt = Vector2i(samplePixId2D);
 
+        // Determine Coalesced loop size
+        uint32_t totalRange = rangeXY[0] + rangeXY[1] + 1;
+        totalRange *= totalRange;
+
+        int writeCounter = 0;
+        for(int y = rangeXY[0]; y <= rangeXY[1]; y++)
+        for(int x = rangeXY[0]; x <= rangeXY[1]; x++)
+        {
+            // Find the closest point on the pixel
+            Vector2f pixCoord = Vector2f(static_cast<float>(x),
+                                        static_cast<float>(y));
+            pixCoord += Vector2f((x < 0) ? 1.0f : 0.0f,
+                                 (y < 0) ? 1.0f : 0.0f);
+            //
+            float dist = (pixCoord - relImgCoords).LengthSqr();
+            if(dist < filterRadius * filterRadius)
+            {
+                if(writeCounter == maxPixelPerSample)
+                    printf("Filter Error: Too many pixels!\n");
+
+                // This pixel is affected by this sample
+                uint32_t pixelId = ((samplePixId2DInt[1] + y) * imgResolution[0] +
+                                    samplePixId2DInt[0] + x);
+
+                gLocalPixIds[writeCounter] = pixelId;
+                gLocalsampleIndices[writeCounter] = threadId;
+                writeCounter++;
+            }
+        }
+    }
 }
 
 template <class T, class Filter, int TPB_X>
-__global__
-void KCFilterToImg(ImageGMem<T> img,
-                   // Inputs per block
-                   const uint32_t* gOffsets,
-                   const int32_t* gPixelIds,
-                   // Inputs per thread
-                   const uint32_t* gSampleIds,
-                   // Inputs Accessed by SampleId
-                   const Vector4f* gValues,
-                   const Vector2f* gImgCoords,
-                   // Constants
-                   Vector2i imgSegmentSize,
-                   Vector2i imgSegmentOffset,
-                   Vector2i imgResolution,
-                   Filter filter,
-                   size_t segmentCount)
+__global__ __launch_bounds__(TPB_X)
+static void KCFilterToImg(ImageGMem<T> img,
+                          // Inputs per block
+                          const uint32_t* gOffsets,
+                          const uint32_t* gPixelIds,
+                          // Inputs per thread
+                          const uint32_t* gSampleIds,
+                          // Inputs Accessed by SampleId
+                          const Vector4f* gValues,
+                          const Vector2f* gImgCoords,
+                          // Constants
+                          Vector2i imgSegmentSize,
+                          Vector2i imgSegmentOffset,
+                          Vector2i imgResolution,
+                          Filter filter,
+                          uint32_t segmentCount)
 {
     auto PixelIdToImgCoords = [&](int32_t pixId) -> Vector2f
     {
@@ -74,7 +134,7 @@ void KCFilterToImg(ImageGMem<T> img,
         // Segment Related Info
         if(localId == 0)
         {
-            sPixelId = gPixelIds[segmentIndex];
+            sPixelId = static_cast<int32_t>(gPixelIds[segmentIndex]);
             sOffset[0] = gOffsets[segmentIndex];
             sOffset[1] = gOffsets[segmentIndex + 1];
         }

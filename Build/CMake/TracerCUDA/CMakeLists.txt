@@ -67,11 +67,8 @@ set(SRC_DEBUG
 
 set(SRC_FILTERS
     ${CURRENT_SOURCE_DIR}/GPUReconFilterBox.cu
-    ${CURRENT_SOURCE_DIR}/GPUReconFilterBox.h
-    ${CURRENT_SOURCE_DIR}/GPUReconFilterKC.cuh
-    #${CURRENT_SOURCE_DIR}/GPUReconFilterTent.cu
-    #${CURRENT_SOURCE_DIR}/GPUReconFilterTent.h
-)
+    ${CURRENT_SOURCE_DIR}/GPUReconFilter.h
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterKC.cuh)
 
 set(SRC_GPU_ALGORITHMS_COMMON
     ${CURRENT_SOURCE_DIR}/MortonCode.cuh
@@ -334,10 +331,6 @@ set(SRC_WFPG_TRACER
     ${CURRENT_SOURCE_DIR}/WFPGTracerWorks.cuh)
 
 set(SRC_WFPG_TRACER_AUX_CLASSES
-    ${CURRENT_SOURCE_DIR}/RaceSketch.cu
-    ${CURRENT_SOURCE_DIR}/RaceSketch.cuh
-    ${CURRENT_SOURCE_DIR}/L2HashGroup.cuh
-    ${CURRENT_SOURCE_DIR}/SRPHashGroup.cuh
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cu
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cuh)
 

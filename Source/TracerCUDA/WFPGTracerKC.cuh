@@ -10,7 +10,6 @@
 #include "ImageStructs.h"
 #include "WorkOutputWriter.cuh"
 #include "WFPGCommon.h"
-#include "RaceSketch.cuh"
 
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
@@ -19,7 +18,6 @@
 
 #include "AnisoSVO.cuh"
 #include "GPUBlockPWCDistribution.cuh"
-#include "RaceSketch.cuh"
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -36,7 +34,6 @@ struct WFPGTracerGlobalState
     uint32_t                        totalMediumCount;
     // Path Guiding Related
     AnisoSVOctreeGPU                svo;
-    RaceSketchGPU                   sketchGPU;
     // Path Related
     PathGuidingNode*                gPathNodes;
     uint32_t                        maximumPathNodePerRay;
@@ -635,12 +632,6 @@ void WFPGTracerPhotonWork(// Output
             // Store operation
             float luminance = Utility::RGBToLuminance(photonReceivedPower);
 
-            // TEST Firefly elimination
-            if(luminance < 30.0f)
-                renderState.sketchGPU.AtomicAddData(position,
-                                                    sphrCoords,
-                                                    luminance);
-
         };
 
         // Ray
@@ -781,45 +772,6 @@ static void KCTraceSVO(// Output
                 locColor = Vector3f(1.0f, 0.0f, 1.0f);
         }
 
-        // Accumulate the pixel
-        ImageAccumulatePixel(gImage,
-                             aux.pixelIndex,
-                             Vector4f(locColor, 1.0f));
-    }
-}
-
-__global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCQuerySketch(// Output
-                          ImageGMem<Vector4> gImage,
-                          // Input
-                          const AnisoSVOctreeGPU svo,
-                          const RaceSketchGPU sketch,
-                          const RayGMem* gRays,
-                          const RayAuxWFPG* gRayAux,
-                          // Constants
-                          uint32_t rayCount)
-{
-    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < rayCount;
-        threadId += (blockDim.x * gridDim.x))
-    {
-        RayReg ray = RayReg(gRays, threadId);
-        RayAuxWFPG aux = gRayAux[threadId];
-
-        //uint32_t svoLeafIndex;
-        //float tMin = svo.TraceRay(svoLeafIndex, ray.ray,
-        //                          ray.tMin, ray.tMax);
-
-        //Vector3f pos = ray.ray.AdvancedPos(tMin);
-        Vector3f pos = ray.ray.getPosition();
-
-        // Generate Spherical Coordinates
-        Vector3f wo = ray.ray.getDirection();
-        Vector3 dirZUp = Vector3(wo[2], wo[0], wo[1]);
-        Vector2f sphrCoords = Utility::CartesianToSphericalUnit(dirZUp);
-
-        float prob = sketch.Probability(pos, sphrCoords);
-        Vector3f locColor = Vector3f(prob);
         // Accumulate the pixel
         ImageAccumulatePixel(gImage,
                              aux.pixelIndex,

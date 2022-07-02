@@ -12,7 +12,7 @@ set(SRC_COMMON
     ${CURRENT_SOURCE_DIR}/T_BlockSegmentedReduce.cu
     ${CURRENT_SOURCE_DIR}/T_BlockSegmentedScan.cu
     ${CURRENT_SOURCE_DIR}/T_BlockPWCDistribution.cu
-    ${CURRENT_SOURCE_DIR}/T_2DSketch.cu)
+    ${CURRENT_SOURCE_DIR}/T_ReconFilter.cu)
 
 source_group("" FILES ${SRC_COMMON})
 

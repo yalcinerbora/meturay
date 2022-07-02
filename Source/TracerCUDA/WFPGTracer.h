@@ -10,8 +10,6 @@
 #include "RNGSobol.cuh"
 #include "RNGIndependent.cuh"
 
-#include "RaceSketch.cuh"
-
 class GPUDirectLightSamplerI;
 
 class WFPGTracer final : public RayTracer
@@ -81,7 +79,6 @@ class WFPGTracer final : public RayTracer
         uint32_t                        treeDumpCount;
         // SVO
         AnisoSVOctreeCPU                svo;
-        RaceSketchCPU                   sketch;
         // RNG and Guide Sample Related
         //RNGScrSobolCPU                  pgSampleRNG;
         RNGIndependentCPU               pgSampleRNG;

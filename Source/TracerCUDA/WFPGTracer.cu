@@ -327,7 +327,6 @@ void WFPGTracer::TraceAndStorePhotons()
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
     globalData.rawPathGuiding = false;
-    globalData.sketchGPU = sketch.SketchGPU();
     //
     globalData.directLightMIS = options.directLightMIS;
     globalData.nee = options.nextEventEstimation;
@@ -427,7 +426,6 @@ WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
-    , sketch(512, 8192 * 8, 0.0004f, 0)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(WFPGBoundaryWorkerList{});
@@ -530,9 +528,6 @@ TracerError WFPGTracer::Initialize()
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
-
-    // Set Range for Sketch
-    sketch.SetSceneExtent(scene.BaseAccelerator()->SceneExtents());
 
     // Init SVO
     if((err = svo.Constrcut(scene.BaseAccelerator()->SceneExtents(),
@@ -762,7 +757,6 @@ bool WFPGTracer::Render()
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
     globalData.rawPathGuiding = false;
-    globalData.sketchGPU = sketch.SketchGPU();
     //
     globalData.directLightMIS = options.directLightMIS;
     globalData.nee = options.nextEventEstimation;
