@@ -10,7 +10,7 @@
 // Delta distribution refract material
 class LambertMat final
     : public GPUMaterialGroup<LambertMatData, UVSurface,
-                              LambertMatFuncs>                              
+                              LambertMatFuncs>
 {
     public:
         static const char*      TypeName() { return "Lambert"; }

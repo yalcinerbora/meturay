@@ -113,7 +113,7 @@ constexpr const T& Vector<N, T>::operator[](int i) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-void Vector<N, T>::operator+=(const Vector& right)
+constexpr void Vector<N, T>::operator+=(const Vector& right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -124,7 +124,7 @@ void Vector<N, T>::operator+=(const Vector& right)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-void Vector<N, T>::operator-=(const Vector& right)
+constexpr void Vector<N, T>::operator-=(const Vector& right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -135,7 +135,7 @@ void Vector<N, T>::operator-=(const Vector& right)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-void Vector<N, T>::operator*=(const Vector& right)
+constexpr void Vector<N, T>::operator*=(const Vector& right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -146,7 +146,7 @@ void Vector<N, T>::operator*=(const Vector& right)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-void Vector<N, T>::operator*=(T right)
+constexpr void Vector<N, T>::operator*=(T right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -157,7 +157,7 @@ void Vector<N, T>::operator*=(T right)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-void Vector<N, T>::operator/=(const Vector& right)
+constexpr void Vector<N, T>::operator/=(const Vector& right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -168,7 +168,7 @@ void Vector<N, T>::operator/=(const Vector& right)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-void Vector<N, T>::operator/=(T right)
+constexpr void Vector<N, T>::operator/=(T right)
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -179,7 +179,7 @@ void Vector<N, T>::operator/=(T right)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator+(const Vector& right) const
+constexpr Vector<N, T> Vector<N, T>::operator+(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -192,7 +192,7 @@ Vector<N, T> Vector<N, T>::operator+(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator+(T r) const
+constexpr Vector<N, T> Vector<N, T>::operator+(T r) const
 {
     Vector v;
     UNROLL_LOOP
@@ -205,7 +205,7 @@ Vector<N, T> Vector<N, T>::operator+(T r) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
+constexpr Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -218,7 +218,7 @@ Vector<N, T> Vector<N, T>::operator-(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator-(T r) const
+constexpr Vector<N, T> Vector<N, T>::operator-(T r) const
 {
     Vector v;
     UNROLL_LOOP
@@ -232,7 +232,7 @@ Vector<N, T> Vector<N, T>::operator-(T r) const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-SignedEnable<Q, Vector<N, T>> Vector<N, T>::operator-() const
+constexpr SignedEnable<Q, Vector<N, T>> Vector<N, T>::operator-() const
 {
     Vector<N, T> v;
     UNROLL_LOOP
@@ -245,7 +245,7 @@ SignedEnable<Q, Vector<N, T>> Vector<N, T>::operator-() const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator*(const Vector& right) const
+constexpr Vector<N, T> Vector<N, T>::operator*(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -258,7 +258,7 @@ Vector<N, T> Vector<N, T>::operator*(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator*(T right) const
+constexpr Vector<N, T> Vector<N, T>::operator*(T right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -271,7 +271,7 @@ Vector<N, T> Vector<N, T>::operator*(T right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator/(const Vector& right) const
+constexpr Vector<N, T> Vector<N, T>::operator/(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -284,7 +284,7 @@ Vector<N, T> Vector<N, T>::operator/(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::operator/(T right) const
+constexpr Vector<N, T> Vector<N, T>::operator/(T right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -298,7 +298,7 @@ Vector<N, T> Vector<N, T>::operator/(T right) const
 template <int N, class T>
 template<class Q>
 __device__ __host__ HYBRID_INLINE
-IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
+constexpr IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -312,7 +312,7 @@ IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) con
 template <int N, class T>
 template<class Q>
 __device__ __host__ HYBRID_INLINE
-IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
+constexpr IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -326,7 +326,7 @@ IntegralEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
 template <int N, class T>
 template<class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -340,7 +340,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(const Vector& right) const
 template <int N, class T>
 template<class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
 {
     Vector v;
     UNROLL_LOOP
@@ -353,7 +353,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::operator%(T right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool Vector<N, T>::operator==(const Vector& right) const
+constexpr bool Vector<N, T>::operator==(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
@@ -366,14 +366,14 @@ bool Vector<N, T>::operator==(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool Vector<N, T>::operator!=(const Vector& right) const
+constexpr bool Vector<N, T>::operator!=(const Vector& right) const
 {
     return !(*this == right);
 }
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool Vector<N, T>::operator<(const Vector& right) const
+constexpr bool Vector<N, T>::operator<(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
@@ -386,7 +386,7 @@ bool Vector<N, T>::operator<(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool Vector<N, T>::operator<=(const Vector& right) const
+constexpr bool Vector<N, T>::operator<=(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
@@ -399,7 +399,7 @@ bool Vector<N, T>::operator<=(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool Vector<N, T>::operator>(const Vector& right) const
+constexpr bool Vector<N, T>::operator>(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
@@ -412,7 +412,7 @@ bool Vector<N, T>::operator>(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool Vector<N, T>::operator>=(const Vector& right) const
+constexpr bool Vector<N, T>::operator>=(const Vector& right) const
 {
     bool b = true;
     UNROLL_LOOP
@@ -425,7 +425,7 @@ bool Vector<N, T>::operator>=(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-T Vector<N, T>::Dot(const Vector& right) const
+constexpr T Vector<N, T>::Dot(const Vector& right) const
 {
     T data = 0;
     UNROLL_LOOP
@@ -438,7 +438,7 @@ T Vector<N, T>::Dot(const Vector& right) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-T Vector<N, T>::Sum() const
+constexpr T Vector<N, T>::Sum() const
 {
     T result = 0;
     UNROLL_LOOP
@@ -451,7 +451,7 @@ T Vector<N, T>::Sum() const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-T Vector<N, T>::Multiply() const
+constexpr T Vector<N, T>::Multiply() const
 {
     T result = 1;
     UNROLL_LOOP
@@ -464,7 +464,7 @@ T Vector<N, T>::Multiply() const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-int Vector<N, T>::Max() const
+constexpr int Vector<N, T>::Max() const
 {
     int result = 0;
     T max = vector[0];
@@ -482,7 +482,7 @@ int Vector<N, T>::Max() const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-int Vector<N, T>::Min() const
+constexpr int Vector<N, T>::Min() const
 {
     int result = 0;
     T min = vector[0];
@@ -501,14 +501,14 @@ int Vector<N, T>::Min() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, T> Vector<N, T>::Length() const
+constexpr FloatEnable<Q, T> Vector<N, T>::Length() const
 {
     return sqrt(LengthSqr());
 }
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-T Vector<N, T>::LengthSqr() const
+constexpr T Vector<N, T>::LengthSqr() const
 {
     return Dot(*this);
 }
@@ -516,7 +516,7 @@ T Vector<N, T>::LengthSqr() const
 template <int N, class T>
 template <class Q>
 [[nodiscard]] __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
 {
     T lengthInv = static_cast<T>(1) / Length();
 
@@ -532,7 +532,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>&> Vector<N, T>::NormalizeSelf()
+constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::NormalizeSelf()
 {
     T lengthInv = static_cast<T>(1) / Length();
     UNROLL_LOOP
@@ -545,7 +545,7 @@ FloatEnable<Q, Vector<N, T>&> Vector<N, T>::NormalizeSelf()
 
 template <int N, class T>
 [[nodiscard]] __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) const
+constexpr Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) const
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -564,7 +564,7 @@ Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) con
 
 template <int N, class T>
 [[nodiscard]] __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
+constexpr Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -583,7 +583,7 @@ Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& minVal, const Vector& maxVal)
+constexpr Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& minVal, const Vector& maxVal)
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -601,7 +601,7 @@ Vector<N, T>& Vector<N, T>::ClampSelf(const Vector& minVal, const Vector& maxVal
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
+constexpr Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -619,7 +619,7 @@ Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool Vector<N, T>::HasNaN() const
+constexpr bool Vector<N, T>::HasNaN() const
 {
     bool hasNan = false;
     UNROLL_LOOP
@@ -635,7 +635,7 @@ bool Vector<N, T>::HasNaN() const
 template <int N, class T>
 template <class Q>
 [[nodiscard]] __device__ __host__ HYBRID_INLINE
-SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
+constexpr SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
 {
     Vector v;
     UNROLL_LOOP
@@ -649,7 +649,7 @@ SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-SignedEnable<Q, Vector<N, T>&> Vector<N, T>::AbsSelf()
+constexpr SignedEnable<Q, Vector<N, T>&> Vector<N, T>::AbsSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -662,7 +662,7 @@ SignedEnable<Q, Vector<N, T>&> Vector<N, T>::AbsSelf()
 template <int N, class T>
 template <class Q>
 [[nodiscard]] __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 {
     Vector v;
     UNROLL_LOOP
@@ -676,7 +676,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
+constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -689,7 +689,7 @@ FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 template <int N, class T>
 template <class Q>
 [[nodiscard]] __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 {
     Vector v;
     UNROLL_LOOP
@@ -703,7 +703,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
+constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -716,7 +716,7 @@ FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 template <int N, class T>
 template <class Q>
 [[nodiscard]] __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 {
     Vector v;
     UNROLL_LOOP
@@ -730,7 +730,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>&> Vector<N, T>::CeilSelf()
+constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::CeilSelf()
 {
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
@@ -742,7 +742,7 @@ FloatEnable<Q, Vector<N, T>&> Vector<N, T>::CeilSelf()
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
+constexpr Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -761,7 +761,7 @@ Vector<N, T> Vector<N, T>::Min(const Vector& v0, const Vector& v1)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
+constexpr Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -780,7 +780,7 @@ Vector<N, T> Vector<N, T>::Min(const Vector& v0, T v1)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
+constexpr Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -799,7 +799,7 @@ Vector<N, T> Vector<N, T>::Max(const Vector& v0, const Vector& v1)
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
+constexpr Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -819,7 +819,7 @@ Vector<N, T> Vector<N, T>::Max(const Vector& v0, T v1)
 template <int N, class T>
 template<class Q>
 __device__ __host__ HYBRID_INLINE
-FloatEnable<Q, Vector<N, T>> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, T t)
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Lerp(const Vector& v0, const Vector& v1, T t)
 {
     assert(t >= 0 && t <= 1);
     Vector v;
@@ -833,7 +833,7 @@ FloatEnable<Q, Vector<N, T>> Vector<N, T>::Lerp(const Vector& v0, const Vector& 
 
 template<int N, class T>
 __device__ __host__
-Vector<N, T> operator*(T left, const Vector<N, T>& vec)
+constexpr Vector<N, T> operator*(T left, const Vector<N, T>& vec)
 {
     return vec * left;
 }
@@ -841,7 +841,7 @@ Vector<N, T> operator*(T left, const Vector<N, T>& vec)
 // Cross product (only for 3d vectors)
 template<class T>
 __device__ __host__
-Vector<3, T> Cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
+constexpr Vector<3, T> Cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 {
     Vector<3, T> result(v0[1] * v1[2] - v0[2] * v1[1],
                         v0[2] * v1[0] - v0[0] * v1[2],
@@ -851,7 +851,7 @@ Vector<3, T> Cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 
 template <class T>
 __device__ __host__
-Vector<3, T> OrthogonalVector(const Vector<3, T>& v)
+constexpr Vector<3, T> OrthogonalVector(const Vector<3, T>& v)
 {
     // PBRT Book
     // https://www.pbr-book.org/3ed-2018/Geometry_and_Transformations/Vectors#CoordinateSystem

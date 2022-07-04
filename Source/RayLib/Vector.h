@@ -107,101 +107,101 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
 
         // Type cast
         template<int M, class C, typename = std::enable_if_t<(M <= N)>>
-        __device__ __host__ explicit                    operator Vector<M, C>() const;
+        __device__ __host__ explicit            operator Vector<M, C>() const;
 
         // Modify
-        __device__ __host__ void                        operator+=(const Vector&);
-        __device__ __host__ void                        operator-=(const Vector&);
-        __device__ __host__ void                        operator*=(const Vector&);
-        __device__ __host__ void                        operator*=(T);
-        __device__ __host__ void                        operator/=(const Vector&);
-        __device__ __host__ void                        operator/=(T);
+        __device__ __host__ constexpr void                    operator+=(const Vector&);
+        __device__ __host__ constexpr void                    operator-=(const Vector&);
+        __device__ __host__ constexpr void                    operator*=(const Vector&);
+        __device__ __host__ constexpr void                    operator*=(T);
+        __device__ __host__ constexpr void                    operator/=(const Vector&);
+        __device__ __host__ constexpr void                    operator/=(T);
 
-        __device__ __host__ Vector                      operator+(const Vector&) const;
-        __device__ __host__ Vector                      operator+(T) const;
-        __device__ __host__ Vector                      operator-(const Vector&) const;
-        __device__ __host__ Vector                      operator-(T) const;
+        __device__ __host__ constexpr Vector                  operator+(const Vector&) const;
+        __device__ __host__ constexpr Vector                  operator+(T) const;
+        __device__ __host__ constexpr Vector                  operator-(const Vector&) const;
+        __device__ __host__ constexpr Vector                  operator-(T) const;
         template<class Q = T>
-        __device__ __host__ SignedEnable<Q, Vector>     operator-() const;
-        __device__ __host__ Vector                      operator*(const Vector&) const;
-        __device__ __host__ Vector                      operator*(T) const;
-        __device__ __host__ Vector                      operator/(const Vector&) const;
-        __device__ __host__ Vector                      operator/(T) const;
+        __device__ __host__ constexpr SignedEnable<Q, Vector> operator-() const;
+        __device__ __host__ constexpr Vector                  operator*(const Vector&) const;
+        __device__ __host__ constexpr Vector                  operator*(T) const;
+        __device__ __host__ constexpr Vector                  operator/(const Vector&) const;
+        __device__ __host__ constexpr Vector                  operator/(T) const;
 
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector>      operator%(const Vector&) const;
+        __device__ __host__ constexpr FloatEnable<Q, Vector>      operator%(const Vector&) const;
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector>      operator%(T) const;
+        __device__ __host__ constexpr FloatEnable<Q, Vector>      operator%(T) const;
         template<class Q = T>
-        __device__ __host__ IntegralEnable<Q, Vector>   operator%(const Vector&) const;
+        __device__ __host__ constexpr IntegralEnable<Q, Vector>   operator%(const Vector&) const;
         template<class Q = T>
-        __device__ __host__ IntegralEnable<Q, Vector>   operator%(T) const;
+        __device__ __host__ constexpr IntegralEnable<Q, Vector>   operator%(T) const;
 
         // Logic
-        __device__ __host__ bool                        operator==(const Vector&) const;
-        __device__ __host__ bool                        operator!=(const Vector&) const;
-        __device__ __host__ bool                        operator<(const Vector&) const;
-        __device__ __host__ bool                        operator<=(const Vector&) const;
-        __device__ __host__ bool                        operator>(const Vector&) const;
-        __device__ __host__ bool                        operator>=(const Vector&) const;
+        __device__ __host__ constexpr bool            operator==(const Vector&) const;
+        __device__ __host__ constexpr bool            operator!=(const Vector&) const;
+        __device__ __host__ constexpr bool            operator<(const Vector&) const;
+        __device__ __host__ constexpr bool            operator<=(const Vector&) const;
+        __device__ __host__ constexpr bool            operator>(const Vector&) const;
+        __device__ __host__ constexpr bool            operator>=(const Vector&) const;
 
         // Utility
-        __device__ __host__ T                           Dot(const Vector&) const;
+        __device__ __host__ constexpr T               Dot(const Vector&) const;
 
         // Reduction
-        __device__ __host__ T                           Sum() const;
-        __device__ __host__ T                           Multiply() const;
+        __device__ __host__ constexpr T               Sum() const;
+        __device__ __host__ constexpr T               Multiply() const;
         // Max Min Reduction functions are selections instead
         // since it sometimes useful to fetch the which index
         // (axis) is maximum so that you can do other stuff wrt. it.
-        __device__ __host__ int                         Max() const;
-        __device__ __host__ int                         Min() const;
+        __device__ __host__ constexpr int             Max() const;
+        __device__ __host__ constexpr int             Min() const;
 
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, T>           Length() const;
-        __device__ __host__ T                           LengthSqr() const;
+        __device__ __host__ constexpr FloatEnable<Q, T>         Length() const;
+        __device__ __host__ constexpr T                         LengthSqr() const;
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector>      Normalize() const;
+        __device__ __host__ constexpr FloatEnable<Q, Vector>    Normalize() const;
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector&>     NormalizeSelf();
-        __device__ __host__ Vector                      Clamp(const Vector&, const Vector&) const;
-        __device__ __host__ Vector                      Clamp(T min, T max) const;
-        __device__ __host__ Vector&                     ClampSelf(const Vector&, const Vector&);
-        __device__ __host__ Vector&                     ClampSelf(T min, T max);
-        __device__ __host__ bool                        HasNaN() const;
+        __device__ __host__ constexpr FloatEnable<Q, Vector&>   NormalizeSelf();
+        __device__ __host__ constexpr Vector                    Clamp(const Vector&, const Vector&) const;
+        __device__ __host__ constexpr Vector                    Clamp(T min, T max) const;
+        __device__ __host__ constexpr Vector&                   ClampSelf(const Vector&, const Vector&);
+        __device__ __host__ constexpr Vector&                   ClampSelf(T min, T max);
+        __device__ __host__ constexpr bool                      HasNaN() const;
 
         template<class Q = T>
-        __device__ __host__ SignedEnable<Q, Vector>     Abs() const;
+        __device__ __host__ constexpr SignedEnable<Q, Vector>   Abs() const;
         template<class Q = T>
-        __device__ __host__ SignedEnable<Q, Vector&>    AbsSelf();
+        __device__ __host__ constexpr SignedEnable<Q, Vector&>  AbsSelf();
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector>      Round() const;
+        __device__ __host__ constexpr FloatEnable<Q, Vector>    Round() const;
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector&>     RoundSelf();
+        __device__ __host__ constexpr FloatEnable<Q, Vector&>   RoundSelf();
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector>      Floor() const;
+        __device__ __host__ constexpr FloatEnable<Q, Vector>    Floor() const;
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector&>     FloorSelf();
+        __device__ __host__ constexpr FloatEnable<Q, Vector&>   FloorSelf();
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector>      Ceil() const;
+        __device__ __host__ constexpr FloatEnable<Q, Vector>    Ceil() const;
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Vector&>     CeilSelf();
+        __device__ __host__ constexpr FloatEnable<Q, Vector&>   CeilSelf();
 
-        static __device__ __host__ Vector               Min(const Vector&, const Vector&);
-        static __device__ __host__ Vector               Min(const Vector&, T);
-        static __device__ __host__ Vector               Max(const Vector&, const Vector&);
-        static __device__ __host__ Vector               Max(const Vector&, T);
+        static __device__ __host__ constexpr Vector             Min(const Vector&, const Vector&);
+        static __device__ __host__ constexpr Vector             Min(const Vector&, T);
+        static __device__ __host__ constexpr Vector             Max(const Vector&, const Vector&);
+        static __device__ __host__ constexpr Vector             Max(const Vector&, T);
 
         template<class Q = T>
-        static __device__ __host__ FloatEnable<Q, Vector>   Lerp(const Vector&,
-                                                                 const Vector&,
-                                                                 T);
+        static __device__ __host__ constexpr FloatEnable<Q, Vector>   Lerp(const Vector&,
+                                                                           const Vector&,
+                                                                           T);
 };
 
 // Left scalars
 template<int N, class T>
 __device__ __host__ HYBRID_INLINE
-Vector<N, T> operator*(T, const Vector<N, T>&);
+constexpr Vector<N, T> operator*(T, const Vector<N, T>&);
 
 // Typeless vectors are defaulted to float
 using Vector2 = Vector<2, float>;
@@ -261,12 +261,12 @@ static_assert(sizeof(Vector4) == 16, "Vector4 should be tightly packed");
 // Cross product (only for 3d vectors)
 template <class T>
 __device__ __host__ HYBRID_INLINE
-Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
+constexpr Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
 
 // Arbitrary Orthogonal Vector Generation (only for 3D Vectors)
 template <class T>
 __device__ __host__ HYBRID_INLINE
-Vector<3, T> OrthogonalVector(const Vector<3, T>&);
+constexpr Vector<3, T> OrthogonalVector(const Vector<3, T>&);
 
 // Implementation
 #include "Vector.hpp"   // CPU & GPU

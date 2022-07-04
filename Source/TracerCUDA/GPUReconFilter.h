@@ -12,78 +12,31 @@
 #include "CudaSystem.hpp"
 #include "ParallelPartition.cuh"
 
-template <class GPUFilterFunctor>
 class GPUReconFilter : public GPUReconFilterI
 {
     private:
         DeviceMemory            filterMemory;
 
     protected:
-        // Common Json Names
-        static constexpr const char* RADIUS_NAME = "radius";
-
-        GPUFilterFunctor        filterGPU;
         float                   filterRadius;
 
+        template <class GPUFilterFunctor>
+        void                    FilterToImgInternal(ImageMemory&,
+                                                    const Vector4f* dValues,
+                                                    const Vector2f* dImgCoords,
+                                                    uint32_t sampleCount,
+                                                    const GPUFilterFunctor& f,
+                                                    const CudaSystem&) override;
         uint32_t                ConservativePixelPerSample() const;
-
-        // Constructors
-                                GPUReconFilter(Options filterOptions,
-                                               GPUFilterFunctor f);
     public:
-        // Destructor
-
+        // Constructors & Destructor
+                                GPUReconFilter(float filterRadius);
                                 ~GPUReconFilter() = default;
 
         size_t                  UsedGPUMemory() const override;
-        // Actual Functionality
-        // Filter the samples to the image
-        void                    FilterToImg(ImageMemory&,
-                                            const Vector4f* dValues,
-                                            const Vector2f* dImgCoords,
-                                            uint32_t sampleCount,
-                                            const CudaSystem&) override;
 };
 
-class GPUBoxFilter
-{
-    private:
-    float       radius;
-
-    public:
-    // Constructors & Destructor
-                BoxFilter(float radius);
-                ~BoxFilter() = default;
-
-    __device__ __host__
-    float       operator()(const Vector2f& pixCoord,
-                           const Vector2f& sampleCoord) const;
-};
-
-class GPUReconFilterBox : public GPUReconFilter<BoxFilter>
-{
-    private:
-    protected:
-    public:
-        // Constructors & Destructor
-                    GPUReconFilter(Options filterOptions);
-                    ~GPUReconFilter() = default;
-};
-
-inline ReconBoxFilterFunctor::ReconBoxFilterFunctor(float radius)
-    : radius(radius)
-{}
-
-__device__ inline
-float ReconBoxFilterFunctor::operator()(const Vector2f& pixCoord,
-                                        const Vector2f& sampleCoord) const
-{
-    return ((pixCoord - sampleCoord).Length() < radius) ? 1.0f : 0.0f;
-}
-
-
-template <class T>
-uint32_t GPUReconFilter<T>::ConservativePixelPerSample() const
+uint32_t GPUReconFilter::ConservativePixelPerSample() const
 {
     uint32_t rangeInt = static_cast<int>(std::ceil(filterRadius));
     // Special case, for zero radius directly write to a pixel
@@ -91,27 +44,22 @@ uint32_t GPUReconFilter<T>::ConservativePixelPerSample() const
     return rangeInt * rangeInt * 4;
 }
 
-template <class T>
-GPUReconFilter<T>::GPUReconFilter(Options filterOptions, T f)
-    : filterGPU(f)
-{
-    TracerError e = TracerError::OK;
-    if((e = filterOptions.GetFloat(filterRadius, RADIUS_NAME)) != TracerError::OK)
-        throw TracerException(e);
-}
+GPUReconFilter::GPUReconFilter(float filterRadius)
+    : filterRadius(filterRadius)
+{}
 
-template <class T>
-size_t GPUReconFilter<T>::UsedGPUMemory() const
+size_t GPUReconFilter::UsedGPUMemory() const
 {
     return filterMemory.Size();
 }
 
-template <class T>
-void GPUReconFilter<T>::FilterToImg(ImageMemory& img,
-                                    const Vector4f* dValues,
-                                    const Vector2f* dImgCoords,
-                                    uint32_t sampleCount,
-                                    const CudaSystem& system)
+template <class GPUFilterFunctor>
+void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
+                                         const Vector4f* dValues,
+                                         const Vector2f* dImgCoords,
+                                         uint32_t sampleCount,
+                                         const GPUFilterFunctor& filterGPU,
+                                         const CudaSystem& system)
 {
     const auto& gpu = system.BestGPU();
 
@@ -253,7 +201,7 @@ void GPUReconFilter<T>::FilterToImg(ImageMemory& img,
     gpu.ExactKC_X(0, (cudaStream_t)0,
                   TPB_X, filterKernelBlockCount,
                   //
-                  KCFilterToImg<Vector4f, T, TPB_X>,
+                  KCFilterToImg<Vector4f, GPUFilterFunctor, TPB_X>,
                   // Out
                   img.GMem<Vector4f>(),
                   // In
