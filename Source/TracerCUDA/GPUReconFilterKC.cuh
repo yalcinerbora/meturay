@@ -2,9 +2,33 @@
 
 #include <cub/cub.cuh>
 
+#include "RayLib/AABB.h"
 #include "RayLib/Vector.h"
 #include "ImageStructs.h"
 #include "CudaSystem.h"
+
+__device__ __host__
+inline uint32_t FilterRadiusToPixelWH(float filterRadius)
+{
+    // At every 0.5 increment conservative pixel estimate is increasing
+    // [0]          = Single Pixel (Special Case)
+    // (0, 0.5]     = 2x2
+    // (0.5, 1]     = 3x3
+    // (1, 1.5]     = 4x4
+    // (1.5, 2]     = 5x5
+    // etc...
+    uint32_t result = 1;
+    if(filterRadius == 0.0f) return result;
+
+    // Do division
+    uint32_t quot = static_cast<uint32_t>(filterRadius / 0.5f);
+    float remainder = fmod(filterRadius, 0.5f);
+
+    // Exact divisions reside on previous segment
+    if(remainder == 0.0f) quot -= 1;
+    result += (quot + 1);
+    return result;
+}
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCExpandSamplesToPixels(// Outputs
@@ -19,8 +43,12 @@ static void KCExpandSamplesToPixels(// Outputs
                                     Vector2i imgResolution)
 {
     // Conservative range of pixels
-    const uint32_t rangeInt = static_cast<int>(ceil(filterRadius));
-    const Vector2i rangeXY = Vector2i(-(rangeInt * 2), rangeInt * 2);
+    const int32_t rangeInt = static_cast<int32_t>(FilterRadiusToPixelWH(filterRadius));
+    const Vector2i rangeXY = Vector2i(-(rangeInt - 1) / 2,
+                                      (rangeInt + 2) / 2);
+    // Don't use 1.0f exactly here
+    // pixel is [0,1) internally
+    const float pixWidth = nextafter(1.0f, 0.0f);
 
     // Grid Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -43,25 +71,46 @@ static void KCExpandSamplesToPixels(// Outputs
                                               &(samplePixId2D[1])));
         Vector2i samplePixId2DInt = Vector2i(samplePixId2D);
 
-        // Determine Coalesced loop size
-        uint32_t totalRange = rangeXY[0] + rangeXY[1] + 1;
-        totalRange *= totalRange;
+        // Adjsut the pixel range wrt. pixelCoords
+        Vector2i pixRangeX = rangeXY;
+        Vector2i pixRangeY = rangeXY;
+        // Shift the range window unless radius is odd
+        if(rangeInt % 2 == 0)
+        {
+            if(relImgCoords[0] < 0.5f) pixRangeX -= Vector2i(1);
+            if(relImgCoords[1] < 0.5f) pixRangeY -= Vector2i(1);
+        }
 
+        //printf("Range X [%d, %d), Y [%d, %d)\n",
+        //       pixRangeX[0], pixRangeX[1],
+        //       pixRangeY[0], pixRangeY[1]);
+
+        // Actual write
         int writeCounter = 0;
-        for(int y = rangeXY[0]; y <= rangeXY[1]; y++)
-        for(int x = rangeXY[0]; x <= rangeXY[1]; x++)
+        for(int y = pixRangeY[0]; y < pixRangeY[1]; y++)
+        for(int x = pixRangeX[0]; x < pixRangeX[1]; x++)
         {
             // Find the closest point on the pixel
             Vector2f pixCoord = Vector2f(static_cast<float>(x),
-                                        static_cast<float>(y));
-            pixCoord += Vector2f((x < 0) ? 1.0f : 0.0f,
-                                 (y < 0) ? 1.0f : 0.0f);
-            //
-            float dist = (pixCoord - relImgCoords).LengthSqr();
-            if(dist < filterRadius * filterRadius)
+                                         static_cast<float>(y));
+
+            // Pixel-Filter Circle Intersections
+            AABB2f pixel = AABB2f(pixCoord, pixCoord + pixWidth);
+
+            //printf("S(%f, %f): Pixel (%f, %f)-(%f, %f) ",
+            //       relImgCoords[0], relImgCoords[1],
+            //       pixel.Min()[0], pixel.Min()[1],
+            //       pixel.Max()[0], pixel.Max()[1]);
+
+            // Do actual AABB / Circle Intersection here
+            // (special case when radius == 0, directly accept)
+            if(rangeInt == 1 ||
+               pixel.IntersectsSphere(relImgCoords, filterRadius))
             {
                 if(writeCounter == maxPixelPerSample)
                     printf("Filter Error: Too many pixels!\n");
+
+                //printf("YES\n");
 
                 // This pixel is affected by this sample
                 uint32_t pixelId = ((samplePixId2DInt[1] + y) * imgResolution[0] +
@@ -71,6 +120,13 @@ static void KCExpandSamplesToPixels(// Outputs
                 gLocalsampleIndices[writeCounter] = threadId;
                 writeCounter++;
             }
+            //else printf("NO\n");
+        }
+        // Write invalid to the unused locations
+        for(int i = writeCounter; i < maxPixelPerSample; i++)
+        {
+            gLocalPixIds[i] = UINT32_MAX;
+            gLocalsampleIndices[i] = UINT32_MAX;
         }
     }
 }

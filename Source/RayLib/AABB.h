@@ -65,8 +65,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
         __device__ __host__ Vector<N,T>             FurthestCorner(const Vector<N, T>&) const;
 
         // Intersection
-        __device__ __host__ bool                    IntersectsSphere(const Vector3f& sphrPos,
-                                                                     float sphrRadius);
+        __device__ __host__ bool                    IntersectsSphere(const Vector<N, T>& sphrPos,
+                                                                     float sphrRadius) const;
 };
 
 // Typeless aabbs are defaulted to float

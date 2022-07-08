@@ -12,6 +12,8 @@
 #include "CudaSystem.hpp"
 #include "ParallelPartition.cuh"
 
+#include "TracerDebug.h"
+
 class GPUReconFilter : public GPUReconFilterI
 {
     private:
@@ -28,6 +30,7 @@ class GPUReconFilter : public GPUReconFilterI
                                                     const GPUFilterFunctor& f,
                                                     const CudaSystem&) override;
         uint32_t                ConservativePixelPerSample() const;
+
     public:
         // Constructors & Destructor
                                 GPUReconFilter(float filterRadius);
@@ -38,10 +41,8 @@ class GPUReconFilter : public GPUReconFilterI
 
 uint32_t GPUReconFilter::ConservativePixelPerSample() const
 {
-    uint32_t rangeInt = static_cast<int>(std::ceil(filterRadius));
-    // Special case, for zero radius directly write to a pixel
-    if(rangeInt == 0) return 1;
-    return rangeInt * rangeInt * 4;
+    uint32_t result = FilterRadiusToPixelWH(filterRadius);
+    return result * result;
 }
 
 GPUReconFilter::GPUReconFilter(float filterRadius)
@@ -103,7 +104,9 @@ void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
                                    {ppsTotal, ppsTotal,
                                    ppsTotal, ppsTotal,
                                    tempMemSize});
-
+    // Now actually set the double buffer
+    dbPixIds = cub::DoubleBuffer<uint32_t>(dPixelIdBuffer0, dPixelIdBuffer1);
+    dbSampleIndices = cub::DoubleBuffer<uint32_t>(dSampleIndicesBuffer0, dSampleIndicesBuffer1);
 
     // Call the PPS Generation Kernel
     gpu.GridStrideKC_X(0, (cudaStream_t)0, sampleCount,
@@ -119,11 +122,16 @@ void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
                        sampleCount,
                        filterRadius,
                        img.Resolution());
+
+
+    Debug::DumpBatchedMemToFile("pixelIds", dPixelIdBuffer0, pps, ppsTotal);
+    Debug::DumpBatchedMemToFile("sampleIndex", dSampleIndicesBuffer0, pps, ppsTotal);
+
     // Do the sort
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(static_cast<void*>(dTempMemory), sortTempBufferSize,
                                                dbPixIds, dbSampleIndices,
                                                static_cast<int>(ppsTotal)));
-
+    CUDA_KERNEL_CHECK();
 
     // Rename the buffers for if operations etc.
     uint32_t* dSortedPixelIds;
@@ -170,6 +178,7 @@ void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
                                      dSplitCount,
                                      static_cast<int>(ppsTotal),
                                      ValidSplit()));
+    CUDA_KERNEL_CHECK();
     CUDA_CHECK(cudaStreamSynchronize((cudaStream_t)0));
 
     // Load the dense size

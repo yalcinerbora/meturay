@@ -34,7 +34,7 @@ TYPED_TEST(ReconFilterTest, Basic)
     static constexpr uint32_t SAMPLE_COUNT = 512;
     static constexpr Vector2i RESOLUTION = Vector2i{320, 180};
     static constexpr uint32_t PIXEL_COUNT = RESOLUTION.Multiply();
-    static constexpr float RADIUS = 0.5f;
+    static constexpr float RADIUS = 1.5f; //0.5f;
     const Options emptyOptions;
     // RNG
     std::mt19937 rng;
@@ -58,6 +58,8 @@ TYPED_TEST(ReconFilterTest, Basic)
                       coord[1] = uniformDistY(rng);
                   });
 
+    //coordinates[0][0] = std::floor(coordinates[0][0]) + 0.5f;
+    //coordinates[0][1] = std::floor(coordinates[0][1]) + 0.5f;
 
     // Device Stuff
     ImageMemory imgMem(Zero2i, RESOLUTION, RESOLUTION,

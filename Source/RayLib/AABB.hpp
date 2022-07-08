@@ -142,8 +142,8 @@ Vector<N, T> AABB<N, T>::FurthestCorner(const Vector<N, T>& point) const
 
 template<int N, class T>
 __device__ __host__ HYBRID_INLINE
-bool  AABB<N, T>::IntersectsSphere(const Vector3f& sphrPos,
-                                   float sphrRadius)
+bool  AABB<N, T>::IntersectsSphere(const Vector<N, T>& sphrPos,
+                                   float sphrRadius) const
 {
     // Graphics Gems 2
     // http://www.realtimerendering.com/resources/GraphicsGems/gems/BoxSphere.c
@@ -156,7 +156,7 @@ bool  AABB<N, T>::IntersectsSphere(const Vector3f& sphrPos,
         else if(sphrPos[i] > max[i])
             dmin += (sphrPos[i] - max[i]) * (sphrPos[i] - max[i]);
     }
-    if(dmin <= sphrRadius * sphrRadius)
+    if(dmin < sphrRadius * sphrRadius)
         return true;
     return false;
 }
