@@ -22,6 +22,7 @@ class GPUReconFilterBox : public GPUReconFilter
 {
     public:
         static const char* TypeName() { return "Box"; }
+        using FilterFunctor = GPUBoxFilterFunctor;
     private:
         GPUBoxFilterFunctor   filter;
 

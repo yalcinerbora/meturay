@@ -49,6 +49,7 @@ static void KCExpandSamplesToPixels(// Outputs
     // Don't use 1.0f exactly here
     // pixel is [0,1) internally
     const float pixWidth = nextafter(1.0f, 0.0f);
+    const float filterRSqr = filterRadius * filterRadius;
 
     // Grid Stride Loop
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -64,10 +65,10 @@ static void KCExpandSamplesToPixels(// Outputs
         // (It may be faster?)
         // Load img coordinates for this sample
         Vector2f samplePixId2D;
-        Vector2f imgCoords = gImgCoords[threadId];
-        Vector2f relImgCoords = Vector2f(modf(imgCoords[0],
+        Vector2f sampleImgCoords = gImgCoords[threadId];
+        Vector2f relImgCoords = Vector2f(modf(sampleImgCoords[0],
                                               &(samplePixId2D[0])),
-                                         modf(imgCoords[1],
+                                         modf(sampleImgCoords[1],
                                               &(samplePixId2D[1])));
         Vector2i samplePixId2DInt = Vector2i(samplePixId2D);
 
@@ -91,21 +92,19 @@ static void KCExpandSamplesToPixels(// Outputs
         for(int x = pixRangeX[0]; x < pixRangeX[1]; x++)
         {
             // Find the closest point on the pixel
-            Vector2f pixCoord = Vector2f(static_cast<float>(x),
-                                         static_cast<float>(y));
-
-            // Pixel-Filter Circle Intersections
-            AABB2f pixel = AABB2f(pixCoord, pixCoord + pixWidth);
-
+            Vector2f pixCoord = samplePixId2D + Vector2f(static_cast<float>(x),
+                                                         static_cast<float>(y));
+            Vector2f pixCenter = pixCoord + Vector2f(0.5f);
             //printf("S(%f, %f): Pixel (%f, %f)-(%f, %f) ",
             //       relImgCoords[0], relImgCoords[1],
             //       pixel.Min()[0], pixel.Min()[1],
             //       pixel.Max()[0], pixel.Max()[1]);
 
-            // Do actual AABB / Circle Intersection here
+            Vector distVec = (sampleImgCoords - pixCenter);
+            // Do range check
             // (special case when radius == 0, directly accept)
             if(rangeInt == 1 ||
-               pixel.IntersectsSphere(relImgCoords, filterRadius))
+               distVec.LengthSqr() <= filterRSqr)
             {
                 if(writeCounter == maxPixelPerSample)
                     printf("Filter Error: Too many pixels!\n");
@@ -113,12 +112,23 @@ static void KCExpandSamplesToPixels(// Outputs
                 //printf("YES\n");
 
                 // This pixel is affected by this sample
-                uint32_t pixelId = ((samplePixId2DInt[1] + y) * imgResolution[0] +
-                                    samplePixId2DInt[0] + x);
+                Vector2i actualPixId = Vector2i(samplePixId2DInt[0] + x,
+                                                samplePixId2DInt[1] + y);
+                bool pixXInside = (actualPixId[0] >= 0 &&
+                                    actualPixId[0] < imgResolution[0]);
+                bool pixYInside = (actualPixId[1] >= 0 &&
+                                    actualPixId[1] < imgResolution[1]);
 
-                gLocalPixIds[writeCounter] = pixelId;
-                gLocalsampleIndices[writeCounter] = threadId;
-                writeCounter++;
+                // Only make the sample if pixel is in the actual image
+                if(pixXInside && pixYInside)
+                {
+                    uint32_t pixelId = (actualPixId[1] * imgResolution[0] +
+                                        actualPixId[0]);
+
+                    gLocalPixIds[writeCounter] = pixelId;
+                    gLocalsampleIndices[writeCounter] = threadId;
+                    writeCounter++;
+                }
             }
             //else printf("NO\n");
         }
@@ -196,6 +206,9 @@ static void KCFilterToImg(ImageGMem<T> img,
         }
         __syncthreads();
 
+        // Skip this segment
+        if(sPixelId == UINT32_MAX) continue;
+
         // Calculate Pixel Coordinates on the image space
         const Vector2f pixCoords = PixelIdToImgCoords(sPixelId);
         // Calculate iteration count
@@ -205,18 +218,19 @@ static void KCFilterToImg(ImageGMem<T> img,
 
         // These variables are only valid on main thread
         float totalWeight = 0.0f;
-        T totalValue = Zero4f;
+        T totalValue = T(0.0f);
         // Do the reduction batch by batch
         for(uint32_t i = 0; i < iterations; i++)
         {
-            uint32_t fetchIndex = sOffset[0] + localId + i * TPB_X;
+            const uint32_t localIndex = localId + i * TPB_X;
+            const uint32_t globalSampleIdIndex = sOffset[0] + localIndex;
 
             // Fetch Value & Image Coords
             T value = T(0.0f);
             Vector2f sampleCoords = Vector2f(FLT_MAX, FLT_MAX);
-            if(fetchIndex < elementCount)
+            if(localIndex < elementCount)
             {
-                uint32_t sampleId = gSampleIds[fetchIndex];
+                uint32_t sampleId = gSampleIds[globalSampleIdIndex];
                 value = gValues[sampleId];
                 sampleCoords = gImgCoords[sampleId];
             }
@@ -227,7 +241,7 @@ static void KCFilterToImg(ImageGMem<T> img,
             // Now do the reduction operations
             totalWeight += BlockReduceF(tempShared.reduceFMem).Sum(filterWeight);
             __syncthreads();
-            totalValue += BlockReduceV4(tempShared.reduceV4Mem).Sum(totalValue);
+            totalValue += BlockReduceV4(tempShared.reduceV4Mem).Sum(weightedVal);
         }
         // Now all is reduced, main thread can write to the img buffer
         if(localId == 0)

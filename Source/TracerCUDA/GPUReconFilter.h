@@ -123,10 +123,6 @@ void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
                        filterRadius,
                        img.Resolution());
 
-
-    Debug::DumpBatchedMemToFile("pixelIds", dPixelIdBuffer0, pps, ppsTotal);
-    Debug::DumpBatchedMemToFile("sampleIndex", dSampleIndicesBuffer0, pps, ppsTotal);
-
     // Do the sort
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(static_cast<void*>(dTempMemory), sortTempBufferSize,
                                                dbPixIds, dbSampleIndices,
@@ -157,7 +153,6 @@ void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
         dSortedSampleIndices = dSampleIndicesBuffer1;
         dIfInput = dSampleIndicesBuffer0;
     }
-
     // Mark the splits
     uint32_t markLocCount = ppsTotal - 1;
     gpu.GridStrideKC_X(0, (cudaStream_t)0, markLocCount,
@@ -185,7 +180,9 @@ void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
     uint32_t hSelectCount;
     CUDA_CHECK(cudaMemcpy(&hSelectCount, dSplitCount,
                           sizeof(uint32_t), cudaMemcpyDeviceToHost));
-
+    // The the last dense index as total pps count
+    CUDA_CHECK(cudaMemcpy(dDenseSplitIndices + hSelectCount, &ppsTotal,
+                          sizeof(uint32_t), cudaMemcpyHostToDevice));
 
     uint32_t* dDenseKeys = dIfInput;
     gpu.GridStrideKC_X(0, (cudaStream_t)0, markLocCount,
@@ -204,8 +201,9 @@ void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
 
     // Call segmented reduce
     static constexpr uint32_t TPB_X = 128;
-    const uint32_t filterKernelBlockCount = (gpu.MaxActiveBlockPerSM(TPB_X) *
-                                             gpu.SMCount() * TPB_X) / TPB_X;
+    // Maximum GPU Saturation
+    uint32_t filterKernelBlockCount = (gpu.MaxActiveBlockPerSM(TPB_X) *
+                                       gpu.SMCount() * TPB_X) / TPB_X;
 
     gpu.ExactKC_X(0, (cudaStream_t)0,
                   TPB_X, filterKernelBlockCount,
