@@ -23,8 +23,8 @@ static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
 struct WFPGTracerGlobalState
 {
-    // Output Image
-    ImageGMem<Vector4>              gImage;
+    // Output Samples
+    CamSampleGMem<Vector4f>         gSamples;
     // Light Related
     const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
@@ -80,7 +80,7 @@ void WFPGTracerBoundaryWork(// Output
     using GPUType = typename EGroup::GPUType;
 
     // Current Path
-    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    const uint32_t pathStartIndex = aux.sampleIndex * renderState.maximumPathNodePerRay;
     PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
@@ -153,9 +153,9 @@ void WFPGTracerBoundaryWork(// Output
        isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contribute
     {
         // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
 
         // Also back propagate this radiance to the path nodes
         if(aux.type != RayType::CAMERA_RAY)
@@ -201,7 +201,7 @@ void WFPGTracerPathWork(// Output
     static constexpr Vector3 ZERO_3 = Zero3;
 
     // Path Memory
-    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    const uint32_t pathStartIndex = aux.sampleIndex * renderState.maximumPathNodePerRay;
     PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // TODO: change this currently only first strategy is sampled
@@ -251,9 +251,9 @@ void WFPGTracerPathWork(// Output
                                         gMatData,
                                         matIndex);
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
 
         // Accumulate this to the paths as well
         if(total.HasNaN()) printf("NAN Found emissive!!!\n");
@@ -687,9 +687,9 @@ void WFPGTracerDebugBWork(// Output
     Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
                                 : Vector3f(0.0f);
     // Accumulate the pixel
-    ImageAccumulatePixel(renderState.gImage,
-                            aux.pixelIndex,
-                            Vector4f(locColor, 1.0f));
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex,
+                        Vector4f(locColor, 1.0f));
 }
 
 template <class MGroup>
@@ -730,14 +730,14 @@ void WFPGTracerDebugWork(// Output
     Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
                                 : Vector3f(0.0f);
     // Accumulate the pixel
-    ImageAccumulatePixel(renderState.gImage,
-                            aux.pixelIndex,
-                            Vector4f(locColor, 1.0f));
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex,
+                        Vector4f(locColor, 1.0f));
 }
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCTraceSVO(// Output
-                       ImageGMem<Vector4> gImage,
+                       CamSampleGMem<Vector4f> gSamples,
                        // Input
                        const AnisoSVOctreeGPU svo,
                        const RayGMem* gRays,
@@ -773,9 +773,9 @@ static void KCTraceSVO(// Output
         }
 
         // Accumulate the pixel
-        ImageAccumulatePixel(gImage,
-                             aux.pixelIndex,
-                             Vector4f(locColor, 1.0f));
+        AccumulateRaySample(gSamples,
+                            aux.sampleIndex,
+                            Vector4f(locColor, 1.0f));
     }
 }
 

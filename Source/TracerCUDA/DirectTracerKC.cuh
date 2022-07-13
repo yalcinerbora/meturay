@@ -26,7 +26,8 @@ enum class PositionRenderType
 
 struct DirectTracerGlobalState
 {
-    ImageGMem<Vector4>  gImage;
+    // Samples
+    CamSampleGMem<Vector4f> gSamples;
 };
 
 // Position Render Specific States
@@ -65,9 +66,9 @@ void DirectBoundaryWork(// Output
                                    -r.getDirection(),
                                    position,
                                    surface);
-    ImageAccumulatePixel(renderState.gImage,
-                         aux.pixelIndex,
-                         Vector4f(emission, 1.0f));
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex,
+                        Vector4f(emission, 1.0f));
 }
 
 template <class MGroup>
@@ -125,9 +126,9 @@ inline void DirectFurnaceWork(// Output
     radiance = (pdf == 0.0f) ? Zero3 : (radiance / pdf);
     radiance += emission;
     // And accumulate pixel
-    ImageAccumulatePixel(renderState.gImage,
-                         aux.pixelIndex,
-                         Vector4(radiance, 1.0f));
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex,
+                        Vector4(radiance, 1.0f));
 }
 
 __device__
@@ -157,9 +158,9 @@ inline void DirectPositionWork(// Output
     {
         case PositionRenderType::VECTOR3:
         {
-            ImageAccumulatePixel(renderState.gImage,
-                                 aux.pixelIndex,
-                                 worldPos);
+            AccumulateRaySample(renderState.gSamples,
+                                aux.sampleIndex,
+                                worldPos);
             return;
         }
         case PositionRenderType::LINEAR_DEPTH:
@@ -174,9 +175,9 @@ inline void DirectPositionWork(// Output
             else
                 depth = log(C * ndc[3] + 1.0f) / log(C * nearFar[1] + 1.0f);
 
-            ImageAccumulatePixel(renderState.gImage,
-                                 aux.pixelIndex,
-                                 Vector4(depth, depth, depth, 1.0f));
+            AccumulateRaySample(renderState.gSamples,
+                                aux.sampleIndex,
+                                Vector4(depth, depth, depth, 1.0f));
             break;
         }
     }
@@ -205,7 +206,7 @@ inline void DirectNormalWork(// Output
     Vector3f ZERO = Zero3;
     const GPUMediumVacuum m(0);
     Vector3f normal = NormalRenderMat::Evaluate(ZERO, ZERO, ZERO, m, surface, gMatData, matIndex);
-    ImageAccumulatePixel(renderState.gImage,
-                         aux.pixelIndex,
-                         Vector4(normal, 1.0f));
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex,
+                        Vector4(normal, 1.0f));
 }

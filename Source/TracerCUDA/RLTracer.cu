@@ -192,7 +192,7 @@ bool RLTracer::Render()
 
     // Generate Global Data Struct
     RLTracerGlobalState globalData;
-    globalData.gImage = imgMemory.GMem<Vector4>();
+    globalData.gSamples = dSamplePtrs;
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.gLightSampler = dLightSampler;

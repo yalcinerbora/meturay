@@ -14,14 +14,21 @@ class RayTracer : public GPUTracer
         static constexpr const char* SAMPLE_NAME = "Samples";
 
     private:
+        void                            AllocateSampleBuffer(uint32_t totalSampleCount);
+
     protected:
         // Auxiliary Data for Each Ray
-        DeviceMemory            auxBuffer0;
-        DeviceMemory            auxBuffer1;
+        DeviceMemory                    auxBuffer0;
+        DeviceMemory                    auxBuffer1;
         //
-        DeviceMemory*           dAuxIn;
-        DeviceMemory*           dAuxOut;
+        DeviceMemory*                   dAuxIn;
+        DeviceMemory*                   dAuxOut;
+        // Sample Buffer of each ray
+        DeviceMemory                    dSampleBuffer;
+        CamSampleGMem<Vector4f>         dSamplePtrs;
+        CamSampleGMemConst<Vector4f>    dSampleConstPtrs;
 
+        // Scene Reference
         const GPUSceneI&        scene;
 
         int32_t                 totalSamplePerPixel;

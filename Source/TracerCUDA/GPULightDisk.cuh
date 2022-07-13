@@ -31,6 +31,7 @@ class GPULightDisk final : public GPULightP
                                        float& distance,
                                        Vector3& direction,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
@@ -38,6 +39,7 @@ class GPULightDisk final : public GPULightP
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
+                                            Vector2f&,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -128,6 +130,7 @@ inline void GPULightDisk::Sample(// Output
                                  float& distance,
                                  Vector3& direction,
                                  float& pdf,
+                                 Vector2f& localCoords,
                                  // Input
                                  const Vector3& worldLoc,
                                  // I-O
@@ -155,11 +158,15 @@ inline void GPULightDisk::Sample(// Output
     //float nDotL = max(normal.Dot(-direction), 0.0f);
     float nDotL = abs(normal.Dot(-direction));
     pdf = distanceSqr / (nDotL * area);
+
+    // TODO:
+    localCoords = Vector2f(NAN, NAN);
 }
 
 __device__
 inline void GPULightDisk::GenerateRay(// Output
                                       RayReg&,
+                                      Vector2f&,
                                       // Input
                                       const Vector2i& sampleId,
                                       const Vector2i& sampleMax,

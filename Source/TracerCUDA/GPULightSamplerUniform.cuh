@@ -110,9 +110,10 @@ inline bool GPULightSamplerUniform::SampleLight(// Outputs
     // if it happens just return the last light on the list
     if(index == lightCount) index--;
 
+    Vector2f localCoords;
     const GPULightI* light = gLights[index];
     light->Sample(lDistance, direction,
-                  pdf, position, rng);
+                  pdf, localCoords, position, rng);
     // Incorporate the PDF of selecting that light
     pdf *= (1.0f / static_cast<float>(lightCount));
     lightIndex = index;

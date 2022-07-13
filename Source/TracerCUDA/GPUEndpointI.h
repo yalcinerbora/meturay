@@ -52,6 +52,7 @@ class GPUEndpointI
                                            float& distance,
                                            Vector3& direction,
                                            float& pdf,
+                                           Vector2f& localCoords,
                                            // Input
                                            const Vector3& position,
                                            // I-O
@@ -59,6 +60,7 @@ class GPUEndpointI
         // Generate a Ray from this endpoint
         virtual __device__ void     GenerateRay(// Output
                                                 RayReg&,
+                                                Vector2f& localCoords,
                                                 // Input
                                                 const Vector2i& sampleId,
                                                 const Vector2i& sampleMax,

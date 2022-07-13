@@ -13,6 +13,7 @@ class GPUCameraPinhole final : public GPUCameraI
         Vector3                 position;
         Vector3                 right;
         Vector3                 up;
+        Vector3                 gazeDir;
         Vector3                 bottomLeft;
         Vector2                 planeSize;
         Vector2                 nearFar;
@@ -36,6 +37,7 @@ class GPUCameraPinhole final : public GPUCameraI
                                    float& distance,
                                    Vector3& direction,
                                    float& pdf,
+                                   Vector2f& localCoords,
                                    // Input
                                    const Vector3& position,
                                    // I-O
@@ -43,6 +45,7 @@ class GPUCameraPinhole final : public GPUCameraI
 
         __device__ void     GenerateRay(// Output
                                         RayReg&,
+                                        Vector2f& localCoords,
                                         // Input
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
@@ -148,7 +151,7 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
     float heightHalf = tanf(fov[1] * 0.5f) * nearPlane;
 
     // Camera Vector Correction
-    Vector3 gazeDir = gazePoint - position;
+    gazeDir = gazePoint - position;
     right = Cross(gazeDir, up).Normalize();
     up = Cross(right, gazeDir).Normalize();
     gazeDir = Cross(up, right).Normalize();
@@ -167,6 +170,7 @@ inline void GPUCameraPinhole::Sample(// Output
                                      float& distance,
                                      Vector3& direction,
                                      float& pdf,
+                                     Vector2f& localCoords,
                                      // Input
                                      const Vector3& sampleLoc,
                                      // I-O
@@ -177,11 +181,28 @@ inline void GPUCameraPinhole::Sample(// Output
     distance = direction.Length();
     direction.NormalizeSelf();
     pdf = 1.0f;
+
+    // Generate image space (local) coords
+    // "bottomLeft" plane is "near" distance away from the position
+    float nearPlane = nearFar[0];
+    float cosAlpha = gazeDir.Dot(direction);
+    float planeDist = nearFar[0] / cosAlpha;
+
+    // Adjust length of the direction
+    Vector3f dirNear = direction * planeDist;
+
+    float deltaX = dirNear.Dot(right);
+    float deltaY = dirNear.Dot(right);
+
+    Vector2f planeCenter = planeSize * 0.5f;
+    Vector2f planeCoord = planeCenter - Vector2f(deltaX, deltaY);
+    localCoords = planeCoord / planeSize;
 }
 
 __device__
 inline void GPUCameraPinhole::GenerateRay(// Output
                                           RayReg& ray,
+                                          Vector2f& localCoords,
                                           // Input
                                           const Vector2i& sampleId,
                                           const Vector2i& sampleMax,
@@ -205,6 +226,9 @@ inline void GPUCameraPinhole::GenerateRay(// Output
     Vector3 samplePoint = bottomLeft + ((sampleDistance[0] * right) +
                                         (sampleDistance[1] * up));
     Vector3 rayDir = (samplePoint - position).Normalize();
+
+    // Local Coords
+    localCoords = sampleDistance / planeSize;
 
     // Initialize Ray
     ray.ray = RayF(rayDir, position);

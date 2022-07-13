@@ -316,7 +316,7 @@ void WFPGTracer::TraceAndStorePhotons()
 {
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
-    globalData.gImage = imgMemory.GMem<Vector4>();
+    globalData.gSamples = dSamplePtrs;
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.gLightSampler = dLightSampler;
@@ -746,7 +746,7 @@ bool WFPGTracer::Render()
 
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
-    globalData.gImage = imgMemory.GMem<Vector4>();
+    globalData.gSamples = dSamplePtrs;
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.gLightSampler = dLightSampler;
@@ -772,7 +772,7 @@ bool WFPGTracer::Render()
                             //
                            KCTraceSVO,
                            //
-                           imgMemory.GMem<Vector4>(),
+                           dSamplePtrs,
                            svo.TreeGPU(),
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
@@ -940,10 +940,10 @@ void WFPGTracer::Finalize()
 
 
         gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
-                            //
+                           //
                            KCTraceSVO,
                            //
-                           imgMemory.GMem<Vector4>(),
+                           dSamplePtrs,
                            svo.TreeGPU(),
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),

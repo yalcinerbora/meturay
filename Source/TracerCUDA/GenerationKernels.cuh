@@ -29,11 +29,12 @@ __device__ inline
 void GenerateCameraRaysGPU(// Output
                            RayGMem* gRays,
                            RayAuxData* gAuxiliary,
-                           ImageGMem<Vector4f> imgMem,
+                           CamSampleGMem<Vector4f>& sampleMem,
                            // I-O
                            RNGeneratorGPUI** gRNGs,
                            // Input
                            const GPUCameraI& gCamera,
+                           const uint32_t samplesIssuedSoFar,
                            const uint32_t samplePerLocation,
                            const Vector2i resolution,
                            const Vector2i pixelStart,
@@ -63,7 +64,9 @@ void GenerateCameraRaysGPU(// Output
         Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
 
         RayReg ray;
+        Vector2f imgSpaceCoords;
         gCamera.GenerateRay(ray,
+                            imgSpaceCoords,
                             //
                             globalSampleId,
                             totalSamples,
@@ -73,8 +76,13 @@ void GenerateCameraRaysGPU(// Output
         // Generate Required Parameters
         Vector2i pixelSampleId = threadId2d % samplePerLocation;
         Vector2i localPixelId = globalPixelId - pixelStart;
-        uint32_t pixelIdLinear = localPixelId[1] * pixelCount[0] + localPixelId[0];
-        uint32_t sampleIdLinear = pixelSampleId[1] * samplePerLocation + pixelSampleId[0];
+        //uint32_t pixelIdLinear = localPixelId[1] * pixelCount[0] + localPixelId[0];
+        uint32_t localSampleIdLinear = pixelSampleId[1] * samplePerLocation + pixelSampleId[0];
+
+        // Write Sample
+        uint32_t globalSampleId1D = samplesIssuedSoFar + threadId;
+        sampleMem.gValues[globalSampleId1D] = Zero4f;
+        sampleMem.gImgCoords[globalSampleId1D] = imgSpaceCoords;
 
         // Write Ray
         ray.Update(gRays, threadId);
@@ -85,11 +93,8 @@ void GenerateCameraRaysGPU(// Output
                  ray,
                  // Index
                  gCamera.MediumIndex(),
-                 pixelIdLinear,
-                 sampleIdLinear);
-
-        // Initialize Samples
-        if(incSampleCount) ImageAddSample(imgMem, pixelIdLinear, 1);
+                 globalSampleId1D,
+                 localSampleIdLinear);
     }
 }
 
@@ -99,12 +104,13 @@ __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGenCameraRaysFromArrayGPU(// Output
                                  RayGMem* gRays,
                                  RayAuxData* gAuxiliary,
-                                 ImageGMem<Vector4f> imgMem,
+                                 CamSampleGMem<Vector4f> sampleMem,
                                  // I-O
                                  RNGeneratorGPUI** gRNGs,
                                  // Input
                                  const GPUCameraI** gCameras,
                                  const uint32_t sceneCamId,
+                                 const uint32_t samplesIssuedSoFar,
                                  const uint32_t samplePerLocation,
                                  const Vector2i resolution,
                                  const Vector2i pixelStart,
@@ -123,10 +129,11 @@ void KCGenCameraRaysFromArrayGPU(// Output
         // Output
         gRays,
         gAuxiliary,
-        imgMem,
+        sampleMem,
         // Input
         gRNGs,
         *gCam,
+        samplesIssuedSoFar,
         samplePerLocation,
         resolution,
         pixelStart,
@@ -146,11 +153,12 @@ __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGenCameraRaysFromObjectGPU(// Output
                                   RayGMem* gRays,
                                   RayAuxData* gAuxiliary,
-                                  ImageGMem<Vector4f> imgMem,
+                                  CamSampleGMem<Vector4f> sampleMem,
                                   // I-O
                                   RNGeneratorGPUI** gRNGs,
                                   // Input
                                   const GPUCameraI& gCamera,
+                                  const uint32_t samplesIssuedSoFar,
                                   const uint32_t samplePerLocation,
                                   const Vector2i resolution,
                                   const Vector2i pixelStart,
@@ -166,10 +174,11 @@ void KCGenCameraRaysFromObjectGPU(// Output
         // Output
         gRays,
         gAuxiliary,
-        imgMem,
+        sampleMem,
         // Input
         gRNGs,
         gCamera,
+        samplesIssuedSoFar,
         samplePerLocation,
         resolution,
         pixelStart,

@@ -19,6 +19,7 @@ class GPULightNull : public GPULightI
                                    float& distance,
                                    Vector3& direction,
                                    float& pdf,
+                                   Vector2f& localCoords,
                                    // Input
                                    const Vector3& position,
                                    // I-O
@@ -26,6 +27,7 @@ class GPULightNull : public GPULightI
     // Generate a Ray from this endpoint
     __device__ void         GenerateRay(// Output
                                         RayReg&,
+                                        Vector2f&,
                                         // Input
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,

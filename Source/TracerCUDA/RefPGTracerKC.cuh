@@ -12,8 +12,8 @@
 
 struct RPGTracerGlobalState
 {
-    // Output Image
-    ImageGMem<float>                gImage;
+    // Output Samples
+    CamSampleGMem<float>            gSamples;
     // Light Related
     const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
@@ -158,7 +158,7 @@ void RPGTracerBoundaryWork(// Output
         total *= misWeight;
         // Accumulate the pixel
         float luminance = Utility::RGBToLuminance(total);
-        ImageAccumulatePixel(renderState.gImage, aux.pixelIndex, luminance);
+        AccumulateRaySample(renderState.gSamples, aux.sampleIndex, luminance);
     }
 }
 
@@ -235,9 +235,9 @@ void RPGTracerPathWork(// Output
         if(aux.type != RayType::CAMERA_RAY)
         {
             float luminance = Utility::RGBToLuminance(total);
-            ImageAccumulatePixel(renderState.gImage,
-                                 aux.pixelIndex,
-                                 luminance);
+            AccumulateRaySample(renderState.gSamples,
+                                aux.sampleIndex,
+                                luminance);
         }
     }
 
@@ -386,7 +386,9 @@ void RPGTracerPathWork(// Output
         {
             auxOut.pixelIndex = CalculateSphericalPixelId(rayPath.getDirection(),
                                                           renderState.resolution);
-            ImageAddSample(renderState.gImage, auxOut.pixelIndex, 1);
+            //ImageAddSample(renderState.gSamples, auxOut.sampleIndex, 1);
+
+
             // Still divide with the path pdf since we sample the paths
             // using BxDF
             //auxOut.radianceFactor = Vector3(1.0f / pdfPath);

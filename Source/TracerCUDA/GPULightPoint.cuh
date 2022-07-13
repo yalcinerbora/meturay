@@ -25,6 +25,7 @@ class GPULightPoint final : public GPULightP
                                        float& distance,
                                        Vector3& direction,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
@@ -32,6 +33,7 @@ class GPULightPoint final : public GPULightP
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
+                                            Vector2f& localCoords,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -111,6 +113,7 @@ inline void GPULightPoint::Sample(// Output
                                   float& distance,
                                   Vector3& direction,
                                   float& pdf,
+                                  Vector2f& localCoords,
                                   // Input
                                   const Vector3& worldLoc,
                                   // I-O
@@ -120,6 +123,9 @@ inline void GPULightPoint::Sample(// Output
     distance = direction.Length();
     direction *= (1.0f / distance);
 
+    // Since point light has no surface not local coords
+    localCoords = Vector2f(NAN, NAN);
+
     // Fake pdf to incorporate square falloff
     pdf = (distance * distance);
 }
@@ -127,6 +133,7 @@ inline void GPULightPoint::Sample(// Output
 __device__
 inline void GPULightPoint::GenerateRay(// Output
                                        RayReg&,
+                                       Vector2f&,
                                        // Input
                                        const Vector2i& sampleId,
                                        const Vector2i& sampleMax,

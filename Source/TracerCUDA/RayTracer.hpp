@@ -4,6 +4,21 @@
 #include "RayTracer.h"
 #include "RayLib/GPUSceneI.h"
 
+inline void RayTracer::AllocateSampleBuffer(uint32_t totalSampleCount)
+{
+    Vector4f* dValues;
+    Vector2f* dCoords;
+
+    GPUMemFuncs::AllocateMultiData(std::tie(dValues, dCoords),
+                                   dSampleBuffer,
+                                   {totalSampleCount, totalSampleCount});
+
+    dSamplePtrs.gValues = dValues;
+    dSamplePtrs.gImgCoords = dCoords;
+    dSampleConstPtrs.gValues = dValues;
+    dSampleConstPtrs.gImgCoords = dCoords;
+}
+
 template <class AuxStruct, class AuxInitFunctor, class RNG>
 void RayTracer::GenerateRays(uint32_t cameraIndex,
                              int32_t sampleCount,
@@ -27,23 +42,26 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     rayCaster->ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
     GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
+    // Allocate enough space for samples
+    AllocateSampleBuffer(totalRayCount);
+
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
     // Call multi-device
-    const uint32_t TPB = StaticThreadPerBlock1D;
+    constexpr uint32_t TPB = StaticThreadPerBlock1D;
     // GPUSplits
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
                                                            reinterpret_cast<void*>(&KCGenCameraRaysFromArrayGPU<AuxStruct, AuxInitFunctor,
                                                                                                                 RNGIndependentGPU>));
-
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
     // however not perfectly balanced... (as all things should be))
     int i = 0;
     Vector2i localPixelStart = Zero2i;
+    uint32_t samplesIssuedSoFar = 0;
     for(const CudaGPU& gpu : cudaSystem.SystemGPUs())
     {
-        // If no work is splits to this GPU skip
+        // If no work is split to this GPU skip
         if(splits[i] == 0) break;
 
         // Generic Args
@@ -55,6 +73,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
         Vector2i localPixelEnd = Vector2i::Min(localPixelStart + localPixelCount, pixelCount);
         Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * sampleCountSqr;
         size_t localWorkCount = localWorkCount2D[0] * localWorkCount2D[1];
+        samplesIssuedSoFar += static_cast<uint32_t>(localWorkCount);
 
         // Kernel Specific Args
         // Output
@@ -62,7 +81,8 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
         RNGeneratorGPUI** dRNGs = rngCPU->GetGPUGenerators(gpu);
-        ImageGMem<Vector4f> gImgData = imgMemory.GMem<Vector4f>();
+        CamSampleGMem<Vector4f> gCamSamplePtrs = dSamplePtrs;
+
 
         cudaSystem.SyncAllGPUs();
 
@@ -75,12 +95,13 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
             // Inputs
             gRays,
             gAuxiliary,
-            gImgData,
+            gCamSamplePtrs,
             // I-O
             dRNGs,
             // Input
             dCameras,
             cameraIndex,
+            samplesIssuedSoFar,
             sampleCount,
             resolution,
             localPixelStart,
@@ -128,6 +149,9 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     rayCaster->ResizeRayOut(totalRayCount, scene.BaseBoundaryMaterial());
     GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
+    // Allocate enough space for samples
+    AllocateSampleBuffer(totalRayCount);
+
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
     // Call multi-device
@@ -142,6 +166,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     // however not perfectly balanced... (as all things should be))
     int i = 0;
     Vector2i localPixelStart = Zero2i;
+    uint32_t samplesIssuedSoFar = 0;
     for(const CudaGPU& gpu : cudaSystem.SystemGPUs())
     {
         // If no work is splits to this GPU skip
@@ -156,6 +181,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
         Vector2i localPixelEnd = Vector2i::Min(localPixelStart + localPixelCount, pixelCount);
         Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * sampleCountSqr;
         size_t localWorkCount = localWorkCount2D[0] * localWorkCount2D[1];
+        samplesIssuedSoFar += static_cast<uint32_t>(localWorkCount);
 
         // Kernel Specific Args
         // Output
@@ -163,7 +189,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
         RNGeneratorGPUI** dRNGs = rngCPU->GetGPUGenerators(gpu);
-        ImageGMem<Vector4f> gImgData = imgMemory.GMem<Vector4f>();
+        CamSampleGMem<Vector4f> gCamSamplePtrs = dSamplePtrs;
 
         cudaSystem.SyncAllGPUs();
 
@@ -176,11 +202,12 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
             // Inputs
             gRays,
             gAuxiliary,
-            gImgData,
+            gCamSamplePtrs,
             // I-O
             dRNGs,
             // Input
             dCamera,
+            samplesIssuedSoFar,
             sampleCount,
             resolution,
             localPixelStart,

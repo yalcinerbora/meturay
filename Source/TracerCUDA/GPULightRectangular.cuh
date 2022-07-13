@@ -32,6 +32,7 @@ class GPULightRectangular final : public GPULightP
                                        float& distance,
                                        Vector3& direction,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
@@ -39,6 +40,7 @@ class GPULightRectangular final : public GPULightP
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
+                                            Vector2f&,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -129,6 +131,7 @@ inline void GPULightRectangular::Sample(// Output
                                         float& distance,
                                         Vector3& direction,
                                         float& pdf,
+                                        Vector2f& localCoords,
                                         // Input
                                         const Vector3& worldLoc,
                                         // I-O
@@ -152,13 +155,13 @@ inline void GPULightRectangular::Sample(// Output
     //distance = direction.Length();
     //direction *= (1.0f / distance);
 
-    //// Fake pdf to incorporate square falloff
-    //pdf = (distance * distance);
+    localCoords = Vector2f(x, y);
 }
 
 __device__ void
 inline GPULightRectangular::GenerateRay(// Output
                                         RayReg&,
+                                        Vector2f&,
                                         // Input
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,

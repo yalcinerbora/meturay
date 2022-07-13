@@ -26,6 +26,7 @@ class GPULightDirectional final : public GPULightP
                                        float& distance,
                                        Vector3& direction,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
@@ -33,6 +34,7 @@ class GPULightDirectional final : public GPULightP
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
+                                            Vector2f&,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -110,6 +112,7 @@ inline void GPULightDirectional::Sample(// Output
                                         float& distance,
                                         Vector3& dir,
                                         float& pdf,
+                                        Vector2f& localCoords,
                                         // Input
                                         const Vector3&,
                                         // I-O
@@ -118,11 +121,13 @@ inline void GPULightDirectional::Sample(// Output
     dir = -direction;
     distance = FLT_MAX;
     pdf = 1.0f;
+    localCoords = Vector2f(NAN, NAN);
 }
 
 __device__
 inline void GPULightDirectional::GenerateRay(// Output
                                              RayReg&,
+                                             Vector2f&,
                                              // Input
                                              const Vector2i&,
                                              const Vector2i&,

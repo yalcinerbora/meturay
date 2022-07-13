@@ -33,6 +33,7 @@ class GPULightSkySphere final : public GPULightP
                                        float& distance,
                                        Vector3& direction,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
@@ -40,6 +41,7 @@ class GPULightSkySphere final : public GPULightP
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
+                                            Vector2f& localCoords,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -135,13 +137,14 @@ inline void GPULightSkySphere::Sample(// Output
                                       float& distance,
                                       Vector3& dir,
                                       float& pdf,
+                                      Vector2f& localCoords,
                                       // Input
                                       const Vector3& worldLoc,
                                       // I-O
                                       RNGeneratorGPUI& rng) const
 {
     Vector2f index;
-    Vector2f uv = distribution.Sample(pdf, index, rng);
+    const Vector2f uv = distribution.Sample(pdf, index, rng);
     Vector2f thetaPhi = Vector2f(// [-pi, pi]
                                  (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
                                   // [0, pi]
@@ -151,6 +154,9 @@ inline void GPULightSkySphere::Sample(// Output
     Vector3 dirYUp = Vector3(dirZUp[1], dirZUp[2], dirZUp[0]);
     // Transform Direction to World Space
     dir = gTransform.LocalToWorld(dirYUp, true);
+
+    // Set local Coords
+    localCoords = uv;
 
     // Convert to solid angle pdf
     // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
@@ -165,6 +171,7 @@ inline void GPULightSkySphere::Sample(// Output
 __device__
 inline void GPULightSkySphere::GenerateRay(// Output
                                            RayReg&,
+                                           Vector2f&,
                                            // Input
                                            const Vector2i& sampleId,
                                            const Vector2i& sampleMax,

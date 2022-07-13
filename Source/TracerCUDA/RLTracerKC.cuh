@@ -22,8 +22,8 @@ struct RLTracerGlobalState
 {
     using SpatialTree = typename SceneSurfaceTree::TreeGPUType;
 
-    // Output Image
-    ImageGMem<Vector4>              gImage;
+    // Output Samples
+    CamSampleGMem<Vector4f>         gSamples;
     // Light Related
     const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
@@ -205,9 +205,9 @@ void RLTracerBoundaryWork(// Output
        isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contribute
     {
         // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
 
         // Also  write this to the previous QFunction
         // Only do this when there is a "previous" location
@@ -305,9 +305,9 @@ void RLTracerPathWork(// Output
                                 gMatData,
                                 matIndex);
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
     }
 
     // If this material does not require to have any samples just quit
@@ -635,9 +635,9 @@ void RLTracerDebugBWork(// Output
                          : Utility::RandomColorRGB(spatialIndex);
 
     // Accumulate the pixel
-    ImageAccumulatePixel(renderState.gImage,
-                         aux.pixelIndex,
-                         Vector4f(locColor, 1.0f));
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex,
+                        Vector4f(locColor, 1.0f));
 }
 
 template <class MGroup>
@@ -684,7 +684,7 @@ void RLTracerDebugWork(// Output
                          : Utility::RandomColorRGB(spatialIndex);
     //Vector3f locColor = Utility::RandomColorRGB(spatialIndex);
     // Accumulate the pixel
-    ImageAccumulatePixel(renderState.gImage,
-                         aux.pixelIndex,
-                         Vector4f(locColor, 1.0f));
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex,
+                        Vector4f(locColor, 1.0f));
 }

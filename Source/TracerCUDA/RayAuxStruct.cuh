@@ -15,44 +15,43 @@ enum class RayType : uint8_t
 
 struct alignas(4) RayAuxBasic
 {
-    uint32_t        pixelIndex;
+    uint32_t    sampleIndex;    // Starting sample index of the ray
 };
 
 struct alignas(16) RayAuxAO
 {
-    Vector3f        aoFactor;
-    uint32_t        pixelIndex;
+    Vector3f    aoFactor;
+    uint32_t    sampleIndex;    // Starting sample index of the ray
 };
 
 struct alignas(16) RayAuxPath
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
-    Vector3f        radianceFactor;
+    Vector3f    radianceFactor;
 
-    uint32_t        pixelIndex;     // Starting pixel index of the ray
-    uint32_t        endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
-    uint16_t        mediumIndex;    // Current Medium of the Ray
-    uint8_t         depth;          // Current path depth
-    RayType         type;           // Ray Type
-    float           prevPDF;        // Previous Intersections BxDF pdf
-                                    // (is used when a path ray hits a light (MIS))
+    uint32_t    sampleIndex;    // Starting sample index of the ray
+    uint32_t    endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
+    uint16_t    mediumIndex;    // Current Medium of the Ray
+    uint8_t     depth;          // Current path depth
+    RayType     type;           // Ray Type
+    float       prevPDF;        // Previous Intersections BxDF pdf
+                                // (is used when a path ray hits a light (MIS))
 };
 
 struct alignas(16) RayAuxPPG
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
-    Vector3f        radianceFactor;
+    Vector3f    radianceFactor;
 
-    uint32_t        pixelIndex;     // Starting pixel index of the ray
-    uint32_t        endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
-    uint16_t        mediumIndex;    // Current Medium of the Ray
-    uint8_t         depth;          // Current path depth
-    RayType         type;           // Ray Type
-    float           prevPDF;        // Previous Intersections BxDF pdf
-                                    // (is used when a path ray hits a light (MIS))
-    uint32_t        pathIndex;      // Global path node index
+    uint32_t    sampleIndex;    // Starting sample index of the ray
+    uint32_t    endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
+    uint16_t    mediumIndex;    // Current Medium of the Ray
+    uint8_t     depth;          // Current path depth
+    RayType     type;           // Ray Type
+    float       prevPDF;        // Previous Intersections BxDF pdf
+                                // (is used when a path ray hits a light (MIS))
 };
 
 struct alignas(16) RayAuxRL
@@ -61,7 +60,7 @@ struct alignas(16) RayAuxRL
     // (a.k.a. total radiance coefficient along the path)
     Vector3f    radianceFactor;
 
-    uint32_t    pixelIndex;         // Starting pixel index of the ray
+    uint32_t    sampleIndex;        // Starting sample index of the ray
     uint32_t    endpointIndex;      // Destination of the ray if applicable (i.e. NEE Ray)
     uint16_t    mediumIndex;        // Current Medium of the Ray
     uint8_t     depth;              // Current path depth
@@ -76,27 +75,26 @@ struct alignas(16) RayAuxWFPG
 {
     // Path throughput
     // (a.k.a. total radiance coefficient along the path)
-    Vector3f        radianceFactor;
+    Vector3f    radianceFactor;
 
-    uint32_t        pixelIndex;     // Starting pixel index of the ray
-    uint32_t        endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
-    uint16_t        mediumIndex;    // Current Medium of the Ray
-    uint8_t         depth;          // Current path depth
-    RayType         type;           // Ray Type
-    float           prevPDF;        // Previous Intersections BxDF pdf
-                                    // (is used when a path ray hits a light (MIS))
+    uint32_t    sampleIndex;    // Starting sample index of the ray
+    uint32_t    endpointIndex;  // Destination of the ray if applicable (i.e. NEE Ray)
+    uint16_t    mediumIndex;    // Current Medium of the Ray
+    uint8_t     depth;          // Current path depth
+    RayType     type;           // Ray Type
+    float       prevPDF;        // Previous Intersections BxDF pdf
+                                // (is used when a path ray hits a light (MIS))
     // Method Related
-    uint32_t        pathIndex;      // Index of the path in the path array
-    uint32_t        binId;          // Position bin id
-    Vector2h        guideDir;       // Spherical coords of the guided direction
-    half            guidePDF;       // Guided direction's sample pdf
+    uint32_t    binId;          // Position bin id
+    Vector2h    guideDir;       // Spherical coords of the guided direction
+    half        guidePDF;       // Guided direction's sample pdf
 };
 
 struct alignas(16) RayAuxPhotonWFPG
 {
-    uint16_t        mediumIndex;    // Current Medium of the photon
-    uint8_t         depth;          // Current photon depth
-    Vector3f        power;          // Photon power
+    uint16_t    mediumIndex;    // Current Medium of the photon
+    uint8_t     depth;          // Current photon depth
+    Vector3f    power;          // Photon power
 
 };
 
@@ -126,8 +124,7 @@ static const RayAuxPPG InitialPPGAux = RayAuxPPG
     UINT32_MAX, UINT32_MAX, UINT16_MAX,
     0,  // Depth
     RayType::CAMERA_RAY,
-    NAN,
-    UINT32_MAX
+    NAN
 };
 
 static const RayAuxRL InitialRLAux = RayAuxRL
@@ -150,7 +147,6 @@ static const RayAuxWFPG InitialWFPGAux = RayAuxWFPG
     NAN,
     // WFPG Related
     UINT32_MAX,
-    UINT32_MAX,
     Vector2h(0.0f, 0.0f),
     0.0f
 };
@@ -171,11 +167,11 @@ class RayAuxInitBasic
                         const RayReg&,
                         // Index
                         uint16_t,
-                        const uint32_t localPixelId,
+                        const uint32_t localSampleId,
                         const uint32_t) const
         {
             RayAuxBasic init = defaultValue;
-            init.pixelIndex = localPixelId;
+            init.sampleIndex = localSampleId;
             gOutBasic = init;
         }
 };
@@ -196,11 +192,11 @@ class RayAuxInitPath
                         const RayReg&,
                         // Index
                         uint16_t mediumIndex,
-                        const uint32_t localPixelId,
+                        const uint32_t localSampleId,
                         const uint32_t) const
         {
             RayAuxPath init = defaultValue;
-            init.pixelIndex = localPixelId;
+            init.sampleIndex = localSampleId;
             init.type = RayType::CAMERA_RAY;
             init.mediumIndex = mediumIndex;
             init.depth = 1;
@@ -228,7 +224,7 @@ class RayAuxInitRefPG
                         const uint32_t) const
         {
             RayAuxPath init = defaultValue;
-            init.pixelIndex = UINT32_MAX;
+            init.sampleIndex = UINT32_MAX;
             init.type = RayType::CAMERA_RAY;
             init.mediumIndex = mediumIndex;
             init.depth = 1;
@@ -252,11 +248,11 @@ class RayAuxInitAO
                         const RayReg&,
                         // Index
                         uint16_t,
-                        const uint32_t localPixelId,
+                        const uint32_t localSampleId,
                         const uint32_t) const
         {
             RayAuxAO init = defaultValue;
-            init.pixelIndex = localPixelId;
+            init.sampleIndex = localSampleId;
             gOutAO = init;
         }
 };
@@ -280,12 +276,11 @@ class RayAuxInitPPG
                         const RayReg&,
                         // Index
                         uint16_t medumIndex,
-                        const uint32_t localPixelId,
-                        const uint32_t pixelSampleId) const
+                        const uint32_t localSampleId,
+                        const uint32_t) const
         {
             RayAuxPPG init = defaultValue;
-            init.pixelIndex = localPixelId;
-            init.pathIndex = localPixelId * samplePerPixel + pixelSampleId;
+            init.sampleIndex = localSampleId;
             init.depth = 1;
             init.mediumIndex = medumIndex;
             gOutPPG = init;
@@ -311,11 +306,11 @@ class RayAuxInitRL
                         const RayReg&,
                         // Index
                         uint16_t medumIndex,
-                        const uint32_t localPixelId,
-                        const uint32_t pixelSampleId) const
+                        const uint32_t localSampleId,
+                        const uint32_t) const
         {
             RayAuxRL init = defaultValue;
-            init.pixelIndex = localPixelId;
+            init.sampleIndex = localSampleId;
             init.depth = 1;
             init.mediumIndex = medumIndex;
             gOutPPG = init;
@@ -341,12 +336,11 @@ class RayAuxInitWFPG
                         const RayReg&,
                         // Index
                         uint16_t medumIndex,
-                        const uint32_t localPixelId,
-                        const uint32_t pixelSampleId) const
+                        const uint32_t localSampleId,
+                        const uint32_t) const
         {
             RayAuxWFPG init = defaultValue;
-            init.pixelIndex = localPixelId;
-            init.pathIndex = localPixelId * samplePerPixel + pixelSampleId;
+            init.sampleIndex = localSampleId;
             init.depth = 1;
             init.mediumIndex = medumIndex;
             gOutPPG = init;

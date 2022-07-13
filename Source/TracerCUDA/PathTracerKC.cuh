@@ -13,8 +13,8 @@
 
 struct PathTracerGlobalState
 {
-    // Output Image
-    ImageGMem<Vector4>              gImage;
+    // Output Samples
+    CamSampleGMem<Vector4f>         gSamples;
     // Light Related
     const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
@@ -123,9 +123,9 @@ void PathTracerBoundaryWork(// Output
         // else misWeight is 1.0f
         total *= misWeight;
         // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
     }
 }
 
@@ -198,9 +198,9 @@ void PathTracerPathWork(// Output
                                         gMatData,
                                         matIndex);
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
     }
 
     // If this material does not require to have any samples just quit

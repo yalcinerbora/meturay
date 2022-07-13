@@ -20,8 +20,8 @@
 
 struct PPGTracerGlobalState
 {
-    // Output Image
-    ImageGMem<Vector4>              gImage;
+    // Output Samples
+    CamSampleGMem<Vector4f>         gSamples;
     // Light Related
     const GPULightI**               gLightList;
     uint32_t                        totalLightCount;
@@ -79,7 +79,7 @@ void PPGTracerBoundaryWork(// Output
     using GPUType = typename EGroup::GPUType;
 
     // Current Path
-    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    const uint32_t pathStartIndex = aux.sampleIndex * renderState.maximumPathNodePerRay;
     PPGPathNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
@@ -152,9 +152,9 @@ void PPGTracerBoundaryWork(// Output
        isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contribute
     {
         // Accumulate the pixel
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
 
         // Also back propagate this radiance to the path nodes
         if(aux.type != RayType::CAMERA_RAY &&
@@ -205,7 +205,7 @@ void PPGTracerPathWork(// Output
     static constexpr Vector3 ZERO_3 = Zero3;
 
     // Path Memory
-    const uint32_t pathStartIndex = aux.pathIndex * renderState.maximumPathNodePerRay;
+    const uint32_t pathStartIndex = aux.sampleIndex * renderState.maximumPathNodePerRay;
     PPGPathNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // TODO: change this currently only first strategy is sampled
@@ -262,9 +262,9 @@ void PPGTracerPathWork(// Output
                                         gMatData,
                                         matIndex);
         Vector3f total = emission * radianceFactor;
-        ImageAccumulatePixel(renderState.gImage,
-                             aux.pixelIndex,
-                             Vector4f(total, 1.0f));
+        AccumulateRaySample(renderState.gSamples,
+                            aux.sampleIndex,
+                            Vector4f(total, 1.0f));
 
         // Accumulate this to the paths as well
         if(total.HasNaN()) printf("NAN Found emissive!!!\n");

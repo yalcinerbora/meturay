@@ -39,6 +39,7 @@ class GPUCameraPixel final : public GPUCameraI
                                    float& distance,
                                    Vector3& direction,
                                    float& pdf,
+                                   Vector2f& localCoords,
                                    // Input
                                    const Vector3& position,
                                    // I-O
@@ -46,6 +47,7 @@ class GPUCameraPixel final : public GPUCameraI
 
         __device__ void     GenerateRay(// Output
                                         RayReg&,
+                                        Vector2f& localCoords,
                                         // Input
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
@@ -104,6 +106,7 @@ inline void GPUCameraPixel::Sample(// Output
                                    float& distance,
                                    Vector3& direction,
                                    float& pdf,
+                                   Vector2f& localCoords,
                                    // Input
                                    const Vector3& sampleLoc,
                                    // I-O
@@ -114,11 +117,29 @@ inline void GPUCameraPixel::Sample(// Output
     distance = direction.Length();
     direction.NormalizeSelf();
     pdf = 1.0f;
+
+    // Generate image space (local) coords
+    // "bottomLeft" plane is "near" distance away from the position
+    Vector3 gazeDir = Cross(up, right).Normalize();
+    float nearPlane = nearFar[0];
+    float cosAlpha = gazeDir.Dot(direction);
+    float planeDist = nearFar[0] / cosAlpha;
+
+    // Adjust length of the direction
+    Vector3f dirNear = direction * planeDist;
+
+    float deltaX = dirNear.Dot(right);
+    float deltaY = dirNear.Dot(right);
+
+    Vector2f planeCenter = planeSize * 0.5f;
+    Vector2f planeCoord = planeCenter - Vector2f(deltaX, deltaY);
+    localCoords = planeCoord / planeSize;
 }
 
 __device__
 inline void GPUCameraPixel::GenerateRay(// Output
                                         RayReg& ray,
+                                        Vector2f& localCoords,
                                         // Input
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
@@ -143,6 +164,8 @@ inline void GPUCameraPixel::GenerateRay(// Output
                                         (sampleDistance[1] * up));
     Vector3 rayDir = (samplePoint - position).Normalize();
 
+    // Local Coords
+    localCoords = sampleDistance / planeSize;
     // Initialize Ray
     ray.ray = RayF(rayDir, position);
     ray.tMin = nearFar[0];

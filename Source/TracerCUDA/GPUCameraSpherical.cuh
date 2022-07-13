@@ -36,6 +36,7 @@ class GPUCameraSpherical final : public GPUCameraI
                                    float& distance,
                                    Vector3& direction,
                                    float& pdf,
+                                   Vector2f& localCoords,
                                    // Input
                                    const Vector3& position,
                                    // I-O
@@ -43,6 +44,7 @@ class GPUCameraSpherical final : public GPUCameraI
 
         __device__ void     GenerateRay(// Output
                                         RayReg&,
+                                        Vector2f& localCoords,
                                         // Input
                                         const Vector2i& sampleId,
                                         const Vector2i& sampleMax,
@@ -150,6 +152,7 @@ inline void GPUCameraSpherical::Sample(// Output
                                        float& distance,
                                        Vector3& dirOut,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& sampleLoc,
                                        // I-O
@@ -160,11 +163,28 @@ inline void GPUCameraSpherical::Sample(// Output
     distance = dirOut.Length();
     dirOut.NormalizeSelf();
     pdf = 1.0f;
+
+    Vector3 dirZUp = Vector3(dirOut[2], dirOut[0], dirOut[1]);
+    Vector2 thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
+
+    // Normalize to generate UV [0, 1]
+    // theta range [-pi, pi]
+    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
+    // If we are at edge point (u == 1) make it zero since
+    // piecewise constant function will not have that pdf (out of bounds)
+    u = (u == 1.0f) ? 0.0f : u;
+    // phi range [0, pi]
+    float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
+    // If (v == 1) then again pdf of would be out of bounds.
+    // make it inbound
+    v = (v == 1.0f) ? (v - MathConstants::SmallEpsilon) : v;
+    localCoords = Vector2f(u, v);
 }
 
 __device__
 inline void GPUCameraSpherical::GenerateRay(// Output
                                             RayReg& ray,
+                                            Vector2f& localCoords,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -194,6 +214,9 @@ inline void GPUCameraSpherical::GenerateRay(// Output
     // Incorporate pixel ratio
     // TODO: Incorporate Pix Ratio (for non-square textures)
     sphericalCoords[0] *= pixelRatio;
+
+    // Normalized spherical coords are local space coords
+    localCoords = normCoords;
 
     // Convert to Cartesian
     Vector3 dirZUp = Utility::SphericalToCartesianUnit(sphericalCoords);

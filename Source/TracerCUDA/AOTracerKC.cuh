@@ -12,11 +12,12 @@
 
 struct AmbientOcclusionGlobalState
 {
-    ImageGMem<Vector4>  gImage;
+    // Samples
+    CamSampleGMem<Vector4f> gSamples;
 
-    float               maxDistance;
-    bool                hitPhase;
-    HitKey              aoMissKey;
+    float                   maxDistance;
+    bool                    hitPhase;
+    HitKey                  aoMissKey;
 };
 
 struct AmbientOcclusionLocalState {};
@@ -43,8 +44,8 @@ inline void AOMissWork(// Output
 {
     // We did not hit anything just accumulate
     Vector4f result = Vector4f(aux.aoFactor, 1.0f);
-    ImageAccumulatePixel(renderState.gImage,
-                         aux.pixelIndex, result);
+    AccumulateRaySample(renderState.gSamples,
+                        aux.sampleIndex, result);
 }
 
 template <class MGroup>
@@ -77,7 +78,7 @@ inline void AOWork(// Output
         RayReg rDummy = EMPTY_RAY_REGISTER;
         rDummy.Update(gOutRays, 0);
         gOutBoundKeys[0] = HitKey::InvalidKey;
-        gOutRayAux[0].pixelIndex = UINT32_MAX;
+        gOutRayAux[0].sampleIndex = UINT32_MAX;
     }
     else
     {

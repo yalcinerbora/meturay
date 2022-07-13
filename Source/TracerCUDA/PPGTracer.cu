@@ -21,7 +21,7 @@
 std::ostream& operator<<(std::ostream& stream, const RayAuxPPG& v)
 {
     stream << std::setw(0)
-        << v.pixelIndex << ", "
+        << v.sampleIndex << ", "
         << "{" << v.radianceFactor[0]
         << "," << v.radianceFactor[1]
         << "," << v.radianceFactor[2] << "} "
@@ -229,7 +229,7 @@ bool PPGTracer::Render()
 
     // Generate Global Data Struct
     PPGTracerGlobalState globalData;
-    globalData.gImage = imgMemory.GMem<Vector4>();
+    globalData.gSamples = dSamplePtrs;
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.gLightSampler = dLightSampler;

@@ -44,6 +44,7 @@ class GPULight final : public GPULightP
                                        float& distance,
                                        Vector3& direction,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
@@ -51,6 +52,7 @@ class GPULight final : public GPULightP
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
+                                            Vector2f& localCoords,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -138,6 +140,7 @@ __device__ void GPULight<PGroup>::Sample(// Output
                                          float& distance,
                                          Vector3& direction,
                                          float& pdf,
+                                         Vector2f& localCoords,
                                          // Input
                                          const Vector3& worldLoc,
                                          // I-O
@@ -158,14 +161,17 @@ __device__ void GPULight<PGroup>::Sample(// Output
     distance = sqrt(distanceSqr);
     direction *= (1.0f / distance);
 
-    //float nDotL = max(normal.Dot(-direction), 0.0f);
     float nDotL = abs(normal.Dot(-direction));
     pdf *= distanceSqr / nDotL;
+
+    // TODO: Do some localCoord Generation
+    localCoords = Vector2f(NAN, NAN);
 }
 
 template <class PGroup>
 __device__ void  GPULight<PGroup>::GenerateRay(// Output
                                                RayReg& rReg,
+                                               Vector2f& localCoords,
                                                // Input
                                                const Vector2i& sampleId,
                                                const Vector2i& sampleMax,
@@ -197,6 +203,9 @@ __device__ void  GPULight<PGroup>::GenerateRay(// Output
 
     RayF ray = {position, direction};
     rReg = RayReg(ray, 0, INFINITY);
+
+    // TODO:
+    localCoords = Vector2f(NAN, NAN);
 }
 
 template <class PGroup>

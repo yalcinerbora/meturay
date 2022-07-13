@@ -21,6 +21,7 @@ class GPULightConstant final : public GPULightP
                                        float& distance,
                                        Vector3& direction,
                                        float& pdf,
+                                       Vector2f& localCoords,
                                        // Input
                                        const Vector3& worldLoc,
                                        // I-O
@@ -28,6 +29,7 @@ class GPULightConstant final : public GPULightP
 
         __device__ void         GenerateRay(// Output
                                             RayReg&,
+                                            Vector2f&,
                                             // Input
                                             const Vector2i& sampleId,
                                             const Vector2i& sampleMax,
@@ -96,6 +98,7 @@ inline void GPULightConstant::Sample(// Output
                                      float& distance,
                                      Vector3& direction,
                                      float& pdf,
+                                     Vector2f& localCoords,
                                      // Input
                                      const Vector3& worldLoc,
                                      // I-O
@@ -104,11 +107,13 @@ inline void GPULightConstant::Sample(// Output
     distance = FLT_MAX;
     direction = Zero3f;
     pdf = 0.0f;
+    localCoords = Vector2f(NAN, NAN);
 }
 
 __device__
 inline void GPULightConstant::GenerateRay(// Output
                                           RayReg&,
+                                          Vector2f&,
                                           // Input
                                           const Vector2i& sampleId,
                                           const Vector2i& sampleMax,
