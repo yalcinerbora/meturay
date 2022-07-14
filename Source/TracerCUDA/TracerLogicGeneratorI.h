@@ -14,6 +14,7 @@ class CudaGPU;
 struct TracerParameters;
 class GPUSceneI;
 class CudaSystem;
+class Options;
 
 class TracerLogicGeneratorI
 {
@@ -62,6 +63,12 @@ class TracerLogicGeneratorI
                                                const GPUSceneI&,
                                                const TracerParameters&,
                                                const std::string& tracerType) = 0;
+
+        virtual SceneError      GenerateReconFilter(GPUReconFilterPtr&,
+                                                    float filterRadius,
+                                                    const Options& filterOptions,
+                                                    const std::string& filterType) = 0;
+
 
         //// Inclusion Functionality
         //// Additionally includes the materials from these libraries

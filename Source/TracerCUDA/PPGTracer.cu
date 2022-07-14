@@ -229,7 +229,7 @@ bool PPGTracer::Render()
 
     // Generate Global Data Struct
     PPGTracerGlobalState globalData;
-    globalData.gSamples = dSamplePtrs;
+    globalData.gSamples = sampleMemory.GMem<Vector4f>();
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.gLightSampler = dLightSampler;

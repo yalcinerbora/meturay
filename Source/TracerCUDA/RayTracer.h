@@ -3,6 +3,7 @@
 #include "GPUTracer.h"
 #include "TypeTraits.h"
 #include "GPUCameraI.h"
+#include "SampleMemory.h"
 #include "CameraFunctions.h"
 #include "RNGIndependent.cuh"
 
@@ -14,8 +15,6 @@ class RayTracer : public GPUTracer
         static constexpr const char* SAMPLE_NAME = "Samples";
 
     private:
-        void                            AllocateSampleBuffer(uint32_t totalSampleCount);
-
     protected:
         // Auxiliary Data for Each Ray
         DeviceMemory                    auxBuffer0;
@@ -24,9 +23,7 @@ class RayTracer : public GPUTracer
         DeviceMemory*                   dAuxIn;
         DeviceMemory*                   dAuxOut;
         // Sample Buffer of each ray
-        DeviceMemory                    dSampleBuffer;
-        CamSampleGMem<Vector4f>         dSamplePtrs;
-        CamSampleGMemConst<Vector4f>    dSampleConstPtrs;
+        SampleMemory                    sampleMemory;
 
         // Scene Reference
         const GPUSceneI&        scene;

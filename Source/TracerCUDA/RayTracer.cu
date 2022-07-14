@@ -53,6 +53,7 @@ void RayTracer::UpdateFrameAnalytics(const std::string& throughputSuffix,
 size_t RayTracer::TotalGPUMemoryUsed() const
 {
     return (GPUTracer::TotalGPUMemoryUsed() +
+            sampleMemory.UsedGPUMemory(),
             auxBuffer0.Size() +
             auxBuffer1.Size());
 }

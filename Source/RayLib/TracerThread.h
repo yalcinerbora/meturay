@@ -31,6 +31,8 @@ class TracerThread : public LoopingThreadI
         TracerParameters            tracerParameters;
         std::string                 tracerTypeName;
         TracerCallbacksI&           tracerCallbacks;
+        // Filter Related Options
+        Options                     filterOptions;
 
         // Internal Bool for checking if tracer is crashed
         // This technically is not needed to be an atomic
@@ -75,8 +77,9 @@ class TracerThread : public LoopingThreadI
     public:
         // Constructors & Destructor
                         TracerThread(TracerSystemI&,
-                                     const Options&,
+                                     const Options& tracerOptions,
                                      const TracerParameters&,
+                                     const Options& filterOptions,
                                      TracerCallbacksI&,
                                      const std::string& tracerTypeName);
                         ~TracerThread() = default;

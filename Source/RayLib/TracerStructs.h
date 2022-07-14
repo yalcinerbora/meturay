@@ -26,9 +26,11 @@ class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
 class GPUWorkBatchI;
 class GPUTracerI;
+class GPUReconFilterI;
 
 using NameGPUPair = std::pair<std::string, const CudaGPU*>;
 
+using GPUReconFilterPtr = SharedLibPtr<GPUReconFilterI>;
 using GPUTracerPtr = SharedLibPtr<GPUTracerI>;
 using GPUBaseAccelPtr = SharedLibPtr<GPUBaseAcceleratorI>;
 using GPUAccelGPtr = SharedLibPtr<GPUAcceleratorGroupI>;

@@ -97,6 +97,7 @@ int main(int argc, const char* argv[])
     if(!ConfigParser::ParseTracerOptions(tracerOptions, tracerParameters,
                                          tracerTypeName, tracerDLLName,
                                          tracerDLLEntryFunctionNames,
+                                         filterOptions,
                                          surfaceLoaderLibraries, scenePartitionType,
                                          //
                                          tracerConfigFileName))
@@ -146,7 +147,7 @@ int main(int argc, const char* argv[])
     // Create a Self Node
     SelfNode selfNode(*visor, *tracerSystem,
                       tracerOptions, tracerParameters,
-                      tracerTypeName,
+                      tracerTypeName, filterOptions,
                       Vector2i(resolution.data()));
 
     // Init Visor with the self node (callbacks)

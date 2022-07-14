@@ -17,6 +17,8 @@ and it adds default accelerators and primitives as default types.
 #include "TracerLogicGeneratorI.h"
 #include "TracerTypeGenerators.h"
 
+class Options;
+
 class TracerLogicGenerator : public TracerLogicGeneratorI
 {
     private:
@@ -32,6 +34,7 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
         std::map<std::string, CPUMediumGen>         medGroupGenerators;
         std::map<std::string, CPULightGroupGen>     lightGroupGenerators;
         std::map<std::string, CPUCameraGroupGen>    camGroupGenerators;
+        std::map<std::string, GPUReconFilterGen>    filterGenerators;
 
     public:
         // Constructor & Destructor
@@ -75,4 +78,9 @@ class TracerLogicGenerator : public TracerLogicGeneratorI
                                                    const GPUSceneI&,
                                                    const TracerParameters&,
                                                    const std::string& tracerType) override;
+        // Filter Types
+        SceneError                  GenerateReconFilter(GPUReconFilterPtr&,
+                                                        float filterRadius,
+                                                        const Options& filterOptions,
+                                                        const std::string& filterType) override;
 };

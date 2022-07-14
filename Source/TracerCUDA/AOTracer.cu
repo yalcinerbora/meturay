@@ -139,7 +139,7 @@ bool AOTracer::Render()
 
     // Generate Global Data for Work Kernels
     AmbientOcclusionGlobalState globalData;
-    globalData.gSamples = dSamplePtrs;
+    globalData.gSamples = sampleMemory.GMem<Vector4f>();
     globalData.maxDistance = options.maxDistance;
     globalData.hitPhase = hitPhase;
     globalData.aoMissKey = aoMissKey;

@@ -20,12 +20,16 @@ class GPUTracerI;
 class GPUSceneI;
 class CudaGPU;
 class CudaSystem;
+class Options;
 
 // Statically Interfaced Generators
 template<class TracerLogic>
 using TracerGeneratorFunc = GPUTracerI* (*)(const CudaSystem&,
                                             const GPUSceneI&,
                                             const TracerParameters&);
+
+template<class FilterLogic>
+using ReconFilterGeneratorFunc = GPUReconFilterI* (*)(float, const Options&);
 
 template<class Accel>
 using AccelGroupGeneratorFunc = Accel* (*)(const GPUPrimitiveGroupI&);
@@ -154,6 +158,28 @@ class CPUCameraGroupGen
         }
 };
 
+class GPUReconFilterGen
+{
+     private:
+        ReconFilterGeneratorFunc<GPUReconFilterI>   gFunc;
+        ObjDestroyerFunc<GPUReconFilterI>           dFunc;
+
+    public:
+        // Constructor & Destructor
+        GPUReconFilterGen(ReconFilterGeneratorFunc<GPUReconFilterI> g,
+                          ObjDestroyerFunc<GPUReconFilterI> d)
+            : gFunc(g)
+            , dFunc(d)
+        {}
+
+        GPUReconFilterPtr operator()(float filterRadius,
+                                     const Options& filterOptions)
+        {
+            GPUReconFilterI* logic = gFunc(filterRadius, filterOptions);
+            return GPUReconFilterPtr(logic, dFunc);
+        }
+};
+
 namespace TypeGenWrappers
 {
     template <class Base, class TracerLogic>
@@ -162,6 +188,13 @@ namespace TypeGenWrappers
                                const TracerParameters& params)
     {
         return new TracerLogic(s, scene, params);
+    }
+
+    template <class Base, class FilterLogic>
+    Base* ReconFilterLogicConstruct(float filterRadius,
+                                    const Options& filterOptions)
+    {
+        return new FilterLogic(filterRadius, filterOptions);
     }
 
     template <class Base, class AccelGroup>

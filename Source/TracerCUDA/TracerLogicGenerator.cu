@@ -43,6 +43,8 @@
 // Cameras
 #include "GPUCameraPinhole.cuh"
 #include "GPUCameraSpherical.cuh"
+// Filters
+#include "GPUReconFilterBox.h"
 
 // Type to utilize the generated ones
 extern template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
@@ -242,6 +244,10 @@ TracerLogicGenerator::TracerLogicGenerator()
     tracerGenerators.emplace(WFPGTracer::TypeName(),
                              GPUTracerGen(TracerLogicConstruct<GPUTracerI, WFPGTracer>,
                                           DefaultDestruct<GPUTracerI>));
+    // Filters
+    filterGenerators.emplace(GPUReconFilterBox::TypeName(),
+                             GPUReconFilterGen(ReconFilterLogicConstruct<GPUReconFilterI, GPUReconFilterBox>,
+                                               DefaultDestruct<GPUReconFilterI>));
 }
 
 SceneError TracerLogicGenerator::GeneratePrimitiveGroup(GPUPrimGPtr& pg,
@@ -340,6 +346,19 @@ SceneError TracerLogicGenerator::GenerateTracer(GPUTracerPtr& tracerPtr,
     if(loc == tracerGenerators.end()) return SceneError::NO_LOGIC_FOR_TRACER;
 
     tracerPtr = std::move(loc->second(s, scene, p));
+    return SceneError::OK;
+}
+
+SceneError TracerLogicGenerator::GenerateReconFilter(GPUReconFilterPtr& filterPtr,
+                                                     float filterRadius,
+                                                     const Options& filterOptions,
+                                                     // Type
+                                                     const std::string& filterType)
+{
+    auto loc = filterGenerators.find(filterType);
+    if(loc == filterGenerators.end()) return SceneError::NO_LOGIC_FOR_RECON_FILTER;
+
+    filterPtr = std::move(loc->second(filterRadius, filterOptions));
     return SceneError::OK;
 }
 

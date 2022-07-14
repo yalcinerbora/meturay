@@ -148,6 +148,8 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
                                       // Tracer DLL Related
                                       std::string& tracerDLLName,
                                       SharedLibArgs& dllEntryPointName,
+                                      // Reconstruction Filter Related
+                                      Options& filterOptions,
                                       // Misc
                                       std::vector<SurfaceLoaderSharedLib>& surfaceLoaderDLLs,
                                       ScenePartitionerType& gpuUsage,
@@ -162,6 +164,7 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
     static constexpr const char* TRACER_TYPE_NAME = "TracerTypeName";
     static constexpr const char* PARTITION_TYPE_NAME = "ScenePartitionType";
 
+    static constexpr const char* FILTER_OPTS_NAME = "FilterOptions";
     try
     {
         // Always assume filenames are UTF-8
@@ -175,6 +178,9 @@ bool ConfigParser::ParseTracerOptions(// Tracer Related
         // Json is Loaded
         // Load Tracer Options
         tracerOptions = Options(configJson[TRACER_OPTS_NAME]);
+
+        // Filter Options
+        filterOptions = Options(configJson[FILTER_OPTS_NAME]);
 
         // Load Tracer Parameters
         ParseTracerParameters(tracerParameters, configJson[TRACER_PARAMS_NAME]);

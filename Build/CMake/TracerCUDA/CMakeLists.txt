@@ -180,6 +180,7 @@ set(SRC_MEMORY
     ${CURRENT_SOURCE_DIR}/DeviceMemory.cpp
     ${CURRENT_SOURCE_DIR}/DeviceMemory.h
     ${CURRENT_SOURCE_DIR}/GPUBitmap.h
+    ${CURRENT_SOURCE_DIR}/SampleMemory.h
     ${CURRENT_SOURCE_DIR}/ImageMemory.cu
     ${CURRENT_SOURCE_DIR}/ImageMemory.h
     ${CURRENT_SOURCE_DIR}/RayMemory.cu

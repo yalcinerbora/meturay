@@ -196,7 +196,7 @@ bool DirectTracer::Render()
 
             // Generate Global Data Struct
             DirectTracerPositionGlobalState globalData;
-            globalData.gSamples = dSamplePtrs;
+            globalData.gSamples = sampleMemory.GMem<Vector4f>();
             globalData.gCurrentCam = dCameras[currentCameraId];
             if(options.renderType == RenderType::RENDER_POSITION)
                 globalData.posRenderType = PositionRenderType::VECTOR3;
@@ -222,7 +222,7 @@ bool DirectTracer::Render()
 
             // Generate Global Data Struct
             DirectTracerGlobalState globalData;
-            globalData.gSamples = dSamplePtrs;
+            globalData.gSamples = sampleMemory.GMem<Vector4f>();
 
             int i = 0;
             for(auto& work : loc->second)

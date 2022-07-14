@@ -39,6 +39,8 @@ namespace ConfigParser
                             // Tracer DLL Related
                             std::string& tracerDLLName,
                             SharedLibArgs& dllEntryPointName,
+                            // Reconstruction Filter Related
+                            Options& filterOptions,
                             // Misc
                             std::vector<SurfaceLoaderSharedLib>& surfaceLoaderDLLs,
                             ScenePartitionerType& gpuUsage,

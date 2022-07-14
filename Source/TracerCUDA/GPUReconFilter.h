@@ -39,28 +39,28 @@ class GPUReconFilter : public GPUReconFilterI
         size_t                  UsedGPUMemory() const override;
 };
 
-uint32_t GPUReconFilter::ConservativePixelPerSample() const
+inline uint32_t GPUReconFilter::ConservativePixelPerSample() const
 {
     uint32_t result = FilterRadiusToPixelWH(filterRadius);
     return result * result;
 }
 
-GPUReconFilter::GPUReconFilter(float filterRadius)
+inline GPUReconFilter::GPUReconFilter(float filterRadius)
     : filterRadius(filterRadius)
 {}
 
-size_t GPUReconFilter::UsedGPUMemory() const
+inline size_t GPUReconFilter::UsedGPUMemory() const
 {
     return filterMemory.Size();
 }
 
 template <class GPUFilterFunctor>
-void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
-                                         const Vector4f* dValues,
-                                         const Vector2f* dImgCoords,
-                                         uint32_t sampleCount,
-                                         const GPUFilterFunctor& filterGPU,
-                                         const CudaSystem& system)
+inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
+                                                const Vector4f* dValues,
+                                                const Vector2f* dImgCoords,
+                                                uint32_t sampleCount,
+                                                const GPUFilterFunctor& filterGPU,
+                                                const CudaSystem& system)
 {
     const auto& gpu = system.BestGPU();
 

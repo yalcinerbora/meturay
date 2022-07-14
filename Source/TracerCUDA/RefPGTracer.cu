@@ -292,7 +292,7 @@ bool RefPGTracer::Render()
 
     // Generate Global Data Struct
     RPGTracerGlobalState globalData;
-    globalData.gImage = imgMemory.GMem<float>();
+    globalData.gSamples = sampleMemory.GMem<float>();
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.mediumList = dMediums;

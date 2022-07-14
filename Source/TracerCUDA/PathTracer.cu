@@ -158,7 +158,7 @@ bool PathTracer::Render()
 
     // Generate Global Data Struct
     PathTracerGlobalState globalData;
-    globalData.gSamples = dSamplePtrs;
+    globalData.gSamples = sampleMemory.GMem<Vector4f>();
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.mediumList = dMediums;

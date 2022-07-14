@@ -6,11 +6,13 @@
 #include "VisorI.h"
 
 SelfNode::SelfNode(VisorI& v, TracerSystemI& t,
-                   const Options& opts,
+                   const Options& tracerOpts,
                    const TracerParameters& params,
                    const std::string& tracerTypeName,
+                   const Options& filterOpts,
                    const Vector2i& resolution)
-    : tracerThread(t, opts, params, *this, tracerTypeName)
+    : tracerThread(t, tracerOpts, params,
+                   filterOpts, *this, tracerTypeName)
     , visor(v)
     , tracerCrashed(false)
 {

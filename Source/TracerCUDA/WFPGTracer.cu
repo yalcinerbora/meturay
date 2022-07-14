@@ -316,7 +316,7 @@ void WFPGTracer::TraceAndStorePhotons()
 {
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
-    globalData.gSamples = dSamplePtrs;
+    globalData.gSamples = sampleMemory.GMem<Vector4f>();
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.gLightSampler = dLightSampler;
@@ -746,7 +746,7 @@ bool WFPGTracer::Render()
 
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
-    globalData.gSamples = dSamplePtrs;
+    globalData.gSamples = sampleMemory.GMem<Vector4f>();
     globalData.gLightList = dLights;
     globalData.totalLightCount = lightCount;
     globalData.gLightSampler = dLightSampler;
@@ -772,7 +772,7 @@ bool WFPGTracer::Render()
                             //
                            KCTraceSVO,
                            //
-                           dSamplePtrs,
+                           sampleMemory.GMem<Vector4f>(),
                            svo.TreeGPU(),
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
@@ -943,7 +943,7 @@ void WFPGTracer::Finalize()
                            //
                            KCTraceSVO,
                            //
-                           dSamplePtrs,
+                           sampleMemory.GMem<Vector4f>(),
                            svo.TreeGPU(),
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),

@@ -36,6 +36,7 @@ class SelfNode
                              const Options&,
                              const TracerParameters&,
                              const std::string& tracerTypeName,
+                             const Options& filterOpts,
                              const Vector2i& resolution);
                     ~SelfNode() = default;
 

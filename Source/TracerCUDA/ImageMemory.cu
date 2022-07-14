@@ -149,8 +149,7 @@ void ImageMemory::Reset(const CudaSystem&)
     size_t pixelCount = static_cast<size_t>(segmentSize[0]) * segmentSize[1];
     if(pixelCount != 0)
     {
-        size_t totalBytes = ImageIOI::FormatToPixelSize(format) * pixelCount +
-                            sizeof(float) * pixelCount;
+        size_t totalBytes = memory.Size();
         CUDA_CHECK(cudaMemset(memory, 0x0, totalBytes));
     }
 }

@@ -4,21 +4,6 @@
 #include "RayTracer.h"
 #include "RayLib/GPUSceneI.h"
 
-inline void RayTracer::AllocateSampleBuffer(uint32_t totalSampleCount)
-{
-    Vector4f* dValues;
-    Vector2f* dCoords;
-
-    GPUMemFuncs::AllocateMultiData(std::tie(dValues, dCoords),
-                                   dSampleBuffer,
-                                   {totalSampleCount, totalSampleCount});
-
-    dSamplePtrs.gValues = dValues;
-    dSamplePtrs.gImgCoords = dCoords;
-    dSampleConstPtrs.gValues = dValues;
-    dSampleConstPtrs.gImgCoords = dCoords;
-}
-
 template <class AuxStruct, class AuxInitFunctor, class RNG>
 void RayTracer::GenerateRays(uint32_t cameraIndex,
                              int32_t sampleCount,
@@ -43,7 +28,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
     // Allocate enough space for samples
-    AllocateSampleBuffer(totalRayCount);
+    sampleMemory.Resize(imgMemory.Format(), totalRayCount);
 
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
@@ -81,7 +66,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
         RNGeneratorGPUI** dRNGs = rngCPU->GetGPUGenerators(gpu);
-        CamSampleGMem<Vector4f> gCamSamplePtrs = dSamplePtrs;
+        CamSampleGMem<Vector4f> gCamSamplePtrs = sampleMemory.GMem<Vector4f>();
 
 
         cudaSystem.SyncAllGPUs();
@@ -150,7 +135,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
 
     // Allocate enough space for samples
-    AllocateSampleBuffer(totalRayCount);
+    sampleMemory.Resize(imgMemory.Format(), totalRayCount);
 
     // Basic Tracer does classic camera to light tracing
     // Thus its initial rays are from camera
@@ -160,7 +145,6 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     const auto splits = cudaSystem.GridStrideMultiGPUSplit(totalRayCount, TPB, 0,
                                                            reinterpret_cast<void*>(&KCGenCameraRaysFromObjectGPU<AuxStruct, AuxInitFunctor,
                                                                                                                  RNGIndependentGPU>));
-
     // Only use splits as guidance
     // and Split work into columns (much easier to maintain..
     // however not perfectly balanced... (as all things should be))
@@ -189,7 +173,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
         AuxStruct* gAuxiliary = static_cast<AuxStruct*>(*dAuxOut);
         // Input
         RNGeneratorGPUI** dRNGs = rngCPU->GetGPUGenerators(gpu);
-        CamSampleGMem<Vector4f> gCamSamplePtrs = dSamplePtrs;
+        CamSampleGMem<Vector4f> gCamSamplePtrs = sampleMemory.GMem<Vector4f>();
 
         cudaSystem.SyncAllGPUs();
 
