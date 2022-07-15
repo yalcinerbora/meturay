@@ -46,112 +46,112 @@ void TracerThread::LoopWork()
     bool imageAlreadyChanged = false;
     bool newSceneGenerated = false;
     bool reallocateTracer = false;
-
-    // First check that the scene is changed
-    std::u8string newScene;
-    if(currentScenePath.CheckChanged(newScene) || isPrevStopped)
+    try
     {
-        newSceneGenerated = true;
+        // First check that the scene is changed
+        std::u8string newScene;
+        if(currentScenePath.CheckChanged(newScene) || isPrevStopped)
+        {
+            newSceneGenerated = true;
 
-        SceneLoadFlags flags;
-        if(tracerParameters.forceOptiX)
-            flags |= SceneLoadFlagType::FORCE_OPTIX_ACCELS;
+            SceneLoadFlags flags;
+            if(tracerParameters.forceOptiX)
+                flags |= SceneLoadFlagType::FORCE_OPTIX_ACCELS;
 
-        // First Generate Scene
-        tracerSystem.GenerateScene(currentScene, newScene, flags);
-        // We need to re-create tracer
-        // since it is scene dependent
-        // First deallocate tracer
-        tracer = GPUTracerPtr(nullptr, nullptr);
-        reallocateTracer = true;
-    }
-    // Check scene time and regenerate scene if new scene is requested
-    // Check if the time is changed
-    SceneError sError = SceneError::OK;
-    double newTime;
-    bool timeChanged = currentTime.CheckChanged(newTime);
-    // Generate Scene (time change is implicit)
-    if(newSceneGenerated)
-    {
-        if((sError = currentScene->LoadScene(newTime)) != SceneError::OK)
+            // First Generate Scene
+            tracerSystem.GenerateScene(currentScene, newScene, flags);
+            // We need to re-create tracer
+            // since it is scene dependent
+            // First deallocate tracer
+            tracer = GPUTracerPtr(nullptr, nullptr);
+            reallocateTracer = true;
+        }
+        // Check scene time and regenerate scene if new scene is requested
+        // Check if the time is changed
+        SceneError sError = SceneError::OK;
+        double newTime;
+        bool timeChanged = currentTime.CheckChanged(newTime);
+        // Generate Scene (time change is implicit)
+        if(newSceneGenerated)
+        {
+            if((sError = currentScene->LoadScene(newTime)) != SceneError::OK)
+            {
+                PrintErrorAndSignalTerminate(sError);
+                return;
+            }
+        }
+        // Change time if required
+        else if(timeChanged &&
+                ((sError = currentScene->ChangeTime(newTime)) != SceneError::OK))
         {
             PrintErrorAndSignalTerminate(sError);
             return;
         }
-    }
-    // Change time if required
-    else if(timeChanged &&
-            ((sError = currentScene->ChangeTime(newTime)) != SceneError::OK))
-    {
-        PrintErrorAndSignalTerminate(sError);
-        return;
-    }
 
-    // Send new camera count to the visor(s)
-    if(newSceneGenerated)
-    {
-        tracerCallbacks.SendCurrentSceneCameraCount(currentScene->CameraCount());
-    }
-
-    // Now scene is reorganized
-    // Recreate tracer if necessary
-    if(reallocateTracer)
-    {
-        // Now create and check for error
-        TracerError tError = TracerError::OK;
-        if((tError = RecreateTracer()) != TracerError::OK)
+        // Send new camera count to the visor(s)
+        if(newSceneGenerated)
         {
-            PrintErrorAndSignalTerminate(tError);
-            return;
+            tracerCallbacks.SendCurrentSceneCameraCount(currentScene->CameraCount());
         }
-        // Reset the Image as well
-        Vector2i newRes, newStart, newEnd;
-        resolution.CheckChanged(newRes);
-        imgPortionStart.CheckChanged(newStart);
-        imgPortionEnd.CheckChanged(newEnd);
 
-        tracer->SetImagePixelFormat(PixelFormat::RGBA_FLOAT);
-        tracer->ResizeImage(newRes);
-        tracer->ReportionImage(newStart, newEnd);
+        // Now scene is reorganized
+        // Recreate tracer if necessary
+        if(reallocateTracer)
+        {
+            // Now create and check for error
+            TracerError tError = TracerError::OK;
+            if((tError = RecreateTracer()) != TracerError::OK)
+            {
+                PrintErrorAndSignalTerminate(tError);
+                return;
+            }
+            // Reset the Image as well
+            Vector2i newRes, newStart, newEnd;
+            resolution.CheckChanged(newRes);
+            imgPortionStart.CheckChanged(newStart);
+            imgPortionEnd.CheckChanged(newEnd);
 
-imageAlreadyChanged = true;
-    }
+            tracer->SetImagePixelFormat(PixelFormat::RGBA_FLOAT);
+            tracer->ResizeImage(newRes);
+            tracer->ReportionImage(newStart, newEnd);
 
-    // TODO: wtf is this?
-    if(!tracer) return;
+            imageAlreadyChanged = true;
+        }
 
-    // Check if image is changed
-    Vector2i newRes;
-    if(!imageAlreadyChanged && resolution.CheckChanged(newRes))
-    {
-        tracer->ResizeImage(newRes);
-    }
-    Vector2i newStart;
-    Vector2i newEnd;
-    bool startChanged = imgPortionStart.CheckChanged(newStart);
-    bool endChanged = imgPortionEnd.CheckChanged(newEnd);
-    if(startChanged || endChanged)
-    {
-        tracer->ReportionImage(newStart, newEnd);
-    }
-    // Generate work according to the camera that is being selected
-    if(isSceneCameraActive.Get())
-    {
-        uint32_t cam;
-        if(sceneCam.CheckChanged(cam))
-            tracer->ResetImage();
-        tracer->GenerateWork(cam);
-    }
-    else
-    {
-        VisorTransform vt;
-        if(visorTransform.CheckChanged(vt))
-            tracer->ResetImage();
-        tracer->GenerateWork(vt, sceneCam.Get());
-    }
+        // TODO: wtf is this?
+        if(!tracer) return;
 
-    try
-    {
+        // Check if image is changed
+        Vector2i newRes;
+        if(!imageAlreadyChanged && resolution.CheckChanged(newRes))
+        {
+            tracer->ResizeImage(newRes);
+        }
+        Vector2i newStart;
+        Vector2i newEnd;
+        bool startChanged = imgPortionStart.CheckChanged(newStart);
+        bool endChanged = imgPortionEnd.CheckChanged(newEnd);
+        if(startChanged || endChanged)
+        {
+            tracer->ReportionImage(newStart, newEnd);
+        }
+        // Generate work according to the camera that is being selected
+        if(isSceneCameraActive.Get())
+        {
+            uint32_t cam;
+            if(sceneCam.CheckChanged(cam))
+                tracer->ResetImage();
+            tracer->GenerateWork(cam);
+        }
+        else
+        {
+            VisorTransform vt;
+            if(visorTransform.CheckChanged(vt))
+                tracer->ResetImage();
+            tracer->GenerateWork(vt, sceneCam.Get());
+        }
+
+
         // Exhaust all the generated work
         while(tracer->Render());
 
@@ -217,6 +217,10 @@ TracerError TracerThread::RecreateTracer()
     GPUReconFilterI* filterPtr = nullptr;
     if((tError = tracerSystem.GenerateReconFilter(filterPtr,
                                                   filterOptions)) != TracerError::OK)
+    {
+        tracer = nullptr;
+        return tError;
+    }
     tracer->AttachReconFilter(filterPtr);
 
     return TracerError::OK;

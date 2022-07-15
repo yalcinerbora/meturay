@@ -228,7 +228,7 @@ inline void GPUCameraPinhole::GenerateRay(// Output
     Vector3 rayDir = (samplePoint - position).Normalize();
 
     // Local Coords
-    localCoords = sampleDistance / planeSize;
+    localCoords = (Vector2(sampleId) + randomOffset) / Vector2(sampleMax);
 
     // Initialize Ray
     ray.ray = RayF(rayDir, position);

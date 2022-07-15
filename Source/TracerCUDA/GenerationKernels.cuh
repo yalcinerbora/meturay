@@ -64,15 +64,19 @@ void GenerateCameraRaysGPU(// Output
         Vector2i globalPixelId = pixelStart + (threadId2d / samplePerLocation);
 
         RayReg ray;
-        Vector2f imgSpaceCoords;
+        Vector2f cameraWindowSpaceCoords;
         gCamera.GenerateRay(ray,
-                            imgSpaceCoords,
+                            cameraWindowSpaceCoords,
                             //
                             globalSampleId,
                             totalSamples,
                             rng,
                             //
                             antiAliasOn);
+        // "Generate Ray" function returns normalized coordinates
+        // convert it to image space (0, resolution)
+        Vector2 imgSpaceCoords = cameraWindowSpaceCoords * Vector2f(resolution);
+
         // Generate Required Parameters
         Vector2i pixelSampleId = threadId2d % samplePerLocation;
         Vector2i localPixelId = globalPixelId - pixelStart;
@@ -83,6 +87,12 @@ void GenerateCameraRaysGPU(// Output
         uint32_t globalSampleId1D = samplesIssuedSoFar + threadId;
         sampleMem.gValues[globalSampleId1D] = Zero4f;
         sampleMem.gImgCoords[globalSampleId1D] = imgSpaceCoords;
+
+        //printf("W[%u] camCoord (%f, %f), imgCoord (%f, %f)\n",
+        //       globalSampleId1D,
+        //       cameraWindowSpaceCoords[0],
+        //       cameraWindowSpaceCoords[1],
+        //       imgSpaceCoords[0], imgSpaceCoords[1]);
 
         // Write Ray
         ray.Update(gRays, threadId);

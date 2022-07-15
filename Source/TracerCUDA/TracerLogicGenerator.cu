@@ -45,6 +45,9 @@
 #include "GPUCameraSpherical.cuh"
 // Filters
 #include "GPUReconFilterBox.h"
+#include "GPUReconFilterTent.h"
+#include "GPUReconFilterGaussian.h"
+#include "GPUReconFilterMitchell.h"
 
 // Type to utilize the generated ones
 extern template class GPUAccLinearGroup<GPUPrimitiveTriangle>;
@@ -247,6 +250,15 @@ TracerLogicGenerator::TracerLogicGenerator()
     // Filters
     filterGenerators.emplace(GPUReconFilterBox::TypeName(),
                              GPUReconFilterGen(ReconFilterLogicConstruct<GPUReconFilterI, GPUReconFilterBox>,
+                                               DefaultDestruct<GPUReconFilterI>));
+    filterGenerators.emplace(GPUReconFilterTent::TypeName(),
+                             GPUReconFilterGen(ReconFilterLogicConstruct<GPUReconFilterI, GPUReconFilterTent>,
+                                               DefaultDestruct<GPUReconFilterI>));
+    filterGenerators.emplace(GPUReconFilterGaussian::TypeName(),
+                             GPUReconFilterGen(ReconFilterLogicConstruct<GPUReconFilterI, GPUReconFilterGaussian>,
+                                               DefaultDestruct<GPUReconFilterI>));
+    filterGenerators.emplace(GPUReconFilterMitchell::TypeName(),
+                             GPUReconFilterGen(ReconFilterLogicConstruct<GPUReconFilterI, GPUReconFilterMitchell>,
                                                DefaultDestruct<GPUReconFilterI>));
 }
 

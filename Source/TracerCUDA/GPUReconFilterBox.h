@@ -21,10 +21,10 @@ class GPUBoxFilterFunctor
 class GPUReconFilterBox : public GPUReconFilter
 {
     public:
-        static const char* TypeName() { return "Box"; }
-        using FilterFunctor = GPUBoxFilterFunctor;
+        static const char*      TypeName() { return "Box"; }
+        using FilterFunctor     = GPUBoxFilterFunctor;
     private:
-        GPUBoxFilterFunctor   filter;
+        FilterFunctor           filter;
 
     protected:
     public:
@@ -50,7 +50,12 @@ __device__ __host__ inline
 float GPUBoxFilterFunctor::operator()(const Vector2f& pixCoord,
                                       const Vector2f& sampleCoord) const
 {
-    return ((pixCoord - sampleCoord).Length() < radius) ? 1.0f : 0.0f;
+    // Special case (no filtering mode)
+    // Only valid for Box Filter
+    if(radius == 0.0f) return 1.0f;
+
+    Vector2f dist = (pixCoord - sampleCoord).Abs();
+    return ((dist[0] < radius) && (dist[1] < radius)) ? 1.0f : 0.0f;
 }
 
 inline GPUReconFilterBox::GPUReconFilterBox(float filterRadius, Options filterOptions)

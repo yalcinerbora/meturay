@@ -66,7 +66,10 @@ set(SRC_DEBUG
     ${CURRENT_SOURCE_DIR}/TracerDebug.h)
 
 set(SRC_FILTERS
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterMitchell.h
     ${CURRENT_SOURCE_DIR}/GPUReconFilterBox.h
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterTent.h
+    ${CURRENT_SOURCE_DIR}/GPUReconFilterGaussian.h
     ${CURRENT_SOURCE_DIR}/GPUReconFilter.h
     ${CURRENT_SOURCE_DIR}/GPUReconFilterKC.cuh)
 

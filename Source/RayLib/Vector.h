@@ -153,7 +153,7 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         __device__ __host__ constexpr T               Multiply() const;
         // Max Min Reduction functions are selections instead
         // since it sometimes useful to fetch the which index
-        // (axis) is maximum so that you can do other stuff wrt. it.
+        // (axis) is maximum/minimum so that you can do other stuff with it.
         __device__ __host__ constexpr int             Max() const;
         __device__ __host__ constexpr int             Min() const;
 

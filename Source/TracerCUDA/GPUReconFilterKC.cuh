@@ -227,15 +227,16 @@ static void KCFilterToImg(ImageGMem<T> img,
 
             // Fetch Value & Image Coords
             T value = T(0.0f);
-            Vector2f sampleCoords = Vector2f(FLT_MAX, FLT_MAX);
+            float filterWeight = 0.0f;
             if(localIndex < elementCount)
             {
                 uint32_t sampleId = gSampleIds[globalSampleIdIndex];
                 value = gValues[sampleId];
-                sampleCoords = gImgCoords[sampleId];
+                Vector2f sampleCoords = gImgCoords[sampleId];
+                // Do the filter operation here
+                // If this operator unavailable just do
+                filterWeight = filter(pixCoords, sampleCoords);
             }
-            // Do the filter operation & multiply with value
-            float filterWeight = filter(pixCoords, sampleCoords);
             T weightedVal = filterWeight * value;
 
             // Now do the reduction operations

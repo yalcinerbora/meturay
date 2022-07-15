@@ -41,6 +41,8 @@ class SampleMemory
         CamSampleGMemConst<T>   GMem() const;
 
         size_t                  UsedGPUMemory() const;
+
+        uint32_t                SampleCount() const;
 };
 
 inline SampleMemory::SampleMemory()
@@ -115,4 +117,9 @@ inline CamSampleGMemConst<T> SampleMemory::GMem() const
 inline size_t SampleMemory::UsedGPUMemory() const
 {
     return memory.Size();
+}
+
+inline uint32_t SampleMemory::SampleCount() const
+{
+    return sampleCount;
 }

@@ -25,7 +25,6 @@ class RayTracer : public GPUTracer
         // Sample Buffer of each ray
         SampleMemory                    sampleMemory;
         GPUReconFilterI*                reconFilter;
-        uint32_t                        sampleCountThisIteration;
         // Scene Reference
         const GPUSceneI&                scene;
         int32_t                         totalSamplePerPixel;

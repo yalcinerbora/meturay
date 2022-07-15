@@ -118,7 +118,7 @@ TracerError TracerSystemCUDA::GenerateReconFilter(GPUReconFilterI*& filterPtr,
     }
 
     float filterRadius;
-    if((err = filterOptions.GetFloat(filterRadius, GPUReconFilterI::TYPE_OPTION_NAME)) != TracerError::OK)
+    if((err = filterOptions.GetFloat(filterRadius, GPUReconFilterI::RADIUS_OPTION_NAME)) != TracerError::OK)
     {
         return TracerError(err, "Filter Options has to have \"radius\" field");
     }

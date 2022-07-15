@@ -58,7 +58,6 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
         Vector2i localPixelEnd = Vector2i::Min(localPixelStart + localPixelCount, pixelCount);
         Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * sampleCountSqr;
         size_t localWorkCount = localWorkCount2D[0] * localWorkCount2D[1];
-        samplesIssuedSoFar += static_cast<uint32_t>(localWorkCount);
 
         // Kernel Specific Args
         // Output
@@ -99,6 +98,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
         );
 
         // Adjust for next call
+        samplesIssuedSoFar += static_cast<uint32_t>(localWorkCount);
         localPixelStart = localPixelEnd;
         i++;
     }
@@ -165,7 +165,6 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
         Vector2i localPixelEnd = Vector2i::Min(localPixelStart + localPixelCount, pixelCount);
         Vector2i localWorkCount2D = (localPixelEnd - localPixelStart) * sampleCountSqr;
         size_t localWorkCount = localWorkCount2D[0] * localWorkCount2D[1];
-        samplesIssuedSoFar += static_cast<uint32_t>(localWorkCount);
 
         // Kernel Specific Args
         // Output
@@ -204,6 +203,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
         );
 
         // Adjust for next call
+        samplesIssuedSoFar += static_cast<uint32_t>(localWorkCount);
         localPixelStart = localPixelEnd;
         i++;
     }
