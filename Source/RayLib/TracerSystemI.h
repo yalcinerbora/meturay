@@ -13,6 +13,7 @@ struct SceneError;
 
 class SurfaceLoaderGenerator;
 class Options;
+class GPUReconFilterI;
 
 enum class ScenePartitionerType
 {
@@ -46,4 +47,6 @@ class TracerSystemI
                                                        const TracerParameters&,
                                                        const Options&,
                                                        const std::string& tracerType) = 0;
+        virtual TracerError             GenerateReconFilter(GPUReconFilterI*&,
+                                                            const Options&) = 0;
 };

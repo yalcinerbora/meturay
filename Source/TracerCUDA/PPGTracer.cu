@@ -439,7 +439,7 @@ void PPGTracer::Finalize()
        (currentTreeIteration - prevTreeSwap) >= prevTreeSwap)
     {
         // Base class finalize directly sends the image
-        GPUTracer::Finalize();
+        RayTracer::Finalize();
     }
 }
 

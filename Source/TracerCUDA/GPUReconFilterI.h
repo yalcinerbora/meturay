@@ -8,6 +8,10 @@ class CudaSystem;
 class GPUReconFilterI
 {
     public:
+        // Some Option Fetching Names
+        static constexpr const char*    RADIUS_OPTION_NAME = "radius";
+        static constexpr const char*    TYPE_OPTION_NAME = "type";
+    public:
         virtual                         ~GPUReconFilterI() = default;
         // Interface
         virtual const char*             Type() const = 0;

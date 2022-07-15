@@ -286,7 +286,7 @@ void RLTracer::Finalize()
     }
     iterationCount++;
 
-    GPUTracer::Finalize();
+    RayTracer::Finalize();
 }
 
 void RLTracer::GenerateWork(uint32_t cameraIndex)

@@ -258,7 +258,7 @@ void DirectTracer::Finalize()
     frameTimer.Stop();
     UpdateFrameAnalytics("rays / sec", options.sampleCount * options.sampleCount);
 
-    GPUTracer::Finalize();
+    RayTracer::Finalize();
 }
 
 void DirectTracer::GenerateWork(uint32_t cameraIndex)

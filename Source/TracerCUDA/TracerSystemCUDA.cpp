@@ -8,8 +8,13 @@
 
 #include "ScenePartitioner.h"
 #include "GPUSceneJson.h"
+#include "GPUReconFilterI.h"
 
 #include <nlohmann/json.hpp>
+
+TracerSystemCUDA::TracerSystemCUDA()
+    : reconFilter(nullptr, nullptr)
+{}
 
 TracerError TracerSystemCUDA::Initialize(const std::vector<SurfaceLoaderSharedLib>& sLoaderArgs,
                                          ScenePartitionerType partitionerType)
@@ -97,6 +102,38 @@ TracerError TracerSystemCUDA::GenerateTracer(GPUTracerPtr& tracer,
         tracer = nullptr;
         return trcE;
     }
+
+    return TracerError::OK;
+}
+
+TracerError TracerSystemCUDA::GenerateReconFilter(GPUReconFilterI*& filterPtr,
+                                                  const Options& filterOptions)
+{
+    TracerError err = TracerError::OK;
+
+    std::string filterType;
+    if((err = filterOptions.GetString(filterType, GPUReconFilterI::TYPE_OPTION_NAME)) != TracerError::OK)
+    {
+        return TracerError(err, "Filter Options has to have \"type\" field");
+    }
+
+    float filterRadius;
+    if((err = filterOptions.GetFloat(filterRadius, GPUReconFilterI::TYPE_OPTION_NAME)) != TracerError::OK)
+    {
+        return TracerError(err, "Filter Options has to have \"radius\" field");
+    }
+
+    // Single filter is required delete the old filter
+    reconFilter = nullptr;
+
+    SceneError sceneErr = SceneError::OK;
+    if((sceneErr = logicGenerator->GenerateReconFilter(reconFilter, filterRadius,
+                                                       filterOptions, filterType)) != TracerError::OK)
+    {
+        return TracerError(TracerError::TRACER_INTERNAL_ERROR,
+                           static_cast<std::string>(sceneErr));
+    }
+    filterPtr = reconFilter.get();
 
     return TracerError::OK;
 }

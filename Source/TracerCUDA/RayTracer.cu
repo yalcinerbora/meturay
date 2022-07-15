@@ -7,6 +7,7 @@
 #include "RayMemory.h"
 #include "ImageMemory.h"
 #include "GenerationKernels.cuh"
+#include "GPUReconFilterI.h"
 
 RayTracer::RayTracer(const CudaSystem& s,
                      const GPUSceneI& scene,
@@ -52,8 +53,35 @@ void RayTracer::UpdateFrameAnalytics(const std::string& throughputSuffix,
 
 size_t RayTracer::TotalGPUMemoryUsed() const
 {
+    size_t reconFilterMemSize = (reconFilter) ? reconFilter->UsedGPUMemory() : 0;
+
     return (GPUTracer::TotalGPUMemoryUsed() +
-            sampleMemory.UsedGPUMemory(),
+            sampleMemory.UsedGPUMemory() +
+            reconFilterMemSize +
             auxBuffer0.Size() +
             auxBuffer1.Size());
+}
+
+void RayTracer::AttachReconFilter(GPUReconFilterI* f)
+{
+    reconFilter = f;
+}
+
+void RayTracer::Finalize()
+{
+    if(crashed) return;
+
+    const auto sampleGMem = std::as_const(sampleMemory).GMem<Vector4f>();
+    if(reconFilter != nullptr)
+        reconFilter->FilterToImg(imgMemory,
+                                 sampleGMem.gValues,
+                                 sampleGMem.gImgCoords,
+                                 sampleCountThisIteration,
+                                 cudaSystem);
+    else
+    {
+        METU_ERROR_LOG("Reconstruction Filter did not set!");
+        crashed = true;
+    }
+    GPUTracer::Finalize();
 }

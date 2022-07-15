@@ -65,11 +65,11 @@ inline void SampleMemory::Resize(PixelFormat f, uint32_t newCount)
 {
     format = f;
     size_t pixelSize = ImageIOI::FormatToPixelSize(f);
-    size_t sizeOfValues = pixelSize * sampleCount;
+    size_t sizeOfValues = pixelSize * newCount;
     sizeOfValues = Memory::AlignSize(sizeOfValues);
-    size_t sizeOfImgCoords = sampleCount * sizeof(Vector2f);
+    size_t sizeOfImgCoords = newCount * sizeof(Vector2f);
 
-    if(sampleCount != 0)
+    if(newCount != 0)
     {
         GPUMemFuncs::EnlargeBuffer(memory, sizeOfValues + sizeOfImgCoords);
 
@@ -81,6 +81,7 @@ inline void SampleMemory::Resize(PixelFormat f, uint32_t newCount)
         offset += sizeOfImgCoords;
         assert(offset == (sizeOfValues + sizeOfImgCoords));
     }
+    sampleCount = newCount;
 }
 
 inline void SampleMemory::Reset()

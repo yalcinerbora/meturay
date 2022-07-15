@@ -238,7 +238,7 @@ void PathTracer::Finalize()
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
 
-    GPUTracer::Finalize();
+    RayTracer::Finalize();
 }
 
 void PathTracer::GenerateWork(uint32_t cameraIndex)

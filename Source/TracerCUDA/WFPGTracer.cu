@@ -1009,7 +1009,7 @@ void WFPGTracer::Finalize()
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
-    GPUTracer::Finalize();
+    RayTracer::Finalize();
 }
 
 size_t WFPGTracer::TotalGPUMemoryUsed() const

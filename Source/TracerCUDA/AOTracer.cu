@@ -203,7 +203,7 @@ void AOTracer::Finalize()
     frameTimer.Stop();
     UpdateFrameAnalytics("rays / sec", options.sampleCount * options.sampleCount);
 
-    GPUTracer::Finalize();
+    RayTracer::Finalize();
 }
 
 void AOTracer::AskOptions()

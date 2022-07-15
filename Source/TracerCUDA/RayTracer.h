@@ -24,11 +24,11 @@ class RayTracer : public GPUTracer
         DeviceMemory*                   dAuxOut;
         // Sample Buffer of each ray
         SampleMemory                    sampleMemory;
-
+        GPUReconFilterI*                reconFilter;
+        uint32_t                        sampleCountThisIteration;
         // Scene Reference
-        const GPUSceneI&        scene;
-
-        int32_t                 totalSamplePerPixel;
+        const GPUSceneI&                scene;
+        int32_t                         totalSamplePerPixel;
 
         template <class AuxStruct, class AuxInitFunctor, class RNG>
         void                    GenerateRays(uint32_t sceneCamId,
@@ -63,4 +63,11 @@ class RayTracer : public GPUTracer
         TracerError             Initialize() override;
 
         size_t                  TotalGPUMemoryUsed() const override;
+
+        void                    AttachReconFilter(GPUReconFilterI*) override;
+
+        // Filtered Finalize
+        void                    Finalize() override;
+
+
 };

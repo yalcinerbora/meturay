@@ -114,7 +114,7 @@ void TracerThread::LoopWork()
         tracer->ResizeImage(newRes);
         tracer->ReportionImage(newStart, newEnd);
 
-        imageAlreadyChanged = true;
+imageAlreadyChanged = true;
     }
 
     // TODO: wtf is this?
@@ -212,6 +212,13 @@ TracerError TracerThread::RecreateTracer()
         tracer = nullptr;
         return tError;
     }
+
+    // Generate Reconstruction Filter
+    GPUReconFilterI* filterPtr = nullptr;
+    if((tError = tracerSystem.GenerateReconFilter(filterPtr,
+                                                  filterOptions)) != TracerError::OK)
+    tracer->AttachReconFilter(filterPtr);
+
     return TracerError::OK;
 }
 

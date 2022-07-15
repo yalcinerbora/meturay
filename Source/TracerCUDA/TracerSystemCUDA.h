@@ -16,11 +16,12 @@ class TracerSystemCUDA final : public TracerSystemI
         std::unique_ptr<ScenePartitionerI>          scenePartitioner;
         std::unique_ptr<SurfaceLoaderGenerator>     surfaceLoaders;
         std::unique_ptr<GPUSceneI>                  gpuScene;
+        GPUReconFilterPtr                           reconFilter;
 
     protected:
     public:
         // Constructors & Destructor
-                                TracerSystemCUDA() = default;
+                                TracerSystemCUDA();
                                 TracerSystemCUDA(const TracerSystemCUDA&) = delete;
                                 TracerSystemCUDA(TracerSystemCUDA&&) = delete;
         TracerSystemCUDA&       operator=(const TracerSystemCUDA&) = delete;
@@ -36,4 +37,6 @@ class TracerSystemCUDA final : public TracerSystemI
                                                const TracerParameters&,
                                                const Options&,
                                                const std::string& tracerType) override;
+        TracerError             GenerateReconFilter(GPUReconFilterI*&,
+                                                    const Options&) override;
 };
