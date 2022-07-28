@@ -16,6 +16,68 @@
 struct PathGuidingNode;
 class CudaSystem;
 
+// Voxel Payload (SoA)
+struct VoxelPayload
+{
+    private:
+    static constexpr uint32_t NORMAL_X_BIT_COUNT        = 9;
+    static constexpr uint32_t NORMAL_Y_BIT_COUNT        = 9;
+    static constexpr uint32_t NORMAL_STD_DEV_BIT_COUNT  = 6;
+    static constexpr uint32_t SPECULAR_BIT_COUNT        = 8;
+    static constexpr float UNORM_6_FACTOR               = 1.0f / 64.0f;
+    static constexpr float UNORM_8_FACTOR               = 1.0f / 256.0f;
+    static constexpr float UNORM_9_FACTOR               = 2.0f / 512.0f;
+    static constexpr float SNORM_9_OFFSET               = 512.0f / 2.0f ;
+
+    static constexpr uint32_t NORMAL_X_BIT_MASK        = (1 << NORMAL_X_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_Y_BIT_MASK        = (1 << NORMAL_Y_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_STD_DEV_BIT_MASK  = (1 << NORMAL_STD_DEV_BIT_COUNT) - 1;
+    static constexpr uint32_t SPECULAR_BIT_MASK        = (1 << SPECULAR_BIT_COUNT) - 1;
+
+    static constexpr uint32_t NORMAL_X_OFFSET           = 0;
+    static constexpr uint32_t NORMAL_Y_OFFSET           = NORMAL_X_OFFSET + NORMAL_X_BIT_COUNT;
+    static constexpr uint32_t NORMAL_STD_DEV_OFFSET     = NORMAL_Y_OFFSET + NORMAL_Y_BIT_COUNT;
+    static constexpr uint32_t SPECULAR_OFFSET           = NORMAL_STD_DEV_OFFSET + NORMAL_STD_DEV_BIT_COUNT;
+
+    public:
+    // Leaf Unique Data
+    Vector2f*   dTotalIrradianceLeaf;   // Total Irradiance, 2 values
+                                        // one for "above" the surface other is for "below".
+                                        // Surface is defined by the normal
+    Vector2ui*  dSampleCountLeaf;       // Total number of ray samples that hits to this voxel
+                                        // used to calculate average irradiance
+    // Leaf Common Data
+    Vector2h*   dAvgIrradianceLeaf;     // Average irradiance of this node, this value is also filtered
+                                        // and contains information from nearby voxels
+    uint32_t*   dNormalAndSpecLeaf;     // Packed data; contains normal, and guiding metric
+                                        // 32-bit word => [ 9 | 9 | 6 | 8 ]
+                                        // first two contains normal X, Y coords (9-bit UNORM in DirectX terms),
+                                        // third field hold normal std deviation (since SVO is low resolution
+                                        // discretization normals are not exact (average and distribution).
+                                        // Last field holds the specularity of the location; again it is
+                                        // normalized 8-bit integer, 0 means fully diffuse and 1 means
+                                        // perfectly specular.
+    uint8_t*    dGuidingFactorLeaf;     // Guiding metric which is used to determine if this location
+                                        // of the scene should be guided by the algorithm or not
+                                        // this value is used stochastically.
+    // Node Data
+    Vector2h*   dAvgIrradianceNode;     // Same as above but for nodes
+    uint32_t*   dNormalAndSpecNode;
+    Vector2f*   dGuidingFactorNode;     // ...........................
+
+    // Unpacking Data
+    __device__
+    Vector3f            UnpackNormalSpecular(float& stdDev, float& specularity,
+                                             uint32_t nodeIndex, bool isLeaf);
+    //__device__
+    //float               UnpackGuidingFactor(uint32_t nodeIndex, bool isLeaf);
+
+    // Size Related (per voxel and total)
+    static size_t       BytePerLeaf();
+    static size_t       BytePerNode();
+    static size_t       TotalSize(size_t leafCount, size_t nodeCount);
+};
+
 class AnisoSVOctreeGPU
 {
     public:
@@ -128,8 +190,9 @@ class AnisoSVOctreeGPU
     // Methods
     // Trace the ray over the SVO and tMin and leafId
     __device__
-    float               TraceRay(uint32_t& leafId, const RayF&,
-                                 float tMin, float tMax) const;
+    float               ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&,
+                                     float tMin, float tMax,
+                                     float coneAperture = 0.0f) const;
     // Deposit radiance to the nearest voxel leaf
     // Uses atomics, returns false if no leaf is found on this location
     __device__
@@ -219,6 +282,52 @@ class AnisoSVOctreeCPU
     void                    DumpSVOAsBinary(std::vector<Byte>& data,
                                             const CudaSystem& system) const;
 };
+
+__device__ inline
+Vector3f VoxelPayload::UnpackNormalSpecular(float& stdDev, float& specularity,
+                                            uint32_t nodeIndex, bool isLeaf)
+{
+    uint32_t* gFetchArray = (isLeaf) ? dNormalAndSpecLeaf : dNormalAndSpecNode;
+    uint32_t packedData = gFetchArray[nodeIndex];
+
+    Vector3f normal;
+    normal[0] = static_cast<float>((packedData >> NORMAL_X_OFFSET) & NORMAL_X_BIT_MASK) * UNORM_9_FACTOR - SNORM_9_OFFSET;
+    normal[1] = static_cast<float>((packedData >> NORMAL_Y_OFFSET) & NORMAL_Y_BIT_MASK) * UNORM_9_FACTOR - SNORM_9_OFFSET;
+    normal[2] = sqrtf(1.0f - normal[0] * normal[0] - normal[1] * normal[1]);
+
+    stdDev = static_cast<float>((packedData >> NORMAL_STD_DEV_OFFSET) & NORMAL_STD_DEV_BIT_MASK) * UNORM_6_FACTOR;
+    specularity = static_cast<float>((packedData >> SPECULAR_OFFSET) & SPECULAR_BIT_MASK) * UNORM_8_FACTOR;
+
+    return normal;
+}
+
+//__device__
+//float VoxelPayload::UnpackGuidingFactor(uint32_t nodeIndex, bool isLeaf)
+//{
+//    Vector2f packedData = dGuidingFactorNode[nodeIndex];
+//    return static_cast<float>(packedData) * UNORM_8_FACTOR;
+//}
+
+inline
+size_t VoxelPayload::BytePerLeaf()
+{
+    return (sizeof(Vector2f) + sizeof(Vector2ui) +
+            sizeof(Vector2h) + sizeof(uint32_t));
+}
+
+inline
+size_t VoxelPayload::BytePerNode()
+{
+    return (sizeof(Vector2h) + sizeof(uint32_t) +
+            sizeof(uint8_t));
+}
+
+inline
+size_t VoxelPayload::TotalSize(size_t leafCount, size_t nodeCount)
+{
+    return (BytePerLeaf() * leafCount +
+            BytePerNode() * nodeCount);
+}
 
 template <class T>
 __device__ inline
@@ -481,8 +590,8 @@ uint32_t AnisoSVOctreeGPU::GetRayCount(uint32_t binInfo)
 }
 
 __device__ inline
-float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
-                                 float tMin, float tMax) const
+float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
+                                     float tMin, float tMax, float coneAperture) const
 {
     static constexpr float EPSILON = MathConstants::Epsilon;
     // We wrap the exp2f function here
@@ -503,7 +612,7 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
         return __int_as_float(fVal);
 
         // This is the float version
-        //return log2f(-power);
+        //return exp2f(-power);
     };
     // Instead of holding a large stack for each thread,
     // we hold a bit stack which will hold the node morton Id
@@ -536,6 +645,18 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
     auto ReadMortonCode = [&mortonBitStack]() -> uint32_t
     {
         return mortonBitStack & 0b111;
+    };
+
+    // Aperture Related Routines
+    const float CONE_DIAMETER_FACTOR = tan(0.5 * coneAperture) * 2.0f;
+    auto ConeDiameter = [&CONE_DIAMETER_FACTOR](float distance)
+    {
+        return CONE_DIAMETER_FACTOR * distance;
+    };
+    auto LevelVoxelSize = [this](uint32_t currentLevel)
+    {
+        float levelFactor = static_cast<float>(1 << (leafDepth - currentLevel));
+        return levelFactor * leafVoxelSize;
     };
 
     // Set leaf to invalid value
@@ -699,10 +820,15 @@ float AnisoSVOctreeGPU::TraceRay(uint32_t& leafId, const RayF& ray,
                 // Only update the node if it has an actual children
                 nodeId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
 
-                // If it is leaf just return the "nodeId" it is actually
-                // leaf id
-                if(IsChildrenLeaf(node))
+                // Check if the current cone aperture is larger than the
+                // current voxel size, then terminate
+                bool isTerminated = ConeDiameter(tMin) > LevelVoxelSize(stack3BitCount + 1);
+                bool isChildLeaf = IsChildrenLeaf(node);
+                // If it is leaf just return the
+                // "nodeId" it is actually leaf id
+                if(isChildLeaf || isTerminated)
                 {
+                    isLeaf = isChildLeaf;
                     leafId = nodeId;
                     break;
                 }

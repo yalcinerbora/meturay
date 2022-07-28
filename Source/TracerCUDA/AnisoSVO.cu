@@ -478,11 +478,11 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     Vector3f span = sceneAABB.Span();
     int maxDimIndex = span.Max();
     float worldSizeXYZ = span[maxDimIndex];
-    float halfVoxelSize = (worldSizeXYZ / static_cast<float>(resolutionXYZ)) * 0.5f * 2;
-    treeGPU.svoAABB = AABB3f(sceneAABB.Min() - Vector3f(halfVoxelSize),
-                             sceneAABB.Min() + Vector3f(halfVoxelSize + worldSizeXYZ));
+    float sizePadding = (worldSizeXYZ / static_cast<float>(resolutionXYZ));
+    treeGPU.svoAABB = AABB3f(sceneAABB.Min() - Vector3f(sizePadding),
+                             sceneAABB.Min() + Vector3f(sizePadding + worldSizeXYZ));
     treeGPU.leafDepth = Utility::FindLastSet(resolutionXYZ);
-    treeGPU.leafVoxelSize = (worldSizeXYZ + 2.0f * halfVoxelSize) / static_cast<float>(resolutionXYZ);
+    treeGPU.leafVoxelSize = (worldSizeXYZ + 2.0f * sizePadding) / static_cast<float>(resolutionXYZ);
     treeGPU.voxelResolution = resolutionXYZ;
 
     // Find out the sort memory requirement of Light Keys
@@ -910,10 +910,28 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                               hUniqueVoxelCount * sizeof(float) +
                                               hUniqueVoxelCount * sizeof(half)) / 1024.0 / 1024.0;
 
-    METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB, Rad Cache {:.2f} MiB, If Irrad {:.2f} MiB)",
+    double newStyleSize = static_cast<double>(// Irradiance Read
+                                              totalNodeCount * sizeof(Vector2h) +
+                                              hUniqueVoxelCount * sizeof(Vector2h) +
+                                              // Irradiance Write
+                                              hUniqueVoxelCount * sizeof(Vector2ui) +
+                                              hUniqueVoxelCount * sizeof(Vector2f) +
+                                              // Variance or Metric Write
+                                              hUniqueVoxelCount * sizeof(Vector2f) +
+                                              // Normals
+                                              totalNodeCount * sizeof(uint32_t) +
+                                              hUniqueVoxelCount * sizeof(uint32_t) +
+                                              // Metric Read
+                                              hUniqueVoxelCount * sizeof(Vector2h) +
+                                              totalNodeCount * sizeof(Vector2h)
+
+                                              ) / 1024.0 / 1024.0;
+
+    METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB, Rad Cache {:.2f} MiB, If Irrad {:.2f} MiB), New {:.2f} MiB",
              treeGPU.nodeCount, treeGPU.leafCount,
              timer.Elapsed<CPUTimeSeconds>(),
-             svoMemSize, radMemSize, irradMemSize);
+             svoMemSize, radMemSize, irradMemSize,
+             newStyleSize);
 
     // All Done!
     return TracerError::OK;

@@ -67,6 +67,7 @@ class GPUCameraSpherical final : public GPUCameraI
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
+        __device__ Vector2f         FoV() const override;
 
         __device__ VisorTransform   GenVisorTransform() const override;
         __device__ void             SwapTransform(const VisorTransform&) override;
@@ -279,6 +280,13 @@ inline Vector2f GPUCameraSpherical::NearFar() const
 }
 
 __device__
+inline Vector2f GPUCameraSpherical::FoV() const
+{
+    return Vector2f(MathConstants::Pi * 2.0f,
+                    MathConstants::Pi);
+}
+
+__device__
 inline VisorTransform GPUCameraSpherical::GenVisorTransform() const
 {
     return VisorTransform
@@ -315,7 +323,8 @@ inline GPUCameraPixel GPUCameraSpherical::GeneratePixelCamera(const Vector2i& pi
                           ZERO3,
                           ZERO3,
                           ZERO2,
-                          ZERO3,
+                          ZERO2,
+                          ZERO2,
                           pixelId,
                           resolution,
                           mediumIndex,

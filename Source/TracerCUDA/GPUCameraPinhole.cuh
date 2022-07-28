@@ -68,6 +68,7 @@ class GPUCameraPinhole final : public GPUCameraI
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
+        __device__ Vector2f         FoV() const override;
 
         __device__ VisorTransform   GenVisorTransform() const override;
         __device__ void             SwapTransform(const VisorTransform&) override;
@@ -302,6 +303,12 @@ inline Vector2f GPUCameraPinhole::NearFar() const
 }
 
 __device__
+inline Vector2f GPUCameraPinhole::FoV() const
+{
+    return fov;
+}
+
+__device__
 inline VisorTransform GPUCameraPinhole::GenVisorTransform() const
 {
     Vector3 dir = Cross(up, right).Normalize();
@@ -349,12 +356,16 @@ inline GPUCameraPixel GPUCameraPinhole::GeneratePixelCamera(const Vector2i& pixe
     Vector3 pixelBottomLeft = bottomLeft + ((pixelDistance[0] * right) +
                                             (pixelDistance[1] * up));
 
+    Vector2 fovPixel = Vector2f(fov[0] / resolution[0],
+                                fov[1] / resolution[1]);
+
     return GPUCameraPixel(position,
                           right,
                           up,
                           pixelBottomLeft,
                           delta,
                           nearFar,
+                          fovPixel,
                           pixelId,
                           resolution,
                           mediumIndex,

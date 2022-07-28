@@ -21,6 +21,18 @@
 // since most of the internal call rely on compile time constants
 static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
 
+constexpr float SphericalConeAperture(uint32_t pixelCountX,
+                                      uint32_t pixelCountY)
+{
+    constexpr float SPHERICAL_X = MathConstants::Pi * 2.0f;
+    constexpr float SPHERICAL_Y = MathConstants::Pi;
+
+    float coneAngleX = SPHERICAL_X / static_cast<float>(pixelCountX);
+    float coneAngleY = SPHERICAL_Y / static_cast<float>(pixelCountY);
+    // Return average
+    return (coneAngleX + coneAngleY) * 0.5f;
+}
+
 using PathGuideKernelFunction = void (*)(// Output
                                          RayAuxWFPG*,
                                          // I-O
@@ -33,6 +45,7 @@ using PathGuideKernelFunction = void (*)(// Output
                                          const uint32_t*,
                                          const uint32_t*,
                                          // Constants
+                                         float coneAperture,
                                          const AnisoSVOctreeGPU,
                                          uint32_t);
 
@@ -50,11 +63,21 @@ static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegi
 
 static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KERNELS =
 {
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 64>,    // First bounce good approximation
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 32>,    // First bounce good approximation
+    //KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 64>,    // First bounce good approximation
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 64, 32>,    // Second bounce as well
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 32, 16>,    // Third bounce not so much
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce bad
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>       // Fifth is bad as well
+};
+
+static constexpr std::array<float, PG_KERNEL_TYPE_COUNT> CONE_APERTURES =
+{
+    SphericalConeAperture(64, 32), //SphericalConeAperture(64, 64),
+    SphericalConeAperture(64, 32),
+    SphericalConeAperture(32, 16),
+    SphericalConeAperture(16, 8),
+    SphericalConeAperture(8, 4)
 };
 
 template <class RNG>
@@ -273,6 +296,7 @@ void WFPGTracer::GenerateGuidedDirections()
     // Select the kernel depending on the depth
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
+    float coneAperture = CONE_APERTURES[kernelIndex];
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
     auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
@@ -298,6 +322,7 @@ void WFPGTracer::GenerateGuidedDirections()
                   dPartitionOffsets,
                   dPartitionBinIds,
                   // Constants
+                  coneAperture,
                   svo.TreeGPU(),
                   hPartitionCount);
     CUDA_CHECK(cudaEventRecord(stop));
@@ -426,6 +451,7 @@ WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
+    , coneAperture(0.0f)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(WFPGBoundaryWorkerList{});
@@ -646,6 +672,29 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
         true,
         enableAA
     );
+    // Generate Cone Aperture If
+    // SVO RADIANCE mode and FALSE COLOR Mode
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
+    {
+        // Generate cone aperture
+        DeviceMemory mem(sizeof(float));
+        float* dConeAperture = static_cast<float*>(mem);
+        const auto& gpu = cudaSystem.BestGPU();
+        gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                      //
+                      KCGenConeApertureFromArray,
+                      //
+                      *dConeAperture,
+                      dCameras,
+                      cameraIndex,
+                      imgMemory.Resolution()
+        );
+
+        CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
+                              sizeof(float), cudaMemcpyDeviceToHost));
+    }
+
     // Save the camera if SVO RADIANCE Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     {
@@ -679,6 +728,30 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
         true,
         enableAA
     );
+
+    // Generate Cone Aperture If
+    // SVO RADIANCE mode and FALSE COLOR Mode
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
+    {
+        // Generate cone aperture
+        DeviceMemory mem(sizeof(float));
+        float* dConeAperture = static_cast<float*>(mem);
+        const auto& gpu = cudaSystem.BestGPU();
+        gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                      //
+                      KCGenConeApertureFromArray,
+                      //
+                      *dConeAperture,
+                      dCameras,
+                      cameraIndex,
+                      imgMemory.Resolution()
+        );
+
+        CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
+                              sizeof(float), cudaMemcpyDeviceToHost));
+    }
+
     // Save the camera if SVO RADIANCE Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     {
@@ -712,7 +785,29 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
         true,
         enableAA
     );
-        // Save the camera if SVO RADIANCE Mode
+
+    // Generate Cone Aperture If
+    // SVO RADIANCE mode and FALSE COLOR Mode
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
+    {
+        // Generate cone aperture
+        DeviceMemory mem(sizeof(float));
+        float* dConeAperture = static_cast<float*>(mem);
+        const auto& gpu = cudaSystem.BestGPU();
+        gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                      //
+                      KCGenConeApertureFromObject,
+                      //
+                      *dConeAperture,
+                      dCam,
+                      imgMemory.Resolution()
+        );
+
+        CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
+                              sizeof(float), cudaMemcpyDeviceToHost));
+    }
+    // Save the camera if SVO RADIANCE Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     {
         currentCamera.type = CameraType::CUSTOM_CAMERA;
@@ -776,6 +871,7 @@ bool WFPGTracer::Render()
                            svo.TreeGPU(),
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
+                           coneAperture,
                            WFPGRenderMode::SVO_FALSE_COLOR,
                            totalRayCount);
         // Signal as if we finished processing
@@ -947,56 +1043,12 @@ void WFPGTracer::Finalize()
                            svo.TreeGPU(),
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
+                           coneAperture,
                            WFPGRenderMode::SVO_RADIANCE,
                            totalRayCount);
 
-
-        //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
-        //                    //
-        //                   KCQuerySketch,
-        //                   //
-        //                   imgMemory.GMem<Vector4>(),
-        //                   svo.TreeGPU(),
-        //                   sketch.SketchGPU(),
-        //                   rayCaster->RaysIn(),
-        //                   static_cast<RayAuxWFPG*>(*dAuxIn),
-        //                   totalRayCount);
-
-        //// Normalize the sketch query
-        //Vector4f* dMax;
-        //Vector4f* dMin;
-        //DeviceMemory minMaxMem;
-        //GPUMemFuncs::AllocateMultiData(std::tie(dMax, dMin),
-        //                               minMaxMem,
-        //                               {1, 1});
-
-        //ReduceArrayGPU<Vector4f, ReduceMax<Vector4f>>
-        //(
-        //    *dMax,
-        //    imgMemory.GMem<Vector4f>().gPixels,
-        //    imgMemory.SegmentSize().Multiply(),
-        //    Vector4f(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX)
-        //);
-        //ReduceArrayGPU<Vector4f, ReduceMin<Vector4f>>
-        //(
-        //    *dMin,
-        //    imgMemory.GMem<Vector4>().gPixels,
-        //    imgMemory.SegmentSize().Multiply(),
-        //    Vector4f(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX)
-        //);
-
-        //gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
-        //                   //
-        //                   KCNormalizeImage,
-        //                   //
-        //                   imgMemory.GMem<Vector4>().gPixels,
-        //                   *dMax,
-        //                   *dMin,
-        //                   //
-        //                   imgMemory.SegmentSize());
-
         // Completely Reset the Image
-        // This is done to eliminate variance from prev samples
+        // This is done to eliminate old data from prev samples
         if(callbacks)
         {
             Vector2i start = imgMemory.SegmentOffset();

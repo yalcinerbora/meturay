@@ -14,6 +14,7 @@ class GPUCameraPixel final : public GPUCameraI
         Vector3                 bottomLeft;
         Vector2                 planeSize;
         Vector2                 nearFar;
+        Vector2                 fov;
 
         Vector2i                pixelId;
         Vector2i                resolution;
@@ -27,6 +28,7 @@ class GPUCameraPixel final : public GPUCameraI
                                            const Vector3& bottomLeft,
                                            const Vector2& planeSize,
                                            const Vector2& nearFar,
+                                           const Vector2& fovPixel,
                                            const Vector2i& pixelId,
                                            const Vector2i& resolution,
                                            // Base Class Related
@@ -70,7 +72,7 @@ class GPUCameraPixel final : public GPUCameraI
 
         __device__ Matrix4x4        VPMatrix() const override;
         __device__ Vector2f         NearFar() const override;
-
+        __device__ Vector2f         FoV() const override;
         __device__ VisorTransform   GenVisorTransform() const override;
         __device__ void             SwapTransform(const VisorTransform&) override;
 
@@ -85,6 +87,7 @@ inline GPUCameraPixel::GPUCameraPixel(const Vector3& position,
                                       const Vector3& bottomLeft,
                                       const Vector2& planeSize,
                                       const Vector2& nearFar,
+                                      const Vector2& fov,
                                       const Vector2i& pixelId,
                                       const Vector2i& resolution,
                                       // Base Class Related
@@ -97,6 +100,7 @@ inline GPUCameraPixel::GPUCameraPixel(const Vector3& position,
     , bottomLeft(bottomLeft)
     , planeSize(planeSize)
     , nearFar(nearFar)
+    , fov(fov)
     , pixelId(pixelId)
     , resolution(resolution)
 {}
@@ -234,6 +238,12 @@ inline Vector2f GPUCameraPixel::NearFar() const
 }
 
 __device__
+inline Vector2f GPUCameraPixel::FoV() const
+{
+    return fov;
+}
+
+__device__
 inline VisorTransform GPUCameraPixel::GenVisorTransform() const
 {
     Vector3 dir = Cross(up, right).Normalize();
@@ -281,12 +291,16 @@ inline GPUCameraPixel GPUCameraPixel::GeneratePixelCamera(const Vector2i& pId,
     Vector3 pixelBottomLeft = bottomLeft + ((pixelDistance[0] * right) +
                                             (pixelDistance[1] * up));
 
+    Vector2 fovPixel = Vector2f(fov[0] / resolution[0],
+                                fov[1] / resolution[1]);
+
     return GPUCameraPixel(position,
                           right,
                           up,
                           pixelBottomLeft,
                           delta,
                           nearFar,
+                          fovPixel,
                           pId,
                           res,
                           mediumIndex,

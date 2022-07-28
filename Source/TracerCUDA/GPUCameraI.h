@@ -37,6 +37,9 @@ class GPUCameraI : public GPUEndpointI
         // in world space distances
         __device__
         virtual Vector2f        NearFar() const = 0;
+        // Field of View of the camera
+        __device__
+        virtual Vector2f        FoV() const = 0;
 
         __device__
         virtual VisorTransform  GenVisorTransform() const = 0;

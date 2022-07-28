@@ -86,6 +86,8 @@ class WFPGTracer final : public RayTracer
         // Path Memory
         DeviceMemory                    pathMemory;
         PathGuidingNode*                dPathNodes;
+        // Debug mode cone aperture
+        float                           coneAperture;
         // Misc
         void                            ResizeAndInitPathMemory();
         uint32_t                        TotalPathNodeCount() const;

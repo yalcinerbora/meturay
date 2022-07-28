@@ -10,6 +10,7 @@
 #include "ImageStructs.h"
 #include "WorkOutputWriter.cuh"
 #include "WFPGCommon.h"
+#include "GPUCameraI.h"
 
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
@@ -743,6 +744,7 @@ static void KCTraceSVO(// Output
                        const RayGMem* gRays,
                        const RayAuxWFPG* gRayAux,
                        // Constants
+                       const float coneAperture,
                        WFPGRenderMode mode,
                        uint32_t rayCount)
 {
@@ -753,25 +755,34 @@ static void KCTraceSVO(// Output
         RayReg ray = RayReg(gRays, threadId);
         RayAuxWFPG aux = gRayAux[threadId];
 
-        uint32_t svoLeafIndex;
-        float tMin = svo.TraceRay(svoLeafIndex, ray.ray,
-                                  ray.tMin, ray.tMax);
+        bool isLeaf;
+        uint32_t svoNodeIndex;
+        float tMin = svo.ConeTraceRay(isLeaf, svoNodeIndex, ray.ray,
+                                      ray.tMin, ray.tMax,
+                                      coneAperture);
 
         Vector3f locColor = Vector3f(1.0f, 0.0f, 1.0f);
         if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
-            locColor = (svoLeafIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoLeafIndex)
+            locColor = (svoNodeIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoNodeIndex)
                                                     : Vector3f(0.0f);
         else if(mode == WFPGRenderMode::SVO_RADIANCE)
         {
-            half radiance = svo.ReadRadiance(svoLeafIndex, true,
-                                             -ray.ray.getDirection());
-            float radianceF = radiance;
-            if(svoLeafIndex != UINT32_MAX)
-                locColor = Vector3f(radianceF);
-            else
+            if(svoNodeIndex == UINT32_MAX)
                 locColor = Vector3f(1.0f, 0.0f, 1.0f);
-        }
+            else if(isLeaf)
 
+            {
+                half radiance = svo.ReadRadiance(svoNodeIndex, true,
+                                                 -ray.ray.getDirection());
+                float radianceF = radiance;
+                locColor = Vector3f(radianceF);
+            }
+            // TODO: change this after filtering implementation
+            else
+            {
+                locColor = Utility::RandomColorRGB(svoNodeIndex);
+            }
+        }
         // Accumulate the pixel
         AccumulateRaySample(gSamples,
                             aux.sampleIndex,
@@ -931,6 +942,7 @@ static void KCGenAndSampleDistribution(// Output
                                        const uint32_t* gBinOffsets,
                                        const uint32_t* gNodeIds,
                                        // Constants
+                                       float coneAperture,
                                        const AnisoSVOctreeGPU svo,
                                        uint32_t binCount)
 {
@@ -1032,10 +1044,13 @@ static void KCGenAndSampleDistribution(// Output
             // TODO: Change it to a better solution
             float tMin = sBinVoxelSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
 
-            uint32_t leafId;
-            svo.TraceRay(leafId, RayF(worldDir, position),
-                         tMin, FLT_MAX);
-            incRadiances[i] = 1.0f;// svo.ReadRadiance(leafId, true, -worldDir);
+            bool isLeaf;
+            uint32_t nodeId;
+            svo.ConeTraceRay(isLeaf, nodeId, RayF(worldDir, position),
+                             tMin, FLT_MAX, coneAperture);
+            // TODO: change this
+            incRadiances[i] = (isLeaf) ? svo.ReadRadiance(nodeId, true, -worldDir) : 1.0f;
+            //incRadiances[i] = 1.0f;
         }
         // We finished tracing rays from the scene
         // Now generate distribution from the data
@@ -1061,25 +1076,42 @@ static void KCGenAndSampleDistribution(// Output
 
         // Sync every thread before processing another bin
         __syncthreads();
-
-        //for(uint32_t rayIndex = 0; rayIndex < sRayCount; rayIndex++)
-        //{
-        //    incRadiances[0] *= rayIndex * 10.f;
-        //    incRadiances[1] *= rayIndex * 10.f;
-        //    BlockPWC2D dist2D(sPWCMem, incRadiances);
-
-        //    if(IsMainThread())
-        //    {
-        //        float pdf;
-        //        Vector2f index;
-        //        Vector2f uv = dist2D.Sample(pdf, index, rng);
-
-        //        uint32_t rayId = gRayIds[sOffsetStart + rayIndex];
-        //        // Store the sampled direction of the ray
-        //        gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
-        //        gRayAux[rayId].guidePDF = pdf;
-        //    }
-        //    __syncthreads();
-        //}
     }
+}
+
+__device__
+static float GenConeAperture(const GPUCameraI& gCamera,
+                             const Vector2i& resolution)
+{
+    Vector2f fov = gCamera.FoV();
+    float coneAngleX = fov[0] / static_cast<float>(resolution[0]);
+    float coneAngleY = fov[1] / static_cast<float>(resolution[1]);
+    // Return average
+    return (coneAngleX + coneAngleY) * 0.5f;
+}
+
+__global__
+static void KCGenConeApertureFromObject(// Output
+                                        float& gConeAperture,
+                                        // Input
+                                        const GPUCameraI& gCamera,
+                                        // Constants
+                                        Vector2i resolution)
+{
+
+    if(threadIdx.x != 0) return;
+    gConeAperture = GenConeAperture(gCamera, resolution);
+}
+
+__global__
+static void KCGenConeApertureFromArray(// Output
+                                       float& gConeAperture,
+                                       // Input
+                                       const GPUCameraI** gCameras,
+                                       const uint32_t sceneCamId,
+                                       // Constants
+                                       Vector2i resolution)
+{
+    if(threadIdx.x != 0) return;
+    gConeAperture = GenConeAperture(*gCameras[sceneCamId], resolution);
 }
