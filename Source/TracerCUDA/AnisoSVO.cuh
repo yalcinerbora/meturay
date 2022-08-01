@@ -57,20 +57,25 @@ struct VoxelPayload
                                         // Last field holds the specularity of the location; again it is
                                         // normalized 8-bit integer, 0 means fully diffuse and 1 means
                                         // perfectly specular.
-    uint8_t*    dGuidingFactorLeaf;     // Guiding metric which is used to determine if this location
-                                        // of the scene should be guided by the algorithm or not
-                                        // this value is used stochastically.
+    uint8_t*   dGuidingFactorLeaf;      // Guiding metric which is used to determine if this location
+                                        // of the scene should be guided by the algorithm or not.
+                                        // this value is used stochastically. It is UNORM-8.
     // Node Data
     Vector2h*   dAvgIrradianceNode;     // Same as above but for nodes
     uint32_t*   dNormalAndSpecNode;
-    Vector2f*   dGuidingFactorNode;     // ...........................
+    uint8_t*    dGuidingFactorNode;     // ...........................
 
-    // Unpacking Data
+    // Read Routines
     __device__
-    Vector3f            UnpackNormalSpecular(float& stdDev, float& specularity,
-                                             uint32_t nodeIndex, bool isLeaf);
-    //__device__
-    //float               UnpackGuidingFactor(uint32_t nodeIndex, bool isLeaf);
+    Vector3f            ReadNormalAndSpecular(float& stdDev, float& specularity,
+                                              uint32_t nodeIndex, bool isLeaf);
+
+    __device__
+    float               ReadIrradiance(const Vector3f& coneDirection, float coneAperture,
+                                       uint32_t nodeIndex, bool isLeaf);
+    __device__
+    float               ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf);
+
 
     // Size Related (per voxel and total)
     static size_t       BytePerLeaf();
@@ -284,8 +289,8 @@ class AnisoSVOctreeCPU
 };
 
 __device__ inline
-Vector3f VoxelPayload::UnpackNormalSpecular(float& stdDev, float& specularity,
-                                            uint32_t nodeIndex, bool isLeaf)
+Vector3f VoxelPayload::ReadNormalAndSpecular(float& stdDev, float& specularity,
+                                             uint32_t nodeIndex, bool isLeaf)
 {
     uint32_t* gFetchArray = (isLeaf) ? dNormalAndSpecLeaf : dNormalAndSpecNode;
     uint32_t packedData = gFetchArray[nodeIndex];
@@ -295,18 +300,49 @@ Vector3f VoxelPayload::UnpackNormalSpecular(float& stdDev, float& specularity,
     normal[1] = static_cast<float>((packedData >> NORMAL_Y_OFFSET) & NORMAL_Y_BIT_MASK) * UNORM_9_FACTOR - SNORM_9_OFFSET;
     normal[2] = sqrtf(1.0f - normal[0] * normal[0] - normal[1] * normal[1]);
 
-    stdDev = static_cast<float>((packedData >> NORMAL_STD_DEV_OFFSET) & NORMAL_STD_DEV_BIT_MASK) * UNORM_6_FACTOR;
+    float normalLength = static_cast<float>((packedData >> NORMAL_STD_DEV_OFFSET) & NORMAL_STD_DEV_BIT_MASK) * UNORM_6_FACTOR;
     specularity = static_cast<float>((packedData >> SPECULAR_OFFSET) & SPECULAR_BIT_MASK) * UNORM_8_FACTOR;
+
+    // Toksvig 2004
+    stdDev = (1.0f - stdev) / stdDev;
 
     return normal;
 }
 
-//__device__
-//float VoxelPayload::UnpackGuidingFactor(uint32_t nodeIndex, bool isLeaf)
-//{
-//    Vector2f packedData = dGuidingFactorNode[nodeIndex];
-//    return static_cast<float>(packedData) * UNORM_8_FACTOR;
-//}
+__device__ inline
+float VoxelPayload::ReadIrradiance(const Vector3f& coneDirection,
+                                   float coneAperture,
+                                   uint32_t nodeIndex, bool isLeaf)
+{
+    Vector2h* gIrradArray = (isLeaf) ? dAvgIrradianceLeaf : dAvgIrradianceNode;
+
+    float normalDeviation, specularity;
+    // Fetch normal to estimate the surface confidence
+    Vector3f normal = ReadNormalAndSpecular(normalDeviation, specularity,
+                                            uint32_t nodeIndex, bool isLeaf);
+
+    // TODO: Implement radiance distribution incorporation
+    // Generate a Gaussian using the bit quadtree for outgoing radiance
+    // Incorporate normal, (which also is a gaussian)
+    // Convolve all these three to generate an analytic function (freq domain)
+    // All functions are gaussians so fourier transform is analytic
+    // Convert it back
+    // Sample the value using tetha (coneDir o normal)
+
+    // Currently we are just fetching irradiance
+    // which side are we on
+    bool towardsNormal = (coneDirection.Dot(normal) >= 0.0f);
+    uint32_t index = towardsNormal ? 0 : 1;
+
+    return gIrradArray[nodeIndex][index];
+}
+
+__device__ inline
+float VoxelPayload::ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf)
+{
+    half* gGuidingFactorArray = (isLeaf) ? dGuidingFactorLeaf : dGuidingFactorNode;
+    return gGuidingFactorArray[nodeIndex];
+}
 
 inline
 size_t VoxelPayload::BytePerLeaf()
