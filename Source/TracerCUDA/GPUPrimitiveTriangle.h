@@ -19,6 +19,7 @@ All of them should be provided
 #include "RayLib/PrimitiveDataTypes.h"
 #include "RayLib/Vector.h"
 #include "RayLib/Triangle.h"
+#include "RayLib/CoordinateConversion.h"
 
 #include "RNGenerator.h"
 #include "GPUPrimitiveP.cuh"
@@ -381,6 +382,7 @@ struct TriFunctions
 
     __device__ inline
     static uint32_t Voxelize(uint64_t* gVoxMortonCodes,
+                             Vector2us* gVoxelNormals,
                              uint32_t voxIndMaxCount,
                              // Inputs
                              bool onlyCalcSize,
@@ -434,6 +436,13 @@ struct TriFunctions
         int domAxis = normal.Abs().Max();
         bool hasNegSign = signbit(normal[domAxis]);
         float domSign = hasNegSign ? -1.0f : 1.0f;
+
+        // Calculate Spherical UV Coordinates of the normal
+        Vector2f sphrCoords = Utility::CartesianToSphericalUnit(normal);
+        sphrCoords[0] = (sphrCoords[0] + MathConstants::Pi) * MathConstants::InvPi * 0.5f;
+        sphrCoords[1] = sphrCoords[1] * MathConstants::InvPi;
+        Vector2us sphrUnorm = Vector2us(static_cast<uint16_t>(sphrCoords[0] * 65535.0f),
+                                        static_cast<uint16_t>(sphrCoords[1] * 65535.0f));
 
         // Look towards to the dominant axis
         QuatF rot;
@@ -556,7 +565,7 @@ struct TriFunctions
                 float actualA = 1.0f - actualB - actualC;
 
                 // TODO:
-                // This code is not proper. You need to multi-sample
+                // This code below is not proper. You need to multi-sample
                 // or utilize proper mip-map level fetching
                 // METUray does not hold mipmapped alpha maps
                 // (in this case it should be conservative)
@@ -593,7 +602,10 @@ struct TriFunctions
                     // Write the found voxel
                     assert(writeIndex < voxIndMaxCount);
                     if(writeIndex < voxIndMaxCount)
+                    {
                         gVoxMortonCodes[writeIndex] = voxelIndexMorton;
+                        gVoxelNormals[writeIndex] = sphrUnorm;
+                    }
                 };
                 writeIndex++;
             }

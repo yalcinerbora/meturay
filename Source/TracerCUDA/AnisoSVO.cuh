@@ -57,13 +57,16 @@ struct VoxelPayload
                                         // Last field holds the specularity of the location; again it is
                                         // normalized 8-bit integer, 0 means fully diffuse and 1 means
                                         // perfectly specular.
-    uint8_t*   dGuidingFactorLeaf;      // Guiding metric which is used to determine if this location
+    uint8_t*    dGuidingFactorLeaf;     // Guiding metric which is used to determine if this location
                                         // of the scene should be guided by the algorithm or not.
                                         // this value is used stochastically. It is UNORM-8.
+    uint64_t*   dMicroQuadTreeLeaf;     // Micro partition tree of the irradiance
+
     // Node Data
     Vector2h*   dAvgIrradianceNode;     // Same as above but for nodes
     uint32_t*   dNormalAndSpecNode;
-    uint8_t*    dGuidingFactorNode;     // ...........................
+    uint8_t*    dGuidingFactorNode;
+    uint64_t*   dMicroQuadTreeNode;
 
     // Read Routines
     __device__
@@ -104,7 +107,7 @@ class AnisoSVOctreeGPU
     using AnisoCount = AnisoData<uint32_t>;
 
     private:
-    static constexpr uint32_t LAST_BIT_UINT32 = (sizeof(uint32_t) * BYTE_BITS - 1);
+    static constexpr uint16_t LAST_BIT_UINT16 = (sizeof(uint16_t) * BYTE_BITS - 1);
 
     static constexpr uint64_t IS_LEAF_BIT_COUNT     = 1;
     static constexpr uint64_t CHILD_MASK_BIT_COUNT  = 8;
@@ -156,9 +159,9 @@ class AnisoSVOctreeGPU
                                                           const Vector3f& direction);
 
     // Bin info related packing operations
-    __device__ static bool      IsBinMarked(uint32_t binInfo);
-    __device__ static void      SetBinAsMarked(uint32_t& gNodeBinInfo);
-    __device__ static uint32_t  GetRayCount(uint32_t binInfo);
+    __device__ static bool      IsBinMarked(uint16_t binInfo);
+    __device__ static void      SetBinAsMarked(uint16_t& gNodeBinInfo);
+    __device__ static uint16_t  GetRayCount(uint16_t binInfo);
 
     private:
     // Generic Data
@@ -166,12 +169,12 @@ class AnisoSVOctreeGPU
     // SVO Data
     uint64_t*           dNodes;         // children ptr (28) parent ptr (27), child mask, leafBit
     AnisoRadiance*      dRadianceRead;  // Anisotropic emitted radiance (normalized)
-    uint32_t*           dBinInfo;       // MSB is "isCollapsed" bit
+    uint16_t*           dBinInfo;       // MSB is "isCollapsed" bit
     // Leaf Data (Leafs does not have nodes,
     // if leaf bit is set on parent children ptr points to these)
     uint32_t*           dLeafParents;
     AnisoRadiance*      dLeafRadianceRead;  // Anisotropic emitted radiance (normalized)
-    uint32_t*           dLeafBinInfo;       // MSB is "isCollapsed" bit
+    uint16_t*           dLeafBinInfo;       // MSB is "isCollapsed" bit
 
     // Actual average radiance for each location (used full precision here for running average)
     AnisoRadianceF*     dLeafRadianceWrite;
@@ -242,6 +245,10 @@ class AnisoSVOctreeGPU
     uint32_t            VoxelResolution() const;
     __device__
     AABB3f              OctreeAABB() const;
+
+    // Convenience Functions
+    __device__
+    static uint16_t     AtomicAddUInt16(uint16_t* gLocation, uint16_t value);
 };
 
 class AnisoSVOctreeCPU
@@ -304,7 +311,7 @@ Vector3f VoxelPayload::ReadNormalAndSpecular(float& stdDev, float& specularity,
     specularity = static_cast<float>((packedData >> SPECULAR_OFFSET) & SPECULAR_BIT_MASK) * UNORM_8_FACTOR;
 
     // Toksvig 2004
-    stdDev = (1.0f - stdev) / stdDev;
+    stdDev = (1.0f - normalLength) / normalLength;
 
     return normal;
 }
@@ -319,7 +326,7 @@ float VoxelPayload::ReadIrradiance(const Vector3f& coneDirection,
     float normalDeviation, specularity;
     // Fetch normal to estimate the surface confidence
     Vector3f normal = ReadNormalAndSpecular(normalDeviation, specularity,
-                                            uint32_t nodeIndex, bool isLeaf);
+                                            nodeIndex, isLeaf);
 
     // TODO: Implement radiance distribution incorporation
     // Generate a Gaussian using the bit quadtree for outgoing radiance
@@ -340,7 +347,7 @@ float VoxelPayload::ReadIrradiance(const Vector3f& coneDirection,
 __device__ inline
 float VoxelPayload::ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf)
 {
-    half* gGuidingFactorArray = (isLeaf) ? dGuidingFactorLeaf : dGuidingFactorNode;
+    uint8_t* gGuidingFactorArray = (isLeaf) ? dGuidingFactorLeaf : dGuidingFactorNode;
     return gGuidingFactorArray[nodeIndex];
 }
 
@@ -348,14 +355,15 @@ inline
 size_t VoxelPayload::BytePerLeaf()
 {
     return (sizeof(Vector2f) + sizeof(Vector2ui) +
-            sizeof(Vector2h) + sizeof(uint32_t));
+            sizeof(Vector2h) + sizeof(uint32_t) +
+            sizeof(uint8_t) + sizeof(uint64_t));
 }
 
 inline
 size_t VoxelPayload::BytePerNode()
 {
     return (sizeof(Vector2h) + sizeof(uint32_t) +
-            sizeof(uint8_t));
+            sizeof(uint8_t) + sizeof(uint64_t));
 }
 
 inline
@@ -426,6 +434,24 @@ T AnisoSVOctreeGPU::AnisoData<T>::Read(const Vector4uc& indices,
     T b = LerpFunc(Read(indices[2]), Read(indices[3]), interp[0]);
     T result = LerpFunc(a, b, interp[1]);
     return result;
+}
+
+__device__ inline
+uint16_t AnisoSVOctreeGPU::AtomicAddUInt16(uint16_t* location, uint16_t value)
+{
+    // Atomic add of 16-bit integer using CAS Atomics
+    // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
+    uint16_t assumed;
+    uint16_t old = *location;
+    do
+    {
+        assumed = old;
+        // Actual Operation
+        uint16_t result = assumed + value;
+        old = atomicCAS(location, assumed, result);
+    }
+    while(assumed != old);
+    return old;
 }
 
 __device__ inline
@@ -607,22 +633,22 @@ Vector4uc AnisoSVOctreeGPU::DirectionToAnisoLocations(Vector2h& interp,
 }
 
 __device__ inline
-bool AnisoSVOctreeGPU::IsBinMarked(uint32_t rayCounts)
+bool AnisoSVOctreeGPU::IsBinMarked(uint16_t rayCounts)
 {
-    return (rayCounts >> LAST_BIT_UINT32) & 0b1;
+    return (rayCounts >> LAST_BIT_UINT16) & 0b1;
 }
 
 __device__ inline
-void AnisoSVOctreeGPU::SetBinAsMarked(uint32_t& gNodeRayCount)
+void AnisoSVOctreeGPU::SetBinAsMarked(uint16_t& gNodeRayCount)
 {
-    uint32_t expandedBoolean = (1u << LAST_BIT_UINT32);
+    uint16_t expandedBoolean = (1u << LAST_BIT_UINT16);
     gNodeRayCount |= expandedBoolean;
 }
 
 __device__ inline
-uint32_t AnisoSVOctreeGPU::GetRayCount(uint32_t binInfo)
+uint16_t AnisoSVOctreeGPU::GetRayCount(uint16_t binInfo)
 {
-    return binInfo & ((1u << LAST_BIT_UINT32) - 1);
+    return binInfo & ((1u << LAST_BIT_UINT16) - 1);
 }
 
 __device__ inline
@@ -950,7 +976,7 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 __device__ inline
 void AnisoSVOctreeGPU::IncrementLeafRayCount(uint32_t leafIndex)
 {
-    atomicAdd(dLeafBinInfo + leafIndex, 1u);
+    AtomicAddUInt16(dLeafBinInfo + leafIndex, 1u);
 }
 
 __device__ inline

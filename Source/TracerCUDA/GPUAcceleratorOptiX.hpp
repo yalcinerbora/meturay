@@ -870,6 +870,7 @@ void GPUAccOptiXGroup<PGroup>::EachPrimVoxelCount(// Output
 template <class PGroup>
 void GPUAccOptiXGroup<PGroup>::VoxelizeSurfaces(// Outputs
                                                 uint64_t* dVoxels,
+                                                Vector2us* dVoxelNormals,
                                                 HitKey* gVoxelLightKeys,
                                                 // Inputs
                                                 const uint64_t* dVoxelOffsets, // For each primitive
@@ -912,6 +913,7 @@ void GPUAccOptiXGroup<PGroup>::VoxelizeSurfaces(// Outputs
                        KCVoxelizePrims<PGroup>,
                        // Outputs
                        dVoxels,
+                       dVoxelNormals,
                        gVoxelLightKeys,
                        // Inputs
                        dVoxelOffsets,

@@ -18,6 +18,8 @@
 #include <CLI11.hpp>
 #include <array>
 
+#include <random>
+
 int main(int argc, const char* argv[])
 {
     // Fancy CMD
@@ -33,7 +35,7 @@ int main(int argc, const char* argv[])
     // Header
     const std::string BundleName = ProgramConstants::ProgramName;
     const std::string AppName = "MRay";
-    const std::string Description = "Single Platform CPU Renderer and Visualizer";
+    const std::string Description = "Single Platform GPU Renderer and Visualizer";
     const std::string header = (BundleName + " - " + AppName + " " + Description);
 
     // Command Line Arguments

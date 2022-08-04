@@ -461,7 +461,7 @@ static void KCGetVoxelCount(//Output
         PrimitiveId primId = gLeafs[globalId].primitiveId;
 
         // Voxelize the geom to the global memory
-        uint32_t voxCount = VoxelizeFunc(nullptr, 0,
+        uint32_t voxCount = VoxelizeFunc(nullptr, nullptr, 0,
                                          true,
                                          primId,
                                          primData,
@@ -477,6 +477,7 @@ template <class PGroup>
 __global__
 static void KCVoxelizePrims(//Outputs
                             uint64_t* gVoxels,
+                            Vector2us* gVoxelNormals,
                             HitKey* gVoxelLightKeys, // For each voxel
                             // Inputs
                             const uint64_t* gVoxOffsets, // For each primitive
@@ -504,6 +505,7 @@ static void KCVoxelizePrims(//Outputs
         // Allocate a segment on the allocated array using atomics)
         // CC 6 or better
         uint64_t* gLocalVoxelStart = gVoxels + voxStart;
+        Vector2us* gLocalNormalStart = gVoxelNormals + voxStart;
 
         // Fetch Transform
         const GPUTransformI* t = gTransforms[gTransformIds[globalId]];
@@ -511,6 +513,7 @@ static void KCVoxelizePrims(//Outputs
 
         // Voxelize the geom to the global memory
         [[maybe_unused]] uint32_t voxCountOut = VoxelizeFunc(gLocalVoxelStart,
+                                                             gLocalNormalStart,
                                                              voxCount,
                                                              false,
                                                              primId,

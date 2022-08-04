@@ -98,7 +98,7 @@ class WFPGTracer final : public RayTracer
 
         // TODO: Change
         // Temporarily store the current camera
-        // For SVO_RADIANCE MOde
+        // For SVO_RADIANCE Mode
         enum CameraType
         {
             SCENE_CAMERA,

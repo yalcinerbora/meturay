@@ -13,6 +13,7 @@
 #include "ParallelReduction.cuh"
 #include "ParallelScan.cuh"
 #include "ParallelMemset.cuh"
+#include "ParallelSequence.cuh"
 #include "BinarySearch.cuh"
 
 #include <cub/cub.cuh>
@@ -201,87 +202,150 @@ void KCSetParentOfLeafChildren(uint32_t* gLeafParents,
 }
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
-void KCDepositInitialLightRadiance(// I-O
-                                   AnisoSVOctreeGPU treeGPU,
-                                   // Input
-                                   const HitKey* gVoxelLightKeys,
-                                   const uint32_t* gVoxelLightOffsets,
-                                   const uint64_t* gUniqueVoxels,
-                                   // Binary Search for light
-                                   const HitKey* gLightKeys,
-                                   const GPULightI** gLights,
-                                   uint32_t lightCount,
-                                   // Constants
-                                   uint32_t uniqueVoxCount,
-                                   uint32_t lightKeyCount,
-                                   const AABB3f svoAABB,
-                                   uint32_t resolutionXYZ)
+void KCReduceVoxelPayload(// I-O
+                          AnisoSVOctreeGPU treeGPU,
+                          // Input
+                          const uint32_t* gVoxelIndexOffsets,
+                          const uint64_t* gUniqueVoxels,
+                          // non-unique voxel index array
+                          const uint32_t* gSortedVoxelIndices,
+                          // Voxel payload that will be reduced
+                          const HitKey* gVoxelLightKeys,
+                          const Vector2us* gVoxelNormals,
+                          // Binary Search for light
+                          const HitKey* gLightKeys,
+                          const GPULightI** gLights,
+                          uint32_t lightCount,
+                          // Constants
+                          uint32_t uniqueVoxCount,
+                          uint32_t lightKeyCount,
+                          const AABB3f svoAABB,
+                          uint32_t resolutionXYZ)
 {
+    // At most this value of voxels will be processed to cluster normals
+    static constexpr uint32_t MAX_CLUSTERED_VOXEL_COUNT = 8;
+
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < lightKeyCount;
+        threadId < uniqueVoxCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        HitKey lightKey = gVoxelLightKeys[threadId];
-        if(lightKey == HitKey::InvalidKey)
-            continue;
-
-        float index;
-        // Binary search the light with key
-        bool found = GPUFunctions::BinarySearchInBetween(index, lightKey,
-                                                         gLightKeys, lightCount);
-        uint32_t lightIndex = static_cast<uint32_t>(index);
-        assert(found);
-        if(!found)
-        {
-            KERNEL_DEBUG_LOG("Error: SVO light not found!\n");
-            continue;
-        }
-
-        // Binary search the voxel morton code with threadId
-        found = GPUFunctions::BinarySearchInBetween(index, threadId,
-                                                    gVoxelLightOffsets, uniqueVoxCount);
-        uint32_t voxelIndex = static_cast<uint32_t>(index);
-        assert(found);
-        if(!found)
-        {
-            KERNEL_DEBUG_LOG("Error: SVO voxel not found!\n");
-            continue;
-        }
-
-        uint64_t mortonCode = gUniqueVoxels[voxelIndex];
-        // Traverse down the tree using tree's code
-        // Generate world position from morton code
+        // Voxel Key (Morton Code)
+        uint64_t mortonCode = gUniqueVoxels[threadId];
+        // And converted world position
         Vector3ui denseIndex = MortonCode::Decompose<uint64_t>(mortonCode);
         Vector3f worldPos = treeGPU.VoxelToWorld(denseIndex);
 
-        uint32_t leafIndex;
-        found = treeGPU.LeafIndex(leafIndex, worldPos);
-        if(!found)
-        {
-            KERNEL_DEBUG_LOG("Error: SVO leaf not found!\n");
-            continue;
-        }
-        // Atomically average (add) the light radiance
-        // to the leaf voxel
-        const GPULightI* gLight = gLights[lightIndex];
 
+        Vector2ui reduceRange = Vector2ui(gVoxelIndexOffsets[threadId],
+                                          gVoxelIndexOffsets[threadId + 1]);
+        uint32_t dupVoxCount = reduceRange[1] - reduceRange[0];
+
+        // First do a clustering of the normals
+        // For each colliding voxel
+        Vector3f normals[MAX_CLUSTERED_VOXEL_COUNT];
         #pragma unroll
-        for(int i = 0; i < AnisoSVOctreeGPU::VOXEL_DIRECTION_COUNT; i++)
+        for(uint32_t i = 0; i < MAX_CLUSTERED_VOXEL_COUNT; i++)
         {
-            Vector3f dir = AnisoSVOctreeGPU::VoxelDirection(i);
+            if(i < dupVoxCount)
+            {
+                uint32_t index = gSortedVoxelIndices[reduceRange[0] + i];
+                Vector2us normal = gVoxelNormals[index];
 
-            // TODO:
-            // Emit function needs UV surface
-            // Currently it is not used (neither normal or uv
-            // is needed for the implemented light sources).
-            //
-            // Also Emit function does not respect normal
-            // orientation, it should
-            Vector3f radiance = gLight->Emit(dir, worldPos,
-                                             UVSurface{});
-            float radianceF = Utility::RGBToLuminance(radiance);
-            treeGPU.DepositRadiance(worldPos, dir, radianceF);
+                Vector2f normalSphr = Vector2f(static_cast<float>(normal[0]) / 65535.0f,
+                                               static_cast<float>(normal[1]) / 65535.0f);
+                normalSphr[0] *= MathConstants::Pi * 2.0f - MathConstants::Pi;
+                normalSphr[1] *= MathConstants::Pi;
+                normals[i] = Utility::SphericalToCartesianUnit(normalSphr);
+
+            }
+            else normals[i] = Zero3f;
         }
+
+        // Mean calculation variables
+        Vector3f normalMeans[2][2] = {{normals[0], normals[1]},
+                                      {Zero3f, Zero3f}};
+        // Cluster id of each normal
+        uint8_t clusterIds[MAX_CLUSTERED_VOXEL_COUNT];
+
+        uint8_t availableNormalCount = min(MAX_CLUSTERED_VOXEL_COUNT, dupVoxCount);
+        uint32_t meanBufferId = 0;
+        // Do 2-means clustering
+        static constexpr uint32_t K_MEANS_CLUSTER_ITER_COUNT = 4;
+        #pragma unroll
+        for(uint32_t l = 0; l < K_MEANS_CLUSTER_ITER_COUNT; l++)
+        {
+            for(uint32_t i = 0; i < availableNormalCount; i++)
+            {
+                // Calculate offsets
+                float angularDist0 = normalMeans[meanBufferId][0].Dot(normals[i]);
+                float angularDist1 = normalMeans[meanBufferId][1].Dot(normals[i]);
+
+                uint32_t updateIndex = (angularDist0 < angularDist1) ? 0 : 1;
+                normalMeans[(meanBufferId + 1) % 2][updateIndex] += normals[i];
+                clusterIds[i] = updateIndex;
+            }
+
+            // One iteration done calculate actual mean by normalizing;
+            // Reset for next iteration
+            normalMeans[meanBufferId][0] = Zero3f;
+            normalMeans[meanBufferId][1] = Zero3f;
+
+            // Swap mean buffers
+            meanBufferId = (meanBufferId + 1) % 2;
+
+            // Calculate actual mean
+            normalMeans[meanBufferId][0].NormalizeSelf();
+            normalMeans[meanBufferId][1].NormalizeSelf();
+        }
+
+        // We estimated some normals using clustering.
+        // Now find the variance and select the smaller cluster for the actual normal
+        // TODO: Change this
+        Vector3f combinedNormal = normalMeans[meanBufferId][0];
+
+        // Then calculate the light luminance for each non unique voxel
+        // For each colliding voxel
+        Vector2f combinedLuminance = Zero2f;
+        for(uint32_t i = 0; i < dupVoxCount; i++)
+        {
+            // Get Index
+            uint32_t voxelIndex = gSortedVoxelIndices[reduceRange[0] + i];
+            HitKey lightKey = gVoxelLightKeys[voxelIndex];
+
+            // Skip if it is not a light
+            if(lightKey == HitKey::InvalidKey) continue;
+
+            // Binary search the light with key
+            float lightIndexF;
+            bool found = GPUFunctions::BinarySearchInBetween(lightIndexF, lightKey,
+                                                             gLightKeys, lightCount);
+            uint32_t lightIndex = static_cast<uint32_t>(lightIndexF);
+            assert(found);
+            if(!found)
+            {
+                KERNEL_DEBUG_LOG("Error: SVO light not found!\n");
+                continue;
+            }
+            const GPULightI* gLight = gLights[lightIndex];
+
+            // Query both sides of the surface
+            // Towards normal
+            Vector3f radiance = gLight->Emit(combinedNormal, worldPos, UVSurface{});
+            combinedLuminance[0] += Utility::RGBToLuminance(radiance);
+
+            // Query both sides of the surface
+            radiance = gLight->Emit(-combinedNormal, worldPos, UVSurface{});
+            combinedLuminance[1] += Utility::RGBToLuminance(radiance);
+        }
+        // Don't forget to average
+        combinedLuminance /= static_cast<float>(dupVoxCount);
+
+        // We are setting initial sample count to this voxel
+        // there shouldn't be any updates to this voxel anyway but just to be sure
+        uint32_t initialSampleCount = 10'000;
+        // Set the combined values
+        treeGPU.SetLeafRadiance(mortonCode, combinedLuminance, initialSampleCount);
+        treeGPU.SetLeafNormal(mortonCode, combinedNormal);
     }
 }
 
@@ -319,7 +383,7 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCCollapseRayCounts(// I-O
-                         uint32_t* gBinInfo,
+                         uint16_t* gBinInfo,
                          // Input
                          const uint64_t* gNodes,
                          // Constants
@@ -350,7 +414,7 @@ void KCCollapseRayCounts(// I-O
         if(rayCount < minRayCount)
         {
             uint32_t parent = AnisoSVOctreeGPU::ParentIndex(gNodes[nodeId]);
-            atomicAdd(gBinInfo + parent, rayCount);
+            AnisoSVOctreeGPU::AtomicAddUInt16(gBinInfo + parent, rayCount);
         }
         // We have enough rays in this node use it as is
         else
@@ -362,8 +426,8 @@ void KCCollapseRayCounts(// I-O
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCCollapseRayCountsLeaf(// I-O
-                             uint32_t* gLeafBinInfo,
-                             uint32_t* gBinInfo,
+                             uint16_t* gLeafBinInfo,
+                             uint16_t* gBinInfo,
                              // Input
                              const uint32_t* gLeafParents,
                              // Constants
@@ -384,7 +448,7 @@ void KCCollapseRayCountsLeaf(// I-O
             continue;
         }
         // Fetch Ray Count
-        uint32_t rayCount = AnisoSVOctreeGPU::GetRayCount(gLeafBinInfo[threadId]);
+        uint16_t rayCount = AnisoSVOctreeGPU::GetRayCount(gLeafBinInfo[threadId]);
         if(rayCount == 0) continue;
 
         // If ray count is not enough on this voxel
@@ -392,7 +456,7 @@ void KCCollapseRayCountsLeaf(// I-O
         if(rayCount < minRayCount)
         {
             uint32_t parent = gLeafParents[threadId];
-            atomicAdd(gBinInfo + parent, rayCount);
+            AnisoSVOctreeGPU::AtomicAddUInt16(gBinInfo + parent, rayCount);
         }
         // We have enough rays in this node use it as is
         else
@@ -559,12 +623,20 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                           sizeof(uint64_t), cudaMemcpyDeviceToHost));
 
     // Allocate enough memory for temp voxels (these may overlap)
-    uint64_t* dVoxels;
+    Vector2us* dVoxelNormals;
     HitKey* dVoxelLightKeys;
+
+    uint64_t* dVoxels;
+    uint32_t* dVoxelIndices;
     DeviceMemory voxelMemory;
-    GPUMemFuncs::AllocateMultiData(std::tie(dVoxels, dVoxelLightKeys),
+    GPUMemFuncs::AllocateMultiData(std::tie(dVoxels, dVoxelIndices),
                                    voxelMemory,
                                    {hTotalVoxCount, hTotalVoxCount + 1});
+    DeviceMemory voxelPayloadMemory;
+    GPUMemFuncs::AllocateMultiData(std::tie(dVoxelNormals,
+                                            dVoxelLightKeys),
+                                   voxelPayloadMemory,
+                                   {hTotalVoxCount, hTotalVoxCount});
 
     // Generate Light / HitKey sorted array (for binary search)
     const CudaGPU& gpu = system.BestGPU();
@@ -587,6 +659,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
 
     }
 
+    // Generate Iota for sorting
+    IotaGPU(dVoxelIndices, 0u, hTotalVoxCount);
+
     // For each accelerator
     // Actually rasterize the primitives
     // and push to the memory (find the light key; if available, here)
@@ -595,6 +670,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     {
         accel->VoxelizeSurfaces(// Outputs
                                 dVoxels,
+                                dVoxelNormals,
                                 dVoxelLightKeys,
                                 // Inputs
                                 dVoxelOffsets + primOffsets[i],
@@ -622,7 +698,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     size_t scanTempMemSize;
 
     uint64_t* dSortedVoxels = nullptr;
-    HitKey* dSortedVoxelKeys = nullptr;
+    uint32_t* dSortedVoxelIndices = nullptr;
     // Duplicate counts
     uint32_t* dDuplicateCounts = nullptr;
     uint32_t* dUniqueVoxelCount = nullptr;
@@ -634,7 +710,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                              static_cast<uint32_t>(hTotalVoxCount + 1)));
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(nullptr, sortTempMemSize,
                                                dVoxels, dSortedVoxels,
-                                               dVoxelLightKeys, dSortedVoxelKeys,
+                                               dVoxelIndices, dSortedVoxelIndices,
                                                static_cast<uint32_t>(hTotalVoxCount),
                                                0, treeGPU.leafDepth * 3 + 1));
     CUDA_CHECK(cub::DeviceRunLengthEncode::Encode(nullptr,
@@ -647,18 +723,18 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
 
     // Allocation
     DeviceMemory sortedVoxelMemory;
-    GPUMemFuncs::AllocateMultiData(std::tie(dSortedVoxels, dSortedVoxelKeys,
+    GPUMemFuncs::AllocateMultiData(std::tie(dSortedVoxels, dSortedVoxelIndices,
                                             dDuplicateCounts, dTempMemory,
                                             dUniqueVoxelCount),
                                    sortedVoxelMemory,
                                    {hTotalVoxCount, hTotalVoxCount,
-                                   hTotalVoxCount + 1, tempMemSize,
-                                   1});
+                                    hTotalVoxCount + 1, tempMemSize,
+                                    1});
 
     // Sort and RLE
     CUDA_CHECK(cub::DeviceRadixSort::SortPairs(dTempMemory, sortTempMemSize,
                                                dVoxels, dSortedVoxels,
-                                               dVoxelLightKeys, dSortedVoxelKeys,
+                                               dVoxelIndices, dSortedVoxelIndices,
                                                static_cast<uint32_t>(hTotalVoxCount),
                                                0, treeGPU.leafDepth * 3 + 1));
     CUDA_CHECK(cub::DeviceRunLengthEncode::Encode(dTempMemory,
@@ -673,18 +749,18 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                           cudaMemcpyDeviceToHost));
     assert(hUniqueVoxelCount <= hTotalVoxCount);
 
-    // Temp reuse the voxel keys array for scan operation
-    uint32_t* dLightKeyOffsets = reinterpret_cast<uint32_t*>(dVoxelLightKeys);
+    // Temp reuse the voxel indices array for scan operation
+    uint32_t* dVoxelIndexOffsets = reinterpret_cast<uint32_t*>(dVoxelIndices);
     CUDA_CHECK(cub::DeviceScan::ExclusiveSum(dTempMemory, scanTempMemSize,
-                                             dDuplicateCounts, dLightKeyOffsets,
+                                             dDuplicateCounts, dVoxelIndexOffsets,
                                              hUniqueVoxelCount + 1));
 
     // Copy the scanned result back to the duplicate counts variable
-    CUDA_CHECK(cudaMemcpy(dDuplicateCounts, dLightKeyOffsets,
+    CUDA_CHECK(cudaMemcpy(dDuplicateCounts, dVoxelIndexOffsets,
                           sizeof(uint32_t) * (hUniqueVoxelCount + 1),
                           cudaMemcpyDeviceToDevice));
     // Rename the allocated buffer to the proper name
-    uint32_t* dLightOffsets = dDuplicateCounts;
+    uint32_t* dIndexOffsets = dDuplicateCounts;
     dDuplicateCounts = nullptr;
 
     // Voxel are sorted and RLE is run
@@ -699,7 +775,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Now we can deallocate the large non-unique voxel buffers
     voxelMemory = DeviceMemory();
     dVoxels = nullptr;
-    dVoxelLightKeys = nullptr;
+    dVoxelIndices = nullptr;
 
     // Now Allocate another temp memory for SVO Construction
     uint32_t* dDiffBitBuffer = nullptr;
@@ -882,13 +958,16 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Call the kernel for it
     gpu.GridStrideKC_X(0, (cudaStream_t)0, hTotalVoxCount,
                        //
-                       KCDepositInitialLightRadiance,
+                       KCReduceVoxelPayload,
                        // I-O
                        treeGPU,
                        // Input
-                       dSortedVoxelKeys,
-                       dLightOffsets,
+                       dIndexOffsets,
                        dSortedUniqueVoxels,
+                       dSortedVoxelIndices, // This is non-unique (we need to reduce it)
+                       dVoxelLightKeys, // Voxel payload that will be reduced
+                       dVoxelNormals,   // Voxel payload that will be reduced
+
                        // Binary Search for light
                        dSortedLightKeys,
                        dSortedLights,
@@ -910,22 +989,15 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                               hUniqueVoxelCount * sizeof(float) +
                                               hUniqueVoxelCount * sizeof(half)) / 1024.0 / 1024.0;
 
-    double newStyleSize = static_cast<double>(// Irradiance Read
-                                              totalNodeCount * sizeof(Vector2h) +
-                                              hUniqueVoxelCount * sizeof(Vector2h) +
-                                              // Irradiance Write
-                                              hUniqueVoxelCount * sizeof(Vector2ui) +
-                                              hUniqueVoxelCount * sizeof(Vector2f) +
-                                              // Variance or Metric Write
-                                              hUniqueVoxelCount * sizeof(Vector2f) +
-                                              // Normals
-                                              totalNodeCount * sizeof(uint32_t) +
-                                              hUniqueVoxelCount * sizeof(uint32_t) +
-                                              // Metric Read
-                                              hUniqueVoxelCount * sizeof(Vector2h) +
-                                              totalNodeCount * sizeof(Vector2h)
-
-                                              ) / 1024.0 / 1024.0;
+    // New SVO size
+    double newStyleSize = static_cast<double>(VoxelPayload::TotalSize(totalNodeCount, hUniqueVoxelCount) +
+                                              // Pointer Hierarchy
+                                              sizeof(uint64_t) * totalNodeCount +
+                                              // Leaf parent pointers
+                                              sizeof(uint32_t) * hUniqueVoxelCount +
+                                              // Bin info
+                                              sizeof(uint32_t) * totalNodeCount +
+                                              sizeof(uint32_t) * hUniqueVoxelCount) / 1024.0 / 1024.0;
 
     METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB, Rad Cache {:.2f} MiB, If Irrad {:.2f} MiB), New {:.2f} MiB",
              treeGPU.nodeCount, treeGPU.leafCount,

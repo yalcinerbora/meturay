@@ -520,12 +520,13 @@ void GPUAccLinearGroup<PGroup>::EachPrimVoxelCount(// Output
                                                    const AABB3f& sceneAABB,
                                                    const CudaSystem& system) const
 {
-
+    METU_ERROR_LOG("Acc Linear did not implemented voxelize surfaces yet");
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::VoxelizeSurfaces(// Outputs
                                                  uint64_t* dVoxels,
+                                                 Vector2us* dVoxelNormals,
                                                  HitKey* gVoxelLightKeys,
                                                  // Inputs
                                                  const uint64_t* dVoxelOffsets, // For each primitive
@@ -537,5 +538,5 @@ void GPUAccLinearGroup<PGroup>::VoxelizeSurfaces(// Outputs
                                                  const AABB3f& sceneAABB,
                                                  const CudaSystem& system) const
 {
-
+    METU_ERROR_LOG("Acc Linear did not implemented voxelize surfaces yet");
 }

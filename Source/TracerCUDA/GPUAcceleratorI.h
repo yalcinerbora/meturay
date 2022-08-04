@@ -118,6 +118,7 @@ class GPUAcceleratorGroupI
                                                const CudaSystem& system) const = 0;
         virtual void        VoxelizeSurfaces(// Outputs
                                              uint64_t* dVoxels,
+                                             Vector2us* dVoxelNormals,
                                              HitKey* gVoxelLightKeys,
                                              // Inputs
                                              const uint64_t* dVoxelOffsets, // For each primitive
