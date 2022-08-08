@@ -255,14 +255,14 @@ void KCReduceVoxelPayload(// I-O
                                                static_cast<float>(normal[1]) / 65535.0f);
                 normalSphr[0] *= MathConstants::Pi * 2.0f - MathConstants::Pi;
                 normalSphr[1] *= MathConstants::Pi;
-                normals[i] = Utility::SphericalToCartesianUnit(normalSphr);
+                normals[i] = Utility::SphericalToCartesianUnit(normalSphr).Normalize();
 
             }
             else normals[i] = Zero3f;
         }
 
         // Mean calculation variables
-        Vector3f normalMeans[2][2] = {{normals[0], normals[1]},
+        Vector3f normalMeans[2][2] = {{normals[0], -normals[0]},
                                       {Zero3f, Zero3f}};
         // Cluster id of each normal
         uint8_t clusterIds[MAX_CLUSTERED_VOXEL_COUNT];
@@ -280,7 +280,7 @@ void KCReduceVoxelPayload(// I-O
                 float angularDist0 = normalMeans[meanBufferId][0].Dot(normals[i]);
                 float angularDist1 = normalMeans[meanBufferId][1].Dot(normals[i]);
 
-                uint32_t updateIndex = (angularDist0 < angularDist1) ? 0 : 1;
+                uint32_t updateIndex = (angularDist0 >= angularDist1) ? 0 : 1;
                 normalMeans[(meanBufferId + 1) % 2][updateIndex] += normals[i];
                 clusterIds[i] = updateIndex;
             }
@@ -339,12 +339,15 @@ void KCReduceVoxelPayload(// I-O
         }
         // Don't forget to average
         combinedLuminance /= static_cast<float>(dupVoxCount);
-
-        // We are setting initial sample count to this voxel
-        // there shouldn't be any updates to this voxel anyway but just to be sure
-        uint32_t initialSampleCount = 10'000;
-        // Set the combined values
-        treeGPU.SetLeafRadiance(mortonCode, combinedLuminance, initialSampleCount);
+        // Only Set Luminance if this voxel contains a light surface
+        if(combinedLuminance != Vector3f(0.0f))
+        {
+            // We are setting initial sample count to this voxel
+            // there shouldn't be any updates to this voxel anyway but just to be sure
+            Vector2ui initialSampleCount = Vector2ui(10'000);
+            // Set the combined values
+            treeGPU.SetLeafRadiance(mortonCode, combinedLuminance, initialSampleCount);
+        }
         treeGPU.SetLeafNormal(mortonCode, combinedNormal);
     }
 }
@@ -468,10 +471,10 @@ void KCCollapseRayCountsLeaf(// I-O
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCCCopyRadianceToHalfBufferLeaf(// I-O
-                                     AnisoSVOctreeGPU::AnisoRadiance* dLeafRadianceRead,
+                                     Vector2h* dLeafRadianceRead,
                                      // Input
-                                     const AnisoSVOctreeGPU::AnisoRadianceF* dLeafRadianceWrite,
-                                     const AnisoSVOctreeGPU::AnisoCount* dLeafSampleCountWrite,
+                                     const Vector2f* dLeafRadianceWrite,
+                                     const Vector2ui* dLeafSampleCountWrite,
                                      // Constants
                                      uint32_t leafCount,
                                      float totalRadianceScene)
@@ -480,51 +483,37 @@ void KCCCopyRadianceToHalfBufferLeaf(// I-O
         threadId < leafCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        AnisoSVOctreeGPU::AnisoRadianceF anisoRad = dLeafRadianceWrite[threadId];
-        AnisoSVOctreeGPU::AnisoCount anisoCount = dLeafSampleCountWrite[threadId];
-        AnisoSVOctreeGPU::AnisoRadiance anisoOut;
+        // Read from the value;
+        Vector2ui count = dLeafSampleCountWrite[threadId];
+        Vector2f irradiance = dLeafRadianceWrite[threadId];
+        Vector2f avgRadiance = Vector2f(irradiance[0] / static_cast<float>(count[0]),
+                                        irradiance[1] / static_cast<float>(count[1]));
+        // Avoid NaN if not accumulation occured
+        avgRadiance[0] = (count[0] == 0) ? 0.0f : avgRadiance[0];
+        avgRadiance[1] = (count[1] == 0) ? 0.0f : avgRadiance[1];
+        // Normalize & Clamp the half range for now
+        Vector2f irradClampled = Vector2f::Min(avgRadiance, Vector2f(MRAY_HALF_MAX));
 
-        for(int i = 0; i < AnisoSVOctreeGPU::VOXEL_DIR_DATA_COUNT; i++)
-        {
-            uint32_t count = anisoCount.Read(i);
-            float radClamped = 0.0f;
-            if(count != 0)
-            {
-                float radiance = anisoRad.Read(i);
-                float avgRadiance = radiance / count;
-                // Normalize & Clamp the half range for now
-                radClamped = fmin(MRAY_HALF_MAX, avgRadiance);
-            }
-            anisoOut.Write(i, radClamped);
-        }
-        dLeafRadianceRead[threadId] = anisoOut;
+        Vector2h irradHalf = Vector2h(irradClampled);
+        dLeafRadianceRead[threadId] = irradHalf;
     }
 }
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
-void KCConvertToAnisoFloat(AnisoSVOctreeGPU::AnisoRadianceF* gAnisoOut,
-                           const AnisoSVOctreeGPU::AnisoRadiance* gAnisoIn,
+void KCConvertToAnisoFloat(Vector2f* gAnisoOut,
+                           const Vector2h* gAnisoIn,
                            uint32_t anisoCount)
 {
-    using AnisoRadianceF = AnisoSVOctreeGPU::AnisoRadianceF;
-    using AnisoRadiance = AnisoSVOctreeGPU::AnisoRadiance;
-
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
         threadId < anisoCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        AnisoRadianceF& gOut = gAnisoOut[threadId];
-        AnisoRadiance in = gAnisoIn[threadId];
+        Vector2f& gOut = gAnisoOut[threadId];
+        Vector2h in = gAnisoIn[threadId];
 
-        gOut.data[0][0] = in.data[0][0];
-        gOut.data[0][1] = in.data[0][1];
-        gOut.data[0][2] = in.data[0][2];
-        gOut.data[0][3] = in.data[0][3];
 
-        gOut.data[1][0] = in.data[1][0];
-        gOut.data[1][1] = in.data[1][1];
-        gOut.data[1][2] = in.data[1][2];
-        gOut.data[1][3] = in.data[1][3];
+        gOut[0] = in[0];
+        gOut[1] = in[1];
     }
 }
 
@@ -841,26 +830,41 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // since we found out the total node count
     GPUMemFuncs::AllocateMultiData(std::tie(// Node Related,
                                             treeGPU.dNodes,
-                                            treeGPU.dRadianceRead,
                                             treeGPU.dBinInfo,
                                             // Leaf Related
                                             treeGPU.dLeafParents,
-                                            treeGPU.dLeafRadianceRead,
                                             treeGPU.dLeafBinInfo,
-                                            treeGPU.dLeafRadianceWrite,
-                                            treeGPU.dLeafSampleCountWrite,
+                                            // Payload Node
+                                            treeGPU.payload.dAvgIrradianceNode,
+                                            treeGPU.payload.dNormalAndSpecNode,
+                                            treeGPU.payload.dGuidingFactorNode,
+                                            treeGPU.payload.dMicroQuadTreeNode,
+                                            // Payload Leaf
+                                            treeGPU.payload.dTotalIrradianceLeaf,
+                                            treeGPU.payload.dSampleCountLeaf,
+                                            treeGPU.payload.dAvgIrradianceLeaf,
+                                            treeGPU.payload.dNormalAndSpecLeaf,
+                                            treeGPU.payload.dGuidingFactorLeaf,
+                                            treeGPU.payload.dMicroQuadTreeLeaf,
                                             // Node Offsets
                                             treeGPU.dLevelNodeOffsets),
                                    octreeMem,
-                                   {totalNodeCount, totalNodeCount,
-                                    totalNodeCount,
-                                    hUniqueVoxelCount, hUniqueVoxelCount,
-                                    hUniqueVoxelCount,
-                                    hUniqueVoxelCount, hUniqueVoxelCount,
-                                    levelNodeOffsets.size()});
+                                   {
+                                        // Node Related
+                                        totalNodeCount, totalNodeCount,
+                                        // Leaf Related
+                                        hUniqueVoxelCount, hUniqueVoxelCount,
+                                        // Payload Node
+                                        totalNodeCount, totalNodeCount,
+                                        totalNodeCount, totalNodeCount,
+                                        // Payload Leaf
+                                        hUniqueVoxelCount, hUniqueVoxelCount, hUniqueVoxelCount,
+                                        hUniqueVoxelCount, hUniqueVoxelCount, hUniqueVoxelCount,
+                                        // Offsets
+                                        levelNodeOffsets.size()
+                                   });
 
     // Set Node and leaf parents to max to early catch errors
-    // Rest is set to zero
     gpu.GridStrideKC_X(0, (cudaStream_t)0, totalNodeCount,
                        //
                        KCMemset<uint64_t>,
@@ -868,15 +872,14 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        treeGPU.dNodes,
                        AnisoSVOctreeGPU::INVALID_NODE,
                        totalNodeCount);
-    CUDA_CHECK(cudaMemset(treeGPU.dRadianceRead, 0x00, totalNodeCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance)));
-    CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, totalNodeCount * sizeof(uint64_t)));
-
     CUDA_CHECK(cudaMemset(treeGPU.dLeafParents, 0xFF, hUniqueVoxelCount * sizeof(uint32_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceRead, 0x00, hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, hUniqueVoxelCount * sizeof(uint32_t)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafRadianceWrite, 0x00, hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadianceF)));
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafSampleCountWrite, 0x00, hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoCount)));
-
+    // Bin info initially should be zero (every bounce we will set it to again zero as well)
+    CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, totalNodeCount * sizeof(uint16_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, hUniqueVoxelCount * sizeof(uint16_t)));
+    // Set accumulators to zero
+    CUDA_CHECK(cudaMemset(treeGPU.payload.dTotalIrradianceLeaf, 0x00, hUniqueVoxelCount * sizeof(Vector2f)));
+    CUDA_CHECK(cudaMemset(treeGPU.payload.dSampleCountLeaf, 0x00, hUniqueVoxelCount * sizeof(Vector2ui)));
+    // Copy the generated offsets
     CUDA_CHECK(cudaMemcpy(treeGPU.dLevelNodeOffsets, levelNodeOffsets.data(),
                           levelNodeOffsets.size() * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
@@ -956,6 +959,17 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     }
     // Only Direct light information deposition is left
     // Call the kernel for it
+
+    // DEBUG
+    //Debug::DumpMemToFile("voxelDuplicates", dIndexOffsets,
+    //                     hUniqueVoxelCount + 1);
+
+    //std::vector<uint32_t> countsss(hUniqueVoxelCount + 1);
+    //std::adjacent_difference(dIndexOffsets, dIndexOffsets + hUniqueVoxelCount + 1,
+    //                         countsss.begin());
+    //Debug::DumpMemToFile("voxelDuplicateCounts", countsss.data(),
+    //                     hUniqueVoxelCount + 1);
+
     gpu.GridStrideKC_X(0, (cudaStream_t)0, hTotalVoxCount,
                        //
                        KCReduceVoxelPayload,
@@ -980,30 +994,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
-    double radMemSize = static_cast<double>(totalNodeCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance) +
-                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadiance) +
-                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoRadianceF) +
-                                            hUniqueVoxelCount * sizeof(AnisoSVOctreeGPU::AnisoCount)) / 1024.0 / 1024.0;
-    double irradMemSize = static_cast<double>(totalNodeCount * sizeof(half) +
-                                              hUniqueVoxelCount * sizeof(uint32_t) +
-                                              hUniqueVoxelCount * sizeof(float) +
-                                              hUniqueVoxelCount * sizeof(half)) / 1024.0 / 1024.0;
 
-    // New SVO size
-    double newStyleSize = static_cast<double>(VoxelPayload::TotalSize(totalNodeCount, hUniqueVoxelCount) +
-                                              // Pointer Hierarchy
-                                              sizeof(uint64_t) * totalNodeCount +
-                                              // Leaf parent pointers
-                                              sizeof(uint32_t) * hUniqueVoxelCount +
-                                              // Bin info
-                                              sizeof(uint32_t) * totalNodeCount +
-                                              sizeof(uint32_t) * hUniqueVoxelCount) / 1024.0 / 1024.0;
-
-    METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB, Rad Cache {:.2f} MiB, If Irrad {:.2f} MiB), New {:.2f} MiB",
-             treeGPU.nodeCount, treeGPU.leafCount,
-             timer.Elapsed<CPUTimeSeconds>(),
-             svoMemSize, radMemSize, irradMemSize,
-             newStyleSize);
+    METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB)",
+             treeGPU.nodeCount, treeGPU.leafCount, timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
 
     // All Done!
     return TracerError::OK;
@@ -1025,10 +1018,10 @@ void AnisoSVOctreeCPU::NormalizeAndFilterRadiance(const CudaSystem& system)
                            //
                            KCCCopyRadianceToHalfBufferLeaf,
                            // I-O
-                           treeGPU.dLeafRadianceRead,
+                           treeGPU.payload.dAvgIrradianceLeaf,
                            // Input
-                           treeGPU.dLeafRadianceWrite,
-                           treeGPU.dLeafSampleCountWrite,
+                           treeGPU.payload.dTotalIrradianceLeaf,
+                           treeGPU.payload.dSampleCountLeaf,
                            // Constants
                            treeGPU.leafCount,
                            1.0f);
@@ -1112,15 +1105,12 @@ void AnisoSVOctreeCPU::ClearRayCounts(const CudaSystem&)
 void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
                                        const CudaSystem& system) const
 {
-    using AnisoRadianceF = AnisoSVOctreeGPU::AnisoRadianceF;
-    using AnisoRadiance = AnisoSVOctreeGPU::AnisoRadiance;
-
     // Temp Float Buffer for Conversion
     assert(treeGPU.leafCount >= treeGPU.nodeCount);
-    DeviceMemory halfConvertedMemory(treeGPU.leafCount * sizeof(AnisoRadianceF));
+    DeviceMemory halfConvertedMemory(treeGPU.leafCount * sizeof(Vector2f));
 
     // Conversion Function
-    auto ConvertAnisoHalfToFloat = [&](const AnisoRadiance* dRadiance,
+    auto ConvertAnisoHalfToFloat = [&](const Vector2h* dRadiance,
                                        uint32_t totalSize)
     {
         const CudaGPU& gpu = system.BestGPU();
@@ -1128,18 +1118,18 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
                            //
                            KCConvertToAnisoFloat,
                            //
-                           static_cast<AnisoRadianceF*>(halfConvertedMemory),
+                           static_cast<Vector2f*>(halfConvertedMemory),
                            dRadiance,
                            totalSize);
     };
 
     // Get Sizes
     std::array<size_t, 4> byteSizes;
-    byteSizes[0]  = treeGPU.nodeCount * sizeof(uint64_t);       // dNodesSize
-    byteSizes[1]  = treeGPU.nodeCount * sizeof(AnisoRadianceF); // dRadianceReadSize
+    byteSizes[0]  = treeGPU.nodeCount * sizeof(uint64_t);   // "dNodes" Size
+    byteSizes[1]  = treeGPU.nodeCount * sizeof(Vector2f);   // "dAvgIrradianceNode" Size
     // Leaf Related
-    byteSizes[2] = treeGPU.leafCount * sizeof(uint32_t);        // dLeafParentSize
-    byteSizes[3] = treeGPU.leafCount * sizeof(AnisoRadianceF);  // dLeafRadianceReadSize
+    byteSizes[2] = treeGPU.leafCount * sizeof(uint32_t);    // "dLeafParent" Size
+    byteSizes[3] = treeGPU.leafCount * sizeof(Vector2f);    // "dAvgIrradianceLeaf" Size
     // Calculate the offsets and total size
     size_t bufferTotalSize = std::reduce(byteSizes.cbegin(), byteSizes.cend(), 0ull);
 
@@ -1170,7 +1160,7 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
                           byteSizes[0], cudaMemcpyDeviceToHost));
     offset += byteSizes[0];
     // Radiance Cache Node
-    ConvertAnisoHalfToFloat(treeGPU.dRadianceRead, treeGPU.nodeCount);
+    ConvertAnisoHalfToFloat(treeGPU.payload.dAvgIrradianceNode, treeGPU.nodeCount);
     CUDA_CHECK(cudaMemcpy(data.data() + offset,
                           static_cast<void*>(halfConvertedMemory),
                           byteSizes[1], cudaMemcpyDeviceToHost));
@@ -1180,7 +1170,7 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
                           byteSizes[2], cudaMemcpyDeviceToHost));
     offset += byteSizes[2];
     // Radiance Cache Leaf
-    ConvertAnisoHalfToFloat(treeGPU.dLeafRadianceRead, treeGPU.leafCount);
+    ConvertAnisoHalfToFloat(treeGPU.payload.dAvgIrradianceLeaf, treeGPU.leafCount);
     CUDA_CHECK(cudaMemcpy(data.data() + offset,
                           static_cast<void*>(halfConvertedMemory),
                           byteSizes[3], cudaMemcpyDeviceToHost));

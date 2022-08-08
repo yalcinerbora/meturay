@@ -761,27 +761,29 @@ static void KCTraceSVO(// Output
                                       ray.tMin, ray.tMax,
                                       coneAperture);
 
-        Vector3f locColor = Vector3f(1.0f, 0.0f, 1.0f);
+        Vector3f locColor = Vector3f(0.0f, 0.0f, 10.0f);
+        // Octree Display Mode
         if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
             locColor = (svoNodeIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoNodeIndex)
                                                     : Vector3f(0.0f);
+        // Payload Display Mode
+        else if(svoNodeIndex == UINT32_MAX)
+            locColor = Vector3f(1.0f, 0.0f, 1.0f);
         else if(mode == WFPGRenderMode::SVO_RADIANCE)
         {
-            if(svoNodeIndex == UINT32_MAX)
-                locColor = Vector3f(1.0f, 0.0f, 1.0f);
-            else if(isLeaf)
-
-            {
-                half radiance = svo.ReadRadiance(svoNodeIndex, true,
-                                                 -ray.ray.getDirection());
-                float radianceF = radiance;
-                locColor = Vector3f(radianceF);
-            }
-            // TODO: change this after filtering implementation
-            else
-            {
-                locColor = Utility::RandomColorRGB(svoNodeIndex);
-            }
+            Vector3f coneDir = ray.ray.getDirection();
+            half radiance = svo.ReadRadiance(coneDir, coneAperture,
+                                             svoNodeIndex, isLeaf);
+            float radianceF = radiance;
+            locColor = Vector3f(radianceF);
+        }
+        else if(mode == WFPGRenderMode::SVO_NORMAL)
+        {
+            Vector3f normal = svo.DebugReadNormal(svoNodeIndex, isLeaf);
+            // Convert normal to 0-1 range
+            normal += Vector3f(1.0f);
+            normal *= Vector3f(0.5f);
+            locColor = normal;
         }
         // Accumulate the pixel
         AccumulateRaySample(gSamples,
@@ -1049,7 +1051,8 @@ static void KCGenAndSampleDistribution(// Output
             svo.ConeTraceRay(isLeaf, nodeId, RayF(worldDir, position),
                              tMin, FLT_MAX, coneAperture);
             // TODO: change this
-            incRadiances[i] = (isLeaf) ? svo.ReadRadiance(nodeId, true, -worldDir) : 1.0f;
+            incRadiances[i] = svo.ReadRadiance(-worldDir, coneAperture,
+                                               nodeId, isLeaf);
             //incRadiances[i] = 1.0f;
         }
         // We finished tracing rays from the scene

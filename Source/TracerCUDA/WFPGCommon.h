@@ -7,12 +7,12 @@
 enum class WFPGRenderMode
 {
     // Tracer outputs camera radiance values as normal
-    NORMAL,
-
+    RENDER,
     // Tracer traces camera rays over the SVO,
     // outputs false color for each leaf.
     SVO_FALSE_COLOR,
-
+    // Tracer directly show the voxel normal
+    SVO_NORMAL,
     // Tracer traces camera rays over the scene
     // using the classic accelerators,
     // then queries the hit positions over the SVO
@@ -40,8 +40,9 @@ enum class WFPGFilterMode
 
 static constexpr std::array<std::string_view, static_cast<size_t>(WFPGRenderMode::END)> WFPGRenderModeNames =
 {
-    "Normal",
+    "Render",
     "SVOFalseColor",
+    "SVONormal",
     "SVOInitialHit",
     "SVORadiance"
 };

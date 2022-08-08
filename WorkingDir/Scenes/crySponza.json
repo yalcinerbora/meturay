@@ -1294,10 +1294,7 @@
 		{"transform": 98, "accelerator": 0, "material": 21, "primitive": 89},
 		{"transform": 99, "accelerator": 0, "material": 20, "primitive": 89},
 		{"transform": 100, "accelerator": 0, "material": 19, "primitive": 89},
-
 		{"transform": 101, "accelerator": 0, "material": 19, "primitive": 90},
-		//{"transform": 101, "accelerator": 0, "material": 26, "primitive": 90},
-
 		{"transform": 102, "accelerator": 0, "material": 21, "primitive": 90},
 		{"transform": 103, "accelerator": 0, "material": 20, "primitive": 90},
 		{"transform": 104, "accelerator": 0, "material": 19, "primitive": 90},

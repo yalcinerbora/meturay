@@ -51,7 +51,7 @@ class WFPGTracer final : public RayTracer
             uint32_t            photonPerPass       = 1'000'000;
 
             // Misc
-            WFPGRenderMode      renderMode          = WFPGRenderMode::NORMAL;
+            WFPGRenderMode      renderMode          = WFPGRenderMode::RENDER;
             uint32_t            svoRadRenderIter    = 2;
             bool                dumpDebugData       = false;
             uint32_t            svoDumpInterval     = 2;

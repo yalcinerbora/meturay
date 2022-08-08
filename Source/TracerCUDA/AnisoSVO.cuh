@@ -71,14 +71,20 @@ struct VoxelPayload
     // Read Routines
     __device__
     Vector3f            ReadNormalAndSpecular(float& stdDev, float& specularity,
-                                              uint32_t nodeIndex, bool isLeaf);
+                                              uint32_t nodeIndex, bool isLeaf) const;
 
     __device__
-    float               ReadIrradiance(const Vector3f& coneDirection, float coneAperture,
-                                       uint32_t nodeIndex, bool isLeaf);
+    float               ReadRadiance(const Vector3f& coneDirection, float coneAperture,
+                                     uint32_t nodeIndex, bool isLeaf) const;
     __device__
-    float               ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf);
+    float               ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf) const;
 
+    __device__
+    bool                WriteLeafRadiance(const Vector3f& outgoingDir,
+                                          uint32_t leafIndex, float radiance);
+    __device__
+    void                WriteNormalAndSpecular(const Vector3f& normal, float specularity,
+                                               uint32_t nodeIndex, bool isLeaf);
 
     // Size Related (per voxel and total)
     static size_t       BytePerLeaf();
@@ -90,21 +96,6 @@ class AnisoSVOctreeGPU
 {
     public:
     static constexpr int VOXEL_DIR_DATA_COUNT = 8;
-
-    template <class T>
-    struct AnisoData
-    {
-        Vector<4, T> data[2];
-
-        __device__ void Write(uint8_t index, T value);
-        __device__ void AtomicAdd(uint8_t index, T value);
-        __device__ T    Read(uint8_t index) const;
-        __device__ T    Read(const Vector4uc& indices,
-                             const Vector2h& interp) const;
-    };
-    using AnisoRadiance = AnisoData<half>;
-    using AnisoRadianceF = AnisoData<float>;
-    using AnisoCount = AnisoData<uint32_t>;
 
     private:
     static constexpr uint16_t LAST_BIT_UINT16 = (sizeof(uint16_t) * BYTE_BITS - 1);
@@ -154,10 +145,6 @@ class AnisoSVOctreeGPU
     __device__ static uint32_t  FindChildOffset(uint64_t packedData, uint32_t childId);
     __device__ static bool      HasChild(uint64_t packedData, uint32_t childId);
 
-    __device__ static Vector3f  VoxelDirection(uint32_t directionId);
-    __device__ static Vector4uc DirectionToAnisoLocations(Vector2h& interp,
-                                                          const Vector3f& direction);
-
     // Bin info related packing operations
     __device__ static bool      IsBinMarked(uint16_t binInfo);
     __device__ static void      SetBinAsMarked(uint16_t& gNodeBinInfo);
@@ -165,38 +152,55 @@ class AnisoSVOctreeGPU
 
     private:
     // Generic Data
-    uint32_t*           dLevelNodeOffsets;
+    uint32_t*           dLevelNodeOffsets;  // Nodes (except leafs which have different array)
+                                            // are laid out on a single array in a depth first fasion
+                                            // this offset can be used to determine which level
+                                            // of nodes start-end on this array
+                                            // This data is convenience for level by level
+                                            // GPU kernel calls
     // SVO Data
-    uint64_t*           dNodes;         // children ptr (28) parent ptr (27), child mask, leafBit
-    AnisoRadiance*      dRadianceRead;  // Anisotropic emitted radiance (normalized)
-    uint16_t*           dBinInfo;       // MSB is "isCollapsed" bit
+    uint64_t*           dNodes;             // Node structure, unlike other SVO structures
+                                            // nodes hold parent pointer as well for stackless traversal
+                                            // children ptr (28) parent ptr (27), child mask (8), leafBit (1)
+    uint16_t*           dBinInfo;           // Number of rays that "collide" with this voxel
+                                            // similar positioned rays will collaborate to generate
+                                            // an incoming radiance field to path guide
+                                            // MSB is "isCollapsed" bit which means that
+                                            // there are not enough rays on this voxels
+                                            // collaborating rays should use the upper level
     // Leaf Data (Leafs does not have nodes,
     // if leaf bit is set on parent children ptr points to these)
-    uint32_t*           dLeafParents;
-    AnisoRadiance*      dLeafRadianceRead;  // Anisotropic emitted radiance (normalized)
-    uint16_t*           dLeafBinInfo;       // MSB is "isCollapsed" bit
+    uint32_t*           dLeafParents;       // Parent pointers of the leaf it is 32-bit for padding reasons
+                                            // (nodes have 27-bit parent pointers so latter 5-bits are wasted)
+    uint16_t*           dLeafBinInfo;       // Same as above but for leafs
 
-    // Actual average radiance for each location (used full precision here for running average)
-    AnisoRadianceF*     dLeafRadianceWrite;
-    AnisoCount*         dLeafSampleCountWrite;
+    // Voxel Payload (refer to the payload structure for info)
+    // TODO: Make this a template for generic SVO structure in future
+    VoxelPayload        payload;
+
     // Boundary Light (Used when any ray does not hit anything)
+    // Only single boundary light is supported currently which should be enough for many
+    // scenes and demonstration purposes
     const GPULightI*    dBoundaryLight;
     // Constants
-    AABB3f              svoAABB;
+    AABB3f              svoAABB;            // svoAABB is slightly larger than the scene AABB;
+                                            // additionally it is a cube
+                                            // to prevent edge voxelization
     uint32_t            voxelResolution;    // x = y = z
     uint32_t            leafDepth;          // log2(voxelResolution)
-    uint32_t            nodeCount;
-    uint32_t            leafCount;
-    float               leafVoxelSize;
-    uint32_t            levelOffsetCount;
-    // CPU class can only access and set the data
+    uint32_t            nodeCount;          // Total number of nodes in the SVO
+    uint32_t            leafCount;          // Total number of leaves in the SVO
+    float               leafVoxelSize;      // svoAABB / voxelResolution
+    uint32_t            levelOffsetCount;   // Number of data on the "dLevelNodeOffsets" array
+    // CPU class can access and set the data
     friend class        AnisoSVOctreeCPU;
 
     public:
     // Constructors & Destructor
     __device__          AnisoSVOctreeGPU();
     // Methods
-    // Trace the ray over the SVO and tMin and leafId
+    // Trace the ray over the SVO; returns tMin and leafId/nodeId
+    // cone can terminate on a node due to its aperture
     __device__
     float               ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&,
                                      float tMin, float tMax,
@@ -207,17 +211,23 @@ class AnisoSVOctreeGPU
     bool                DepositRadiance(const Vector3f& worldPos, const Vector3f& outgoingDir,
                                         float radiance);
 
-    // Read the radiance value from the specified node
+    // Read the radiance value from the specified node,
+    // converts irradiance to radiance
     // Result will be the bi-linear spherical interpolation of
     // nearest samples
     __device__
-    half                ReadRadiance(uint32_t nodeId, bool isLeaf,
-                                     const Vector3f& outgoingDir) const;
+    half                ReadRadiance(const Vector3f& coneDirection, float coneAperture,
+                                     uint32_t nodeId, bool isLeaf) const;
+    __device__
+    Vector3f            DebugReadNormal(uint32_t nodeId, bool isLeaf) const;
+
     // Atomically Increment the ray count for that leafIndex
     __device__
     void                IncrementLeafRayCount(uint32_t leafIndex);
     // Return the leaf index of this position
     // Return false if no such leaf exists
+    // Due to numerical precision, "worldPos" may be slightly outside of a voxel
+    // user can set "checkNeighbours" to find the closest neighboring voxel
     __device__
     bool                LeafIndex(uint32_t& index, const Vector3f& worldPos,
                                   bool checkNeighbours = false) const;
@@ -227,10 +237,22 @@ class AnisoSVOctreeGPU
     uint32_t            FindMarkedBin(bool& isLeaf, uint32_t initialLeafIndex)  const;
     // Returns the center of the voxel as world space coordinates
     __device__
-    Vector3f            VoxelToWorld(const Vector3ui& denseIndex);
+    Vector3f            VoxelToWorld(const Vector3ui& denseIndex) const;
     // Returns the voxel size of the specified node index
+    // This operation binary search the nodeIndex with the "dLevelNodeOffsets"
+    // array, thus, it can be slow (due to global memory access)
     __device__
     float               NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const;
+
+    // Direct Set Functions
+    // Normal and light emitted radiance information will be set by these
+    // on initialization phase
+    __device__
+    bool                SetLeafRadiance(uint64_t mortonCode,
+                                        const Vector2f& combinedLuminance,
+                                        const Vector2ui& initialSampleCount);
+    __device__
+    bool                SetLeafNormal(uint64_t mortonCode, Vector3f combinedNormal);
 
     // Accessors
     __device__
@@ -297,9 +319,9 @@ class AnisoSVOctreeCPU
 
 __device__ inline
 Vector3f VoxelPayload::ReadNormalAndSpecular(float& stdDev, float& specularity,
-                                             uint32_t nodeIndex, bool isLeaf)
+                                             uint32_t nodeIndex, bool isLeaf) const
 {
-    uint32_t* gFetchArray = (isLeaf) ? dNormalAndSpecLeaf : dNormalAndSpecNode;
+    const uint32_t* gFetchArray = (isLeaf) ? dNormalAndSpecLeaf : dNormalAndSpecNode;
     uint32_t packedData = gFetchArray[nodeIndex];
 
     Vector3f normal;
@@ -317,11 +339,11 @@ Vector3f VoxelPayload::ReadNormalAndSpecular(float& stdDev, float& specularity,
 }
 
 __device__ inline
-float VoxelPayload::ReadIrradiance(const Vector3f& coneDirection,
+float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
                                    float coneAperture,
-                                   uint32_t nodeIndex, bool isLeaf)
+                                   uint32_t nodeIndex, bool isLeaf) const
 {
-    Vector2h* gIrradArray = (isLeaf) ? dAvgIrradianceLeaf : dAvgIrradianceNode;
+    const Vector2h* gIrradArray = (isLeaf) ? dAvgIrradianceLeaf : dAvgIrradianceNode;
 
     float normalDeviation, specularity;
     // Fetch normal to estimate the surface confidence
@@ -341,14 +363,74 @@ float VoxelPayload::ReadIrradiance(const Vector3f& coneDirection,
     bool towardsNormal = (coneDirection.Dot(normal) >= 0.0f);
     uint32_t index = towardsNormal ? 0 : 1;
 
-    return gIrradArray[nodeIndex][index];
+    //return gIrradArray[nodeIndex][index];
+    return static_cast<float>(gIrradArray[nodeIndex][0] +
+                              gIrradArray[nodeIndex][1]) * 0.5f;
+
 }
 
 __device__ inline
-float VoxelPayload::ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf)
+float VoxelPayload::ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf) const
 {
-    uint8_t* gGuidingFactorArray = (isLeaf) ? dGuidingFactorLeaf : dGuidingFactorNode;
+    const uint8_t* gGuidingFactorArray = (isLeaf) ? dGuidingFactorLeaf : dGuidingFactorNode;
     return gGuidingFactorArray[nodeIndex];
+}
+
+__device__ inline
+bool VoxelPayload::WriteLeafRadiance(const Vector3f& outgoingDir,
+                                     uint32_t leafIndex,
+                                     float radiance)
+{
+    float normalDeviation, specularity;
+    // Fetch normal to estimate the surface confidence
+    Vector3f normal = ReadNormalAndSpecular(normalDeviation, specularity,
+                                            leafIndex, true);
+    // TODO: Distribute the radiance properly using normals std deviation
+    bool towardsNormal = (outgoingDir.Dot(normal) >= 0.0f);
+    uint32_t index = towardsNormal ? 0 : 1;
+    // Atomic operation here since many rays may update on learn operation
+    //atomicAdd(&(dTotalIrradianceLeaf[leafIndex][index]), radiance);
+    //atomicAdd(&(dSampleCountLeaf[leafIndex][index]), 1);
+
+
+    atomicAdd(&(dTotalIrradianceLeaf[leafIndex][0]), radiance);
+    atomicAdd(&(dSampleCountLeaf[leafIndex][0]), 1);
+    atomicAdd(&(dTotalIrradianceLeaf[leafIndex][1]), radiance);
+    atomicAdd(&(dSampleCountLeaf[leafIndex][1]), 1);
+}
+
+__device__ inline
+void VoxelPayload::WriteNormalAndSpecular(const Vector3f& normal, float specularity,
+                                          uint32_t nodeIndex, bool isLeaf)
+{
+    uint32_t* gWriteArray = (isLeaf) ? dNormalAndSpecLeaf : dNormalAndSpecNode;
+
+    float length = normal.Length();
+    // NormalXY [-1, 1]
+    Vector2f normalXY = normal * Vector3f(1.0f / length);
+    // NormalXY [0, 2]
+    normalXY += Vector2f(1.0f);
+    // NormalXY [0, 1]
+    normalXY *= Vector2f(0.5f);
+    // NormalXY [0, 2^9)
+    normalXY *= Vector2f(NORMAL_X_BIT_MASK, NORMAL_Y_BIT_MASK);
+    Vector2ui packedNorm = Vector2ui(normalXY);
+    // Length [0, 1]
+    // Length [0, 2^6)
+    length *= static_cast<float>(NORMAL_STD_DEV_BIT_MASK);
+    uint32_t packedLength = static_cast<uint32_t>(length);
+    // Specular [0, 1]
+    // Specular [0, 2^8)
+    specularity = static_cast<float>(SPECULAR_BIT_MASK);
+    uint32_t packedSpecular = static_cast<uint32_t>(specularity);
+
+    uint32_t packedData = 0;
+    packedData |= packedNorm[0] << NORMAL_X_OFFSET;
+    packedData |= packedNorm[1] << NORMAL_Y_OFFSET;
+    packedData |= packedLength << NORMAL_STD_DEV_OFFSET;
+    packedData |= packedSpecular << SPECULAR_OFFSET;
+
+    gWriteArray[nodeIndex] = packedData;
 }
 
 inline
@@ -373,69 +455,6 @@ size_t VoxelPayload::TotalSize(size_t leafCount, size_t nodeCount)
             BytePerNode() * nodeCount);
 }
 
-template <class T>
-__device__ inline
-void AnisoSVOctreeGPU::AnisoData<T>::Write(uint8_t index, T value)
-{
-    uint8_t iMSB = index >> 2;
-    uint8_t iLower = index & 0b11;
-    data[iMSB][iLower] = value;
-}
-
-template <class T>
-__device__ inline
-void AnisoSVOctreeGPU::AnisoData<T>::AtomicAdd(uint8_t index, T value)
-{
-    uint8_t iMSB = index >> 2;
-    uint8_t iLower = index & 0b11;
-    atomicAdd(&(data[iMSB][iLower]), value);
-}
-
-template <class T>
-__device__ inline
-T AnisoSVOctreeGPU::AnisoData<T>::Read(uint8_t index) const
-{
-    uint8_t iMSB = index >> 2;
-    uint8_t iLower = index & 0b11;
-    return data[iMSB][iLower];
-}
-
-template <class T>
-__device__ inline
-T AnisoSVOctreeGPU::AnisoData<T>::Read(const Vector4uc& indices,
-                                       const Vector2h& interp) const
-{
-    // Implicitly convert half to float for the operation
-    constexpr auto LerpFunc = HybridFuncs::Lerp<T, T>;
-
-    //printf("Read op Interp(%f, %f) "
-    //       "Vals(%f, %f, %f, %f)"
-    //       "\n",
-    //       static_cast<float>(interp[0]),
-    //       static_cast<float>(interp[1]),
-    //       static_cast<float>(Read(indices[0])),
-    //       static_cast<float>(Read(indices[1])),
-    //       static_cast<float>(Read(indices[2])),
-    //       static_cast<float>(Read(indices[3])));
-
-    //Vector2ui nearest = Zero2ui;
-    //if(interp[0] >= half(0.5f))
-    //    nearest[0] = 1;
-    //if(interp[1] >= half(0.5f))
-    //    nearest[1] = 1;
-
-    //return half(0.25f) * (Read(indices[0]) + Read(indices[1]) +
-    //                      Read(indices[2]) + Read(indices[3]));
-
-    //return  Read(indices[2 * nearest[1] + nearest[0]]);
-
-    // Bilinear interpolation
-    T a = LerpFunc(Read(indices[0]), Read(indices[1]), interp[0]);
-    T b = LerpFunc(Read(indices[2]), Read(indices[3]), interp[0]);
-    T result = LerpFunc(a, b, interp[1]);
-    return result;
-}
-
 __device__ inline
 uint16_t AnisoSVOctreeGPU::AtomicAddUInt16(uint16_t* location, uint16_t value)
 {
@@ -458,13 +477,9 @@ __device__ inline
 AnisoSVOctreeGPU::AnisoSVOctreeGPU()
     : dLevelNodeOffsets(nullptr)
     , dNodes(nullptr)
-    , dRadianceRead(nullptr)
     , dBinInfo(nullptr)
     , dLeafParents(nullptr)
-    , dLeafRadianceRead(nullptr)
     , dLeafBinInfo(nullptr)
-    , dLeafRadianceWrite(nullptr)
-    , dLeafSampleCountWrite(nullptr)
     , dBoundaryLight(nullptr)
     , svoAABB(Vector3f(0.0f), Vector3f(0.0f))
     , voxelResolution(0)
@@ -570,66 +585,6 @@ bool AnisoSVOctreeGPU::HasChild(uint64_t packedData, uint32_t childId)
     assert(childId < 8);
     uint32_t childMask = ChildMask(packedData);
     return (childMask >> childId) & 0b1;
-}
-
-__device__ inline
-Vector3f AnisoSVOctreeGPU::VoxelDirection(uint32_t directionId)
-{
-    static constexpr Vector3f X_AXIS = XAxis;
-    static constexpr Vector3f Y_AXIS = YAxis;
-    static constexpr Vector3f Z_AXIS = ZAxis;
-
-    int8_t signX = (directionId >> 0) & 0b1;
-    int8_t signY = (directionId >> 1) & 0b1;
-    int8_t signZ = (directionId >> 2) & 0b1;
-    signX = (1 - signX) * 2 - 1;
-    signY = (1 - signY) * 2 - 1;
-    signZ = (1 - signZ) * 2 - 1;
-
-    Vector3f dir = (X_AXIS * signX +
-                    Y_AXIS * signY +
-                    Z_AXIS * signZ);
-    return dir.Normalize();
-}
-
-__device__ inline
-Vector4uc AnisoSVOctreeGPU::DirectionToAnisoLocations(Vector2h& interp,
-                                                      const Vector3f& direction)
-{
-    // I couldn't comprehend this as a mathematical
-    // representation so tabulated the output
-    static constexpr Vector4uc TABULATED_LAYOUTS[12] =
-    {
-        Vector4uc(0,1,0,1), Vector4uc(1,2,1,2),  Vector4uc(2,3,2,3), Vector4uc(3,0,3,0),
-        Vector4uc(0,1,4,5), Vector4uc(1,2,5,6),  Vector4uc(2,3,6,7), Vector4uc(3,0,7,4),
-        Vector4uc(4,5,4,5), Vector4uc(5,6,5,6),  Vector4uc(6,7,6,7), Vector4uc(7,4,7,4)
-    };
-
-    static constexpr float PIXEL_X = 4;
-    static constexpr float PIXEL_Y = 2;
-
-    Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
-    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
-    // Normalize to generate UV [0, 1]
-    // theta range [-pi, pi]
-    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
-    // phi range [0, pi]
-    float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
-
-    // Convert to pixelCoords
-    float pixelX = u * PIXEL_X;
-    float pixelY = v * PIXEL_Y;
-
-    float indexX;
-    float interpX = modff(pixelX, &indexX);
-    uint32_t indexXInt = (indexX >= 4) ? 0 : static_cast<uint32_t>(indexX);
-
-    float indexY;
-    float interpY = abs(modff(pixelY + 0.5f, &indexY));
-    uint32_t indexYInt = static_cast<uint32_t>(indexY);
-
-    interp = Vector2h(interpX, interpY);
-    return TABULATED_LAYOUTS[indexYInt * 4 + indexXInt];
 }
 
 __device__ inline
@@ -915,10 +870,9 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
     return tMin;
 }
 
-
 __device__ inline
-half AnisoSVOctreeGPU::ReadRadiance(uint32_t nodeId, bool isLeaf,
-                                    const Vector3f& outgoingDir) const
+half AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneAperture,
+                                    uint32_t nodeId, bool isLeaf) const
 {
     if(nodeId == UINT32_MAX)
     {
@@ -926,15 +880,18 @@ half AnisoSVOctreeGPU::ReadRadiance(uint32_t nodeId, bool isLeaf,
         return 0.0f;
     }
 
-    Vector2h interpValues;
-    Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
-                                                     outgoingDir);
-    //Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
-    //                                                 Vector3f(1.0f, 0.0f, 0.0f));
+    half radiance = payload.ReadRadiance(coneDirection, coneAperture,
+                                         nodeId, isLeaf);
 
-    const AnisoRadiance* gRadRead = (isLeaf) ? dLeafRadianceRead
-                                             : dRadianceRead;
-    return gRadRead[nodeId].Read(neighbours, interpValues);
+    return radiance;
+}
+
+__device__ inline
+Vector3f AnisoSVOctreeGPU::DebugReadNormal(uint32_t nodeIndex, bool isLeaf) const
+{
+    float stdDev, specularity;
+    return payload.ReadNormalAndSpecular(stdDev, specularity,
+                                         nodeIndex, isLeaf);
 }
 
 __device__ inline
@@ -942,33 +899,14 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
                                        const Vector3f& outgoingDir,
                                        float radiance)
 {
-    // TODO: Add filtering here as well
+    // Find the leaf here
     uint32_t lIndex;
     bool leafFound = LeafIndex(lIndex, worldPos, true);
-
+    // We should always find a leaf with the true flag
     if(leafFound)
     {
-        // Extrapolate the data to the all appropriate locations
-        Vector2h interpValues;
-        Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
-                                                         outgoingDir);
-
-        // Find nearest
-        Vector2ui nY = (interpValues[1] < half(0.5f)) ? Vector2ui(neighbours[0], neighbours[1])
-                                                      : Vector2ui(neighbours[2], neighbours[3]);
-        uint32_t nX = (interpValues[0] < half(0.5f)) ? nY[0] : nY[1];
-
-        dLeafRadianceWrite[lIndex].AtomicAdd(nX, radiance);
-        dLeafSampleCountWrite[lIndex].AtomicAdd(nX, 1);
-
-        //// Deposition should be done in a
-        //// Box filter like fashion
-        //#pragma unroll
-        //for(int i = 0; i < 4; i++)
-        //{
-        //    dLeafRadianceWrite[lIndex].AtomicAdd(neighbours[i], radiance);
-        //    dLeafSampleCountWrite[lIndex].AtomicAdd(neighbours[i], 1);
-        //}
+        // Atomically set the sample
+        payload.WriteLeafRadiance(outgoingDir, lIndex, radiance);
     }
     return leafFound;
 }
@@ -1014,7 +952,6 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
     };
 
     index = UINT32_MAX;
-
     if(svoAABB.IsOutside(worldPos))
     {
         index = UINT32_MAX;
@@ -1093,7 +1030,7 @@ uint32_t AnisoSVOctreeGPU::FindMarkedBin(bool& isLeaf, uint32_t initialLeafIndex
     uint32_t parentIndex = dLeafParents[initialLeafIndex];
 
     // Traverse towards parent terminate when marked bin is found
-    // Bin should be marked
+    // From leaf -> root a bin should always be marked
     uint32_t nodeIndex = initialLeafIndex;
     while(parentIndex != INVALID_PARENT && !IsBinMarked(binInfo))
     {
@@ -1107,7 +1044,7 @@ uint32_t AnisoSVOctreeGPU::FindMarkedBin(bool& isLeaf, uint32_t initialLeafIndex
 }
 
 __device__ inline
-Vector3f AnisoSVOctreeGPU::VoxelToWorld(const Vector3ui& denseIndex)
+Vector3f AnisoSVOctreeGPU::VoxelToWorld(const Vector3ui& denseIndex) const
 {
     Vector3f denseIFloat = Vector3f(static_cast<float>(denseIndex[0]) + 0.5f,
                                     static_cast<float>(denseIndex[1]) + 0.5f,
@@ -1132,6 +1069,52 @@ float AnisoSVOctreeGPU::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
     uint32_t levelDiff = leafDepth - static_cast<uint32_t>(levelFloat);
     float multiplier = static_cast<float>(1 << levelDiff);
     return leafVoxelSize * multiplier;
+}
+
+__device__ inline
+bool AnisoSVOctreeGPU::SetLeafRadiance(uint64_t mortonCode,
+                                       const Vector2f& combinedLuminance,
+                                       const Vector2ui& initialSampleCount)
+{
+    Vector3ui denseIndex = MortonCode::Decompose<uint64_t>(mortonCode);
+    Vector3f worldPos = VoxelToWorld(denseIndex);
+
+    uint32_t leafIndex;
+    bool found = LeafIndex(leafIndex, worldPos, true);
+    if(!found)
+    {
+        KERNEL_DEBUG_LOG("Error: SVO leaf not found!\n");
+        return false;
+    }
+    // All fine directly add
+    //
+    // TODO: change this
+    // Add to the all directions
+    atomicAdd(&(payload.dTotalIrradianceLeaf[leafIndex][0]), combinedLuminance[0]);
+    atomicAdd(&(payload.dTotalIrradianceLeaf[leafIndex][1]), combinedLuminance[1]);
+    atomicAdd(&(payload.dSampleCountLeaf[leafIndex][0]), initialSampleCount[0]);
+    atomicAdd(&(payload.dSampleCountLeaf[leafIndex][1]), initialSampleCount[1]);
+    return true;
+}
+
+__device__ inline
+bool AnisoSVOctreeGPU::SetLeafNormal(uint64_t mortonCode, Vector3f combinedNormal)
+{
+    Vector3ui denseIndex = MortonCode::Decompose<uint64_t>(mortonCode);
+    Vector3f worldPos = VoxelToWorld(denseIndex);
+
+    uint32_t leafIndex;
+    bool found = LeafIndex(leafIndex, worldPos, true);
+    if(!found)
+    {
+        KERNEL_DEBUG_LOG("Error: SVO leaf not found!\n");
+        return false;
+    }
+    // TODO: what about specularity
+    // Leaf normals are considered perfect
+    payload.WriteNormalAndSpecular(combinedNormal.Normalize(), 0.0f,
+                                   leafIndex, true);
+    return true;
 }
 
 __device__ inline

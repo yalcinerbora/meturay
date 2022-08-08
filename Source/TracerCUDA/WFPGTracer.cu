@@ -663,7 +663,7 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
+    bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
     (
@@ -678,7 +678,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
     // Generate Cone Aperture If
     // SVO RADIANCE mode and FALSE COLOR Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
-       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
+       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
+       options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
         // Generate cone aperture
         DeviceMemory mem(sizeof(float));
@@ -706,7 +707,7 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
     }
 
     // On voxel trace mode we don't need paths
-    if(options.renderMode == WFPGRenderMode::NORMAL ||
+    if(options.renderMode == WFPGRenderMode::RENDER ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
         ResizeAndInitPathMemory();
 
@@ -720,7 +721,7 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
     //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     //    TraceAndStorePhotons();
 
-    bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
+    bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
     (
@@ -735,7 +736,8 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
     // Generate Cone Aperture If
     // SVO RADIANCE mode and FALSE COLOR Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
-       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
+       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
+       options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
         // Generate cone aperture
         DeviceMemory mem(sizeof(float));
@@ -764,7 +766,7 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
     }
 
     // On voxel trace mode we don't need paths
-    if(options.renderMode == WFPGRenderMode::NORMAL ||
+    if(options.renderMode == WFPGRenderMode::RENDER ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
         ResizeAndInitPathMemory();
     currentDepth = 0;
@@ -777,7 +779,7 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
     //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     //    TraceAndStorePhotons();
 
-    bool enableAA = (options.renderMode == WFPGRenderMode::NORMAL ||
+    bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
     (
@@ -792,7 +794,8 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
     // Generate Cone Aperture If
     // SVO RADIANCE mode and FALSE COLOR Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
-       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
+       options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
+       options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
         // Generate cone aperture
         DeviceMemory mem(sizeof(float));
@@ -818,7 +821,7 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
     }
 
     // On voxel trace mode we don't need paths
-    if(options.renderMode == WFPGRenderMode::NORMAL ||
+    if(options.renderMode == WFPGRenderMode::RENDER ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
         ResizeAndInitPathMemory();
     currentDepth = 0;
@@ -861,7 +864,8 @@ bool WFPGTracer::Render()
     globalData.rrStart = options.rrStart;
 
     // On voxel trace mode we just trace the rays without any material
-    if(options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR)
+    if(options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
+       options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
         // Just call the voxel trace kernel on a GPU and call it a day
         const auto& gpu = cudaSystem.BestGPU();
@@ -875,7 +879,7 @@ bool WFPGTracer::Render()
                            rayCaster->RaysIn(),
                            static_cast<RayAuxWFPG*>(*dAuxIn),
                            coneAperture,
-                           WFPGRenderMode::SVO_FALSE_COLOR,
+                           options.renderMode,
                            totalRayCount);
         // Signal as if we finished processing
         return false;
@@ -954,7 +958,7 @@ void WFPGTracer::Finalize()
     //                            TotalPathNodeCount());
 
     // Deposit the radiances on the path chains
-    if(options.renderMode == WFPGRenderMode::NORMAL ||
+    if(options.renderMode == WFPGRenderMode::RENDER ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     {
         uint32_t totalPathNodeCount = TotalPathNodeCount();
