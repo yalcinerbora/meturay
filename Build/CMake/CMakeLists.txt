@@ -135,6 +135,8 @@ endif()
 # Cuda Compile Options
 add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
                     $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>
+                    # Extended Lambdas (__device__ tagged lambdas)
+                    $<$<COMPILE_LANGUAGE:CUDA>:-extended-lambda>
                     # Use fast math creates self intersection issues on
                     # some scenes. Thus, we only selectively enable
                     # some fp optimizations (culprit was prec-sqrt on some Unreal Materials)
