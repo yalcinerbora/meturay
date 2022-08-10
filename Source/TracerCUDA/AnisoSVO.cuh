@@ -22,22 +22,32 @@ struct VoxelPayload
     private:
     static constexpr uint32_t NORMAL_X_BIT_COUNT        = 9;
     static constexpr uint32_t NORMAL_Y_BIT_COUNT        = 9;
-    static constexpr uint32_t NORMAL_STD_DEV_BIT_COUNT  = 6;
-    static constexpr uint32_t SPECULAR_BIT_COUNT        = 8;
-    static constexpr float UNORM_6_FACTOR               = 1.0f / 64.0f;
-    static constexpr float UNORM_8_FACTOR               = 1.0f / 256.0f;
-    static constexpr float UNORM_9_FACTOR               = 2.0f / 512.0f;
-    static constexpr float SNORM_9_OFFSET               = 512.0f / 2.0f ;
+    static constexpr uint32_t NORMAL_LENGTH_BIT_COUNT   = 7;
+    static constexpr uint32_t SPECULAR_BIT_COUNT        = 6;
+    static constexpr uint32_t NORMAL_SIGN_BIT_COUNT     = 1;
 
-    static constexpr uint32_t NORMAL_X_BIT_MASK        = (1 << NORMAL_X_BIT_COUNT) - 1;
-    static constexpr uint32_t NORMAL_Y_BIT_MASK        = (1 << NORMAL_Y_BIT_COUNT) - 1;
-    static constexpr uint32_t NORMAL_STD_DEV_BIT_MASK  = (1 << NORMAL_STD_DEV_BIT_COUNT) - 1;
-    static constexpr uint32_t SPECULAR_BIT_MASK        = (1 << SPECULAR_BIT_COUNT) - 1;
+    static_assert((NORMAL_X_BIT_COUNT +
+                   NORMAL_Y_BIT_COUNT +
+                   NORMAL_LENGTH_BIT_COUNT +
+                   SPECULAR_BIT_COUNT +
+                   NORMAL_SIGN_BIT_COUNT) == sizeof(uint32_t) * BYTE_BITS);
+
+    static constexpr uint32_t NORMAL_X_BIT_MASK         = (1 << NORMAL_X_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_Y_BIT_MASK         = (1 << NORMAL_Y_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_LENGTH_BIT_MASK    = (1 << NORMAL_LENGTH_BIT_COUNT) - 1;
+    static constexpr uint32_t SPECULAR_BIT_MASK         = (1 << SPECULAR_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_SIGN_BIT_MASK      = (1 << NORMAL_SIGN_BIT_COUNT) - 1;
+
+    static constexpr float UNORM_SPEC_FACTOR            = 1.0f / static_cast<float>(SPECULAR_BIT_COUNT);
+    static constexpr float UNORM_LENGTH_FACTOR          = 1.0f / static_cast<float>(NORMAL_LENGTH_BIT_MASK);
+    static constexpr float UNORM_NORM_X_FACTOR          = 1.0f / static_cast<float>(NORMAL_X_BIT_MASK);
+    static constexpr float UNORM_NORM_Y_FACTOR          = 1.0f / static_cast<float>(NORMAL_Y_BIT_MASK);
 
     static constexpr uint32_t NORMAL_X_OFFSET           = 0;
     static constexpr uint32_t NORMAL_Y_OFFSET           = NORMAL_X_OFFSET + NORMAL_X_BIT_COUNT;
-    static constexpr uint32_t NORMAL_STD_DEV_OFFSET     = NORMAL_Y_OFFSET + NORMAL_Y_BIT_COUNT;
-    static constexpr uint32_t SPECULAR_OFFSET           = NORMAL_STD_DEV_OFFSET + NORMAL_STD_DEV_BIT_COUNT;
+    static constexpr uint32_t NORMAL_LENGTH_OFFSET      = NORMAL_Y_OFFSET + NORMAL_Y_BIT_COUNT;
+    static constexpr uint32_t SPECULAR_OFFSET           = NORMAL_LENGTH_OFFSET + NORMAL_LENGTH_BIT_COUNT;
+    static constexpr uint32_t NORMAL_SIGN_BIT_OFFSET    = SPECULAR_OFFSET + SPECULAR_BIT_COUNT;
 
     public:
     // Leaf Unique Data
@@ -197,7 +207,7 @@ class AnisoSVOctreeGPU
 
     public:
     // Constructors & Destructor
-    __device__          AnisoSVOctreeGPU();
+    __host__          AnisoSVOctreeGPU();
     // Methods
     // Trace the ray over the SVO; returns tMin and leafId/nodeId
     // cone can terminate on a node due to its aperture
@@ -325,12 +335,27 @@ Vector3f VoxelPayload::ReadNormalAndSpecular(float& stdDev, float& specularity,
     uint32_t packedData = gFetchArray[nodeIndex];
 
     Vector3f normal;
-    normal[0] = static_cast<float>((packedData >> NORMAL_X_OFFSET) & NORMAL_X_BIT_MASK) * UNORM_9_FACTOR - SNORM_9_OFFSET;
-    normal[1] = static_cast<float>((packedData >> NORMAL_Y_OFFSET) & NORMAL_Y_BIT_MASK) * UNORM_9_FACTOR - SNORM_9_OFFSET;
-    normal[2] = sqrtf(1.0f - normal[0] * normal[0] - normal[1] * normal[1]);
+    // [0, 511]
+    normal[0] = static_cast<float>((packedData >> NORMAL_X_OFFSET) & NORMAL_X_BIT_MASK);
+    normal[1] = static_cast<float>((packedData >> NORMAL_Y_OFFSET) & NORMAL_Y_BIT_MASK);
+    // [0, 2]
+    normal[0] *= UNORM_NORM_X_FACTOR * 2.0f;
+    normal[1] *= UNORM_NORM_Y_FACTOR * 2.0f;
+    // [-1, 1]
+    normal[0] -= 1.0f;
+    normal[1] -= 1.0f;
+    // Z axis from normalization
+    normal[2] = sqrtf(max(0.0f, 1.0f - normal[0] * normal[0] - normal[1] * normal[1]));
+    normal.NormalizeSelf();
 
-    float normalLength = static_cast<float>((packedData >> NORMAL_STD_DEV_OFFSET) & NORMAL_STD_DEV_BIT_MASK) * UNORM_6_FACTOR;
-    specularity = static_cast<float>((packedData >> SPECULAR_OFFSET) & SPECULAR_BIT_MASK) * UNORM_8_FACTOR;
+    bool normalZSign = (packedData >> NORMAL_SIGN_BIT_OFFSET) & NORMAL_SIGN_BIT_MASK;
+    normal[2] *= (normalZSign) ? -1.0f : 1.0f;
+
+    float normalLength = static_cast<float>((packedData >> NORMAL_LENGTH_OFFSET) & NORMAL_LENGTH_BIT_MASK);
+    normalLength *= UNORM_LENGTH_FACTOR;
+
+    specularity = static_cast<float>((packedData >> SPECULAR_OFFSET) & SPECULAR_BIT_MASK);
+    specularity *= UNORM_SPEC_FACTOR;
 
     // Toksvig 2004
     stdDev = (1.0f - normalLength) / normalLength;
@@ -363,10 +388,7 @@ float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
     bool towardsNormal = (coneDirection.Dot(normal) >= 0.0f);
     uint32_t index = towardsNormal ? 0 : 1;
 
-    //return gIrradArray[nodeIndex][index];
-    return static_cast<float>(gIrradArray[nodeIndex][0] +
-                              gIrradArray[nodeIndex][1]) * 0.5f;
-
+    return gIrradArray[nodeIndex][index];
 }
 
 __device__ inline
@@ -389,14 +411,8 @@ bool VoxelPayload::WriteLeafRadiance(const Vector3f& outgoingDir,
     bool towardsNormal = (outgoingDir.Dot(normal) >= 0.0f);
     uint32_t index = towardsNormal ? 0 : 1;
     // Atomic operation here since many rays may update on learn operation
-    //atomicAdd(&(dTotalIrradianceLeaf[leafIndex][index]), radiance);
-    //atomicAdd(&(dSampleCountLeaf[leafIndex][index]), 1);
-
-
-    atomicAdd(&(dTotalIrradianceLeaf[leafIndex][0]), radiance);
-    atomicAdd(&(dSampleCountLeaf[leafIndex][0]), 1);
-    atomicAdd(&(dTotalIrradianceLeaf[leafIndex][1]), radiance);
-    atomicAdd(&(dSampleCountLeaf[leafIndex][1]), 1);
+    atomicAdd(&(dTotalIrradianceLeaf[leafIndex][index]), radiance);
+    atomicAdd(&(dSampleCountLeaf[leafIndex][index]), 1);
 }
 
 __device__ inline
@@ -416,19 +432,22 @@ void VoxelPayload::WriteNormalAndSpecular(const Vector3f& normal, float specular
     normalXY *= Vector2f(NORMAL_X_BIT_MASK, NORMAL_Y_BIT_MASK);
     Vector2ui packedNorm = Vector2ui(normalXY);
     // Length [0, 1]
-    // Length [0, 2^6)
-    length *= static_cast<float>(NORMAL_STD_DEV_BIT_MASK);
+    // Length [0, 2^7)
+    length *= static_cast<float>(NORMAL_LENGTH_BIT_MASK);
     uint32_t packedLength = static_cast<uint32_t>(length);
     // Specular [0, 1]
-    // Specular [0, 2^8)
-    specularity = static_cast<float>(SPECULAR_BIT_MASK);
+    // Specular [0, 2^6)
+    specularity *= static_cast<float>(SPECULAR_BIT_MASK);
     uint32_t packedSpecular = static_cast<uint32_t>(specularity);
+
+    uint32_t packedZSign = signbit(normal[2]) ? 1 : 0;
 
     uint32_t packedData = 0;
     packedData |= packedNorm[0] << NORMAL_X_OFFSET;
     packedData |= packedNorm[1] << NORMAL_Y_OFFSET;
-    packedData |= packedLength << NORMAL_STD_DEV_OFFSET;
+    packedData |= packedLength << NORMAL_LENGTH_OFFSET;
     packedData |= packedSpecular << SPECULAR_OFFSET;
+    packedData |= packedZSign << NORMAL_SIGN_BIT_OFFSET;
 
     gWriteArray[nodeIndex] = packedData;
 }
@@ -473,7 +492,7 @@ uint16_t AnisoSVOctreeGPU::AtomicAddUInt16(uint16_t* location, uint16_t value)
     return old;
 }
 
-__device__ inline
+__host__ inline
 AnisoSVOctreeGPU::AnisoSVOctreeGPU()
     : dLevelNodeOffsets(nullptr)
     , dNodes(nullptr)
@@ -1110,10 +1129,13 @@ bool AnisoSVOctreeGPU::SetLeafNormal(uint64_t mortonCode, Vector3f combinedNorma
         KERNEL_DEBUG_LOG("Error: SVO leaf not found!\n");
         return false;
     }
+
+    //printf("settingLeaf %llu (%f, %f, %f) -> leaf(%u)\n", mortonCode,
+    //       worldPos[0], worldPos[1], worldPos[2],
+    //       leafIndex);
     // TODO: what about specularity
     // Leaf normals are considered perfect
-    payload.WriteNormalAndSpecular(combinedNormal.Normalize(), 0.0f,
-                                   leafIndex, true);
+    payload.WriteNormalAndSpecular(combinedNormal, 0.0f, leafIndex, true);
     return true;
 }
 

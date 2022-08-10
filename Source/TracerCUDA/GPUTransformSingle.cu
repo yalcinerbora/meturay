@@ -5,7 +5,7 @@
 #include "RayLib/SceneNodeNames.h"
 #include "RayLib/MemoryAlignment.h"
 
-inline __device__ void ConstrucctTransform(GPUTransformSingle* gTransformLocation,
+inline __device__ void ConstructTransform(GPUTransformSingle* gTransformLocation,
                                            const Matrix4x4& transform,
                                            const Matrix4x4& invTransform)
 {
@@ -28,7 +28,7 @@ __global__ void KCConstructGPUTransform(GPUTransformSingle* gTransformLocations,
         invTransform = transform.Inverse();
 
         // Allocate class using transform and inverted transform
-        ConstrucctTransform(gTransformLocations + globalId,
+        ConstructTransform(gTransformLocations + globalId,
                             transform, invTransform);
     }
 }
