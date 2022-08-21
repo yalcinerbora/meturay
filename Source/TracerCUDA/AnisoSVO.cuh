@@ -229,7 +229,7 @@ class AnisoSVOctreeGPU
     half                ReadRadiance(const Vector3f& coneDirection, float coneAperture,
                                      uint32_t nodeId, bool isLeaf) const;
     __device__
-    Vector3f            DebugReadNormal(uint32_t nodeId, bool isLeaf) const;
+    Vector3f            DebugReadNormal(float stdDev, uint32_t nodeId, bool isLeaf) const;
 
     // Atomically Increment the ray count for that leafIndex
     __device__
@@ -906,9 +906,9 @@ half AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneApe
 }
 
 __device__ inline
-Vector3f AnisoSVOctreeGPU::DebugReadNormal(uint32_t nodeIndex, bool isLeaf) const
+Vector3f AnisoSVOctreeGPU::DebugReadNormal(float stdDev, uint32_t nodeIndex, bool isLeaf) const
 {
-    float stdDev, specularity;
+    float specularity;
     return payload.ReadNormalAndSpecular(stdDev, specularity,
                                          nodeIndex, isLeaf);
 }

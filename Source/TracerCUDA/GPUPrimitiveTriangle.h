@@ -441,8 +441,12 @@ struct TriFunctions
         Vector2f sphrCoords = Utility::CartesianToSphericalUnit(normal);
         sphrCoords[0] = (sphrCoords[0] + MathConstants::Pi) * MathConstants::InvPi * 0.5f;
         sphrCoords[1] = sphrCoords[1] * MathConstants::InvPi;
-        Vector2us sphrUnorm = Vector2us(static_cast<uint16_t>(sphrCoords[0] * 65535.0f),
-                                        static_cast<uint16_t>(sphrCoords[1] * 65535.0f));
+        // Due to numerical error this could slightly exceed [0, 65535]
+        // clamp it
+        Vector2i sphrUnormInt = Vector2i(static_cast<int32_t>(sphrCoords[0] * 65535.0f),
+                                         static_cast<int32_t>(sphrCoords[1] * 65535.0f));
+        sphrUnormInt.ClampSelf(0, 65535);
+        Vector2us sphrUnorm = Vector2us(sphrUnormInt[0], sphrUnormInt[1]);
 
         // Look towards to the dominant axis
         QuatF rot;

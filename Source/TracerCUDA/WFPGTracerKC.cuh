@@ -761,34 +761,39 @@ static void KCTraceSVO(// Output
                                       ray.tMin, ray.tMax,
                                       coneAperture);
 
-        Vector3f locColor = Vector3f(0.0f, 0.0f, 10.0f);
+        Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
         // Octree Display Mode
         if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
-            locColor = (svoNodeIndex != UINT32_MAX) ? Utility::RandomColorRGB(svoNodeIndex)
-                                                    : Vector3f(0.0f);
+            locColor = (svoNodeIndex != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(svoNodeIndex), 1.0f)
+                                                    : Vector4f(Vector3f(0.0f), 1.0f);
         // Payload Display Mode
         else if(svoNodeIndex == UINT32_MAX)
-            locColor = Vector3f(1.0f, 0.0f, 1.0f);
+            locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
         else if(mode == WFPGRenderMode::SVO_RADIANCE)
         {
             Vector3f coneDir = ray.ray.getDirection();
             half radiance = svo.ReadRadiance(coneDir, coneAperture,
                                              svoNodeIndex, isLeaf);
             float radianceF = radiance;
-            locColor = Vector3f(radianceF);
+            locColor = Vector4f(Vector3f(radianceF), 1.0f);
         }
         else if(mode == WFPGRenderMode::SVO_NORMAL)
         {
-            Vector3f normal = svo.DebugReadNormal(svoNodeIndex, isLeaf);
+            float stdDev;
+            Vector3f normal = svo.DebugReadNormal(stdDev, svoNodeIndex, isLeaf);
+
+            // Voxels are two sided show the normal for the current direction
+            normal = (normal.Dot(ray.ray.getDirection()) >= 0.0f) ? normal : -normal;
+
             // Convert normal to 0-1 range
             normal += Vector3f(1.0f);
             normal *= Vector3f(0.5f);
-            locColor = normal;
+            locColor = Vector4f(normal, stdDev);
         }
         // Accumulate the pixel
         AccumulateRaySample(gSamples,
                             aux.sampleIndex,
-                            Vector4f(locColor, 1.0f));
+                            locColor);
     }
 }
 

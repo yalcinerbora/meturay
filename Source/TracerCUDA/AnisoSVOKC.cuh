@@ -29,7 +29,8 @@ void KCReduceVoxelPayload(// I-O
     {
         Vector2f normalSphr = Vector2f(static_cast<float>(packedNormal[0]) / 65535.0f,
                                        static_cast<float>(packedNormal[1]) / 65535.0f);
-        normalSphr[0] *= MathConstants::Pi * 2.0f - MathConstants::Pi;
+        normalSphr[0] *= MathConstants::Pi * 2.0f;
+        normalSphr[0] -= MathConstants::Pi;
         normalSphr[1] *= MathConstants::Pi;
         return Utility::SphericalToCartesianUnit(normalSphr).Normalize();
     };
