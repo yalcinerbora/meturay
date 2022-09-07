@@ -205,7 +205,7 @@ void KCSetParentOfLeafChildren(uint32_t* gLeafParents,
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
                                 // Input
-                                const PathGuidingNode* gPathNodes,
+                                const WFPGPathNode* gPathNodes,
                                 uint32_t nodeCount,
                                 uint32_t maxPathNodePerRay)
 {
@@ -218,14 +218,18 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
         const uint32_t nodeIndex = threadId;
         const uint32_t pathStartIndex = nodeIndex / maxPathNodePerRay * maxPathNodePerRay;
 
-        PathGuidingNode gPathNode = gPathNodes[nodeIndex];
+        WFPGPathNode gPathNode = gPathNodes[nodeIndex];
 
         // Skip if this node cannot calculate wo
         if(!gPathNode.HasPrev()) continue;
 
-        Vector3f wo = gPathNode.Wo<PathGuidingNode>(gPathNodes, pathStartIndex);
+        Vector3f wo = gPathNode.Wo<WFPGPathNode>(gPathNodes, pathStartIndex);
+        Vector3f wi = gPathNode.Wi<WFPGPathNode>(gPathNodes, pathStartIndex);
+
         float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
-        unableToAccum |= !svo.DepositRadiance(gPathNode.worldPosition, wo, luminance);
+        unableToAccum |= !svo.DepositRadiance(gPathNode.worldPosition,
+                                              gPathNode.Normal(),
+                                              wi, wo, luminance);
     }
     // Debug
     if(unableToAccum)
@@ -929,7 +933,7 @@ void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount
 }
 
 
-void AnisoSVOctreeCPU::AccumulateRaidances(const PathGuidingNode* dPGNodes,
+void AnisoSVOctreeCPU::AccumulateRaidances(const WFPGPathNode* dPGNodes,
                                            uint32_t totalNodeCount,
                                            uint32_t maxPathNodePerRay,
                                            const CudaSystem& system)

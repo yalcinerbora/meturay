@@ -118,13 +118,13 @@ void KCReduceVoxelPayload(// I-O
                 uint32_t localOffset = i * WARP_SIZE + warpLocalId;
                 uint32_t combinedOffset = passOffset + localOffset;
                 // Only fetch if in range
-                 if(combinedOffset < dupVoxCount)
-                 {
-                     uint32_t voxelIndex = gSortedVoxelIndices[reduceRange[0] + combinedOffset];
-                     Vector2us packedNormal = gVoxelNormals[voxelIndex];
-                     normals[i] = UnpackNormal(packedNormal);
-                 }
-                 else normals[i] = Zero3f;
+                if(combinedOffset < dupVoxCount)
+                {
+                    uint32_t voxelIndex = gSortedVoxelIndices[reduceRange[0] + combinedOffset];
+                    Vector2us packedNormal = gVoxelNormals[voxelIndex];
+                    normals[i] = UnpackNormal(packedNormal);
+                }
+                else normals[i] = Zero3f;
             }
         };
 

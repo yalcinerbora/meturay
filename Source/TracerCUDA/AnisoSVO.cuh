@@ -13,7 +13,7 @@
 #include "MortonCode.cuh"
 #include "BinarySearch.cuh"
 
-struct PathGuidingNode;
+struct WFPGPathNode;
 class CudaSystem;
 
 // Voxel Payload (SoA)
@@ -90,7 +90,8 @@ struct VoxelPayload
     float               ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf) const;
 
     __device__
-    bool                WriteLeafRadiance(const Vector3f& outgoingDir,
+    bool                WriteLeafRadiance(const Vector3f& wi, const Vector3f& wo,
+                                          const Vector3f& surfaceNormal,
                                           uint32_t leafIndex, float radiance);
     __device__
     void                WriteNormalAndSpecular(const Vector3f& normal, float specularity,
@@ -218,7 +219,10 @@ class AnisoSVOctreeGPU
     // Deposit radiance to the nearest voxel leaf
     // Uses atomics, returns false if no leaf is found on this location
     __device__
-    bool                DepositRadiance(const Vector3f& worldPos, const Vector3f& outgoingDir,
+    bool                DepositRadiance(const Vector3f& worldPos,
+                                        const Vector3f& surfaceNormal,
+                                        const Vector3f& wi,
+                                        const Vector3f& wo,
                                         float radiance);
 
     // Read the radiance value from the specified node,
@@ -229,7 +233,7 @@ class AnisoSVOctreeGPU
     half                ReadRadiance(const Vector3f& coneDirection, float coneAperture,
                                      uint32_t nodeId, bool isLeaf) const;
     __device__
-    Vector3f            DebugReadNormal(float stdDev, uint32_t nodeId, bool isLeaf) const;
+    Vector3f            DebugReadNormal(float& stdDev, uint32_t nodeId, bool isLeaf) const;
 
     // Atomically Increment the ray count for that leafIndex
     __device__
@@ -311,7 +315,7 @@ class AnisoSVOctreeCPU
                                               uint32_t minRayCount,
                                               const CudaSystem&);
     // Accumulate the Emissive Radiance from the paths
-    void                    AccumulateRaidances(const PathGuidingNode* dPGNodes,
+    void                    AccumulateRaidances(const WFPGPathNode* dPGNodes,
                                                 uint32_t totalNodeCount,
                                                 uint32_t maxPathNodePerRay,
                                                 const CudaSystem&);
@@ -385,7 +389,8 @@ float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
 
     // Currently we are just fetching irradiance
     // which side are we on
-    bool towardsNormal = (coneDirection.Dot(normal) >= 0.0f);
+    // Note that "coneDirection" is towards to the surface
+    bool towardsNormal = (coneDirection.Dot(-normal) >= 0.0f);
     uint32_t index = towardsNormal ? 0 : 1;
 
     return gIrradArray[nodeIndex][index];
@@ -399,7 +404,9 @@ float VoxelPayload::ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf) const
 }
 
 __device__ inline
-bool VoxelPayload::WriteLeafRadiance(const Vector3f& outgoingDir,
+bool VoxelPayload::WriteLeafRadiance(const Vector3f& surfaceNormal,
+                                     const Vector3f& wi,
+                                     const Vector3f& wo,
                                      uint32_t leafIndex,
                                      float radiance)
 {
@@ -407,9 +414,39 @@ bool VoxelPayload::WriteLeafRadiance(const Vector3f& outgoingDir,
     // Fetch normal to estimate the surface confidence
     Vector3f normal = ReadNormalAndSpecular(normalDeviation, specularity,
                                             leafIndex, true);
+
+    // Use actual surface normal to determine which side
+    // we should accumulate
+    float NdN = normal.Dot(surfaceNormal);
+    float NdL = normal.Dot(wo);
+    float NdV = normal.Dot(wi);
+
+    bool towardsFront = ((NdN >= 0.0f)
+                         && (NdL >= 0.0f)
+                         //&& (NdV >= 0.0f)
+                         );
+
+    bool towardsBack = ((NdN < 0.0f)
+                        && (NdL < 0.0f)
+                        //&& (NdV < 0.0f)
+                        );
+
+    if(!towardsFront && !towardsBack)
+        return true;
+
+    uint32_t index = towardsFront ? 0 : 1;
+
     // TODO: Distribute the radiance properly using normals std deviation
-    bool towardsNormal = (outgoingDir.Dot(normal) >= 0.0f);
-    uint32_t index = towardsNormal ? 0 : 1;
+    //float cosAlpha = wo.Dot(normal);
+    //float cosBeta = wi.Dot(normal);
+    //bool towardsNormal = (cosAlpha >= 0.0f);/* && (cosBeta >= 0.0f);*/
+    //bool towardsBackNormal = (cosAlpha < 0.0f) && (cosBeta < 0.0f);
+
+    //// If this vertex represents inter-reflection
+    //// Don't accumulate (this will create light leak)
+    //if(!towardsNormal && !towardsBackNormal)
+    //    return true;
+
     // Atomic operation here since many rays may update on learn operation
     atomicAdd(&(dTotalIrradianceLeaf[leafIndex][index]), radiance);
     atomicAdd(&(dSampleCountLeaf[leafIndex][index]), 1);
@@ -906,7 +943,7 @@ half AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneApe
 }
 
 __device__ inline
-Vector3f AnisoSVOctreeGPU::DebugReadNormal(float stdDev, uint32_t nodeIndex, bool isLeaf) const
+Vector3f AnisoSVOctreeGPU::DebugReadNormal(float& stdDev, uint32_t nodeIndex, bool isLeaf) const
 {
     float specularity;
     return payload.ReadNormalAndSpecular(stdDev, specularity,
@@ -915,17 +952,21 @@ Vector3f AnisoSVOctreeGPU::DebugReadNormal(float stdDev, uint32_t nodeIndex, boo
 
 __device__ inline
 bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
-                                       const Vector3f& outgoingDir,
+                                       const Vector3f& surfaceNormal,
+                                       const Vector3f& wi,
+                                       const Vector3f& wo,
                                        float radiance)
 {
     // Find the leaf here
     uint32_t lIndex;
     bool leafFound = LeafIndex(lIndex, worldPos, true);
+
     // We should always find a leaf with the true flag
     if(leafFound)
     {
         // Atomically set the sample
-        payload.WriteLeafRadiance(outgoingDir, lIndex, radiance);
+        payload.WriteLeafRadiance(wi, wo, surfaceNormal,
+                                  lIndex, radiance);
     }
     return leafFound;
 }

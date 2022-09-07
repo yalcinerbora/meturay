@@ -14,6 +14,8 @@ information
 */
 
 #include "RayLib/Vector.h"
+#include "RayLib/Constants.h"
+#include "RayLib/CoordinateConversion.h"
 
 // Path node is base class for path related data
 // It is designed to have minimal memory footprint in order to save
@@ -40,6 +42,10 @@ struct PathNode
     __device__ Vector3f     Wi(const Node* gNodeList, uint32_t pathStartIndex);
     template <class Node>
     __device__ Vector3f     Wo(const Node* gNodeList, uint32_t pathStartIndex);
+    template <class Node>
+    __device__ Vector3f     NextPos(const Node* gNodeList, uint32_t pathStartIndex);
+    template <class Node>
+    __device__ Vector3f     PrevPos(const Node* gNodeList, uint32_t pathStartIndex);
 
     __device__ bool         HasPrev();
     __device__ bool         HasNext();
@@ -65,8 +71,30 @@ Vector3f PathNode::Wo(const Node* gNodeList, uint32_t pathStartIndex)
     // Specifically put infinity here to catch some errors
     if(prev == InvalidIndex) return Vector3f(INFINITY);
     //
-    Vector3f wi = gNodeList[pathStartIndex + prev].worldPosition - worldPosition;
-    return wi.Normalize();
+    Vector3f wo = gNodeList[pathStartIndex + prev].worldPosition - worldPosition;
+    return wo.Normalize();
+}
+
+template <class Node>
+__device__ inline
+Vector3f PathNode::NextPos(const Node* gNodeList, uint32_t pathStartIndex)
+{
+    IndexType next = prevNext[1];
+    // Specifically put infinity here to catch some errors
+    if(next == InvalidIndex) return Vector3f(INFINITY);
+
+    return gNodeList[pathStartIndex + next].worldPosition;
+}
+
+template <class Node>
+__device__ inline
+Vector3f PathNode::PrevPos(const Node* gNodeList, uint32_t pathStartIndex)
+{
+    IndexType prev = prevNext[0];
+    // Specifically put infinity here to catch some errors
+    if(prev == InvalidIndex) return Vector3f(INFINITY);
+
+    return gNodeList[pathStartIndex + prev].worldPosition;
 }
 
 __device__ inline
@@ -103,6 +131,14 @@ struct PathGuidingNode : public PathNode
 struct PPGPathNode : public PathGuidingNode
 {
     uint32_t            dataStructIndex;    // Index of an arbitrary data structure
+};
+
+struct WFPGPathNode : public PathGuidingNode
+{
+    Vector2us               packedNormal;
+
+    __device__ Vector3f     Normal() const;
+    __device__ void         SetNormal(const Vector3f& normal);
 };
 
 __device__ inline
@@ -144,6 +180,32 @@ void PathGuidingNode::AccumRadianceUpChain(const Vector3f& endPointRadiance,
     }
 }
 
+__device__ inline
+Vector3f WFPGPathNode::Normal() const
+{
+    Vector2f normalSphr = Vector2f(static_cast<float>(packedNormal[0]) / 65535.0f,
+                                   static_cast<float>(packedNormal[1]) / 65535.0f);
+    normalSphr[0] *= MathConstants::Pi * 2.0f;
+    normalSphr[0] -= MathConstants::Pi;
+    normalSphr[1] *= MathConstants::Pi;
+    return Utility::SphericalToCartesianUnit(normalSphr).Normalize();
+}
+
+__device__ inline
+void WFPGPathNode::SetNormal(const Vector3f& normal)
+{
+       // Calculate Spherical UV Coordinates of the normal
+    Vector2f sphrCoords = Utility::CartesianToSphericalUnit(normal);
+    sphrCoords[0] = (sphrCoords[0] + MathConstants::Pi) * MathConstants::InvPi * 0.5f;
+    sphrCoords[1] = sphrCoords[1] * MathConstants::InvPi;
+    // Due to numerical error this could slightly exceed [0, 65535]
+    // clamp it
+    Vector2i sphrUnormInt = Vector2i(static_cast<int32_t>(sphrCoords[0] * 65535.0f),
+                                     static_cast<int32_t>(sphrCoords[1] * 65535.0f));
+    sphrUnormInt.ClampSelf(0, 65535);
+    packedNormal = Vector2us(sphrUnormInt[0], sphrUnormInt[1]);
+}
+
 __global__
 static void KCInitializePPGPaths(PPGPathNode* gPathNodes,
                                  uint32_t totalNodeCount)
@@ -170,6 +232,23 @@ static void KCInitializePGPaths(PathGuidingNode* gPathNodes,
     if(globalId < totalNodeCount)
     {
         PathGuidingNode node;
+        node.radFactor = Vector3f(1.0f);
+        node.prevNext = Vector<2, PathNode::IndexType>(PathNode::InvalidIndex);
+        node.totalRadiance = Zero3;
+        node.worldPosition = Zero3;
+
+        gPathNodes[globalId] = node;
+    }
+}
+
+__global__
+static void KCInitializeWFPGPaths(WFPGPathNode* gPathNodes,
+                                  uint32_t totalNodeCount)
+{
+    uint32_t globalId = threadIdx.x + blockIdx.x * blockDim.x;
+    if(globalId < totalNodeCount)
+    {
+        WFPGPathNode node;
         node.radFactor = Vector3f(1.0f);
         node.prevNext = Vector<2, PathNode::IndexType>(PathNode::InvalidIndex);
         node.totalRadiance = Zero3;

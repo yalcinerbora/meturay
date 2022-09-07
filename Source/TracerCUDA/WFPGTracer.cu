@@ -159,7 +159,7 @@ void KCNormalizeImage(// I-O
 
 __global__
 void KCSetCamPosToPathChain(// Output
-                            PathGuidingNode* gPathNodes,
+                            WFPGPathNode* gPathNodes,
                             // Input
                             const RayGMem* gRays,
                             // Constants
@@ -191,17 +191,17 @@ void WFPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
     //METU_LOG("Allocating WFPGTracer global path buffer: Size {:d} MiB",
-    //         totalPathNodeCount * sizeof(PathGuidingNode) / 1024 / 1024);
+    //         totalPathNodeCount * sizeof(WFPGPathNode) / 1024 / 1024);
 
-    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(PathGuidingNode));
-    dPathNodes = static_cast<PathGuidingNode*>(pathMemory);
+    GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(WFPGPathNode));
+    dPathNodes = static_cast<WFPGPathNode*>(pathMemory);
 
     // Initialize Paths
     const CudaGPU& bestGPU = cudaSystem.BestGPU();
     if(totalPathNodeCount > 0)
         bestGPU.KC_X(0, 0, totalPathNodeCount,
                      //
-                     KCInitializePGPaths,
+                     KCInitializeWFPGPaths,
                      //
                      dPathNodes,
                      static_cast<uint32_t>(totalPathNodeCount));

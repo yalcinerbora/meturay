@@ -36,7 +36,7 @@ struct WFPGTracerGlobalState
     // Path Guiding Related
     AnisoSVOctreeGPU                svo;
     // Path Related
-    PathGuidingNode*                gPathNodes;
+    WFPGPathNode*                   gPathNodes;
     uint32_t                        maximumPathNodePerRay;
     // Options
     // Path Guiding
@@ -82,7 +82,7 @@ void WFPGTracerBoundaryWork(// Output
 
     // Current Path
     const uint32_t pathStartIndex = aux.sampleIndex * renderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
+    WFPGPathNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // Check Material Sample Strategy
     assert(maxOutRay == 0);
@@ -203,7 +203,7 @@ void WFPGTracerPathWork(// Output
 
     // Path Memory
     const uint32_t pathStartIndex = aux.sampleIndex * renderState.maximumPathNodePerRay;
-    PathGuidingNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
+    WFPGPathNode* gLocalPathNodes = renderState.gPathNodes + pathStartIndex;
 
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
@@ -508,15 +508,16 @@ void WFPGTracerPathWork(// Output
     uint8_t prevPathIndex = DeterminePathIndexWFPG(aux.depth - 1);
     uint8_t curPathIndex = DeterminePathIndexWFPG(aux.depth);
 
-    PathGuidingNode node;
+    WFPGPathNode node;
     //printf("WritingNode PC:(%u %u) W:(%f, %f, %f) RF:(%f, %f, %f) Path: %u\n",
     //       static_cast<uint32_t>(prevPathIndex), static_cast<uint32_t>(curPathIndex),
     //       position[0], position[1], position[2],
     //       pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
     //       aux.pathIndex);
-    node.prevNext[1] = PathGuidingNode::InvalidIndex;
+    node.prevNext[1] = WFPGPathNode::InvalidIndex;
     node.prevNext[0] = prevPathIndex;
     node.worldPosition = position;
+    node.SetNormal(surface.WorldGeoNormal());
     // Unlike other techniques that holds incoming radiance
     // WFPG holds outgoing radiance. To calculate that, wee need to store
     // previous paths throughput
@@ -524,7 +525,7 @@ void WFPGTracerPathWork(// Output
     node.totalRadiance = Zero3;
     gLocalPathNodes[curPathIndex] = node;
     // Set Previous Path node's next index
-    if(prevPathIndex != PathGuidingNode::InvalidIndex)
+    if(prevPathIndex != WFPGPathNode::InvalidIndex)
         gLocalPathNodes[prevPathIndex].prevNext[1] = curPathIndex;
 
     // All Done!
@@ -786,8 +787,8 @@ static void KCTraceSVO(// Output
             normal = (normal.Dot(ray.ray.getDirection()) >= 0.0f) ? normal : -normal;
 
             // Convert normal to 0-1 range
-            normal += Vector3f(1.0f);
-            normal *= Vector3f(0.5f);
+            //normal += Vector3f(1.0f);
+            //normal *= Vector3f(0.5f);
             locColor = Vector4f(normal, stdDev);
         }
         // Accumulate the pixel
