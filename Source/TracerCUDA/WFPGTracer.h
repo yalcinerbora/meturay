@@ -31,6 +31,8 @@ class WFPGTracer final : public RayTracer
         static constexpr const char*    SVO_DEBUG_ITER_NAME     = "SVODebugRenderIter";
         static constexpr const char*    DUMP_DEBUG_NAME         = "DumpDebugData";
         static constexpr const char*    DUMP_INTERVAL_NAME      = "DataDumpIntervalExp";
+        static constexpr const char*    RENDER_LEVEL_NAME       = "SVORenderLevel";
+
 
         struct Options
         {
@@ -55,6 +57,7 @@ class WFPGTracer final : public RayTracer
             uint32_t            svoRadRenderIter    = 2;
             bool                dumpDebugData       = false;
             uint32_t            svoDumpInterval     = 2;
+            uint32_t            svoRenderLevel      = 0;
         };
 
     private:

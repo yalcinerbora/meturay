@@ -347,7 +347,7 @@
             "primitive": [8, 9, 10, 11, 12, 13, 14, 15]
         },
         // Floor Front
-        {"transform": 0, "accelerator": 1, "material": 10, "primitive": 16},
+         {"transform": 0, "accelerator": 1, "material": 10, "primitive": 16},
         // Floor Back
         {"transform": 0, "accelerator": 1, "material": 2, "primitive": 17},
         // Picture Frame & Picture

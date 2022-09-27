@@ -137,10 +137,12 @@ void KCReduceVoxelPayload(// I-O
         Vector3f meanNormals[2][MEAN_COUNT];
         uint32_t counts[2][MEAN_COUNT];
 
-        meanNormals[0][0] = cub::ShuffleIndex<WARP_SIZE>(normals[0], 0, 0xFFFFFFFF);
-
         // Select two extremes as means
+        meanNormals[0][0] = cub::ShuffleIndex<WARP_SIZE>(normals[0], 0, 0xFFFFFFFF);
         meanNormals[0][1] = -meanNormals[0][0];
+        // Init accum counts
+        counts[1][0] = 0;
+        counts[1][1] = 0;
 
         // Start cluster iteration
         // Do 2-means clustering

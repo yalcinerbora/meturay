@@ -17,6 +17,34 @@
 
 #include <array>
 
+// DEBUG
+std::ostream& operator<<(std::ostream& stream, const RayAuxWFPG& v)
+{
+    stream << std::setw(0)
+        << v.sampleIndex << ", "
+        << "{" << v.radianceFactor[0]
+        << "," << v.radianceFactor[1]
+        << "," << v.radianceFactor[2] << "} "
+        << v.endpointIndex << ", "
+        << v.mediumIndex << " ";
+    switch(v.type)
+    {
+        case RayType::CAMERA_RAY:
+            stream << "CAMERA_RAY";
+            break;
+        case RayType::NEE_RAY:
+            stream << "NEE_RAY";
+            break;
+        case RayType::SPECULAR_PATH_RAY:
+            stream << "SPEC_PATH_RAY";
+            break;
+        case RayType::PATH_RAY:
+            stream << "PATH_RAY";
+    }
+    stream << " {binId " << v.binId << "}";
+    return stream;
+}
+
 // Currently These are compile time constants
 // since most of the internal call rely on compile time constants
 static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
@@ -53,9 +81,9 @@ static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_TPB =
 {
     512,
     512,
-    512,
     256,
     256,
+    128,
 };
 
 static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegin(),
@@ -64,18 +92,17 @@ static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegi
 static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KERNELS =
 {
     KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 32>,    // First bounce good approximation
-    //KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 64>,    // First bounce good approximation
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 64, 32>,    // Second bounce as well
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 32, 16>,    // Third bounce not so much
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce bad
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>       // Fifth is bad as well
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 32, 16>,    // Second bounce as well
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 16, 8>,     // Third bounce not so much
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce as well
+    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>       // Fifth is bad
 };
 
 static constexpr std::array<float, PG_KERNEL_TYPE_COUNT> CONE_APERTURES =
 {
-    SphericalConeAperture(64, 32), //SphericalConeAperture(64, 64),
     SphericalConeAperture(64, 32),
     SphericalConeAperture(32, 16),
+    SphericalConeAperture(16, 8),
     SphericalConeAperture(16, 8),
     SphericalConeAperture(8, 4)
 };
@@ -263,8 +290,12 @@ void WFPGTracer::GenerateGuidedDirections()
                        svo.TreeGPU(),
                        rayCount);
 
+    // While iterating with values user may forget to change the minRayBinLevel
+    // to a valid value clamp it to the ray level
+    uint32_t validBinLevel = std::min(options.octreeLevel,
+                                      options.minRayBinLevel);
     // Then call SVO to reduce the bins
-    svo.CollapseRayCounts(options.minRayBinLevel,
+    svo.CollapseRayCounts(validBinLevel,
                           options.binRayCount,
                           cudaSystem);
 
@@ -276,7 +307,6 @@ void WFPGTracer::GenerateGuidedDirections()
                        dRayAux,
                        svo.TreeGPU(),
                        rayCount);
-
     // Partition the generated rays wrt. to the SVO nodeId
     uint32_t hPartitionCount;
     uint32_t* dPartitionOffsets;
@@ -295,8 +325,6 @@ void WFPGTracer::GenerateGuidedDirections()
     // Call the Trace and Sample Kernel
     // Select the kernel depending on the depth
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
-
-    kernelIndex = std::max(kernelIndex, 2u);
 
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
@@ -607,6 +635,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.svoDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetUInt(options.svoRenderLevel, RENDER_LEVEL_NAME)) != TracerError::OK)
+        return err;
     if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
 
@@ -880,6 +910,7 @@ bool WFPGTracer::Render()
                            static_cast<RayAuxWFPG*>(*dAuxIn),
                            coneAperture,
                            options.renderMode,
+                           options.svoRenderLevel,
                            totalRayCount);
         // Signal as if we finished processing
         return false;
@@ -1052,6 +1083,7 @@ void WFPGTracer::Finalize()
                            static_cast<RayAuxWFPG*>(*dAuxIn),
                            coneAperture,
                            WFPGRenderMode::SVO_RADIANCE,
+                           options.svoRenderLevel,
                            totalRayCount);
 
         // Completely Reset the Image

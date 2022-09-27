@@ -297,16 +297,17 @@ void WFPGTracerPathWork(// Output
                                               // Constants
                                               gMatData,
                                               matIndex);
+
+            // Check if mis ray should be sampled
+            shouldLaunchMISRay = (renderState.directLightMIS &&
+                                  // Check if light can be sampled (meaning it is not a
+                                  // dirac delta light (point light spot light etc.)
+                                  renderState.gLightList[lightIndex]->CanBeSampled());
         }
+        else shouldLaunchMISRay = false;
 
-        // Check if mis ray should be sampled
-        shouldLaunchMISRay = (renderState.directLightMIS &&
-                              // Check if light can be sampled (meaning it is not a
-                              // dirac delta light (point light spot light etc.)
-                              renderState.gLightList[lightIndex]->CanBeSampled());
-
-        float pdfNEE = pdfLight;
         // Weight the NEE if using MIS
+        float pdfNEE = pdfLight;
         if(shouldLaunchMISRay)
         {
             float pdfBxDF = MGroup::Pdf(lDirection,
@@ -747,6 +748,7 @@ static void KCTraceSVO(// Output
                        // Constants
                        const float coneAperture,
                        WFPGRenderMode mode,
+                       uint32_t maxQueryLevel,
                        uint32_t rayCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -759,7 +761,7 @@ static void KCTraceSVO(// Output
         bool isLeaf;
         uint32_t svoNodeIndex;
         float tMin = svo.ConeTraceRay(isLeaf, svoNodeIndex, ray.ray,
-                                      ray.tMin, ray.tMax,
+                                      ray.tMin, ray.tMax, maxQueryLevel,
                                       coneAperture);
 
         Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
@@ -776,7 +778,8 @@ static void KCTraceSVO(// Output
             half radiance = svo.ReadRadiance(coneDir, coneAperture,
                                              svoNodeIndex, isLeaf);
             float radianceF = radiance;
-            locColor = Vector4f(Vector3f(radianceF), 1.0f);
+            if(radiance != static_cast<half>(MRAY_HALF_MAX))
+                locColor = Vector4f(Vector3f(radianceF), 1.0f);
         }
         else if(mode == WFPGRenderMode::SVO_NORMAL)
         {
@@ -924,11 +927,7 @@ static void KCCheckReducedSVOBins(// I-O
 
         bool isLeaf;
         uint32_t newBinId = svo.FindMarkedBin(isLeaf, leafNodeId);
-
-        if(!isLeaf)
-        {
-            gRayAux[threadId].binId = newBinId;
-        }
+        if(!isLeaf) gRayAux[threadId].binId = newBinId;
     }
 }
 

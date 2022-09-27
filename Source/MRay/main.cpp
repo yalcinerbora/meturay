@@ -25,8 +25,6 @@ int main(int argc, const char* argv[])
     // Fancy CMD
     EnableVTMode();
 
-    std::locale::global(std::locale("en_US.UTF-8"));
-
     std::array<int, 2> resolution;
     std::string tracerConfigFileName;
     std::string visorConfigFileName;

@@ -224,7 +224,12 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
         if(!gPathNode.HasPrev()) continue;
 
         Vector3f wo = gPathNode.Wo<WFPGPathNode>(gPathNodes, pathStartIndex);
-        Vector3f wi = gPathNode.Wi<WFPGPathNode>(gPathNodes, pathStartIndex);
+        Vector3f wi = wo;
+        // Only consider wi if valid or ignore
+        // This should only fail when a SVO node has both light source and surface
+        // then light will leak behind, this should be a rare case
+        if(gPathNode.HasNext())
+           wi = gPathNode.Wi<WFPGPathNode>(gPathNodes, pathStartIndex);
 
         float luminance = Utility::RGBToLuminance(gPathNode.totalRadiance);
         unableToAccum |= !svo.DepositRadiance(gPathNode.worldPosition,
@@ -337,14 +342,14 @@ void KCCCopyRadianceToHalfBufferLeaf(// I-O
         threadId < leafCount;
         threadId += (blockDim.x * gridDim.x))
     {
-        // Read from the value;
+        // Read the float
         Vector2ui count = dLeafSampleCountWrite[threadId];
         Vector2f irradiance = dLeafRadianceWrite[threadId];
         Vector2f avgRadiance = Vector2f(irradiance[0] / static_cast<float>(count[0]),
                                         irradiance[1] / static_cast<float>(count[1]));
-        // Avoid NaN if not accumulation occured
-        avgRadiance[0] = (count[0] == 0) ? 0.0f : avgRadiance[0];
-        avgRadiance[1] = (count[1] == 0) ? 0.0f : avgRadiance[1];
+        // Avoid NaN if not accumulation occurred
+        avgRadiance[0] = (count[0] == 0) ? MRAY_HALF_MAX : avgRadiance[0];
+        avgRadiance[1] = (count[1] == 0) ? MRAY_HALF_MAX : avgRadiance[1];
         // Normalize & Clamp the half range for now
         Vector2f irradClampled = Vector2f::Min(avgRadiance, Vector2f(MRAY_HALF_MAX));
 
@@ -370,6 +375,213 @@ void KCConvertToAnisoFloat(Vector2f* gAnisoOut,
         gOut[1] = in[1];
     }
 }
+
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCAverageNormals(//I-O
+                      VoxelPayload payload,
+                      // Input
+                      const uint64_t* dNodes,
+                      const uint32_t* dLevelNodeOffsets,
+                      // Constants
+                      uint32_t level,
+                      uint32_t levelNodeCount,
+                      bool childrenAreLeaf)
+{
+    static constexpr uint32_t MEAN_COUNT = 2;
+    static constexpr uint32_t MAX_CHILD_COUNT = 8;
+    static constexpr uint32_t K_MEANS_CLUSTER_ITER_COUNT = 4;
+    // Buffers
+    Vector3f normals[MAX_CHILD_COUNT];
+    Vector3f meanNormals[2][MEAN_COUNT];
+    uint32_t counts[2][MEAN_COUNT];
+
+    auto KMeansCluster = [&](uint32_t validChildCount)
+    {
+        for(uint32_t kMeanPassId = 0; kMeanPassId < K_MEANS_CLUSTER_ITER_COUNT; kMeanPassId++)
+        {
+            uint32_t readIndex = kMeanPassId % 2;
+            uint32_t writeIndex = (readIndex == 0) ? 1 : 0;
+            // For each iteration cluster the normals
+            for(uint32_t nIndex = 0; nIndex < validChildCount; nIndex++)
+            {
+                // Skip if we are on an edge case
+                if(normals[nIndex] == Vector3f(0.0f)) continue;
+
+                // Do the mean calculation
+                // Calculate angular distance and choose your mean
+                float angularDist0 = 1.0f - meanNormals[readIndex][0].Dot(normals[nIndex]);
+                float angularDist1 = 1.0f - meanNormals[readIndex][1].Dot(normals[nIndex]);
+
+                uint32_t updateIndex = (angularDist0 >= angularDist1) ? 0 : 1;
+                meanNormals[writeIndex][updateIndex] += normals[nIndex];
+                counts[writeIndex][updateIndex] += 1;
+            }
+            // Pass is done, swap buffers (automatic)
+            // Clean the accumulation buffers
+            meanNormals[readIndex][0] = Zero3f;
+            meanNormals[readIndex][1] = Zero3f;
+            counts[readIndex][0] = 0;
+            counts[readIndex][1] = 0;
+        }
+    };
+
+    const uint32_t levelNodeOffset = dLevelNodeOffsets[level];
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < levelNodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint32_t nodeIndex = levelNodeOffset + threadId;
+        uint64_t nodeData = dNodes[nodeIndex];
+
+        // Get children count & child offset
+        uint32_t childrenCount = AnisoSVOctreeGPU::ChildrenCount(nodeData);
+        uint32_t childrenIndex = AnisoSVOctreeGPU::ChildrenIndex(nodeData);
+        // For non-leaf this is mandatory
+        assert(childrenCount > 0);
+
+        // Load normals to the buffer
+        // Might as well average the specular while at it
+        float avgSpecular = 0;
+        for(uint32_t i = 0; i < childrenCount; i++)
+        {
+            // Get the normal
+            float stdDev, specular;
+            Vector3f normal = payload.ReadNormalAndSpecular(stdDev, specular,
+                                                            childrenIndex + i, childrenAreLeaf);
+            // Reverse the Toksvig 2004
+            float normalLength = 1.0f / (1.0f + stdDev);
+            normals[i] = normal * normalLength;
+            // Specular is classic average
+            avgSpecular += specular;
+        }
+        float childrenCountRecip = 1.0f / static_cast<float>(childrenCount);
+        avgSpecular *= childrenCountRecip;
+
+        // Do K-Means Cluster (K=2)
+        // Select extremes
+        meanNormals[0][0] = normals[0];
+        meanNormals[0][1] = -normals[0];
+        counts[1][0] = 0;
+        counts[1][1] = 0;
+        KMeansCluster(childrenCount);
+
+        // Clustering is complete,
+        // choose the cluster that has maximum amount of normals in it
+        uint32_t normalIndex = (counts[0][0] >= counts[0][1]) ? 0 : 1;
+        meanNormals[0][normalIndex] *= (1.0f / static_cast<float>(counts[0][normalIndex]));
+        uint32_t normalLength = meanNormals[0][normalIndex].Length();
+
+        // Now set
+        payload.WriteNormalAndSpecular(meanNormals[0][normalIndex],
+                                       avgSpecular, nodeIndex, false);
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCBottomUpFilterIrradiance(//I-O
+                                VoxelPayload payload,
+                                // Input
+                                const uint64_t* dNodes,
+                                const uint32_t* dLevelNodeOffsets,
+                                // Constants
+                                uint32_t level,
+                                uint32_t levelNodeCount,
+                                bool childrenAreLeaf)
+{
+    // TODO: do proper filtering
+    const uint32_t levelNodeOffset = dLevelNodeOffsets[level];
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < levelNodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint32_t nodeIndex = levelNodeOffset + threadId;
+        uint64_t nodeData = dNodes[nodeIndex];
+
+        // Get children count & child offset
+        uint32_t childrenCount = AnisoSVOctreeGPU::ChildrenCount(nodeData);
+        uint32_t childrenIndex = AnisoSVOctreeGPU::ChildrenIndex(nodeData);
+
+        // Child Irradiance array
+        const Vector2h* dChildIrradArray = (childrenAreLeaf)
+                                                ? payload.dAvgIrradianceLeaf
+                                                : payload.dAvgIrradianceNode;
+
+        // Average
+        const half HALF_MAX_LOCAL = static_cast<half>(MRAY_HALF_MAX);
+        Vector2h avgIrrad = Vector2h(0.0f);
+        Vector2uc validChildrenCount = Vector2uc(0);
+        for(uint32_t i = 0; i < childrenCount; i++)
+        {
+            // Get the irradiance
+            Vector2h irradiance = dChildIrradArray[childrenIndex + i];
+
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+            {
+                if(irradiance[i] != HALF_MAX_LOCAL)
+                {
+                    validChildrenCount[i]++;
+                    avgIrrad[i] += irradiance[i];
+                }
+            }
+        }
+
+        const half ONE = static_cast<half>(1.0f);
+        Vector2h childrenCountRecip = Vector2h(ONE / static_cast<half>(validChildrenCount[0]),
+                                               ONE / static_cast<half>(validChildrenCount[1]));
+        avgIrrad[0] *= childrenCountRecip[0];
+        avgIrrad[1] *= childrenCountRecip[1];
+        // Avoid NaN if not accumulation occurred
+        avgIrrad[0] = (validChildrenCount[0] == 0) ? HALF_MAX_LOCAL : avgIrrad[0];
+        avgIrrad[1] = (validChildrenCount[1] == 0) ? HALF_MAX_LOCAL : avgIrrad[1];
+        // Normalize & Clamp the half range for now
+        Vector2h irradClampled = Vector2h((avgIrrad[0] <= HALF_MAX_LOCAL) ? avgIrrad[0] : MRAY_HALF_MAX,
+                                          (avgIrrad[1] <= HALF_MAX_LOCAL) ? avgIrrad[1] : MRAY_HALF_MAX);
+        // Now set
+        payload.dAvgIrradianceNode[nodeIndex] = irradClampled;
+    }
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCTopDownFilterIrradiance(//I-O
+                               VoxelPayload payload,
+                               // Input
+                               const uint64_t* dNodes,
+                               const uint32_t* dLeafParents,
+                               const uint32_t* dLevelNodeOffsets,
+                               // Constants
+                               uint32_t level,
+                               uint32_t levelNodeCount,
+                               bool isLeaf)
+{
+    const uint32_t levelNodeOffset = isLeaf ? 0 : dLevelNodeOffsets[level];
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < levelNodeCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint32_t nodeIndex = levelNodeOffset + threadId;
+        // Get children count & child offset
+        uint32_t parentIndex = isLeaf ? dLeafParents[nodeIndex]
+                                      : AnisoSVOctreeGPU::ParentIndex(dNodes[nodeIndex]);
+        // Child Irradiance array
+        Vector2h* dIrradArray = (isLeaf) ? payload.dAvgIrradianceLeaf
+                                         : payload.dAvgIrradianceNode;
+
+        // Fetch parents value if currently no value
+        const half HALF_MAX_LOCAL = static_cast<half>(MRAY_HALF_MAX);
+        // Check Irrad if HALF_MAX use parents value
+        Vector2h irradiance = dIrradArray[nodeIndex];
+        Vector2h parentIrrad = payload.dAvgIrradianceNode[parentIndex];
+        if(irradiance[0] == HALF_MAX_LOCAL) irradiance[0] = parentIrrad[0];
+        if(irradiance[1] == HALF_MAX_LOCAL) irradiance[1] = parentIrrad[1];
+        // Now set
+        Vector2h* dIrradOut = (isLeaf) ? payload.dAvgIrradianceLeaf
+                                       : payload.dAvgIrradianceNode;
+        dIrradOut[nodeIndex] = irradiance;
+    }
+}
+
 
 TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolutionXYZ,
                                         const AcceleratorBatchMap& accels,
@@ -692,14 +904,14 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                             treeGPU.payload.dAvgIrradianceNode,
                                             treeGPU.payload.dNormalAndSpecNode,
                                             treeGPU.payload.dGuidingFactorNode,
-                                            treeGPU.payload.dMicroQuadTreeNode,
+                                            //treeGPU.payload.dMicroQuadTreeNode,
                                             // Payload Leaf
                                             treeGPU.payload.dTotalIrradianceLeaf,
                                             treeGPU.payload.dSampleCountLeaf,
                                             treeGPU.payload.dAvgIrradianceLeaf,
                                             treeGPU.payload.dNormalAndSpecLeaf,
                                             treeGPU.payload.dGuidingFactorLeaf,
-                                            treeGPU.payload.dMicroQuadTreeLeaf,
+                                            //treeGPU.payload.dMicroQuadTreeLeaf,
                                             // Node Offsets
                                             treeGPU.dLevelNodeOffsets),
                                    octreeMem,
@@ -710,10 +922,12 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                         hUniqueVoxelCount, hUniqueVoxelCount,
                                         // Payload Node
                                         totalNodeCount, totalNodeCount,
-                                        totalNodeCount, totalNodeCount,
+                                        totalNodeCount,
+                                        //totalNodeCount,
                                         // Payload Leaf
                                         hUniqueVoxelCount, hUniqueVoxelCount, hUniqueVoxelCount,
-                                        hUniqueVoxelCount, hUniqueVoxelCount, hUniqueVoxelCount,
+                                        hUniqueVoxelCount, hUniqueVoxelCount,
+                                        //hUniqueVoxelCount,
                                         // Offsets
                                         levelNodeOffsets.size()
                                    });
@@ -811,19 +1025,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                levelNodeCounts[i]);
         }
     }
-    // Only Direct light information deposition is left
+    // Only Direct light information deposition and normal generation is left
     // Call the kernel for it
-
-    // DEBUG
-    //Debug::DumpMemToFile("voxelDuplicates", dIndexOffsets,
-    //                     hUniqueVoxelCount + 1);
-
-    //std::vector<uint32_t> countsss(hUniqueVoxelCount + 1);
-    //std::adjacent_difference(dIndexOffsets, dIndexOffsets + hUniqueVoxelCount + 1,
-    //                         countsss.begin());
-    //Debug::DumpMemToFile("voxelDuplicateCounts", countsss.data(),
-    //                     hUniqueVoxelCount + 1);
-
     gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount * WARP_SIZE,
                        //
                        KCReduceVoxelPayload<StaticThreadPerBlock1D>,
@@ -833,8 +1036,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        dIndexOffsets,
                        dSortedUniqueVoxels,
                        dSortedVoxelIndices, // This is non-unique (we need to reduce it)
-                       dVoxelLightKeys, // Voxel payload that will be reduced
-                       dVoxelNormals,   // Voxel payload that will be reduced
+                       dVoxelLightKeys,     // Voxel payload that will be reduced
+                       dVoxelNormals,       // Voxel payload that will be reduced
 
                        // Binary Search for light
                        dSortedLightKeys,
@@ -846,12 +1049,34 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        treeGPU.svoAABB,
                        resolutionXYZ);
 
+    // Average Normals for each level
+    // Bottom-up
+    for(uint32_t i = 0; i < levelCount; i++)
+    {
+        uint32_t levelIndex = levelCount - i - 1;
+        bool lastNonLeafLevel = (levelIndex == (levelCount - 1));
+
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[levelIndex],
+                           //
+                           KCAverageNormals,
+                           // I-O
+                           treeGPU.payload,
+                           // Input
+                           treeGPU.dNodes,
+                           treeGPU.dLevelNodeOffsets,
+                           // Constants
+                           levelIndex,
+                           levelNodeCounts[levelIndex],
+                           lastNonLeafLevel);
+
+    }
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
-
+    std::locale::global(std::locale("en_US.UTF-8"));
     METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB)",
              treeGPU.nodeCount, treeGPU.leafCount, timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
+    std::locale::global(std::locale::classic());
 
     // All Done!
     return TracerError::OK;
@@ -880,6 +1105,51 @@ void AnisoSVOctreeCPU::NormalizeAndFilterRadiance(const CudaSystem& system)
                            // Constants
                            treeGPU.leafCount,
                            1.0f);
+
+    const CudaGPU& gpu = system.BestGPU();
+    const uint32_t levelCount = treeGPU.leafDepth;
+    // Bottom-up filter and populate the intermediate nodes
+    for(uint32_t i = 0; i < levelCount; i++)
+    {
+        uint32_t levelIndex = levelCount - i - 1;
+        bool lastNonLeafLevel = (levelIndex == (levelCount - 1));
+        uint32_t levelNodeCount = (levelNodeOffsets[levelIndex + 1] -
+                                   levelNodeOffsets[levelIndex]);
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCount,
+                           //
+                           KCBottomUpFilterIrradiance,
+                           // I-O
+                           treeGPU.payload,
+                           // Input
+                           treeGPU.dNodes,
+                           treeGPU.dLevelNodeOffsets,
+                           // Constants
+                           levelIndex,
+                           levelNodeCount,
+                           lastNonLeafLevel);
+    }
+    // Top-Down saturate the values
+    // Skip parent
+    for(uint32_t i = 1; i <= levelCount; i++)
+    {
+        uint32_t levelIndex = i;
+        bool isLeafLevel = (levelIndex == levelCount);
+        uint32_t levelNodeCount = (levelNodeOffsets[levelIndex + 1] -
+                                   levelNodeOffsets[levelIndex]);
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCount,
+                           //
+                           KCTopDownFilterIrradiance,
+                           // I-O
+                           treeGPU.payload,
+                           // Input
+                           treeGPU.dNodes,
+                           treeGPU.dLeafParents,
+                           treeGPU.dLevelNodeOffsets,
+                           // Constants
+                           levelIndex,
+                           levelNodeCount,
+                           isLeafLevel);
+    }
 }
 
 void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount,
@@ -887,7 +1157,6 @@ void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount
 {
     // Assume that the ray counts are set for leaves
     const CudaGPU& bestGPU = system.BestGPU();
-
     // Leaf has different memory layout do it separately
     bestGPU.GridStrideKC_X(0, (cudaStream_t)0, treeGPU.leafCount,
                            //
@@ -902,10 +1171,6 @@ void AnisoSVOctreeCPU::CollapseRayCounts(uint32_t minLevel, uint32_t minRayCount
                            treeGPU.leafDepth,
                            minLevel,
                            minRayCount);
-
-    //Debug::DumpMemToFile(std::to_string(treeGPU.leafDepth) + std::string("_binInfo"),
-    //                     treeGPU.dLeafBinInfo,
-    //                     treeGPU.leafCount, false, true);
 
     // Bottom-up process bins
     int32_t bottomNodeLevel = static_cast<int32_t>(treeGPU.leafDepth - 1);
@@ -953,8 +1218,8 @@ void AnisoSVOctreeCPU::AccumulateRaidances(const WFPGPathNode* dPGNodes,
 
 void AnisoSVOctreeCPU::ClearRayCounts(const CudaSystem&)
 {
-    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, sizeof(uint32_t) * treeGPU.leafCount));
-    CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, sizeof(uint32_t) * treeGPU.nodeCount));
+    CUDA_CHECK(cudaMemset(treeGPU.dLeafBinInfo, 0x00, sizeof(uint16_t) * treeGPU.leafCount));
+    CUDA_CHECK(cudaMemset(treeGPU.dBinInfo, 0x00, sizeof(uint16_t) * treeGPU.nodeCount));
 }
 
 void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
