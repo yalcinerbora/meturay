@@ -504,8 +504,13 @@ void KCBottomUpFilterIrradiance(//I-O
 
         // Child Irradiance array
         const Vector2h* dChildIrradArray = (childrenAreLeaf)
-                                                ? payload.dAvgIrradianceLeaf
-                                                : payload.dAvgIrradianceNode;
+                                            ? payload.dAvgIrradianceLeaf
+                                            : payload.dAvgIrradianceNode;
+
+        // Fetch the normal
+        float stdDev, specular;
+        Vector3f normal = payload.ReadNormalAndSpecular(stdDev, specular,
+                                                        nodeIndex, false);
 
         // Average
         const half HALF_MAX_LOCAL = static_cast<half>(MRAY_HALF_MAX);
@@ -515,14 +520,22 @@ void KCBottomUpFilterIrradiance(//I-O
         {
             // Get the irradiance
             Vector2h irradiance = dChildIrradArray[childrenIndex + i];
-
+            // Normal
+            Vector3f childNormal = payload.ReadNormalAndSpecular(stdDev, specular,
+                                                                 childrenIndex + i,
+                                                                 childrenAreLeaf);
+            // During average normals are swapped
+            bool swapIrrad = (childNormal.Dot(normal) < 0);
             #pragma unroll
             for(int i = 0; i < 2; i++)
             {
-                if(irradiance[i] != HALF_MAX_LOCAL)
+                // Read index may be different if normals are different
+                int readIndex = (swapIrrad) ? ((i + 1) % 2) : i;
+
+                if(irradiance[readIndex] != HALF_MAX_LOCAL)
                 {
                     validChildrenCount[i]++;
-                    avgIrrad[i] += irradiance[i];
+                    avgIrrad[i] += irradiance[readIndex];
                 }
             }
         }
@@ -590,6 +603,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                         HitKey boundaryLightKey,
                                         const CudaSystem& system)
 {
+    treeGPU = {};
+
     Utility::CPUTimer timer;
     timer.Start();
 
@@ -677,7 +692,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     CUDA_CHECK(cudaMemcpy(&hTotalVoxCount, dVoxelOffsets + primOffsets.back(),
                           sizeof(uint64_t), cudaMemcpyDeviceToHost));
 
-    // Allocate enough memory for temp voxels (these may overlap)
+    // Allocate enough memory for temp voxels (these temp voxels may have duplicates)
     Vector2us* dVoxelNormals;
     HitKey* dVoxelLightKeys;
 
@@ -694,6 +709,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                    {hTotalVoxCount, hTotalVoxCount});
 
     // Generate Light / HitKey sorted array (for binary search)
+    // For light irradiance injection to SVO
     const CudaGPU& gpu = system.BestGPU();
     if(totalLightCount != 0)
     {
@@ -1025,7 +1041,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                levelNodeCounts[i]);
         }
     }
-    // Only Direct light information deposition and normal generation is left
+    // Only Direct light information deposition and normal generation are left
     // Call the kernel for it
     gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount * WARP_SIZE,
                        //
@@ -1070,6 +1086,10 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                            lastNonLeafLevel);
 
     }
+
+    // Finally Filter the initial radiance to the system
+    NormalizeAndFilterRadiance(system);
+
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;

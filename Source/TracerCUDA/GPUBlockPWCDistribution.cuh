@@ -160,6 +160,8 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         pdfDataY *= (1.0f / totalSum);
         cdfDataY *= (1.0f / totalSum);
     }
+    else if(totalSum == 0.0f && isMainThread) printf("Entire 2D Histogram is empty!\n");
+
     // Expand the pdf back
     pdfDataY *= Y_FLOAT;
 
@@ -169,25 +171,6 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         sMem.sPDFY[threadId] = pdfDataY;
         if(isMainThread) sMem.sCDFY[0] = 0.0f;
     }
-    //if(isMainThread)
-    //{
-    //    printf("CDF\n"
-    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
-    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
-    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
-    //           "%f, %f, %f, %f, %f, %f, %f, %f\n"
-    //           "%f\n",
-    //           sMem.sCDFY[0], sMem.sCDFY[1], sMem.sCDFY[2], sMem.sCDFY[3],
-    //           sMem.sCDFY[4], sMem.sCDFY[5], sMem.sCDFY[6], sMem.sCDFY[7],
-    //           sMem.sCDFY[8], sMem.sCDFY[9], sMem.sCDFY[10], sMem.sCDFY[11],
-    //           sMem.sCDFY[12], sMem.sCDFY[13], sMem.sCDFY[14], sMem.sCDFY[15],
-    //           sMem.sCDFY[16], sMem.sCDFY[17], sMem.sCDFY[18], sMem.sCDFY[19],
-    //           sMem.sCDFY[20], sMem.sCDFY[21], sMem.sCDFY[22], sMem.sCDFY[23],
-    //           sMem.sCDFY[24], sMem.sCDFY[25], sMem.sCDFY[26], sMem.sCDFY[27],
-    //           sMem.sCDFY[28], sMem.sCDFY[29], sMem.sCDFY[30], sMem.sCDFY[31],
-    //           sMem.sCDFY[32]);
-    //}
-
     __syncthreads();
     // All CDF's and PDFs are generated
 }

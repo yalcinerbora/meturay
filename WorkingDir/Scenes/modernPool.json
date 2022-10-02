@@ -275,7 +275,8 @@
     {
         // Pool Floor
         "id": 1,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
         "albedo": {"texture": 0, "channels": "rgb"},
         "normal": {"texture": 1, "channels": "rgb"},
         "roughness": {"texture": 2, "channels": "r"},
@@ -285,7 +286,8 @@
     {
         // Pool Base
         "id": 2,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
         "albedo": {"texture": 4, "channels": "rgb"},
         "normal": {"texture": 5, "channels": "rgb"},
         //"roughness": {"texture": 6, "channels": "r"},
@@ -296,7 +298,8 @@
     {
         // House Walls
         "id": 3,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
         "albedo": {"texture": 7, "channels": "rgb"},
         "normal": {"texture": 8, "channels": "rgb"},
         "roughness": {"texture": 9, "channels": "r"},
@@ -320,7 +323,8 @@
     {
         // All Metals
         "id": 6,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
 		"albedo" : [0.65, 0.65, 0.65],
 		"roughness" : 0.23,
         "specular": 0.5,
@@ -329,7 +333,8 @@
     {
         // Tree Bark
         "id": 7,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
 		"albedo" : {"texture": 13, "channels": "rgb"},
         "normal": {"texture": 14, "channels": "rgb"},
 		"roughness" : {"texture": 15, "channels": "r"},
@@ -339,7 +344,8 @@
     {
         // Tree Leaves
         "id": 8,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
 		"albedo" : {"texture": 18, "channels": "rgb"},
         "normal": {"texture": 19, "channels": "rgb"},
 		"roughness" : {"texture": 20, "channels": "r"},
@@ -349,7 +355,8 @@
     {
         // Tree Soil
         "id": 9,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
 		"albedo" : {"texture": 24, "channels": "rgb"},
         "normal": {"texture": 25, "channels": "rgb"},
 		"roughness" : {"texture": 26, "channels": "r"},
@@ -359,7 +366,8 @@
     {
         // Tree Brick
         "id": 10,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
 		"albedo" : {"texture": 21, "channels": "rgb"},
         "normal": {"texture": 22, "channels": "rgb"},
 		"roughness" : {"texture": 23, "channels": "r"},
@@ -369,7 +377,8 @@
     {
         // House Window Frame
         "id": 11,
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
 		"albedo" : [0.01, 0.01, 0.01],
 		"roughness" : 0.9,
         "specular": 0.5,
@@ -398,7 +407,8 @@
     {
         // Slippers
         "id": [15, 16],
-        "type": "Unreal",
+        //"type": "Unreal",
+        "type": "Lambert",
         "albedo": [[0.005, 0.005, 0.005], [0.85, 0.85, 0.85]],
         "normal": [{"texture": 32, "channels": "rgb"}, {"texture": 32, "channels": "rgb"}],
         "roughness": [0.7, 0.7],

@@ -9,8 +9,13 @@
 		//"fov": [19.5,  19.5],
 		"planes": [0.05, 30.0],
 
-        "gaze": [0.0, 1, 0.0],
-		"position": [0, 1, 6.8],
+        // // TEST
+        "gaze"     : [-0.233183, -0.405798, 0.459692],
+        "position" : [-0.274609, 0.427482, 1.011],
+
+        // "gaze": [0.0, 1, 0.0],
+		// "position": [0, 1, 6.8],
+
 		"up": [0.0, 1.0, 0.0]
 	}],
 
@@ -162,23 +167,23 @@
 
 	"Surfaces":
     [
-        // Floor
-        { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0},
-        // Ceiling
-        { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
-        // Back Wall
-        { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
+        // // Floor
+         { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0}
+        // // Ceiling
+        // { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
+        // // Back Wall
+        // { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
         // Left Wall
-        { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
-        // Right Wall
-        { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
-        // Tall Box
-        { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
-        // Short Box
-        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
+        //{ "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
+        // // Right Wall
+        // { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
+        // // Tall Box
+        // { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
+        // // Short Box
+        // { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
 
-        // Occuluder Prism
-        { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
+        // // Occuluder Prism
+        // { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
 	],
 
 	"LightSurfaces": [{"light": 1, "transform": 6}],

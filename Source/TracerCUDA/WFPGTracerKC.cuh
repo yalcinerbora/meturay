@@ -359,7 +359,7 @@ void WFPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_GuideSampleRatio = 0.0f;
+        constexpr float BxDF_GuideSampleRatio = 1.0f;
         float xi = rng.Uniform();
 
         bool selectedPDFZero = false;
@@ -383,14 +383,31 @@ void WFPGTracerPathWork(// Output
                                          0);
             pdfGuide = aux.guidePDF;
 
-            if(pdfBxDF == 0.0f) selectedPDFZero = true;
+            selectedPDFZero = (pdfBxDF == 0.0f);
         }
         else
         {
-            // Sample a path using SDTree
-            Vector3f direction = Utility::SphericalToCartesianUnit(Vector2f(aux.guideDir[0],
-                                                                            aux.guideDir[1]));
+            // Sample a path from the pre-sampled UV
+            // uv coordinates to spherical coordinates
+            Vector2f uv = Vector2f(aux.guideDir[0], aux.guideDir[1]);
+            Vector2f thetaPhi = Vector2f(// [-pi, pi]
+                                         (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
+                                          // [0, pi]
+                                         (1.0f - uv[1]) * MathConstants::Pi);
+            Vector3f dirZUp = Utility::SphericalToCartesianUnit(thetaPhi);
+            Vector3f direction = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);
+
+            //printf("--uv(%f, %f) = (%f, %f, %f) pdf %f\n",
+            //       uv[0], uv[1],
+            //       direction[0], direction[1], direction[2],
+            //       static_cast<float>(aux.guidePDF));
+
+            // Convert to solid angle pdf
+            // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
             pdfGuide = aux.guidePDF;
+            float sinPhi = sin(thetaPhi[1]);
+            if(sinPhi == 0.0f) pdfGuide = 0.0f;
+            else pdfGuide = pdfGuide / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
 
             // Calculate BxDF
             reflectance = MGroup::Evaluate(// Input
@@ -417,7 +434,7 @@ void WFPGTracerPathWork(// Output
             rayPath = RayF(direction, position);
             rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
 
-            if(pdfGuide == 0.0f) selectedPDFZero = true;
+            selectedPDFZero = (pdfGuide == 0.0f);
         }
         // Pdf Average
         //pdfPath = pdfBxDF;
@@ -428,17 +445,17 @@ void WFPGTracerPathWork(// Output
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
             printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
-                   (xi >= BxDF_GuideSampleRatio) ? "BxDF": "Tree",
+                   (xi >= BxDF_GuideSampleRatio) ? "BxDF": "SVO",
                    pdfPath, pdfBxDF, pdfGuide, BxDF_GuideSampleRatio);
         if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
             printf("[%s] NAN DIR %f, %f, %f\n",
-                    (xi >= BxDF_GuideSampleRatio) ? "BxDF" : "Tree",
+                    (xi >= BxDF_GuideSampleRatio) ? "BxDF" : "SVO",
                     rayPath.getDirection()[0],
                     rayPath.getDirection()[1],
                     rayPath.getDirection()[2]);
         if(reflectance.HasNaN())
             printf("[%s] NAN REFL %f %f %f\n",
-                   (xi >= BxDF_GuideSampleRatio) ? "BxDF" : "Tree",
+                   (xi >= BxDF_GuideSampleRatio) ? "BxDF" : "SVO",
                    reflectance[0],
                    reflectance[1],
                    reflectance[2]);
@@ -840,12 +857,18 @@ Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
     // Assume image space bottom left is (0,0)
     // Center to the pixel as well
     Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + Vector2f(0.5f);
-    Vector2f sphrCoords = Vector2f(dirXYFloat[0] * deltaXY[0],
+    Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
                                    Pi - dirXYFloat[1] * deltaXY[1]);
-
     Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
     // Spherical Coords calculates as Z up change it to Y up
     Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
+    //printf("Pixel [%u, %u], ThetaPhi [%f, %f], Dir[%f, %f, %f]\n",
+    //       dirXY[0], dirXY[1],
+    //       sphrCoords[0] * RadToDegCoef,
+    //       sphrCoords[1] * RadToDegCoef,
+    //       dirYUp[0], dirYUp[1], dirYUp[2]);
+
     return dirYUp;
 }
 
@@ -954,11 +977,8 @@ static void KCGenAndSampleDistribution(// Output
                                        uint32_t binCount)
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
-    auto IsMainThread = []() -> bool
-    {
-        return threadIdx.x == 0;
-    };
     const uint32_t THREAD_ID = threadIdx.x;
+    const uint32_t isMainThread = (THREAD_ID == 0);
 
     // Number of threads that contributes to the ray tracing operation
     static constexpr uint32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X * Y) ? THREAD_PER_BLOCK : (X * Y);
@@ -982,7 +1002,7 @@ static void KCGenAndSampleDistribution(// Output
     __shared__ uint32_t sOffsetStart;
     __shared__ uint32_t sNodeId;
     __shared__ uint32_t sPositionCount;
-    __shared__ uint32_t sBinVoxelSize;
+    __shared__ float sBinVoxelSize;
 
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
@@ -990,7 +1010,7 @@ static void KCGenAndSampleDistribution(// Output
         binIndex += gridDim.x)
     {
         // Load Bin information
-        if(IsMainThread())
+        if(isMainThread)
         {
             Vector2ui rayRange = Vector2ui(gBinOffsets[binIndex], gBinOffsets[binIndex + 1]);
             sRayCount = rayRange[1] - rayRange[0];
@@ -1053,12 +1073,20 @@ static void KCGenAndSampleDistribution(// Output
 
             bool isLeaf;
             uint32_t nodeId;
-            svo.ConeTraceRay(isLeaf, nodeId, RayF(worldDir, position),
-                             tMin, FLT_MAX, coneAperture);
+            float hitT = svo.ConeTraceRay(isLeaf, nodeId, RayF(worldDir, position),
+                                          tMin, FLT_MAX, coneAperture);
+
             // TODO: change this
-            incRadiances[i] = svo.ReadRadiance(-worldDir, coneAperture,
-                                               nodeId, isLeaf);
-            //incRadiances[i] = 1.0f;
+            float radiance;
+            if(nodeId != UINT32_MAX)
+            {
+                radiance = svo.ReadRadiance(worldDir, coneAperture,
+                                            nodeId, isLeaf);
+                //printf("HitT: %f, tMin %f n:%u r:%f\n", hitT, tMin, nodeId, radiance);
+            }
+            else radiance = 0.001f;
+
+            incRadiances[i] = radiance;
         }
         // We finished tracing rays from the scene
         // Now generate distribution from the data
@@ -1076,6 +1104,26 @@ static void KCGenAndSampleDistribution(// Output
             //Vector2f uv = Zero2f;
             //float pdf = 0.0f;
 
+
+            if(pdf == 0.0f)
+            {
+                printf("pdf zero ?\n");
+            }
+            if(isnan(pdf))
+            {
+                printf("nan pdf?\n");
+            }
+
+            //Vector2f thetaPhi = Vector2f(// [-pi, pi]
+            //                             (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
+            //                              // [0, pi]
+            //                             (1.0f - uv[1]) * MathConstants::Pi);
+            //Vector3f dirZUp = Utility::SphericalToCartesianUnit(thetaPhi);
+            //Vector3f debugDir = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);
+            //printf("[%u] uv(%f, %f) = (%f, %f, %f) pdf %f\n",
+            //       binIndex, uv[0], uv[1],
+            //       debugDir[0], debugDir[1], debugDir[2],
+            //       pdf);
             // Store the sampled direction of the ray
             uint32_t rayId = gRayIds[sOffsetStart + rayIndex];
             gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);

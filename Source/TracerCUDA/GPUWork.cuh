@@ -254,9 +254,12 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
     const uint32_t outRayCount = this->OutRayCount();
 
     const CudaGPU& gpu = materialGroup.GPU();
-    gpu.AsyncGridStrideKC_X
+    // TODO: Async grid stride make kernels
+    // to use the same RNG
+    //gpu.AsyncGridStrideKC_X
+    gpu.GridStrideKC_X
     (
-        0,
+        0, (cudaStream_t)0,
         rayCount,
         // TODO: Generic RNG
         KCWork<GlobalData, LocalData, RayData,
@@ -359,9 +362,13 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
 
     const uint32_t outRayCount = this->OutRayCount();
     const CudaGPU& gpu = endpointGroup.GPU();
-    gpu.AsyncGridStrideKC_X
+
+   // TODO: Async grid stride make kernels
+   // to use the same RNG
+   //gpu.AsyncGridStrideKC_X
+    gpu.GridStrideKC_X
     (
-        0,
+        0, (cudaStream_t)0,
         rayCount,
         // TODO: Change This
         KCBoundaryWork<GlobalData, LocalData, RayData,

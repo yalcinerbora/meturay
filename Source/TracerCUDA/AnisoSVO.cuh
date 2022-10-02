@@ -391,7 +391,7 @@ float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
     // Currently we are just fetching irradiance
     // which side are we on
     // Note that "coneDirection" is towards to the surface
-    bool towardsNormal = (coneDirection.Dot(-normal) >= 0.0f);
+    bool towardsNormal = (normal.Dot(-coneDirection) >= 0.0f);
     uint32_t index = towardsNormal ? 0 : 1;
 
     return gIrradArray[nodeIndex][index];

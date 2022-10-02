@@ -284,7 +284,6 @@ void KCReduceVoxelPayload(// I-O
                 // Towards normal
                 Vector3f radiance = gLight->Emit(normalizedNormal, worldPos, UVSurface{});
                 combinedLuminance[0] += Utility::RGBToLuminance(radiance);
-
                 // Query both sides of the surface
                 radiance = gLight->Emit(-normalizedNormal, worldPos, UVSurface{});
                 combinedLuminance[1] += Utility::RGBToLuminance(radiance);
@@ -295,14 +294,15 @@ void KCReduceVoxelPayload(// I-O
         combinedLuminance = WarpLumReduce(sMem.sLumReduceMem[blockLocalWarpId]).Sum(combinedLuminance);
         if(isWarpLeader)
         {
-            // Don't forget to average
-            combinedLuminance /= static_cast<float>(dupVoxCount);
             // Only Set Luminance if this voxel contains a light surface
             if(combinedLuminance != Vector3f(0.0f))
             {
+                // Don't forget to average
+                combinedLuminance /= static_cast<float>(dupVoxCount);
                 // We are setting initial sample count to this voxel
                 // there shouldn't be any updates to this voxel anyway but just to be sure
-                Vector2ui initialSampleCount = Vector2ui(10'000);
+                Vector2ui initialSampleCount = Vector2ui(100);
+                combinedLuminance *= Vector2f(initialSampleCount);
                 // Set the combined values
                 treeGPU.SetLeafRadiance(mortonCode, combinedLuminance, initialSampleCount);
             }

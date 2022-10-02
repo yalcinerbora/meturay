@@ -39,7 +39,7 @@ struct LambertMatFuncs
         if(matData.dNormal[matId])
             normal = (*matData.dNormal[matId])(surface.uv).Normalize();
 
-        // Generate New Ray Direction
+        // Generate New Ray Direction (This is in tangent space)
         Vector2 xi(rng.Uniform(), rng.Uniform());
         Vector3 direction = HemiDistribution::HemiCosineCDF(xi, pdf);
         direction.NormalizeSelf();
@@ -70,7 +70,7 @@ struct LambertMatFuncs
         // Check if tangent space normal is avail
         if(matData.dNormal[matId])
             normal = (*matData.dNormal[matId])(surface.uv).Normalize();
-        normal = GPUSurface::NormalToSpace(surface.worldToTangent);
+        normal = GPUSurface::ToSpace(normal, surface.worldToTangent);
 
         float pdf = max(wo.Dot(normal), 0.0f);
         pdf *= MathConstants::InvPi;

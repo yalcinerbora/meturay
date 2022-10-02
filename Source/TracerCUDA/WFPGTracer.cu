@@ -324,13 +324,15 @@ void WFPGTracer::GenerateGuidedDirections()
 
     // Call the Trace and Sample Kernel
     // Select the kernel depending on the depth
-    uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
+    //uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
+
+    uint32_t kernelIndex = 1;
 
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
-    auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
+    //auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
 
     cudaEvent_t start, stop;
     CUDA_CHECK(cudaEventCreate(&start));
@@ -358,9 +360,17 @@ void WFPGTracer::GenerateGuidedDirections()
                   hPartitionCount);
     CUDA_CHECK(cudaEventRecord(stop));
 
+    // Only Consider useful rays for bins
+    // Partition function sorts rays in descending order
+    // first two offset values ("[0, n)") determine the invalid
+    // ray range, subtract it from the ray count
+    // (these include NEE rays, missed rays etc.)
+    uint32_t invalidRayCount;
+    CUDA_CHECK(cudaMemcpy(&invalidRayCount, dPartitionOffsets + 1,
+                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
     float milliseconds = 0;
-    float avgRayPerBin = (static_cast<float>(rayCount) /
-                          static_cast<float>(hPartitionCount));
+    float avgRayPerBin = (static_cast<float>(rayCount - invalidRayCount) /
+                          static_cast<float>(hPartitionCount - 1));
 
     CUDA_CHECK(cudaEventSynchronize(stop));
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
