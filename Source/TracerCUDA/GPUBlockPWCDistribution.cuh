@@ -32,7 +32,9 @@ class BlockPWCDistribution2D
     static constexpr float DELTA_Y          = 1.0f / Y_FLOAT;
 
     using BlockSScan    = BlockSegmentedScan<float, TPB, X>;
-    using BlockScan     = cub::BlockScan<float, Y>;
+    using BlockScan     = cub::BlockScan<float, TPB>;
+    // TODO: This does not work, probably ask it on the forums?
+    // "using BlockScan = cub::BlockScan<float, Y>;"
 
     public:
     static constexpr uint32_t DATA_PER_THREAD   = std::max(1u, (X * Y) / TPB);
@@ -160,7 +162,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         pdfDataY *= (1.0f / totalSum);
         cdfDataY *= (1.0f / totalSum);
     }
-    else if(totalSum == 0.0f && isMainThread) printf("Entire 2D Histogram is empty!\n");
+    else if(isMainThread) printf("Entire 2D Histogram is empty!\n");
 
     // Expand the pdf back
     pdfDataY *= Y_FLOAT;
@@ -196,15 +198,17 @@ Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& in
         return xi;
     }
 
+    if(xi[1] == 1.0f) printf("Why???\n");
+
     GPUFunctions::BinarySearchInBetween<float>(index[1], xi[1],
                                                sMem.sCDFY, CDF_SIZE_Y);
     int32_t indexYInt = static_cast<int32_t>(index[1]);
+
     // Extremely rarely index becomes the light count
     // although Uniform should return [0, 1)
     // it still happens due to fp error i guess?
     // if it happens just return the last light on the list
-    //if(indexYInt == CDF_SIZE_Y)
-    if(indexYInt == CDF_SIZE_Y)
+    if(indexYInt >= Y)
     {
         KERNEL_DEBUG_LOG("CUDA Error: Illegal Index on PwC Sample [Y = %f]\n",
                          index[1]);
@@ -216,9 +220,35 @@ Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& in
     GPUFunctions::BinarySearchInBetween<float>(index[0], xi[0],
                                                sRowCDF, CDF_SIZE_X);
     int32_t indexXInt = static_cast<int32_t>(index[0]);
+    if(indexXInt >= X)
+    {
+        KERNEL_DEBUG_LOG("CUDA Error: Illegal Index on PwC Sample [X = %f]\n",
+                         index[0]);
+        indexXInt--;
+    }
 
     // Samples are dependent so we need to multiply the pdf results
     pdf = sMem.sPDFY[indexYInt] * sRowPDF[indexXInt];
+
+    if(sMem.sPDFY[indexYInt] == 0.0f || sRowPDF[indexXInt] == 0)
+    {
+        printf("[Z] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
+               sRowPDF[indexXInt], sMem.sPDFY[indexYInt],
+               xi[0], xi[1], index[0], index[1],
+               indexXInt, indexYInt);
+    }
+    if(isnan(sMem.sPDFY[indexYInt]) || isnan(sRowPDF[indexXInt]))
+    {
+        printf("[NaN] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
+               sRowPDF[indexXInt], sMem.sPDFY[indexYInt],
+               xi[0], xi[1], index[0], index[1],
+               indexXInt, indexYInt);
+    }
+    if(index.HasNaN())
+    {
+        printf("[NaN] index(%f, %f)\n", index[0], index[1]);
+    }
+
     // Return the index as a normalized coordinate as well
     return index * Vector2f(DELTA_X, DELTA_Y);
 }

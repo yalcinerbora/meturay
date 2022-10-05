@@ -844,9 +844,11 @@ bool ReadSVONodeId(uint32_t& nodeId, uint32_t packedData)
     return isLeaf;
 }
 
+template <class RNG>
 __device__ inline
 Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
-                         const Vector2ui& dimensions)
+                         const Vector2ui& dimensions,
+                         RNG& rng)
 {
     assert(dirXY < dimensions);
     using namespace MathConstants;
@@ -856,7 +858,11 @@ Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
 
     // Assume image space bottom left is (0,0)
     // Center to the pixel as well
-    Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + Vector2f(0.5f);
+    // Offset
+    Vector2f xi = rng.Uniform2D();
+    //Vector2f xi = Vector2f(0.5f);
+
+    Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + xi;
     Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
                                    Pi - dirXYFloat[1] * deltaXY[1]);
     Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
@@ -954,6 +960,25 @@ static void KCCheckReducedSVOBins(// I-O
     }
 }
 
+// Shared Memory Class of the kernel below
+template <uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
+struct KCGenSampleShMem
+{
+    // PWC Distribution over the shared memory
+    using BlockPWC2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+
+    typename BlockPWC2D::TempStorage sPWCMem;
+    // Starting positions of the rays (at most TPB)
+    Vector3f sPositions[THREAD_PER_BLOCK];
+    //Vector3f sPosition;
+    // Bin parameters
+    uint32_t sRayCount;
+    uint32_t sOffsetStart;
+    uint32_t sNodeId;
+    uint32_t sPositionCount;
+    float sBinVoxelSize;
+};
+
 // Main directional distribution generation kernel
 // Each block is responsible of a single bin
 // Each block will trace the SVO to generate
@@ -994,15 +1019,18 @@ static void KCGenAndSampleDistribution(// Output
     using BlockPWC2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
 
     // Allocate shared memory for PWC Distribution
-    __shared__ typename BlockPWC2D::TempStorage sPWCMem;
-    // Starting positions of the rays (at most TPB)
-    __shared__ Vector3f sPositions[THREAD_PER_BLOCK];
-    // Bin parameters
-    __shared__ uint32_t sRayCount;
-    __shared__ uint32_t sOffsetStart;
-    __shared__ uint32_t sNodeId;
-    __shared__ uint32_t sPositionCount;
-    __shared__ float sBinVoxelSize;
+    extern __shared__ Byte sharedMemRAW[];
+    KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>* sharedMem = reinterpret_cast<KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>*>(sharedMemRAW);
+
+    //__shared__ typename BlockPWC2D::TempStorage sPWCMem;
+    //// Starting positions of the rays (at most TPB)
+    //__shared__ Vector3f sPositions[THREAD_PER_BLOCK];
+    //// Bin parameters
+    //__shared__ uint32_t sRayCount;
+    //__shared__ uint32_t sOffsetStart;
+    //__shared__ uint32_t sNodeId;
+    //__shared__ uint32_t sPositionCount;
+    //__shared__ float sBinVoxelSize;
 
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
@@ -1013,15 +1041,15 @@ static void KCGenAndSampleDistribution(// Output
         if(isMainThread)
         {
             Vector2ui rayRange = Vector2ui(gBinOffsets[binIndex], gBinOffsets[binIndex + 1]);
-            sRayCount = rayRange[1] - rayRange[0];
-            sOffsetStart = rayRange[0];
-            sNodeId = gNodeIds[binIndex];
-            sPositionCount = min(THREAD_PER_BLOCK, sRayCount);
+            sharedMem->sRayCount = rayRange[1] - rayRange[0];
+            sharedMem->sOffsetStart = rayRange[0];
+            sharedMem->sNodeId = gNodeIds[binIndex];
+            sharedMem->sPositionCount = min(THREAD_PER_BLOCK, sharedMem->sRayCount);
 
             // Calculate the voxel size of the bin
             uint32_t nodeId;
-            bool isLeaf = ReadSVONodeId(nodeId, sNodeId);
-            sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
+            bool isLeaf = ReadSVONodeId(nodeId, sharedMem->sNodeId);
+            sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
             //// Roll a dice stochastically cull bin (TEST)
             //if(rng.Uniform() < 0.5f)
@@ -1030,17 +1058,17 @@ static void KCGenAndSampleDistribution(// Output
         __syncthreads();
 
         // Kill the entire block if Node Id is invalid
-        if(sNodeId == INVALID_BIN_ID) continue;
+        if(sharedMem->sNodeId == INVALID_BIN_ID) continue;
 
         // Load positions of the rays to the shared memory
         // Try to load minimum of TPB or ray count
-        if(THREAD_ID < sPositionCount)
+        if(THREAD_ID < sharedMem->sPositionCount)
         {
-            uint32_t rayId = gRayIds[sOffsetStart + THREAD_ID];
+            uint32_t rayId = gRayIds[sharedMem->sOffsetStart + THREAD_ID];
             RayReg ray(gRays, rayId);
             // Hit Position
             Vector3 position = ray.ray.AdvancedPos(ray.tMax);
-            sPositions[THREAD_ID] = position;
+            sharedMem->sPositions[THREAD_ID] = position;
         }
         __syncthreads();
 
@@ -1057,9 +1085,10 @@ static void KCGenAndSampleDistribution(// Output
             uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
             Vector2ui dirIdXY = Vector2ui(directionId % X,
                                           directionId / X);
-            Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y));
+            Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y), rng);
             // Get a random position from the pool
-            Vector3f position = sPositions[THREAD_ID % sPositionCount];
+            Vector3f position = sharedMem->sPositions[THREAD_ID % sharedMem->sPositionCount];
+            //Vector3f position = sPositions[0];
 
             // Now this is the interesting part
             // We need to offset the ray in order to prevent
@@ -1069,7 +1098,8 @@ static void KCGenAndSampleDistribution(// Output
             // way is to offset the ray with the current level voxel size.
             // This will be highly inaccurate when current bin(node) level is low.
             // TODO: Change it to a better solution
-            float tMin = sBinVoxelSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
+            float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
+                          MathConstants::LargeEpsilon);
 
             bool isLeaf;
             uint32_t nodeId;
@@ -1084,7 +1114,8 @@ static void KCGenAndSampleDistribution(// Output
                                             nodeId, isLeaf);
                 //printf("HitT: %f, tMin %f n:%u r:%f\n", hitT, tMin, nodeId, radiance);
             }
-            else radiance = 0.001f;
+            else radiance = 0.01f;
+            //else radiance = 2.0f;
 
             incRadiances[i] = radiance;
         }
@@ -1093,26 +1124,14 @@ static void KCGenAndSampleDistribution(// Output
         // and sample for each ray
 
         // Generate PWC Distribution over the radiances
-        BlockPWC2D dist2D(sPWCMem, incRadiances);
+        BlockPWC2D dist2D(sharedMem->sPWCMem, incRadiances);
         // Block threads will loop over the every ray in this bin
-        for(uint32_t rayIndex = THREAD_ID; rayIndex < sRayCount;
+        for(uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
             rayIndex += THREAD_PER_BLOCK)
         {
             float pdf;
             Vector2f index;
             Vector2f uv = dist2D.Sample(pdf, index, rng);
-            //Vector2f uv = Zero2f;
-            //float pdf = 0.0f;
-
-
-            if(pdf == 0.0f)
-            {
-                printf("pdf zero ?\n");
-            }
-            if(isnan(pdf))
-            {
-                printf("nan pdf?\n");
-            }
 
             //Vector2f thetaPhi = Vector2f(// [-pi, pi]
             //                             (uv[0] * MathConstants::Pi * 2.0f) - MathConstants::Pi,
@@ -1125,7 +1144,7 @@ static void KCGenAndSampleDistribution(// Output
             //       debugDir[0], debugDir[1], debugDir[2],
             //       pdf);
             // Store the sampled direction of the ray
-            uint32_t rayId = gRayIds[sOffsetStart + rayIndex];
+            uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
             gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
             gRayAux[rayId].guidePDF = pdf;
         }

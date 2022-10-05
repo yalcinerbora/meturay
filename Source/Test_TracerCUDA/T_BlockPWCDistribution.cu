@@ -59,7 +59,8 @@ template <class T>
 class BlockPWC2DTest : public testing::Test
 {};
 
-using Implementations = ::testing::Types<BlockPWC2DTestParams<512, 64, 32>,
+using Implementations = ::testing::Types<BlockPWC2DTestParams<512, 64, 64>,
+                                         BlockPWC2DTestParams<512, 64, 32>,
                                          BlockPWC2DTestParams<512, 32, 32>,
                                          BlockPWC2DTestParams<256, 32, 16>,
                                          BlockPWC2DTestParams<256, 16, 16>,

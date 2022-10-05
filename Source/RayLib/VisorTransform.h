@@ -39,13 +39,13 @@ inline std::string VisorTransformToString(const VisorTransform& c)
     std::stringstream s;
     //s << "M Index  : " << c.mediumIndex << std::endl;
     //s << "Key      : " << std::hex << c.matKey.value << std::dec << std::endl;
-    s << "Gaze     : [" << c.gazePoint[0] << ", "
+    s << "\"gaze\"     : [" << c.gazePoint[0] << ", "
                         << c.gazePoint[1]  << ", "
                         << c.gazePoint[2] << "]" << std:: endl;
-    s << "Pos      : [" << c.position[0] << ", "
+    s << "\"position\" : [" << c.position[0] << ", "
                         << c.position[1]  << ", "
                         << c.position[2] << "]" << std:: endl;
-    s << "Up       : [" << c.up[0] << ", "
+    s << "\"up\"       : [" << c.up[0] << ", "
                         << c.up[1]  << ", "
                         << c.up[2] << "]" << std:: endl;
     //s << "Near Far : [" << c.nearPlane << ", "

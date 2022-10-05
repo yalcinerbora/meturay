@@ -77,34 +77,51 @@ using PathGuideKernelFunction = void (*)(// Output
                                          const AnisoSVOctreeGPU,
                                          uint32_t);
 
-static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_TPB =
+// 1st param is "Thread per block", 2nd and third params are X,Y resolution of the generated texture
+using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
+
+static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
-    512,
-    512,
-    256,
-    256,
-    128,
+    std::make_tuple(1024, 128, 64), // First bounce good approximation
+    std::make_tuple(512, 64, 32),   // Second bounce as well
+    std::make_tuple(256, 32, 16),   // Third bounce not so much
+    std::make_tuple(256, 32, 16),   // Fourth bounce as well
+    std::make_tuple(128, 16, 8)     // Fifth is bad
 };
 
-static constexpr uint32_t KERNEL_TBP_MAX = *std::max_element(PG_KERNEL_TPB.cbegin(),
-                                                             PG_KERNEL_TPB.cend());
+static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),
+                                                                         PG_KERNEL_PARAMS.cend(),
+                                                                         [](const auto& t0, const auto& t1)
+                                                                         {
+                                                                             return std::get<0>(t0) < std::get<0>(t1);
+                                                                         }));
 
 static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KERNELS =
 {
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[0], 64, 32>,    // First bounce good approximation
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[1], 32, 16>,    // Second bounce as well
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[2], 16, 8>,     // Third bounce not so much
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[3], 16, 8>,     // Fourth bounce as well
-    KCGenAndSampleDistribution<RNGIndependentGPU, PG_KERNEL_TPB[4], 8, 4>       // Fifth is bad
+
+    KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>,
+    KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>,
+    KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
+    KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
+    KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
+};
+
+static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_SHMEM_SIZE =
+{
+    sizeof(KCGenSampleShMem<std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>),
+    sizeof(KCGenSampleShMem<std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>),
+    sizeof(KCGenSampleShMem<std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>),
+    sizeof(KCGenSampleShMem<std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>),
+    sizeof(KCGenSampleShMem<std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>)
 };
 
 static constexpr std::array<float, PG_KERNEL_TYPE_COUNT> CONE_APERTURES =
 {
-    SphericalConeAperture(64, 32),
-    SphericalConeAperture(32, 16),
-    SphericalConeAperture(16, 8),
-    SphericalConeAperture(16, 8),
-    SphericalConeAperture(8, 4)
+    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])),
+    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])),
+    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])),
+    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])),
+    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4]))
 };
 
 template <class RNG>
@@ -326,21 +343,28 @@ void WFPGTracer::GenerateGuidedDirections()
     // Select the kernel depending on the depth
     //uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
 
-    uint32_t kernelIndex = 1;
+    uint32_t kernelIndex = 0;
 
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
+    uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
+    uint32_t kernelTBP = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
     //auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
+
+    CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
+                                    cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                    kernelShmemSize));
+    //cudaFuncSetAttribute(KCSampleKernel, cudaFuncAttributePreferredSharedMemoryCarveout, 100*1024);
 
     cudaEvent_t start, stop;
     CUDA_CHECK(cudaEventCreate(&start));
     CUDA_CHECK(cudaEventCreate(&stop));
 
     CUDA_CHECK(cudaEventRecord(start));
-    gpu.ExactKC_X(0, (cudaStream_t)0,
-                  PG_KERNEL_TPB[kernelIndex], pgKernelBlockCount,
+    gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
+                  kernelTBP, pgKernelBlockCount,
                   //
                   KCSampleKernel,
                   // Output
@@ -818,7 +842,6 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
     //if(iterationCount < options.svoRadRenderIter &&
     //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     //    TraceAndStorePhotons();
-
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
@@ -880,11 +903,6 @@ bool WFPGTracer::Render()
        iterationCount >= options.svoRadRenderIter)
         return false;
 
-    //// TODO: CHANGE
-    //// Do not do path trace at all if svo radiance mode is set
-    //if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
-    //    return false;
-
     // Generate Global Data Struct
     WFPGTracerGlobalState globalData;
     globalData.gSamples = sampleMemory.GMem<Vector4f>();
@@ -932,8 +950,8 @@ bool WFPGTracer::Render()
     // Before Material Evaluation
     // Generate guideDirection and PDF
     if(options.renderMode != WFPGRenderMode::SVO_INITIAL_HIT_QUERY)
-    // Change this
-    if(options.renderMode != WFPGRenderMode::SVO_RADIANCE)
+    //// Change this
+    //if(options.renderMode != WFPGRenderMode::SVO_RADIANCE)
     {
         GenerateGuidedDirections();
     }

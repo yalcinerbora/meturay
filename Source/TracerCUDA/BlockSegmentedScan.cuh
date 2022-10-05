@@ -80,7 +80,7 @@ class BlockSegmentedScan<T, TPB_X, SEGMENT_SIZE, LargeSegmentEnable<SEGMENT_SIZE
 };
 
 // This Version is when SEGMENT_SIZE is less than a warp
-// It then segment size must be multiple of warp size
+// Then segment size must be multiple of warp size
 template<class T,
          uint32_t TPB_X,
          uint32_t SEGMENT_SIZE>

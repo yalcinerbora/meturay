@@ -69,7 +69,8 @@ template <class T>
 class BlockSegScanTest : public testing::Test
 {};
 
-using Implementations = ::testing::Types<BlockScanTestParams<64, 32>,
+using Implementations = ::testing::Types<BlockScanTestParams<512, 64>,
+                                         BlockScanTestParams<64, 32>,
                                          BlockScanTestParams<128, 64>,
                                          BlockScanTestParams<64, 16>,
                                          BlockScanTestParams<64, 8>>;

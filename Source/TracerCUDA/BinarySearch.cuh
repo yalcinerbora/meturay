@@ -19,13 +19,12 @@ namespace GPUFunctions
         int32_t end = size;
         while(start <= end)
         {
-            int32_t mid = (start + end) / 2;
+            int32_t mid = (start + end) >> 1;
 
             T current = list[mid];
             T next = list[mid + 1];
 
-            if(current <= value &&
-               next > value)
+            if(current <= value && next > value)
             {
                 T totalDist = next - current;
                 T dist = value - current;

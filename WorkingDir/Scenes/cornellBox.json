@@ -10,14 +10,30 @@
 		"planes": [0.05, 30.0],
 
         // // TEST
-        "gaze"     : [-0.233183, -0.405798, 0.459692],
-        "position" : [-0.274609, 0.427482, 1.011],
+        "gaze"     : [-0.00166431, 1.67172, 2.49813],
+        "position" : [-0.00773513, 2.25885, 3.30762],
 
         // "gaze": [0.0, 1, 0.0],
 		// "position": [0, 1, 6.8],
 
 		"up": [0.0, 1.0, 0.0]
-	}],
+	},
+	{
+		"id": 1,
+		"type": "Spherical",
+
+		// Ratio of the Pixels
+		"pixelRatio": 1.0,
+		// Camera Position
+		"position": [-0.99, 1, 0],
+		// Near & Far Planes
+		"planes": [0.05, 100.0],
+
+		"direction": [1.0, 0.0, 0.0],
+        //"direction": [-0.0235629, -0.988653, 0.148366],
+		"up": [0.0, 1.0, 0.0]
+	}
+],
 
     "Lights": [
 		// Black Background
@@ -110,7 +126,7 @@
             "layout": "trs",
             "translate": [-0.005, 1.7, -0.03],
             "rotate": [0, 0, 0],
-            "scale": [0.85, 0.025, 0.85]
+            "scale": [0.80, 0.025, 0.80]
         }
     ],
 
@@ -167,14 +183,14 @@
 
 	"Surfaces":
     [
-        // // Floor
-         { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0}
+        // Floor
+        { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0}//,
         // // Ceiling
         // { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
         // // Back Wall
         // { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
-        // Left Wall
-        //{ "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
+        // // Left Wall
+        // { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
         // // Right Wall
         // { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
         // // Tall Box
@@ -188,5 +204,5 @@
 
 	"LightSurfaces": [{"light": 1, "transform": 6}],
 
-    "CameraSurfaces":[{"camera": 0}]
+    "CameraSurfaces":[{"camera": 0}, {"camera": 1}]
 }
