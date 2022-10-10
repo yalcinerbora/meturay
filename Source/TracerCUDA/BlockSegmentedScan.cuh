@@ -1,3 +1,4 @@
+#pragma once
 
 #include <type_traits>
 #include <cub/warp/warp_scan.cuh>

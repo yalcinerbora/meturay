@@ -8,20 +8,20 @@
 #include "RNGenerator.h"
 #include "BinarySearch.cuh"
 
-static constexpr bool TPBCheck(uint32_t TPB, uint32_t X, uint32_t Y)
-{
-    auto PIX_COUNT = (X * Y);
-    if (TPB > PIX_COUNT) return TPB % PIX_COUNT == 0;
-    if (TPB <= PIX_COUNT) return PIX_COUNT % TPB  == 0;
-    return false;
-}
-
 template<uint32_t TPB,
          uint32_t X,
          uint32_t Y>
 class BlockPWCDistribution2D
 {
     private:
+    static constexpr bool TPBCheck(uint32_t TPB, uint32_t X, uint32_t Y)
+    {
+        auto PIX_COUNT = (X * Y);
+        if(TPB > PIX_COUNT) return TPB % PIX_COUNT == 0;
+        if(TPB <= PIX_COUNT) return PIX_COUNT % TPB == 0;
+        return false;
+    }
+
     // No SFINAE, just static assert
     static_assert(TPBCheck(TPB, X, Y),
                   "TBP and (X * Y) must be divisible, (X*Y) / TBP or TBP / (X*Y)");
@@ -197,9 +197,6 @@ Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& in
         pdf = 1.0f;
         return xi;
     }
-
-    if(xi[1] == 1.0f) printf("Why???\n");
-
     GPUFunctions::BinarySearchInBetween<float>(index[1], xi[1],
                                                sMem.sCDFY, CDF_SIZE_Y);
     int32_t indexYInt = static_cast<int32_t>(index[1]);

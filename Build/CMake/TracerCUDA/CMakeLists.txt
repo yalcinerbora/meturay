@@ -106,6 +106,7 @@ set(SRC_GPU_ALGORITHMS_BLOCK
 
 set(SRC_GPU_CLASSES
     ${CURRENT_SOURCE_DIR}/GPUBlockPWCDistribution.cuh
+    ${CURRENT_SOURCE_DIR}/GPUBlockPWLDistribution.cuh
     ${CURRENT_SOURCE_DIR}/GPUPiecewiseDistribution.cu
     ${CURRENT_SOURCE_DIR}/GPUPiecewiseDistribution.cuh
     ${CURRENT_SOURCE_DIR}/GPUSurface.h)

@@ -82,7 +82,7 @@ using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 
 static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
-    std::make_tuple(1024, 128, 64), // First bounce good approximation
+    std::make_tuple(512, 128, 64), // First bounce good approximation
     std::make_tuple(512, 64, 32),   // Second bounce as well
     std::make_tuple(256, 32, 16),   // Third bounce not so much
     std::make_tuple(256, 32, 16),   // Fourth bounce as well

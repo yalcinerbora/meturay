@@ -18,7 +18,9 @@
 #include "RayLib/RandomColor.h"
 
 #include "AnisoSVO.cuh"
+
 #include "GPUBlockPWCDistribution.cuh"
+#include "GPUBlockPWLDistribution.cuh"
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -965,9 +967,10 @@ template <uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
 struct KCGenSampleShMem
 {
     // PWC Distribution over the shared memory
-    using BlockPWC2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    //using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
 
-    typename BlockPWC2D::TempStorage sPWCMem;
+    typename BlockDist2D::TempStorage sDistMem;
     // Starting positions of the rays (at most TPB)
     Vector3f sPositions[THREAD_PER_BLOCK];
     //Vector3f sPosition;
@@ -1015,22 +1018,14 @@ static void KCGenAndSampleDistribution(// Output
     static_assert(Y % ROW_PER_ITERATION == 0, "RT_THREADS must exactly iterate over X * Y");
     // Ray tracing related
     static constexpr uint32_t RT_ITER_COUNT = ROW_ITER_COUNT;
-    // PWC Distribution over the shared memory
-    using BlockPWC2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
 
-    // Allocate shared memory for PWC Distribution
+    // PWC Distribution over the shared memory
+    //using Distribution2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    using Distribution2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
+
+    // Change the type of the shared memory
     extern __shared__ Byte sharedMemRAW[];
     KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>* sharedMem = reinterpret_cast<KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>*>(sharedMemRAW);
-
-    //__shared__ typename BlockPWC2D::TempStorage sPWCMem;
-    //// Starting positions of the rays (at most TPB)
-    //__shared__ Vector3f sPositions[THREAD_PER_BLOCK];
-    //// Bin parameters
-    //__shared__ uint32_t sRayCount;
-    //__shared__ uint32_t sOffsetStart;
-    //__shared__ uint32_t sNodeId;
-    //__shared__ uint32_t sPositionCount;
-    //__shared__ float sBinVoxelSize;
 
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
@@ -1114,7 +1109,7 @@ static void KCGenAndSampleDistribution(// Output
                                             nodeId, isLeaf);
                 //printf("HitT: %f, tMin %f n:%u r:%f\n", hitT, tMin, nodeId, radiance);
             }
-            else radiance = 0.01f;
+            else radiance = 0.0001f;
             //else radiance = 2.0f;
 
             incRadiances[i] = radiance;
@@ -1124,7 +1119,7 @@ static void KCGenAndSampleDistribution(// Output
         // and sample for each ray
 
         // Generate PWC Distribution over the radiances
-        BlockPWC2D dist2D(sharedMem->sPWCMem, incRadiances);
+        Distribution2D dist2D(sharedMem->sDistMem, incRadiances);
         // Block threads will loop over the every ray in this bin
         for(uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
             rayIndex += THREAD_PER_BLOCK)
