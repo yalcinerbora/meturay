@@ -9,6 +9,7 @@
 
 #include "RNGSobol.cuh"
 #include "RNGIndependent.cuh"
+#include "BlockTextureFilter.cuh"
 
 class GPUDirectLightSamplerI;
 
@@ -49,6 +50,8 @@ class WFPGTracer final : public RayTracer
                                                             // even if they did not satisfy the ray bin count
             uint32_t            binRayCount         = 512;  // Amount of rays on each bin
 
+            float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
+
             // Photon
             uint32_t            photonPerPass       = 1'000'000;
 
@@ -73,6 +76,9 @@ class WFPGTracer final : public RayTracer
         WorkPool<>                      debugPathWorkPool;
         // Photon Works
         WorkPool<>                      photonWorkPool;
+
+        // Device filter for radiance field
+        GaussFilter                     rFieldGaussFilter;
 
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;

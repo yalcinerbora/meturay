@@ -3,6 +3,8 @@
 #include "TracerCUDA/CudaSystem.hpp"
 #include "TracerCUDA/DeviceMemory.h"
 
+#include "TracerCUDA/BlockTextureFilter.cuh"
+
 #include "RayLib/Constants.h"
 
 #include <gtest/gtest.h>

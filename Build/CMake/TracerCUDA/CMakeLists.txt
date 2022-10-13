@@ -102,7 +102,8 @@ set(SRC_GPU_ALGORITHMS_IMPLEMENTATIONS
 
 set(SRC_GPU_ALGORITHMS_BLOCK
     ${CURRENT_SOURCE_DIR}/BlockSegmentedReduce.cuh
-    ${CURRENT_SOURCE_DIR}/BlockSegmentedScan.cuh)
+    ${CURRENT_SOURCE_DIR}/BlockSegmentedScan.cuh
+    ${CURRENT_SOURCE_DIR}/BlockTextureFilter.cuh)
 
 set(SRC_GPU_CLASSES
     ${CURRENT_SOURCE_DIR}/GPUBlockPWCDistribution.cuh

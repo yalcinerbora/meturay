@@ -41,6 +41,13 @@ double HybridFuncs::Clamp(const double& t, const double& minVal, const double& m
     return fmin(fmax(minVal, t), maxVal);
 }
 
+template <class T>
+__device__ __host__ HYBRID_INLINE
+T HybridFuncs::Clamp(const T& val, const T& min, const T& max)
+{
+    return (val < min) ? min : ((val > max) ? max : val);
+}
+
 template <class T, class F>
 __device__ __host__ HYBRID_INLINE
 T HybridFuncs::Lerp(const T& a, const T& b, const F& v)

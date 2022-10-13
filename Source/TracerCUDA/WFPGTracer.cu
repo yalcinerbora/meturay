@@ -73,6 +73,7 @@ using PathGuideKernelFunction = void (*)(// Output
                                          const uint32_t*,
                                          const uint32_t*,
                                          // Constants
+                                         const GaussFilter,
                                          float coneAperture,
                                          const AnisoSVOctreeGPU,
                                          uint32_t);
@@ -343,7 +344,7 @@ void WFPGTracer::GenerateGuidedDirections()
     // Select the kernel depending on the depth
     //uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
 
-    uint32_t kernelIndex = 0;
+    uint32_t kernelIndex = 1;
 
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
@@ -379,6 +380,7 @@ void WFPGTracer::GenerateGuidedDirections()
                   dPartitionOffsets,
                   dPartitionBinIds,
                   // Constants
+                  rFieldGaussFilter,
                   coneAperture,
                   svo.TreeGPU(),
                   hPartitionCount);
@@ -517,6 +519,7 @@ WFPGTracer::WFPGTracer(const CudaSystem& s,
     : RayTracer(s, scene, p)
     , currentDepth(0)
     , coneAperture(0.0f)
+    , rFieldGaussFilter(1.0f)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(WFPGBoundaryWorkerList{});
@@ -531,6 +534,8 @@ WFPGTracer::WFPGTracer(const CudaSystem& s,
 
 TracerError WFPGTracer::Initialize()
 {
+    rFieldGaussFilter = GaussFilter(options.rFieldGaussAlpha);
+
     iterationCount = 0;
     treeDumpCount = 0;
 

@@ -21,6 +21,7 @@
 
 #include "GPUBlockPWCDistribution.cuh"
 #include "GPUBlockPWLDistribution.cuh"
+#include "BlockTextureFilter.cuh"
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -969,8 +970,12 @@ struct KCGenSampleShMem
     // PWC Distribution over the shared memory
     //using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
-
-    typename BlockDist2D::TempStorage sDistMem;
+    using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
+    union
+    {
+        typename BlockDist2D::TempStorage   sDistMem;
+        typename BlockFilter2D::TempStorage sFilterMem;
+    };
     // Starting positions of the rays (at most TPB)
     Vector3f sPositions[THREAD_PER_BLOCK];
     //Vector3f sPosition;
@@ -1000,6 +1005,7 @@ static void KCGenAndSampleDistribution(// Output
                                        const uint32_t* gBinOffsets,
                                        const uint32_t* gNodeIds,
                                        // Constants
+                                       const GaussFilter rFieldGaussFilter,
                                        float coneAperture,
                                        const AnisoSVOctreeGPU svo,
                                        uint32_t binCount)
@@ -1020,12 +1026,15 @@ static void KCGenAndSampleDistribution(// Output
     static constexpr uint32_t RT_ITER_COUNT = ROW_ITER_COUNT;
 
     // PWC Distribution over the shared memory
-    //using Distribution2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
-    using Distribution2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
+    using Distribution2D = typename SharedMemType::BlockDist2D;
+    using Filter2D = typename SharedMemType::BlockFilter2D;
 
     // Change the type of the shared memory
     extern __shared__ Byte sharedMemRAW[];
-    KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>* sharedMem = reinterpret_cast<KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>*>(sharedMemRAW);
+    SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
+
+    Filter2D filter(sharedMem->sFilterMem, rFieldGaussFilter);
 
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
@@ -1118,8 +1127,12 @@ static void KCGenAndSampleDistribution(// Output
         // Now generate distribution from the data
         // and sample for each ray
 
+        // Before that filter the radiance field
+        float filteredRadiances[RT_ITER_COUNT];
+        filter(filteredRadiances, incRadiances);
+
         // Generate PWC Distribution over the radiances
-        Distribution2D dist2D(sharedMem->sDistMem, incRadiances);
+        Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
         // Block threads will loop over the every ray in this bin
         for(uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
             rayIndex += THREAD_PER_BLOCK)
