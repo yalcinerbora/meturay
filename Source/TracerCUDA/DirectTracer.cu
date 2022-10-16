@@ -270,7 +270,7 @@ void DirectTracer::GenerateWork(uint32_t cameraIndex)
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     // Generate Rays
-    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU>
+    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU, Vector4f>
     (
         cameraIndex,
         options.sampleCount,
@@ -285,7 +285,7 @@ void DirectTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
     currentCameraId = 0;
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
-    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU>
+    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU, Vector4f>
     (
         t, cameraIndex, options.sampleCount,
         RayAuxInitBasic(InitialBasicAux),
@@ -300,7 +300,7 @@ void DirectTracer::GenerateWork(const GPUCameraI& dCam)
     // Only use anti-alias when furnace mode is on
     bool antiAlias = (options.renderType == RenderType::RENDER_FURNACE) ? true : false;
     // Generate Rays
-    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU>
+    GenerateRays<RayAuxBasic, RayAuxInitBasic, RNGIndependentGPU, Vector4f>
     (
         dCam,
         options.sampleCount,

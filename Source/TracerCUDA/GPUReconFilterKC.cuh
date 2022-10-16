@@ -150,7 +150,7 @@ static void KCFilterToImg(ImageGMem<T> img,
                           // Inputs per thread
                           const uint32_t* gSampleIds,
                           // Inputs Accessed by SampleId
-                          const Vector4f* gValues,
+                          const T* gValues,
                           const Vector2f* gImgCoords,
                           // Constants
                           Vector2i imgSegmentSize,

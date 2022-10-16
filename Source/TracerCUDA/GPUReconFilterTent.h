@@ -41,6 +41,11 @@ class GPUReconFilterTent : public GPUReconFilter
                                 const Vector2f* dImgCoords,
                                 uint32_t sampleCount,
                                 const CudaSystem& system) override;
+        void        FilterToImg(ImageMemory&,
+                                const float* dValues,
+                                const Vector2f* dImgCoords,
+                                uint32_t sampleCount,
+                                const CudaSystem& system) override;
 };
 
 inline GPUTentFilterFunctor::GPUTentFilterFunctor(float radius)
@@ -72,6 +77,17 @@ inline GPUReconFilterTent::GPUReconFilterTent(float filterRadius, Options filter
 inline
 void GPUReconFilterTent::FilterToImg(ImageMemory& iMem,
                                      const Vector4f* dValues,
+                                     const Vector2f* dImgCoords,
+                                     uint32_t sampleCount,
+                                     const CudaSystem& system)
+{
+    FilterToImgInternal(iMem, dValues, dImgCoords, sampleCount,
+                        filter, system);
+}
+
+inline
+void GPUReconFilterTent::FilterToImg(ImageMemory& iMem,
+                                     const float* dValues,
                                      const Vector2f* dImgCoords,
                                      uint32_t sampleCount,
                                      const CudaSystem& system)

@@ -125,56 +125,6 @@ static constexpr std::array<float, PG_KERNEL_TYPE_COUNT> CONE_APERTURES =
     SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4]))
 };
 
-template <class RNG>
-__global__
-void GeneratePhotons(// Output
-                     RayGMem* gRays,
-                     RayAuxPhotonWFPG* gAuxiliary,
-                     // I-O
-                     RNGeneratorGPUI** gRNGs,
-                     // Input
-                     const GPULightI** gLightList,
-                     uint32_t totalLightCount,
-                     // Constants
-                     uint32_t totalPhotonCount)
-{
-    // Get this Threads RNG
-    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
-
-    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < totalPhotonCount;
-        threadId += (blockDim.x * gridDim.x))
-    {
-        // TODO: generate power CDF and use it instead
-        // Uniformly Sample Light
-        uint32_t index = static_cast<uint32_t>(rng.Uniform() * totalLightCount);
-        float pdf = 1.0f / static_cast<float>(totalLightCount);
-
-        float posPDF = 0.0f;
-        float dirPDF = 0.0f;
-        RayReg ray; Vector3f normal;
-        Vector3f power = gLightList[index]->GeneratePhoton(ray, normal,
-                                                           posPDF, dirPDF,
-                                                           rng);
-        uint16_t mediumIndex = gLightList[index]->MediumIndex();
-
-        // Divide by the sampling pdf
-        if(posPDF != 0 && dirPDF != 0 && pdf != 0)
-            power /= (posPDF * dirPDF * pdf);
-        else
-            power = Zero3f;
-
-        RayAuxPhotonWFPG aux;
-        aux.power = power;
-        aux.depth = 1;
-        aux.mediumIndex = mediumIndex;
-
-        // Store
-        ray.Update(gRays, threadId);
-        gAuxiliary[threadId] = aux;
-    }
-}
-
 __global__
 void KCNormalizeImage(// I-O
                       Vector4f* dPixels,
@@ -342,9 +292,9 @@ void WFPGTracer::GenerateGuidedDirections()
 
     // Call the Trace and Sample Kernel
     // Select the kernel depending on the depth
-    //uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
+    uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
 
-    uint32_t kernelIndex = 1;
+    //uint32_t kernelIndex = 0;
 
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
@@ -404,129 +354,17 @@ void WFPGTracer::GenerateGuidedDirections()
              currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
 }
 
-void WFPGTracer::TraceAndStorePhotons()
-{
-    // Generate Global Data Struct
-    WFPGTracerGlobalState globalData;
-    globalData.gSamples = sampleMemory.GMem<Vector4f>();
-    globalData.gLightList = dLights;
-    globalData.totalLightCount = lightCount;
-    globalData.gLightSampler = dLightSampler;
-    globalData.mediumList = dMediums;
-    globalData.totalMediumCount = mediumCount;
-    //
-    globalData.svo = svo.TreeGPU();
-    globalData.gPathNodes = dPathNodes;
-    globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
-    globalData.rawPathGuiding = false;
-    //
-    globalData.directLightMIS = options.directLightMIS;
-    globalData.nee = options.nextEventEstimation;
-    globalData.rrStart = options.rrStart;
-
-    // Generate Photons
-    const CudaGPU& gpu = cudaSystem.BestGPU();
-    // Allocate Ray & Aux Memory
-    size_t auxBufferSize = options.photonPerPass * sizeof(RayAuxPhotonWFPG);
-    rayCaster->ResizeRayOut(options.photonPerPass, scene.BaseBoundaryMaterial());
-    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxBufferSize);
-    RayAuxPhotonWFPG* dRayAux = static_cast<RayAuxPhotonWFPG*>(*dAuxOut);
-
-    // Photon Generation Kernel Call
-    gpu.GridStrideKC_X(0, (cudaStream_t)0,
-                       options.photonPerPass,
-                       //
-                       GeneratePhotons<RNGIndependentGPU>,
-                       // Output
-                       rayCaster->RaysOut(),
-                       dRayAux,
-                       // I-O
-                       rngCPU->GetGPUGenerators(gpu),
-                       // Input
-                       dLights,
-                       lightCount,
-                       // Constants
-                       options.photonPerPass);
-
-    // Swap Auxiliary buffers and start photon tracing
-    SwapAuxBuffers();
-    rayCaster->SwapRays();
-
-    // Photon Bounce Loop
-    uint32_t depth = 0;
-    uint32_t rayCount = rayCaster->CurrentRayCount();
-    while(rayCaster->CurrentRayCount() != 0 &&
-          depth < options.maximumDepth)
-    {
-        // Hit Rays
-        rayCaster->HitRays();
-
-         // Generate output partitions wrt. materials
-        const auto partitions = rayCaster->PartitionRaysWRTWork();
-
-        uint32_t totalOutRayCount = 0;
-        auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
-                                                             partitions,
-                                                             photonWorkMap);
-        // Allocate new auxiliary buffer
-        // to fit all potential ray outputs
-        size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPhotonWFPG);
-        GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
-
-        // Set Auxiliary Pointers
-        for(auto p : outPartitions)
-        {
-            // Skip if null batch or not found material
-            if(p.portionId == HitKey::NullBatch) continue;
-            auto loc = photonWorkMap.find(p.portionId);
-            if(loc == photonWorkMap.end()) continue;
-
-            // Set pointers
-            const RayAuxPhotonWFPG* dAuxInLocal = static_cast<const RayAuxPhotonWFPG*>(*dAuxIn);
-            using WorkData = GPUWorkBatchD<WFPGTracerGlobalState, RayAuxPhotonWFPG>;
-            int i = 0;
-            for(auto& work : loc->second)
-            {
-                RayAuxPhotonWFPG* dAuxOutLocal = static_cast<RayAuxPhotonWFPG*>(*dAuxOut) + p.offsets[i];
-
-                auto& wData = static_cast<WorkData&>(*work);
-                wData.SetGlobalData(globalData);
-                wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
-                i++;
-            }
-        }
-
-        // Launch Kernels
-        rayCaster->WorkRays(photonWorkMap, outPartitions,
-                            partitions,
-                            *rngCPU.get(),
-                            totalOutRayCount,
-                            scene.BaseBoundaryMaterial());
-
-        // Swap auxiliary buffers since output rays are now input rays
-        // for the next iteration
-        SwapAuxBuffers();
-        // Increase Depth
-        depth++;
-    }
-
-    // Now Photons are stored in the global sketch
-}
-
 WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
                        const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
     , coneAperture(0.0f)
-    , rFieldGaussFilter(1.0f)
+    , rFieldGaussFilter(options.rFieldGaussAlpha)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(WFPGBoundaryWorkerList{});
     pathWorkPool.AppendGenerators(WFPGPathWorkerList{});
-
-    // Photon mapping pool
-    photonWorkPool.AppendGenerators(WFPGPhotonWorkerList{});
 
     debugBoundaryWorkPool.AppendGenerators(WFPGDebugBoundaryWorkerList{});
     debugPathWorkPool.AppendGenerators(WFPGDebugPathWorkerList{});
@@ -557,14 +395,12 @@ TracerError WFPGTracer::Initialize()
     for(const auto& wInfo : infoList)
     {
         WorkBatchArray workBatchList;
-        WorkBatchArray workPhotonBatchList;
         uint32_t batchId = std::get<0>(wInfo);
         const GPUPrimitiveGroupI& pg = *std::get<1>(wInfo);
         const GPUMaterialGroupI& mg = *std::get<2>(wInfo);
 
         // Generic Path work
         GPUWorkBatchI* batch = nullptr;
-        GPUWorkBatchI* photonBatch = nullptr;
         if(options.renderMode == WFPGRenderMode::SVO_INITIAL_HIT_QUERY)
         {
             WorkPool<>& wp = debugPathWorkPool;
@@ -580,16 +416,7 @@ TracerError WFPGTracer::Initialize()
                                                 options.nextEventEstimation,
                                                 options.directLightMIS)) != TracerError::OK)
                 return err;
-
-            // Generate Photon Work as well
-            if((err = photonWorkPool.GenerateWorkBatch(photonBatch, mg, pg,
-                                                       dTransforms)) != TracerError::OK)
-                return err;
         }
-
-        workPhotonBatchList.push_back(photonBatch);
-        photonWorkMap.emplace(batchId, workPhotonBatchList);
-
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
@@ -626,13 +453,23 @@ TracerError WFPGTracer::Initialize()
     }
 
     // Init SVO
-    if((err = svo.Constrcut(scene.BaseAccelerator()->SceneExtents(),
-                            (1 << options.octreeLevel),
-                            scene.AcceleratorBatchMappings(),
-                            dLights, lightCount,
-                            scene.BaseBoundaryMaterial(),
-                            cudaSystem)) != TracerError::OK)
-        return err;
+    if(options.svoInitPath.empty())
+    {
+        if((err = svo.Constrcut(scene.BaseAccelerator()->SceneExtents(),
+                                (1 << options.octreeLevel),
+                                scene.AcceleratorBatchMappings(),
+                                dLights, lightCount,
+                                scene.BaseBoundaryMaterial(),
+                                cudaSystem)) != TracerError::OK)
+            return err;
+    }
+    else
+    {
+        std::vector<Byte> data;
+        Utility::DevourFileToStdVector(data, options.svoInitPath);
+        if((err = svo.Constrcut(data, cudaSystem)) != TracerError::OK)
+            return err;
+    }
 
     // Generate a Sampler for the
     // Path Guide Sampling (Conservatively generate maximum amount of RNGs)
@@ -666,17 +503,12 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
         return err;
+    // Method Related
     if((err = opts.GetUInt(options.octreeLevel, OCTREE_LEVEL_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.minRayBinLevel, RAY_BIN_MIN_LEVEL_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.binRayCount, BIN_RAY_COUNT_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetUInt(options.svoDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetUInt(options.svoRenderLevel, RENDER_LEVEL_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
 
     std::string renderModeString;
@@ -686,6 +518,21 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
 
     if((err = opts.GetUInt(options.svoRadRenderIter, SVO_DEBUG_ITER_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetUInt(options.svoRenderLevel, RENDER_LEVEL_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetString(options.svoInitPath, SVO_INIT_PATH_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetFloat(options.rFieldGaussAlpha, R_FIELD_GAUSS_ALPHA_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetBool(options.skipPG, SKIP_PG_NAME)) != TracerError::OK)
+        return err;
+
+    if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetUInt(options.pgDumpInterval, PG_DUMP_INTERVAL_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetString(options.pgDumpDebugName, PG_DUMP_PATH_NAME)) != TracerError::OK)
         return err;
 
     return TracerError::OK;
@@ -705,36 +552,28 @@ void WFPGTracer::AskOptions()
     list.emplace(RAY_BIN_MIN_LEVEL_NAME, OptionVariable(static_cast<int64_t>(options.minRayBinLevel)));
     list.emplace(BIN_RAY_COUNT_NAME, OptionVariable(static_cast<int64_t>(options.binRayCount)));
     list.emplace(RENDER_MODE_NAME, OptionVariable(WFPGRenderModeToString(options.renderMode)));
-    list.emplace(DUMP_DEBUG_NAME, OptionVariable(options.dumpDebugData));
-    list.emplace(DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.svoDumpInterval)));
+
+    list.emplace(SVO_DEBUG_ITER_NAME, OptionVariable(static_cast<int64_t>(options.svoRadRenderIter)));
+    list.emplace(RENDER_LEVEL_NAME, OptionVariable(static_cast<int64_t>(options.svoRenderLevel)));
+    list.emplace(SVO_INIT_PATH_NAME, OptionVariable(options.svoInitPath));
+    list.emplace(R_FIELD_GAUSS_ALPHA_NAME, OptionVariable(options.rFieldGaussAlpha));
+    list.emplace(SKIP_PG_NAME, OptionVariable(options.skipPG));
+
+    list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));
+    list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));
+    list.emplace(PG_DUMP_PATH_NAME, OptionVariable(options.pgDumpDebugName));
+
     if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }
 
 void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 {
-    //// TEST !!!
-    //// Equally partition the samples to all cameras
-    //if(iterationCount <= options.svoRadRenderIter)
-    //{
-    //    uint32_t cameraCount = scene.CameraCount();
-    //    int samplePerCam = options.svoRadRenderIter / cameraCount;
-    //    int i = iterationCount / samplePerCam;
-    //    cameraIndex += i;
-    //    cameraIndex %= cameraCount;
-    //}
-    //// TEST END !!!
-
-    // Before Generating Camera Rays do photon pass
-    //if(iterationCount < options.svoRadRenderIter &&
-    //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
-    //    TraceAndStorePhotons();
-
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
-    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
     (
         cameraIndex,
         options.sampleCount,
@@ -785,14 +624,9 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 
 void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    // Before Generating Camera Rays do photon pass
-    //if(iterationCount < options.svoRadRenderIter &&
-    //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
-    //    TraceAndStorePhotons();
-
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
-    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
     (
         t, cameraIndex, options.sampleCount,
         RayAuxInitWFPG(InitialWFPGAux,
@@ -843,13 +677,9 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 
 void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    // Before Generating Camera Rays do photon pass
-    //if(iterationCount < options.svoRadRenderIter &&
-    //   options.renderMode == WFPGRenderMode::SVO_RADIANCE)
-    //    TraceAndStorePhotons();
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
                      options.renderMode == WFPGRenderMode::SVO_RADIANCE);
-    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+    GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
     (
         dCam, options.sampleCount,
         RayAuxInitWFPG(InitialWFPGAux,
@@ -920,7 +750,7 @@ bool WFPGTracer::Render()
     globalData.svo = svo.TreeGPU();
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
-    globalData.rawPathGuiding = false;
+    globalData.skipPG = options.skipPG;
     //
     globalData.directLightMIS = options.directLightMIS;
     globalData.nee = options.nextEventEstimation;
@@ -954,9 +784,9 @@ bool WFPGTracer::Render()
 
     // Before Material Evaluation
     // Generate guideDirection and PDF
-    if(options.renderMode != WFPGRenderMode::SVO_INITIAL_HIT_QUERY)
-    //// Change this
-    //if(options.renderMode != WFPGRenderMode::SVO_RADIANCE)
+
+    if((options.renderMode != WFPGRenderMode::SVO_INITIAL_HIT_QUERY) &&
+       !options.skipPG)
     {
         GenerateGuidedDirections();
     }
@@ -1025,25 +855,23 @@ void WFPGTracer::Finalize()
     if(options.renderMode == WFPGRenderMode::RENDER ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     {
-        uint32_t totalPathNodeCount = TotalPathNodeCount();
-        svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
-                                MaximumPathNodePerPath(), cudaSystem);
-        svo.NormalizeAndFilterRadiance(cudaSystem);
+        //uint32_t totalPathNodeCount = TotalPathNodeCount();
+        //svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
+        //                        MaximumPathNodePerPath(), cudaSystem);
+        //svo.NormalizeAndFilterRadiance(cudaSystem);
 
         // Dump the SVO tree if requested
-        uint32_t dumpInterval = static_cast<uint32_t>(std::pow(options.svoDumpInterval, treeDumpCount));
-        if(options.dumpDebugData && iterationCount == dumpInterval)
+        uint32_t dumpInterval = static_cast<uint32_t>(std::pow(options.pgDumpInterval, treeDumpCount));
+        if(options.pgDumpDebugData && iterationCount == dumpInterval)
         {
             std::vector<Byte> svoData;
             svo.DumpSVOAsBinary(svoData, cudaSystem);
-            std::string fName = fmt::format("{:d}_svoTree", iterationCount);
+            std::string fName = fmt::format("{:d}_{:s}",
+                                            iterationCount,
+                                            options.pgDumpDebugName);
             Utility::DumpStdVectorToFile(svoData, fName);
             treeDumpCount++;
         }
-
-        //if(iterationCount <= options.svoRadRenderIter)
-        //    sketch.HashRadianceAsPhotonDensity(dPathNodes, totalPathNodeCount,
-        //                                       MaximumPathNodePerPath(), cudaSystem);
     }
 
     // On SVO_Radiance mode clear the image memory
@@ -1059,7 +887,7 @@ void WFPGTracer::Finalize()
         {
             case SCENE_CAMERA:
             {
-                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
                 (
                     currentCamera.nonTransformedCamIndex, options.sampleCount,
                     RayAuxInitWFPG(InitialWFPGAux,
@@ -1072,7 +900,7 @@ void WFPGTracer::Finalize()
             }
             case CUSTOM_CAMERA:
             {
-                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
                 (
                     *currentCamera.dCustomCamera, options.sampleCount,
                     RayAuxInitWFPG(InitialWFPGAux,
@@ -1085,7 +913,7 @@ void WFPGTracer::Finalize()
             }
             case TRANSFORMED_SCENE_CAMERA:
             {
-                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU>
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
                 (
                     currentCamera.transformedSceneCam.transform,
                     currentCamera.transformedSceneCam.cameraIndex,

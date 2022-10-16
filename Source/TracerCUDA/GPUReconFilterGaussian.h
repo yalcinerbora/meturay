@@ -53,6 +53,11 @@ class GPUReconFilterGaussian : public GPUReconFilter
                                 const Vector2f* dImgCoords,
                                 uint32_t sampleCount,
                                 const CudaSystem& system) override;
+        void        FilterToImg(ImageMemory&,
+                                const float* dValues,
+                                const Vector2f* dImgCoords,
+                                uint32_t sampleCount,
+                                const CudaSystem& system) override;
 };
 
 inline GPUGaussianFilterFunctor::GPUGaussianFilterFunctor(float radius, float alpha)
@@ -99,6 +104,17 @@ inline GPUReconFilterGaussian::GPUReconFilterGaussian(float filterRadius, Option
 inline
 void GPUReconFilterGaussian::FilterToImg(ImageMemory& iMem,
                                          const Vector4f* dValues,
+                                         const Vector2f* dImgCoords,
+                                         uint32_t sampleCount,
+                                         const CudaSystem& system)
+{
+    FilterToImgInternal(iMem, dValues, dImgCoords, sampleCount,
+                        filter, system);
+}
+
+inline
+void GPUReconFilterGaussian::FilterToImg(ImageMemory& iMem,
+                                         const float* dValues,
                                          const Vector2f* dImgCoords,
                                          uint32_t sampleCount,
                                          const CudaSystem& system)

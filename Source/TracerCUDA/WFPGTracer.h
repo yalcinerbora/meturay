@@ -16,24 +16,31 @@ class GPUDirectLightSamplerI;
 class WFPGTracer final : public RayTracer
 {
     public:
-        static constexpr const char*    TypeName() { return "WFPGTracer"; }
+    static constexpr const char*    TypeName() { return "WFPGTracer"; }
 
-        static constexpr const char*    MAX_DEPTH_NAME          = "MaxDepth";
-        static constexpr const char*    NEE_NAME                = "NextEventEstimation";
-        static constexpr const char*    RR_START_NAME           = "RussianRouletteStart";
-        static constexpr const char*    DIRECT_LIGHT_MIS_NAME   = "DirectLightMIS";
-        static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME = "NEESampler";
+    // PT Related
+    static constexpr const char*    MAX_DEPTH_NAME              = "MaxDepth";
+    static constexpr const char*    NEE_NAME                    = "NextEventEstimation";
+    static constexpr const char*    RR_START_NAME               = "RussianRouletteStart";
+    static constexpr const char*    DIRECT_LIGHT_MIS_NAME       = "DirectLightMIS";
+    static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME     = "NEESampler";
 
-        static constexpr const char*    OCTREE_LEVEL_NAME       = "OctreeLevel";
-        static constexpr const char*    RAY_BIN_MIN_LEVEL_NAME  = "MinRayBinLevel";
-        static constexpr const char*    BIN_RAY_COUNT_NAME      = "BinRayCount";
+    //
+    static constexpr const char*    OCTREE_LEVEL_NAME           = "OctreeLevel";
+    static constexpr const char*    RAY_BIN_MIN_LEVEL_NAME      = "MinRayBinLevel";
+    static constexpr const char*    BIN_RAY_COUNT_NAME          = "BinRayCount";
 
-        static constexpr const char*    RENDER_MODE_NAME        = "RenderMode";
-        static constexpr const char*    SVO_DEBUG_ITER_NAME     = "SVODebugRenderIter";
-        static constexpr const char*    DUMP_DEBUG_NAME         = "DumpDebugData";
-        static constexpr const char*    DUMP_INTERVAL_NAME      = "DataDumpIntervalExp";
-        static constexpr const char*    RENDER_LEVEL_NAME       = "SVORenderLevel";
+    static constexpr const char*    RENDER_MODE_NAME            = "RenderMode";
+    static constexpr const char*    SVO_DEBUG_ITER_NAME         = "SVODebugRenderIter";
+    static constexpr const char*    RENDER_LEVEL_NAME           = "SVORenderLevel";
+    static constexpr const char*    SVO_INIT_PATH_NAME          = "InitialSVO";
+    static constexpr const char*    SKIP_PG_NAME                = "SkipPG";
 
+    static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
+
+    static constexpr const char*    PG_DUMP_DEBUG_NAME          = "PGDumpDataStruct";
+    static constexpr const char*    PG_DUMP_INTERVAL_NAME       = "PGDataStructDumpIntervalExp";
+    static constexpr const char*    PG_DUMP_PATH_NAME           = "PGDataStructDumpName";
 
         struct Options
         {
@@ -50,33 +57,29 @@ class WFPGTracer final : public RayTracer
                                                             // even if they did not satisfy the ray bin count
             uint32_t            binRayCount         = 512;  // Amount of rays on each bin
 
-            float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
-
-            // Photon
-            uint32_t            photonPerPass       = 1'000'000;
-
             // Misc
             WFPGRenderMode      renderMode          = WFPGRenderMode::RENDER;
             uint32_t            svoRadRenderIter    = 2;
-            bool                dumpDebugData       = false;
-            uint32_t            svoDumpInterval     = 2;
             uint32_t            svoRenderLevel      = 0;
+            std::string         svoInitPath         =  "";
+            float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
+            bool                skipPG              = false;
+            //
+            bool                pgDumpDebugData     = false;
+            uint32_t            pgDumpInterval      = 2;
+            std::string         pgDumpDebugName     = "wfpg_svo";
         };
 
     private:
         Options                         options;
         uint32_t                        currentDepth;
         WorkBatchMap                    workMap;
-        WorkBatchMap                    photonWorkMap;
          // Work Pools
         BoundaryWorkPool<bool, bool>    boundaryWorkPool;
         WorkPool<bool, bool>            pathWorkPool;
         // Debug Works
         BoundaryWorkPool<>              debugBoundaryWorkPool;
         WorkPool<>                      debugPathWorkPool;
-        // Photon Works
-        WorkPool<>                      photonWorkPool;
-
         // Device filter for radiance field
         GaussFilter                     rFieldGaussFilter;
 
@@ -103,7 +106,6 @@ class WFPGTracer final : public RayTracer
         uint32_t                        MaximumPathNodePerPath() const;
 
         void                            GenerateGuidedDirections();
-        void                            TraceAndStorePhotons();
 
         // TODO: Change
         // Temporarily store the current camera

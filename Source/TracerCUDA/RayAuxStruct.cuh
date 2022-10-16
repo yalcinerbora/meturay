@@ -220,11 +220,11 @@ class RayAuxInitRefPG
                         const RayReg&,
                         // Index
                         uint16_t mediumIndex,
-                        const uint32_t,
+                        const uint32_t localSampleId,
                         const uint32_t) const
         {
             RayAuxPath init = defaultValue;
-            init.sampleIndex = UINT32_MAX;
+            init.sampleIndex = localSampleId;
             init.type = RayType::CAMERA_RAY;
             init.mediumIndex = mediumIndex;
             init.depth = 1;

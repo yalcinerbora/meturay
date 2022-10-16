@@ -118,6 +118,7 @@ set(SRC_THREADS
     ${CURRENT_SOURCE_DIR}/WorkerThread.h)
 
 set(SRC_UTILITY
+    ${CURRENT_SOURCE_DIR}/MortonCode.h
     ${CURRENT_SOURCE_DIR}/BitManipulation.cpp
     ${CURRENT_SOURCE_DIR}/BitManipulation.h
     ${CURRENT_SOURCE_DIR}/ColorConversion.h

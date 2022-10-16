@@ -82,36 +82,6 @@ class WFPGWork
         const char*     Type() const override { return Base::TypeName(); }
 };
 
-
-template<class MGroup, class PGroup>
-class WFPGPhotonWork
-    : public GPUWorkBatch<WFPGTracerGlobalState,
-                          WFPGTracerLocalState, RayAuxPhotonWFPG,
-                          MGroup, PGroup, WFPGTracerPhotonWork<MGroup>,
-                          PGroup::GetSurfaceFunction>
-{
-    private:
-        bool                            neeOn;
-        bool                            misOn;
-
-        using Base = GPUWorkBatch<WFPGTracerGlobalState,
-                                  WFPGTracerLocalState, RayAuxPhotonWFPG,
-                                  MGroup, PGroup, WFPGTracerPhotonWork<MGroup>,
-                                  PGroup::GetSurfaceFunction>;
-
-    protected:
-    public:
-        // Constructors & Destructor
-                        WFPGPhotonWork(const GPUMaterialGroupI& mg,
-                                       const GPUPrimitiveGroupI& pg,
-                                       const GPUTransformI* const* t);
-                        ~WFPGPhotonWork() = default;
-
-        void            GetReady() override {}
-        uint8_t         OutRayCount() const override { return 1; };
-        const char*     Type() const override { return Base::TypeName(); }
-};
-
 template<class EGroup>
 class WFPGDebugBoundaryWork
     : public GPUBoundaryWorkBatch<WFPGTracerGlobalState,
@@ -173,16 +143,6 @@ WFPGWork<M, P>::WFPGWork(const GPUMaterialGroupI& mg,
     : Base(mg, pg, t)
     , neeOn(neeOn)
     , misOn(misOn)
-{
-    // Populate localData
-    this->localData.emptyPrimitive = false;
-}
-
-template<class M, class P>
-WFPGPhotonWork<M, P>::WFPGPhotonWork(const GPUMaterialGroupI& mg,
-                                     const GPUPrimitiveGroupI& pg,
-                                     const GPUTransformI* const* t)
-    : Base(mg, pg, t)
 {
     // Populate localData
     this->localData.emptyPrimitive = false;
@@ -271,21 +231,6 @@ extern template class WFPGWork<LambertMat, GPUPrimitiveSphere>;
 
 extern template class WFPGWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class WFPGWork<UnrealMat, GPUPrimitiveSphere>;
-// Photon Path
-extern template class WFPGPhotonWork<LambertCMat, GPUPrimitiveTriangle>;
-extern template class WFPGPhotonWork<LambertCMat, GPUPrimitiveSphere>;
-
-extern template class WFPGPhotonWork<ReflectMat, GPUPrimitiveTriangle>;
-extern template class WFPGPhotonWork<ReflectMat, GPUPrimitiveSphere>;
-
-extern template class WFPGPhotonWork<RefractMat, GPUPrimitiveTriangle>;
-extern template class WFPGPhotonWork<RefractMat, GPUPrimitiveSphere>;
-
-extern template class WFPGPhotonWork<LambertMat, GPUPrimitiveTriangle>;
-extern template class WFPGPhotonWork<LambertMat, GPUPrimitiveSphere>;
-
-extern template class WFPGPhotonWork<UnrealMat, GPUPrimitiveTriangle>;
-extern template class WFPGPhotonWork<UnrealMat, GPUPrimitiveSphere>;
 // Debug Path
 extern template class WFPGDebugWork<LambertCMat, GPUPrimitiveTriangle>;
 extern template class WFPGDebugWork<LambertCMat, GPUPrimitiveSphere>;
@@ -333,17 +278,6 @@ using WFPGPathWorkerList = TypeList<WFPGWork<LambertCMat, GPUPrimitiveTriangle>,
                                     WFPGWork<LambertMat, GPUPrimitiveSphere>,
                                     WFPGWork<UnrealMat, GPUPrimitiveTriangle>,
                                     WFPGWork<UnrealMat, GPUPrimitiveSphere>>;
-// ===================================================
-using WFPGPhotonWorkerList = TypeList<WFPGPhotonWork<LambertCMat, GPUPrimitiveTriangle>,
-                                      WFPGPhotonWork<LambertCMat, GPUPrimitiveSphere>,
-                                      WFPGPhotonWork<ReflectMat, GPUPrimitiveTriangle>,
-                                      WFPGPhotonWork<ReflectMat, GPUPrimitiveSphere>,
-                                      WFPGPhotonWork<RefractMat, GPUPrimitiveTriangle>,
-                                      WFPGPhotonWork<RefractMat, GPUPrimitiveSphere>,
-                                      WFPGPhotonWork<LambertMat, GPUPrimitiveTriangle>,
-                                      WFPGPhotonWork<LambertMat, GPUPrimitiveSphere>,
-                                      WFPGPhotonWork<UnrealMat, GPUPrimitiveTriangle>,
-                                      WFPGPhotonWork<UnrealMat, GPUPrimitiveSphere>>;
 // ===================================================
 using WFPGDebugPathWorkerList = TypeList<WFPGDebugWork<LambertCMat, GPUPrimitiveTriangle>,
                                          WFPGDebugWork<LambertCMat, GPUPrimitiveSphere>,

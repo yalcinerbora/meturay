@@ -24,12 +24,12 @@ Uses stratified sampling
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, class AuxInitFunctor,
-         class RNG>
+         class RNG, class T>
 __device__ inline
 void GenerateCameraRaysGPU(// Output
                            RayGMem* gRays,
                            RayAuxData* gAuxiliary,
-                           CamSampleGMem<Vector4f>& sampleMem,
+                           CamSampleGMem<T>& sampleMem,
                            // I-O
                            RNGeneratorGPUI** gRNGs,
                            // Input
@@ -85,7 +85,7 @@ void GenerateCameraRaysGPU(// Output
 
         // Write Sample
         uint32_t globalSampleId1D = samplesIssuedSoFar + threadId;
-        sampleMem.gValues[globalSampleId1D] = Zero4f;
+        sampleMem.gValues[globalSampleId1D] = T(0);
         sampleMem.gImgCoords[globalSampleId1D] = imgSpaceCoords;
 
         //printf("W[%u] camCoord (%f, %f), imgCoord (%f, %f)\n",
@@ -109,12 +109,12 @@ void GenerateCameraRaysGPU(// Output
 }
 
 // Templated Camera Ray Generation Kernel
-template<class RayAuxData, class AuxInitFunctor, class RNG>
+template<class RayAuxData, class AuxInitFunctor, class RNG, class T>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGenCameraRaysFromArrayGPU(// Output
                                  RayGMem* gRays,
                                  RayAuxData* gAuxiliary,
-                                 CamSampleGMem<Vector4f> sampleMem,
+                                 CamSampleGMem<T> sampleMem,
                                  // I-O
                                  RNGeneratorGPUI** gRNGs,
                                  // Input
@@ -134,7 +134,7 @@ void KCGenCameraRaysFromArrayGPU(// Output
     // Fetch Camera
     const GPUCameraI* gCam = gCameras[sceneCamId];
 
-    GenerateCameraRaysGPU<RayAuxData, AuxInitFunctor, RNG>
+    GenerateCameraRaysGPU<RayAuxData, AuxInitFunctor, RNG, T>
     (
         // Output
         gRays,
@@ -158,12 +158,12 @@ void KCGenCameraRaysFromArrayGPU(// Output
 
 // Templated Camera Ray Generation Kernel
 template<class RayAuxData, class AuxInitFunctor,
-         class RNG>
+         class RNG, class T>
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGenCameraRaysFromObjectGPU(// Output
                                   RayGMem* gRays,
                                   RayAuxData* gAuxiliary,
-                                  CamSampleGMem<Vector4f> sampleMem,
+                                  CamSampleGMem<T> sampleMem,
                                   // I-O
                                   RNGeneratorGPUI** gRNGs,
                                   // Input
@@ -179,7 +179,7 @@ void KCGenCameraRaysFromObjectGPU(// Output
                                   bool incSampleCount,
                                   bool antiAliasOn)
 {
-    GenerateCameraRaysGPU<RayAuxData, AuxInitFunctor, RNG>
+    GenerateCameraRaysGPU<RayAuxData, AuxInitFunctor, RNG, T>
     (
         // Output
         gRays,

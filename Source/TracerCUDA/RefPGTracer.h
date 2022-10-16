@@ -70,10 +70,10 @@ class RefPGTracer : public RayTracer
         GPUCameraPixel*                 dPixelCamera;
         bool                            doInitCameraCreation;
         // Image Related
-        Vector2i                        resolution;     // Image Resolution
-        Vector2i                        iPortionStart;  // Our image portion
+        Vector2i                        iResolution;     // Image Resolution
+        Vector2i                        iPortionStart;   // Our image portion
         Vector2i                        iPortionEnd;
-        PixelFormat                     iPixelFormat;   // Requested Pixel Format
+        PixelFormat                     iPixelFormat;    // Requested Pixel Format
         //
         ImageMemory                     accumulationBuffer;
 

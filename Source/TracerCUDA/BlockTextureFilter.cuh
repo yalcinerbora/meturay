@@ -151,7 +151,7 @@ void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THR
         dataOut[i] = 0.0f;
         for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
         {
-            int32_t col = HybridFuncs::Clamp<int32_t>(columnId + j, 0, X);
+            int32_t col = HybridFuncs::Clamp<int32_t>(columnId + j, 0, X - 1);
             dataOut[i] += sMem.sTexture[rowId][col] * filterFunctor(j);
         }
     }
@@ -172,12 +172,11 @@ void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THR
         dataOut[i] = 0.0f;
         for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
         {
-            int32_t row = HybridFuncs::Clamp<int32_t>(rowId + j, 0, Y);
+            int32_t row = HybridFuncs::Clamp<int32_t>(rowId + j, 0, Y - 1);
             dataOut[i] += sMem.sTexture[row][columnId] * filterFunctor(j);
         }
     }
     // All Done!
-    __syncthreads();
 }
 
 

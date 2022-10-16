@@ -16,6 +16,7 @@
 #include "GPUTransformIdentity.cuh"
 #include "DeviceMemory.h"
 #include "ParallelReduction.cuh"
+#include "GPUReconFilterI.h"
 
 #include "ImageIO/EntryPoint.h"
 
@@ -36,16 +37,16 @@ void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
         threadId += (blockDim.x * gridDim.x))
     {
         float data0 = accumBuffer.gPixels[threadId];
-        uint32_t sample0 = accumBuffer.gSampleCounts[threadId];
+        float sample0 = accumBuffer.gSampleCounts[threadId];
 
         float data1 = newSamples.gPixels[threadId];
-        uint32_t sample1 = newSamples.gSampleCounts[threadId];
+        float sample1 = newSamples.gSampleCounts[threadId];
 
-        float avgData = (data0 * static_cast<float>(sample0) + data1);
-        uint32_t newSampleCount = sample0 + sample1;
-        avgData = (newSampleCount == 0)
+        float avgData = (data0 * sample0 + data1);
+        float newSampleCount = sample0 + sample1;
+        avgData = (newSampleCount == 0.0f)
                     ? 0.0f
-                    : avgData / static_cast<float>(newSampleCount);
+                    : avgData / newSampleCount;
 
         // Make NaN bright to make them easier to find
         if(isnan(avgData)) avgData = 1e30;
@@ -123,7 +124,7 @@ Vector2i RefPGTracer::GlobalPixel2D() const
 void RefPGTracer::ResetIterationVariables()
 {
     doInitCameraCreation = true;
-    currentPixel = options.pixelStart[1] * options.resolution[0] + options.pixelStart[0];
+    currentPixel = options.pixelStart[1] * iResolution[0] + options.pixelStart[0];
     currentSampleCount = 0;
     currentDepth = 0;
 }
@@ -393,14 +394,14 @@ void RefPGTracer::GenerateWork(uint32_t cameraIndex)
                                   //
                                   *(dCameras[cameraIndex]),
                                   pixelId,
-                                  resolution);
+                                  iResolution);
 
         // Reset sample count for this img
         currentSampleCount = 0;
     }
 
     // Generate Work for current Camera
-    GenerateRays<RayAuxPath, RayAuxInitRefPG, RNGIndependentGPU>
+    GenerateRays<RayAuxPath, RayAuxInitRefPG, RNGIndependentGPU, float>
     (
         *dPixelCamera, options.samplePerIteration,
         RayAuxInitRefPG(InitialPathAux),
@@ -421,7 +422,20 @@ void RefPGTracer::Finalize()
     currentSampleCount += finalizedSampleCount;
 
     // Finalize the tracing
-    // Accumulate the image to the buffer
+    // Filter the samples to accumulation image
+    const auto sampleGMem = std::as_const(sampleMemory).GMem<float>();
+    if(reconFilter != nullptr)
+        reconFilter->FilterToImg(imgMemory,
+                                 sampleGMem.gValues,
+                                 sampleGMem.gImgCoords,
+                                 sampleMemory.SampleCount(),
+                                 cudaSystem);
+    else
+    {
+        METU_ERROR_LOG("Reconstruction Filter did not set!");
+        crashed = true;
+    }
+
     const auto& gpu = cudaSystem.BestGPU();
     // Average the finalized data
     size_t workCount = imgMemory.SegmentSize()[0] * imgMemory.SegmentSize()[1];
@@ -454,12 +468,13 @@ void RefPGTracer::Finalize()
         currentPixel++;
     }
 
-    Vector2i segmentSize = iPortionStart - iPortionEnd;
+    Vector2i segmentSize = iPortionEnd - iPortionStart;
     uint32_t totalPixels = static_cast<uint32_t>(segmentSize[0] * segmentSize[1]);
     if(currentPixel >= totalPixels && callbacks)
     {
         callbacks->SendLog("Finished All Pixels");
-
+        // TODO: Change this, currently tracer never designed to end
+        // (it goes forever)
         callbacks->SendCrashSignal();
     }
 }
@@ -497,7 +512,7 @@ void RefPGTracer::SetImagePixelFormat(PixelFormat pf)
 
 void RefPGTracer::ReportionImage(Vector2i start, Vector2i end)
 {
-    end = Vector2i::Min(resolution, end);
+    end = Vector2i::Min(iResolution, end);
 
     iPortionStart = start;
     iPortionEnd = end;
@@ -512,7 +527,7 @@ void RefPGTracer::ReportionImage(Vector2i start, Vector2i end)
 void RefPGTracer::ResizeImage(Vector2i res)
 {
     // Save the resolution
-    resolution = res;
+    iResolution = res;
     ResetIterationVariables();
 
     imgMemory.Resize(options.resolution);

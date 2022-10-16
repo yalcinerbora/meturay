@@ -94,7 +94,7 @@ void AOTracer::GenerateWork(uint32_t cameraIndex)
 
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU>
+    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU, Vector4f>
     (
         cameraIndex,
         options.sampleCount,
@@ -107,7 +107,7 @@ void AOTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU>
+    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU, Vector4f>
     (
         t,
         cameraIndex,
@@ -121,7 +121,7 @@ void AOTracer::GenerateWork(const GPUCameraI& dCam)
 {
     depth = 0;
     hitPhase = false;
-    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU>
+    GenerateRays<RayAuxAO, RayAuxInitAO, RNGIndependentGPU, Vector4f>
     (
         dCam,
         options.sampleCount,

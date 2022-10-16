@@ -448,7 +448,7 @@ void PPGTracer::GenerateWork(uint32_t cameraIndex)
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU>
+    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU, Vector4f>
     (
         cameraIndex,
         options.sampleCount,
@@ -464,7 +464,7 @@ void PPGTracer::GenerateWork(uint32_t cameraIndex)
 
 void PPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU>
+    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU, Vector4f>
     (
         t, cameraIndex, options.sampleCount,
         RayAuxInitPPG(InitialPPGAux,
@@ -478,7 +478,7 @@ void PPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 
 void PPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU>
+    GenerateRays<RayAuxPPG, RayAuxInitPPG, RNGIndependentGPU, Vector4f>
     (
         dCam, options.sampleCount,
         RayAuxInitPPG(InitialPPGAux,

@@ -109,64 +109,9 @@ bool SVOctree::HasChild(uint64_t packedData, uint32_t childId)
     return (childMask >> childId) & 0b1;
 }
 
-Vector4uc SVOctree::DirectionToAnisoLocations(Vector2f& interp,
-                                              const Vector3f& direction)
-{
-    // I couldn't comprehend this as a mathematical
-    // representation so tabulated the output
-    static constexpr Vector4uc TABULATED_LAYOUTS[12] =
-    {
-        Vector4uc(0,1,0,1), Vector4uc(1,2,1,2),  Vector4uc(2,3,2,3), Vector4uc(3,0,3,0),
-        Vector4uc(0,1,4,5), Vector4uc(1,2,5,6),  Vector4uc(2,3,6,7), Vector4uc(3,0,7,4),
-        Vector4uc(4,5,4,5), Vector4uc(5,6,5,6),  Vector4uc(6,7,6,7), Vector4uc(7,4,7,4)
-    };
-
-    static constexpr float PIXEL_X = 4;
-    static constexpr float PIXEL_Y = 2;
-
-    Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
-    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
-    // Normalize to generate UV [0, 1]
-    // theta range [-pi, pi]
-    float u = (thetaPhi[0] + MathConstants::Pi) * 0.5f / MathConstants::Pi;
-    // phi range [0, pi]
-    float v = 1.0f - (thetaPhi[1] / MathConstants::Pi);
-
-    // Convert to pixelCoords
-    float pixelX = u * PIXEL_X;
-    float pixelY = v * PIXEL_Y;
-
-    float indexX;
-    float interpX = modff(pixelX, &indexX);
-    uint32_t indexXInt = (indexX >= 4) ? 0 : static_cast<uint32_t>(indexX);
-
-    float indexY;
-    float interpY = abs(modff(pixelY + 0.5f, &indexY));
-    uint32_t indexYInt = static_cast<uint32_t>(indexY);
-
-    interp = Vector2f(interpX, interpY);
-    return TABULATED_LAYOUTS[indexYInt * 4 + indexXInt];
-}
-
-float SVOctree::AnisoRadianceF::Read(uint8_t index) const
-{
-    uint8_t iMSB = index >> 2;
-    uint8_t iLower = index & 0b11;
-    return data[iMSB][iLower];
-}
-
-float SVOctree::AnisoRadianceF::Read(const Vector4uc& indices,
-                                     const Vector2f& interp) const
-{
-    // Bilinear interpolation
-    float a = HybridFuncs::Lerp(Read(indices[0]), Read(indices[1]), interp[0]);
-    float b = HybridFuncs::Lerp(Read(indices[2]), Read(indices[3]), interp[0]);
-    float result = HybridFuncs::Lerp(a, b, interp[1]);
-    return result;
-}
-
-float SVOctree::TraceRay(uint32_t& leafId, const RayF& ray,
-                         float tMin, float tMax) const
+float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
+                             float tMin, float tMax, uint32_t maxQueryLevel,
+                             float coneAperture = 0.0f) const
 {
     static constexpr float EPSILON = MathConstants::Epsilon;
     // We wrap the exp2f function here
@@ -220,6 +165,18 @@ float SVOctree::TraceRay(uint32_t& leafId, const RayF& ray,
     auto ReadMortonCode = [&mortonBitStack]() -> uint32_t
     {
         return mortonBitStack & 0b111;
+    };
+
+    // Aperture Related Routines
+    const float CONE_DIAMETER_FACTOR = tan(0.5 * coneAperture) * 2.0f;
+    auto ConeDiameter = [&CONE_DIAMETER_FACTOR](float distance)
+    {
+        return CONE_DIAMETER_FACTOR * distance;
+    };
+    auto LevelVoxelSize = [this](uint32_t currentLevel)
+    {
+        float levelFactor = static_cast<float>(1 << (leafDepth - currentLevel));
+        return levelFactor * leafVoxelSize;
     };
 
     // Set leaf to invalid value
@@ -307,8 +264,8 @@ float SVOctree::TraceRay(uint32_t& leafId, const RayF& ray,
     // Initially corner is zero (SVO space [0,1])
     Vector3f corner = Zero3f;
     // Empty node boolean will be used to
-    // create cleaner code
-    // There should be at least one node
+    // create cleaner code.
+    // Initially, there should be at least one node
     // available on the tree (root)
     bool emptyNode = false;
     // Ray March Loop
@@ -383,10 +340,17 @@ float SVOctree::TraceRay(uint32_t& leafId, const RayF& ray,
                 // Only update the node if it has an actual children
                 nodeId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
 
-                // If it is leaf just return the "nodeId" it is actually
-                // leaf id
-                if(IsChildrenLeaf(node))
+                // Check if the current cone aperture is larger than the
+                // current voxel size, then terminate
+                uint32_t voxelLevel = stack3BitCount + 1;
+                bool isTerminated = ConeDiameter(tMin) > LevelVoxelSize(stack3BitCount + 1);
+                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevel;
+                bool isChildLeaf = IsChildrenLeaf(node);
+                // If it is leaf just return the
+                // "nodeId" it is actually leaf id
+                if(isChildLeaf || isTerminated)
                 {
+                    isLeaf = isChildLeaf;
                     leafId = nodeId;
                     break;
                 }
@@ -514,22 +478,67 @@ bool SVOctree::LeafIndex(uint32_t& index, const Vector3f& worldPos,
     return found;
 }
 
-float SVOctree::ReadRadiance(uint32_t nodeId, bool isLeaf,
-                             const Vector3f& outgoingDir) const
+Vector3f SVOctree::ReadNormalAndSpecular(float& stdDev, float& specularity,
+                                         uint32_t nodeIndex, bool isLeaf) const
 {
-    if(nodeId == UINT32_MAX)
-    {
-        // TODO: sample the boundary light in this case
-        return 0.0f;
-    }
+    const uint32_t* gFetchArray = (isLeaf) ? normalAndSpecLeaf.data() : normalAndSpecNode.data();
+    uint32_t packedData = gFetchArray[nodeIndex];
 
-    Vector2f interpValues;
-    Vector4uc neighbours = DirectionToAnisoLocations(interpValues,
-                                                     outgoingDir);
+    Vector3f normal;
+    // [0, 511]
+    normal[0] = static_cast<float>((packedData >> NORMAL_X_OFFSET) & NORMAL_X_BIT_MASK);
+    normal[1] = static_cast<float>((packedData >> NORMAL_Y_OFFSET) & NORMAL_Y_BIT_MASK);
+    // [0, 2]
+    normal[0] *= UNORM_NORM_X_FACTOR * 2.0f;
+    normal[1] *= UNORM_NORM_Y_FACTOR * 2.0f;
+    // [-1, 1]
+    normal[0] -= 1.0f;
+    normal[1] -= 1.0f;
+    // Z axis from normalization
+    normal[2] = sqrtf(std::max(0.0f, 1.0f - normal[0] * normal[0] - normal[1] * normal[1]));
+    normal.NormalizeSelf();
 
-    const auto& gRadRead = (isLeaf) ? leafRadianceRead
-                                    : radianceRead;
-    return gRadRead[nodeId].Read(neighbours, interpValues);
+    bool normalZSign = (packedData >> NORMAL_SIGN_BIT_OFFSET) & NORMAL_SIGN_BIT_MASK;
+    normal[2] *= (normalZSign) ? -1.0f : 1.0f;
+
+    float normalLength = static_cast<float>((packedData >> NORMAL_LENGTH_OFFSET) & NORMAL_LENGTH_BIT_MASK);
+    normalLength *= UNORM_LENGTH_FACTOR;
+
+    specularity = static_cast<float>((packedData >> SPECULAR_OFFSET) & SPECULAR_BIT_MASK);
+    specularity *= UNORM_SPEC_FACTOR;
+
+    // Toksvig 2004
+    stdDev = (1.0f - normalLength) / normalLength;
+
+    return normal;
+}
+
+float SVOctree::ReadRadiance(const Vector3f& coneDirection,
+                             float coneAperture, uint32_t nodeIndex,
+                             bool isLeaf) const
+{
+    const Vector2f* gIrradArray = (isLeaf) ? avgIrradianceLeaf.data() : avgIrradianceNode.data();
+
+    float normalDeviation, specularity;
+    // Fetch normal to estimate the surface confidence
+    Vector3f normal = ReadNormalAndSpecular(normalDeviation, specularity,
+                                            nodeIndex, isLeaf);
+
+    // TODO: Implement radiance distribution incorporation
+    // Generate a Gaussian using the bit quadtree for outgoing radiance
+    // Incorporate normal, (which also is a gaussian)
+    // Convolve all these three to generate an analytic function (freq domain)
+    // All functions are gaussians so fourier transform is analytic
+    // Convert it back
+    // Sample the value using tetha (coneDir o normal)
+
+    // Currently we are just fetching irradiance
+    // which side are we on
+    // Note that "coneDirection" is towards to the surface
+    bool towardsNormal = (normal.Dot(-coneDirection) >= 0.0f);
+    uint32_t index = towardsNormal ? 0 : 1;
+
+    return gIrradArray[nodeIndex][index];
 }
 
 GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,

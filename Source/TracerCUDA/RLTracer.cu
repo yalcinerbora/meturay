@@ -294,7 +294,7 @@ void RLTracer::GenerateWork(uint32_t cameraIndex)
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU>
+    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU, Vector4f>
     (
         cameraIndex,
         options.sampleCount,
@@ -309,7 +309,7 @@ void RLTracer::GenerateWork(uint32_t cameraIndex)
 
 void RLTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU>
+    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU, Vector4f>
     (
         t, cameraIndex, options.sampleCount,
         RayAuxInitRL(InitialRLAux,
@@ -323,7 +323,7 @@ void RLTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 
 void RLTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU>
+    GenerateRays<RayAuxRL, RayAuxInitRL, RNGIndependentGPU, Vector4f>
     (
         dCam, options.sampleCount,
         RayAuxInitRL(InitialRLAux,

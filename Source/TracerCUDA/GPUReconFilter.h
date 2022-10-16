@@ -22,9 +22,9 @@ class GPUReconFilter : public GPUReconFilterI
     protected:
         float                   filterRadius;
 
-        template <class GPUFilterFunctor>
+        template <class GPUFilterFunctor, class T>
         void                    FilterToImgInternal(ImageMemory&,
-                                                    const Vector4f* dValues,
+                                                    const T* dValues,
                                                     const Vector2f* dImgCoords,
                                                     uint32_t sampleCount,
                                                     const GPUFilterFunctor& f,
@@ -54,9 +54,9 @@ inline size_t GPUReconFilter::UsedGPUMemory() const
     return filterMemory.Size();
 }
 
-template <class GPUFilterFunctor>
+template <class GPUFilterFunctor, class T>
 inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
-                                                const Vector4f* dValues,
+                                                const T* dValues,
                                                 const Vector2f* dImgCoords,
                                                 uint32_t sampleCount,
                                                 const GPUFilterFunctor& filterGPU,
@@ -208,9 +208,9 @@ inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
     gpu.ExactKC_X(0, (cudaStream_t)0,
                   TPB_X, filterKernelBlockCount,
                   //
-                  KCFilterToImg<Vector4f, GPUFilterFunctor, TPB_X>,
+                  KCFilterToImg<T, GPUFilterFunctor, TPB_X>,
                   // Out
-                  img.GMem<Vector4f>(),
+                  img.GMem<T>(),
                   // In
                   dOffsets,
                   dPixelIds,

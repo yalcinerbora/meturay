@@ -10,8 +10,40 @@
 #include "ShaderGL.h"
 #include "TextureGL.h"
 
+// TODO: Make this "DRY"
 struct SVOctree
 {
+    static constexpr uint32_t NORMAL_X_BIT_COUNT        = 9;
+    static constexpr uint32_t NORMAL_Y_BIT_COUNT        = 9;
+    static constexpr uint32_t NORMAL_LENGTH_BIT_COUNT   = 7;
+    static constexpr uint32_t SPECULAR_BIT_COUNT        = 6;
+    static constexpr uint32_t NORMAL_SIGN_BIT_COUNT     = 1;
+
+    static_assert((NORMAL_X_BIT_COUNT +
+                   NORMAL_Y_BIT_COUNT +
+                   NORMAL_LENGTH_BIT_COUNT +
+                   SPECULAR_BIT_COUNT +
+                   NORMAL_SIGN_BIT_COUNT) == sizeof(uint32_t) * BYTE_BITS);
+
+    static constexpr uint32_t NORMAL_X_BIT_MASK         = (1 << NORMAL_X_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_Y_BIT_MASK         = (1 << NORMAL_Y_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_LENGTH_BIT_MASK    = (1 << NORMAL_LENGTH_BIT_COUNT) - 1;
+    static constexpr uint32_t SPECULAR_BIT_MASK         = (1 << SPECULAR_BIT_COUNT) - 1;
+    static constexpr uint32_t NORMAL_SIGN_BIT_MASK      = (1 << NORMAL_SIGN_BIT_COUNT) - 1;
+
+    static constexpr float UNORM_SPEC_FACTOR            = 1.0f / static_cast<float>(SPECULAR_BIT_COUNT);
+    static constexpr float UNORM_LENGTH_FACTOR          = 1.0f / static_cast<float>(NORMAL_LENGTH_BIT_MASK);
+    static constexpr float UNORM_NORM_X_FACTOR          = 1.0f / static_cast<float>(NORMAL_X_BIT_MASK);
+    static constexpr float UNORM_NORM_Y_FACTOR          = 1.0f / static_cast<float>(NORMAL_Y_BIT_MASK);
+
+    static constexpr uint32_t NORMAL_X_OFFSET           = 0;
+    static constexpr uint32_t NORMAL_Y_OFFSET           = NORMAL_X_OFFSET + NORMAL_X_BIT_COUNT;
+    static constexpr uint32_t NORMAL_LENGTH_OFFSET      = NORMAL_Y_OFFSET + NORMAL_Y_BIT_COUNT;
+    static constexpr uint32_t SPECULAR_OFFSET           = NORMAL_LENGTH_OFFSET + NORMAL_LENGTH_BIT_COUNT;
+    static constexpr uint32_t NORMAL_SIGN_BIT_OFFSET    = SPECULAR_OFFSET + SPECULAR_BIT_COUNT;
+
+    static constexpr uint16_t LAST_BIT_UINT16 = (sizeof(uint16_t) * BYTE_BITS - 1);
+
     static constexpr uint64_t IS_LEAF_BIT_COUNT     = 1;
     static constexpr uint64_t CHILD_MASK_BIT_COUNT  = 8;
     static constexpr uint64_t PARENT_BIT_COUNT      = 28;
@@ -39,8 +71,6 @@ struct SVOctree
     static constexpr uint64_t   INVALID_NODE = 0x007FFFFFFFFFFFFF;
     static constexpr uint32_t   VOXEL_DIRECTION_COUNT = 8;
 
-    static constexpr uint32_t   LAST_BIT_UINT32 = (sizeof(uint32_t) * BYTE_BITS - 1);
-
     // Utility Bit Options
     // Data Unpack
     static bool      IsChildrenLeaf(uint64_t packedData);
@@ -55,20 +85,25 @@ struct SVOctree
     static Vector4uc DirectionToAnisoLocations(Vector2f& interp,
                                                const Vector3f& direction);
 
-    //
-    struct AnisoRadianceF
-    {
-        Vector4f data[2];
-
-        float   Read(uint8_t index) const;
-        float   Read(const Vector4uc& indices,
-                     const Vector2f& interp) const;
-    };
+    // Generic
+    std::vector<uint32_t>       levelNodeOffsets;
+    // Node Related
     std::vector<uint64_t>       nodes;
-    std::vector<AnisoRadianceF> radianceRead;
+    std::vector<uint16_t>       binInfo;
     // Leaf Related
     std::vector<uint32_t>       leafParents;
-    std::vector<AnisoRadianceF> leafRadianceRead;
+    std::vector<uint16_t>       leafBinInfo;
+    // Payload Related
+    // Leaf
+    std::vector<Vector2f>       totalIrradianceLeaf;
+    std::vector<Vector2ui>      sampleCountLeaf;
+    std::vector<Vector2f>       avgIrradianceLeaf;
+    std::vector<uint32_t>       normalAndSpecLeaf;
+    std::vector<uint8_t>        guidingFactorLeaf;
+    // Node
+    std::vector<Vector2f>       avgIrradianceNode;
+    std::vector<uint32_t>       normalAndSpecNode;
+    std::vector<uint8_t>        guidingFactorNode;
 
     AABB3f                      svoAABB;
     uint32_t                    voxelResolution;
@@ -78,14 +113,18 @@ struct SVOctree
     float                       leafVoxelSize;
     uint32_t                    levelOffsetCount;
 
-    float       TraceRay(uint32_t& leafId, const RayF&,
-                         float tMin, float tMax) const;
+    float       ConeTraceRay(bool& isLeaf, uint32_t& nodeId, const RayF&,
+                             float tMin, float tMax, uint32_t maxQueryLevel,
+                             float coneAperture = 0.0f) const;
 
     bool        LeafIndex(uint32_t& index, const Vector3f& worldPos,
                           bool checkNeighbours = false) const;
 
-    float       ReadRadiance(uint32_t nodeId, bool isLeaf,
-                             const Vector3f& outgoingDir) const;
+    Vector3f    ReadNormalAndSpecular(float& stdDev, float& specularity,
+                                      uint32_t nodeIndex, bool isLeaf) const;
+
+    float       ReadRadiance(const Vector3f& coneDirection, float coneAperture,
+                             uint32_t nodeIndex, bool isLeaf) const;
 };
 
 class GDebugRendererSVO : public GDebugRendererI

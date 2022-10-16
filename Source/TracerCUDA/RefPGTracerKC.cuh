@@ -62,9 +62,6 @@ Vector2f CalculateSphericalSampleImgCoord(const Vector3& dir,
     Vector2f sampleImgCoord = Vector2f(u * static_cast<float>(resolution[0]),
                                        v * static_cast<float>(resolution[1]));
     return sampleImgCoord;
-    //Vector2i pixelId2D = Vector2i(sampleImgCoord);
-    //uint32_t pixel1D = pixelId2D[1] * resolution[0] + pixelId2D[0];
-    //return pixel1D;
 }
 
 template <class EGroup>
@@ -389,6 +386,7 @@ void RPGTracerPathWork(// Output
             // Set the actual image coordinate
             Vector2f sampleImgCoord = CalculateSphericalSampleImgCoord(rayPath.getDirection(),
                                                                        renderState.resolution);
+            //printf("NewCoord: %f, %f\n", sampleImgCoord[0], sampleImgCoord[1]);
             renderState.gSamples.gImgCoords[aux.sampleIndex] = sampleImgCoord;
 
             // Still divide with the path pdf since we sample the paths

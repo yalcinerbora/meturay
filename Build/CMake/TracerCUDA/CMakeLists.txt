@@ -74,7 +74,6 @@ set(SRC_FILTERS
     ${CURRENT_SOURCE_DIR}/GPUReconFilterKC.cuh)
 
 set(SRC_GPU_ALGORITHMS_COMMON
-    ${CURRENT_SOURCE_DIR}/MortonCode.cuh
     ${CURRENT_SOURCE_DIR}/BinarySearch.cuh
     ${CURRENT_SOURCE_DIR}/ParallelPartition.cuh
     ${CURRENT_SOURCE_DIR}/ParallelReduction.cuh

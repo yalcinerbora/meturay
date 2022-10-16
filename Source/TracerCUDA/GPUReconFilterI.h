@@ -23,4 +23,9 @@ class GPUReconFilterI
                                                     const Vector2f* dImgCoords,
                                                     uint32_t sampleCount,
                                                     const CudaSystem& system) = 0;
+        virtual void                    FilterToImg(ImageMemory&,
+                                                    const float* dValues,
+                                                    const Vector2f* dImgCoords,
+                                                    uint32_t sampleCount,
+                                                    const CudaSystem& system) = 0;
 };

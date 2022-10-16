@@ -309,6 +309,10 @@ class AnisoSVOctreeCPU
                                           uint32_t totalLightCount,
                                           HitKey boundaryLightKey,
                                           const CudaSystem&);
+    // Construct (Actually Load) the tree directly from binary
+    TracerError                 Constrcut(const std::vector<Byte>& data,
+                                          const CudaSystem&);
+
     // Normalize and filter radiances for sampling
     void                    NormalizeAndFilterRadiance(const CudaSystem&);
     // Collapse the ray counts to find optimal binning
@@ -370,8 +374,8 @@ Vector3f VoxelPayload::ReadNormalAndSpecular(float& stdDev, float& specularity,
 
 __device__ inline
 float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
-                                   float coneAperture,
-                                   uint32_t nodeIndex, bool isLeaf) const
+                                 float coneAperture,
+                                 uint32_t nodeIndex, bool isLeaf) const
 {
     const Vector2h* gIrradArray = (isLeaf) ? dAvgIrradianceLeaf : dAvgIrradianceNode;
 

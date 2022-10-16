@@ -73,11 +73,6 @@ void RayTracer::Finalize()
     if(crashed) return;
     const auto sampleGMem = std::as_const(sampleMemory).GMem<Vector4f>();
 
-    //DEBUG
-    // Dump samples and values
-    //Debug::DumpMemToFile("__samples", sampleGMem.gValues, sampleMemory.SampleCount());
-    //Debug::DumpMemToFile("__coords", sampleGMem.gImgCoords, sampleMemory.SampleCount());
-
     if(reconFilter != nullptr)
         reconFilter->FilterToImg(imgMemory,
                                  sampleGMem.gValues,

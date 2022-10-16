@@ -246,7 +246,7 @@ void PathTracer::GenerateWork(uint32_t cameraIndex)
     if(callbacks)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
-    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU, Vector4f>
     (
         cameraIndex,
         options.sampleCount,
@@ -258,7 +258,7 @@ void PathTracer::GenerateWork(uint32_t cameraIndex)
 
 void PathTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU, Vector4f>
     (
         t, cameraIndex, options.sampleCount,
         RayAuxInitPath(InitialPathAux),
@@ -269,7 +269,7 @@ void PathTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 
 void PathTracer::GenerateWork(const GPUCameraI& dCam)
 {
-    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU>
+    GenerateRays<RayAuxPath, RayAuxInitPath, RNGIndependentGPU, Vector4f>
     (
         dCam, options.sampleCount,
         RayAuxInitPath(InitialPathAux),

@@ -43,7 +43,7 @@ struct WFPGTracerGlobalState
     uint32_t                        maximumPathNodePerRay;
     // Options
     // Path Guiding
-    bool                            rawPathGuiding;
+    bool                            skipPG;
     // Options for NEE
     bool                            directLightMIS;
     bool                            nee;
@@ -362,7 +362,7 @@ void WFPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_GuideSampleRatio = 1.0f;
+        const float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 1.0f;
         float xi = rng.Uniform();
 
         bool selectedPDFZero = false;
@@ -399,12 +399,6 @@ void WFPGTracerPathWork(// Output
                                          (1.0f - uv[1]) * MathConstants::Pi);
             Vector3f dirZUp = Utility::SphericalToCartesianUnit(thetaPhi);
             Vector3f direction = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);
-
-            //printf("--uv(%f, %f) = (%f, %f, %f) pdf %f\n",
-            //       uv[0], uv[1],
-            //       direction[0], direction[1], direction[2],
-            //       static_cast<float>(aux.guidePDF));
-
             // Convert to solid angle pdf
             // http://www.pbr-book.org/3ed-2018/Light_Transport_I_Surface_Reflection/Sampling_Light_Sources.html
             pdfGuide = aux.guidePDF;
@@ -550,126 +544,6 @@ void WFPGTracerPathWork(// Output
         gLocalPathNodes[prevPathIndex].prevNext[1] = curPathIndex;
 
     // All Done!
-}
-
-template <class MGroup>
-__device__ inline
-void WFPGTracerPhotonWork(// Output
-                          HitKey* gOutBoundKeys,
-                          RayGMem* gOutRays,
-                          RayAuxPhotonWFPG* gOutRayAux,
-                          const uint32_t maxOutRay,
-                          // Input as registers
-                          const RayReg& ray,
-                          const RayAuxPhotonWFPG& aux,
-                          const typename MGroup::Surface& surface,
-                          const RayId rayId,
-                          // I-O
-                          WFPGTracerLocalState& localState,
-                          WFPGTracerGlobalState& renderState,
-                          RNGeneratorGPUI& rng,
-                          // Constants
-                          const typename MGroup::Data& gMatData,
-                          const HitKey::Type matIndex)
-{
-    assert(maxOutRay == 1);
-
-    static constexpr Vector3 ZERO_3 = Zero3;
-    // TODO: change this currently only first strategy is sampled
-    static constexpr int PHOTON_RAY_INDEX = 0;
-    // Helper Class for better code readability
-    OutputWriter<RayAuxPhotonWFPG> outputWriter(gOutBoundKeys,
-                                                gOutRays,
-                                                gOutRayAux,
-                                                maxOutRay);
-
-    // Inputs
-    // Current Ray
-    const RayF& r = ray.ray;
-    // Hit Position
-    Vector3 position = surface.WorldPosition();
-    // Wi (direction is swapped as if it is coming out of the surface)
-    Vector3 wi = -(r.getDirection().Normalize());
-    // Current ray's medium
-    const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
-
-    // Calculate Transmittance factor of the medium
-    // And reduce the radiance wrt the medium transmittance
-    Vector3 transFactor = m.Transmittance(ray.tMax);
-    Vector3 photonReceivedPower = aux.power * transFactor;
-
-    // Check Material's specularity;
-    float specularity = MGroup::Specularity(surface, gMatData, matIndex);
-    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
-
-    // Sample a path from material
-    RayF rayPath; float pdfPath; const GPUMediumI* outM;
-    Vector3 reflectance = MGroup::Sample(// Outputs
-                                         rayPath, pdfPath, outM,
-                                         // Inputs
-                                         wi,
-                                         position,
-                                         m,
-                                         //
-                                         surface,
-                                         // I-O
-                                         rng,
-                                         // Constants
-                                         gMatData,
-                                         matIndex,
-                                         0);
-
-    // Factor the radiance of the surface
-    Vector3f photonScatteredFactor = photonReceivedPower * reflectance;
-    // Check singularities
-    photonScatteredFactor = (pdfPath == 0.0f) ? Zero3 : (photonScatteredFactor / pdfPath);
-
-    // Check Russian Roulette
-    float avgThroughput = photonScatteredFactor.Dot(Vector3f(0.333f));
-    bool terminateRay = ((aux.depth > renderState.rrStart) &&
-                         TracerFunctions::RussianRoulette(photonScatteredFactor, avgThroughput, rng));
-
-
-    if(photonScatteredFactor.HasNaN() || photonReceivedPower.HasNaN() ||
-       isnan(pdfPath))
-        printf("NAN PHOTON R: %f %f %f = {%f %f %f} * {%f %f %f} / %f  \n",
-               photonScatteredFactor[0], photonScatteredFactor[1], photonScatteredFactor[2],
-               photonReceivedPower[0], photonReceivedPower[1], photonReceivedPower[2],
-               reflectance[0], reflectance[1], reflectance[2], pdfPath);
-
-    // Do not terminate rays ever for specular mats
-    if((!terminateRay || isSpecularMat) &&
-       // Do not waste rays on zero radiance paths
-       photonScatteredFactor != ZERO_3)
-    {
-        if(!isSpecularMat &&  // Only non-specular surfaces can hold photons
-           (aux.depth == 1))  // Don't store direct illumination photons
-                              // (we are concerned with indirect illumination guide)
-        {
-            // Store the photon power to the sketch
-            // "incoming direction towards this position"
-            // Generate Spherical Coordinates
-            Vector3f wi = ray.ray.getDirection().Normalize();
-            Vector3 dirZUp = Vector3(wi[2], wi[0], wi[1]);
-            Vector2f sphrCoords = Utility::CartesianToSphericalUnit(dirZUp);
-            // Store operation
-            float luminance = Utility::RGBToLuminance(photonReceivedPower);
-
-        };
-
-        // Ray
-        RayReg rayOut;
-        rayOut.ray = rayPath;
-        rayOut.tMin = 0.0f;
-        rayOut.tMax = FLT_MAX;
-        // Aux
-        RayAuxPhotonWFPG auxOut;
-        auxOut.mediumIndex = static_cast<uint16_t>(outM->GlobalIndex());
-        auxOut.power = photonScatteredFactor;
-        auxOut.depth = aux.depth + 1;
-        // Write
-        outputWriter.Write(PHOTON_RAY_INDEX, rayOut, auxOut);
-    }
 }
 
 template <class EGroup>
@@ -968,8 +842,8 @@ template <uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
 struct KCGenSampleShMem
 {
     // PWC Distribution over the shared memory
-    //using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
-    using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
     union
     {
@@ -1130,6 +1004,7 @@ static void KCGenAndSampleDistribution(// Output
         // Before that filter the radiance field
         float filteredRadiances[RT_ITER_COUNT];
         filter(filteredRadiances, incRadiances);
+        __syncthreads();
 
         // Generate PWC Distribution over the radiances
         Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);

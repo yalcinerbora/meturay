@@ -376,6 +376,23 @@ void KCConvertToAnisoFloat(Vector2f* gAnisoOut,
     }
 }
 
+__global__ CUDA_LAUNCH_BOUNDS_1D
+void KCConvertToAnisoHalf(Vector2h* gAnisoOut,
+                          const Vector2f* gAnisoIn,
+                          uint32_t anisoCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < anisoCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        Vector2h& gOut = gAnisoOut[threadId];
+        Vector2f in = gAnisoIn[threadId];
+
+
+        gOut[0] = in[0];
+        gOut[1] = in[1];
+    }
+}
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCAverageNormals(//I-O
@@ -908,6 +925,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
 
     treeGPU.nodeCount = totalNodeCount;
     treeGPU.leafCount = hUniqueVoxelCount;
+    treeGPU.levelOffsetCount = static_cast<uint32_t>(levelNodeOffsets.size());
     // Allocate required memories now
     // since we found out the total node count
     GPUMemFuncs::AllocateMultiData(std::tie(// Node Related,
@@ -1102,6 +1120,208 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     return TracerError::OK;
 }
 
+TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
+                                        const CudaSystem& system)
+{
+    Utility::CPUTimer timer;
+    timer.Start();
+
+    // Init Zeroes
+    treeGPU = {};
+    // Start by fetching the "header"
+    size_t offset = 0;
+    std::memcpy(&treeGPU.svoAABB, data.data() + offset, sizeof(AABB3f));
+    offset += sizeof(AABB3f);
+    std::memcpy(&treeGPU.voxelResolution, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&treeGPU.leafDepth, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&treeGPU.nodeCount, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&treeGPU.leafCount, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&treeGPU.leafVoxelSize, data.data() + offset, sizeof(float));
+    offset += sizeof(float);
+    std::memcpy(&treeGPU.levelOffsetCount, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+    // Temp Float Buffer for Conversion
+    assert(treeGPU.leafCount >= treeGPU.nodeCount);
+    DeviceMemory halfConvertedMemory(treeGPU.leafCount * sizeof(Vector2f));
+    // Conversion Function
+    auto ConvertAnisoFloatToHalf = [&](Vector2h* dRadiance,
+                                       uint32_t totalSize)
+    {
+        const CudaGPU& gpu = system.BestGPU();
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalSize,
+                           //
+                           KCConvertToAnisoHalf,
+                           //
+                           dRadiance,
+                           static_cast<const Vector2f*>(halfConvertedMemory),
+                           totalSize);
+    };
+
+    // After that generate the sizes
+    std::array<size_t, 5> treeSizes = {};
+    // Actual Tree Related Sizes
+    // Node Amount
+    treeSizes[0]  = treeGPU.nodeCount * sizeof(uint64_t);       // "dNodes" Size
+    treeSizes[1] = treeGPU.nodeCount * sizeof(uint16_t);        // "dBinInfo" Size
+    // Leaf Amount
+    treeSizes[2] = treeGPU.leafCount * sizeof(uint32_t);        // "dLeafParents" Size
+    treeSizes[3] = treeGPU.leafCount * sizeof(uint16_t);        // "dLeafBinInfo" Size
+    // Misc
+    treeSizes[4] = treeGPU.levelOffsetCount * sizeof(uint32_t); // "dLevelNodeOffsets" Size
+
+    // Payload Related Sizes
+    std::array<size_t, 10> payloadSizes = {};
+    // Node Amount
+    payloadSizes[0] = treeGPU.nodeCount * sizeof(Vector2f);     // "dAvgIrradianceNode" Size
+    payloadSizes[1] = treeGPU.nodeCount * sizeof(uint32_t);     // "dNormalAndSpecNode" Size
+    payloadSizes[2] = treeGPU.nodeCount * sizeof(uint8_t);      // "dGuidingFactorNode" Size
+    //payloadSizes[3] = treeGPU.nodeCount * sizeof(uint64_t);   // "dMicroQuadTreeNode" Size
+    //Leaf Amount
+    payloadSizes[4]  = treeGPU.leafCount * sizeof(Vector2f);    // "dTotalIrradianceLeaf" Size
+    payloadSizes[5] = treeGPU.leafCount * sizeof(Vector2ui);    // "dSampleCountLeaf" Size
+    payloadSizes[6] = treeGPU.leafCount * sizeof(Vector2f);     // "dAvgIrradianceLeaf" Size
+    payloadSizes[7] = treeGPU.leafCount * sizeof(uint32_t);     // "dNormalAndSpecLeaf" Size
+    payloadSizes[8] = treeGPU.leafCount * sizeof(uint8_t);      // "dGuidingFactorLeaf" Size
+    //payloadSizes[9] = treeGPU.leafCount * sizeof(uint64_t);   // "dMicroQuadTreeNode" Size
+
+    // Calculate the offsets and total size
+    size_t treeTotalSize = std::reduce(treeSizes.cbegin(), treeSizes.cend(), 0ull);
+    size_t payloadTotalSize = std::reduce(payloadSizes.cbegin(), payloadSizes.cend(), 0ull);
+
+    // Sanity check the calculated size
+    size_t totalSize = (treeTotalSize + payloadTotalSize +
+                        sizeof(AABB3f) + 5 * sizeof(uint32_t) +
+                        sizeof(float));
+    if(totalSize != data.size())
+        return TracerError(TracerError::TRACER_INTERNAL_ERROR, "Read SVO size mismatch");
+
+    // Now allocate the actual buffers
+    GPUMemFuncs::AllocateMultiData(std::tie(// Node Related,
+                                            treeGPU.dNodes,
+                                            treeGPU.dBinInfo,
+                                            // Leaf Related
+                                            treeGPU.dLeafParents,
+                                            treeGPU.dLeafBinInfo,
+                                            // Payload Node
+                                            treeGPU.payload.dAvgIrradianceNode,
+                                            treeGPU.payload.dNormalAndSpecNode,
+                                            treeGPU.payload.dGuidingFactorNode,
+                                            //treeGPU.payload.dMicroQuadTreeNode,
+                                            // Payload Leaf
+                                            treeGPU.payload.dTotalIrradianceLeaf,
+                                            treeGPU.payload.dSampleCountLeaf,
+                                            treeGPU.payload.dAvgIrradianceLeaf,
+                                            treeGPU.payload.dNormalAndSpecLeaf,
+                                            treeGPU.payload.dGuidingFactorLeaf,
+                                            //treeGPU.payload.dMicroQuadTreeLeaf,
+                                            // Node Offsets
+                                            treeGPU.dLevelNodeOffsets),
+                                   octreeMem,
+                                   {
+                                        // Node Related
+                                        treeGPU.nodeCount, treeGPU.nodeCount,
+                                        // Leaf Related
+                                        treeGPU.leafCount, treeGPU.leafCount,
+                                        // Payload Node
+                                        treeGPU.nodeCount, treeGPU.nodeCount,
+                                        treeGPU.nodeCount,
+                                        //treeGPU.nodeCount,
+                                        // Payload Leaf
+                                        treeGPU.leafCount, treeGPU.leafCount, treeGPU.leafCount,
+                                        treeGPU.leafCount, treeGPU.leafCount,
+                                        //treeGPU.leafCount,
+                                        // Offsets
+                                        treeGPU.levelOffsetCount
+                                   });
+
+    // Now copy stuff
+    // Tree Related
+    // "dNodes"
+    CUDA_CHECK(cudaMemcpy(treeGPU.dNodes, data.data() + offset,
+                          treeSizes[0], cudaMemcpyHostToDevice));
+    offset += treeSizes[0];
+    // "dBinInfo"
+    CUDA_CHECK(cudaMemcpy(treeGPU.dBinInfo, data.data() + offset,
+                          treeSizes[1], cudaMemcpyHostToDevice));
+    offset += treeSizes[1];
+    // "dLeafParents"
+    CUDA_CHECK(cudaMemcpy(treeGPU.dLeafParents, data.data() + offset,
+                          treeSizes[2], cudaMemcpyHostToDevice));
+    offset += treeSizes[2];
+    // "dLeafBinInfo"
+    CUDA_CHECK(cudaMemcpy(treeGPU.dLeafBinInfo, data.data() + offset,
+                          treeSizes[3], cudaMemcpyHostToDevice));
+    offset += treeSizes[3];
+    // "dLevelNodeOffsets"
+    levelNodeOffsets.resize(treeGPU.levelOffsetCount);
+    std::memcpy(levelNodeOffsets.data(), data.data() + offset, treeSizes[4]);
+    CUDA_CHECK(cudaMemcpy(treeGPU.dLevelNodeOffsets, data.data() + offset,
+                          treeSizes[4], cudaMemcpyHostToDevice));
+    offset += treeSizes[4];
+    // Payload Related
+    // "dAvgIrradianceNode"
+    CUDA_CHECK(cudaMemcpy(static_cast<void*>(halfConvertedMemory), data.data() + offset,
+                          payloadSizes[0], cudaMemcpyHostToDevice));
+    ConvertAnisoFloatToHalf(treeGPU.payload.dAvgIrradianceNode, treeGPU.nodeCount);
+    offset += payloadSizes[0];
+    // "dNormalAndSpecNode"
+    CUDA_CHECK(cudaMemcpy(treeGPU.payload.dNormalAndSpecNode, data.data() + offset,
+                          payloadSizes[1], cudaMemcpyHostToDevice));
+    offset += payloadSizes[1];
+    // "dGuidingFactorNode"
+    CUDA_CHECK(cudaMemcpy(treeGPU.payload.dGuidingFactorNode, data.data() + offset,
+                          payloadSizes[2], cudaMemcpyHostToDevice));
+    offset += payloadSizes[2];
+    //// "dMicroQuadTreeNode"
+    //CUDA_CHECK(cudaMemcpy(treeGPU.payload.dMicroQuadTreeNode, data.data() + offset,
+    //                      payloadSizes[3], cudaMemcpyHostToDevice));
+    //offset += payloadSizes[3];
+    // "dTotalIrradianceLeaf"
+    CUDA_CHECK(cudaMemcpy(treeGPU.payload.dTotalIrradianceLeaf, data.data() + offset,
+                          payloadSizes[4], cudaMemcpyHostToDevice));
+    offset += payloadSizes[4];
+    // "dTotalIrradianceLeaf"
+    CUDA_CHECK(cudaMemcpy(treeGPU.payload.dSampleCountLeaf, data.data() + offset,
+                          payloadSizes[5], cudaMemcpyHostToDevice));
+    offset += payloadSizes[5];
+    // "dSampleCountLeaf"
+    CUDA_CHECK(cudaMemcpy(static_cast<void*>(halfConvertedMemory), data.data() + offset,
+                          payloadSizes[6], cudaMemcpyHostToDevice));
+    ConvertAnisoFloatToHalf(treeGPU.payload.dAvgIrradianceLeaf, treeGPU.leafCount);
+    offset += payloadSizes[6];
+    // "dNormalAndSpecLeaf"
+    CUDA_CHECK(cudaMemcpy(treeGPU.payload.dNormalAndSpecLeaf, data.data() + offset,
+                          payloadSizes[7], cudaMemcpyHostToDevice));
+    offset += payloadSizes[7];
+    // "dGuidingFactorLeaf"
+    CUDA_CHECK(cudaMemcpy(treeGPU.payload.dGuidingFactorLeaf, data.data() + offset,
+                          payloadSizes[8], cudaMemcpyHostToDevice));
+    offset += payloadSizes[8];
+    //// "dMicroQuadTreeLeaf"
+    //CUDA_CHECK(dSampleCountLeaf(treeGPU.payload.dMicroQuadTreeLeaf, data.data() + offset,
+    //                            payloadSizes[9], cudaMemcpyHostToDevice));
+    //offset += payloadSizes[9];
+    // All Done!
+    assert(offset == data.size());
+
+        // Log some stuff
+    timer.Stop();
+    double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
+    std::locale::global(std::locale("en_US.UTF-8"));
+    METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Loaded from disk in {:f} seconds. (Total {:.2f} MiB)",
+             treeGPU.nodeCount, treeGPU.leafCount,
+
+             timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
+    std::locale::global(std::locale::classic());
+
+    return TracerError::OK;
+}
+
 void AnisoSVOctreeCPU::NormalizeAndFilterRadiance(const CudaSystem& system)
 {
     // From leaf (leaf-write) to root
@@ -1264,16 +1484,39 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
     };
 
     // Get Sizes
-    std::array<size_t, 4> byteSizes;
-    byteSizes[0]  = treeGPU.nodeCount * sizeof(uint64_t);   // "dNodes" Size
-    byteSizes[1]  = treeGPU.nodeCount * sizeof(Vector2f);   // "dAvgIrradianceNode" Size
-    // Leaf Related
-    byteSizes[2] = treeGPU.leafCount * sizeof(uint32_t);    // "dLeafParent" Size
-    byteSizes[3] = treeGPU.leafCount * sizeof(Vector2f);    // "dAvgIrradianceLeaf" Size
-    // Calculate the offsets and total size
-    size_t bufferTotalSize = std::reduce(byteSizes.cbegin(), byteSizes.cend(), 0ull);
+    std::array<size_t, 5> treeSizes = {};
+    // Actual Tree Related Sizes
+    // Node Amount
+    treeSizes[0]  = treeGPU.nodeCount * sizeof(uint64_t);       // "dNodes" Size
+    treeSizes[1] = treeGPU.nodeCount * sizeof(uint16_t);        // "dBinInfo" Size
+    // Leaf Amount
+    treeSizes[2] = treeGPU.leafCount * sizeof(uint32_t);        // "dLeafParents" Size
+    treeSizes[3] = treeGPU.leafCount * sizeof(uint16_t);        // "dLeafBinInfo" Size
+    // Misc
+    treeSizes[4] = treeGPU.levelOffsetCount * sizeof(uint32_t); // "dLevelNodeOffsets" Size
 
-    size_t totalSize = (bufferTotalSize + sizeof(AABB3f) +
+    // Payload Related Sizes
+    std::array<size_t, 10> payloadSizes = {};
+    // Node Amount
+    payloadSizes[0] = treeGPU.nodeCount * sizeof(Vector2f);     // "dAvgIrradianceNode" Size
+    payloadSizes[1] = treeGPU.nodeCount * sizeof(uint32_t);     // "dNormalAndSpecNode" Size
+    payloadSizes[2] = treeGPU.nodeCount * sizeof(uint8_t);      // "dGuidingFactorNode" Size
+    //payloadSizes[3] = treeGPU.nodeCount * sizeof(uint64_t);   // "dMicroQuadTreeNode" Size
+    //Leaf Amount
+    payloadSizes[4]  = treeGPU.leafCount * sizeof(Vector2f);    // "dTotalIrradianceLeaf" Size
+    payloadSizes[5] = treeGPU.leafCount * sizeof(Vector2ui);    // "dSampleCountLeaf" Size
+    payloadSizes[6] = treeGPU.leafCount * sizeof(Vector2f);     // "dAvgIrradianceLeaf" Size
+    payloadSizes[7] = treeGPU.leafCount * sizeof(uint32_t);     // "dNormalAndSpecLeaf" Size
+    payloadSizes[8] = treeGPU.leafCount * sizeof(uint8_t);      // "dGuidingFactorLeaf" Size
+    //payloadSizes[9] = treeGPU.leafCount * sizeof(uint64_t);   // "dMicroQuadTreeNode" Size
+
+    // Calculate the offsets and total size
+    size_t treeTotalSize = std::reduce(treeSizes.cbegin(), treeSizes.cend(), 0ull);
+    size_t payloadTotalSize = std::reduce(payloadSizes.cbegin(), payloadSizes.cend(), 0ull);
+
+    size_t totalSize = (treeTotalSize +
+                        payloadTotalSize +
+                        sizeof(AABB3f) +
                         5 * sizeof(uint32_t) +
                         sizeof(float));
 
@@ -1295,27 +1538,70 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
     std::memcpy(data.data() + offset, &treeGPU.levelOffsetCount, sizeof(uint32_t));
     offset += sizeof(uint32_t);
 
-    // Nodes
+    // Tree Related
+    // "dNodes"
     CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.dNodes,
-                          byteSizes[0], cudaMemcpyDeviceToHost));
-    offset += byteSizes[0];
-    // Radiance Cache Node
-    ConvertAnisoHalfToFloat(treeGPU.payload.dAvgIrradianceNode, treeGPU.nodeCount);
-    CUDA_CHECK(cudaMemcpy(data.data() + offset,
-                          static_cast<void*>(halfConvertedMemory),
-                          byteSizes[1], cudaMemcpyDeviceToHost));
-    offset += byteSizes[1];
-    // Leaf Parents
+                          treeSizes[0], cudaMemcpyDeviceToHost));
+    offset += treeSizes[0];
+    // "dBinInfo"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.dBinInfo,
+                          treeSizes[1], cudaMemcpyDeviceToHost));
+    offset += treeSizes[1];
+    // "dLeafParents"
     CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.dLeafParents,
-                          byteSizes[2], cudaMemcpyDeviceToHost));
-    offset += byteSizes[2];
-    // Radiance Cache Leaf
+                          treeSizes[2], cudaMemcpyDeviceToHost));
+    offset += treeSizes[2];
+    // "dLeafBinInfo"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.dLeafBinInfo,
+                          treeSizes[3], cudaMemcpyDeviceToHost));
+    offset += treeSizes[3];
+    // "dLevelNodeOffsets"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.dLevelNodeOffsets,
+                          treeSizes[4], cudaMemcpyDeviceToHost));
+    offset += treeSizes[4];
+    // Payload Related
+    // "dAvgIrradianceNode"
+    ConvertAnisoHalfToFloat(treeGPU.payload.dAvgIrradianceNode, treeGPU.nodeCount);
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, static_cast<void*>(halfConvertedMemory),
+                          payloadSizes[0], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[0];
+    // "dNormalAndSpecNode"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dNormalAndSpecNode,
+                          payloadSizes[1], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[1];
+    // "dGuidingFactorNode"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dGuidingFactorNode,
+                          payloadSizes[2], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[2];
+    //// "dMicroQuadTreeNode"
+    //CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dMicroQuadTreeNode,
+    //                      payloadSizes[3], cudaMemcpyDeviceToHost));
+    //offset += payloadSizes[3];
+    // "dTotalIrradianceLeaf"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dTotalIrradianceLeaf,
+                          payloadSizes[4], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[4];
+    // "dSampleCountLeaf"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dSampleCountLeaf,
+                          payloadSizes[5], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[5];
+    // "dAvgIrradianceLeaf"
     ConvertAnisoHalfToFloat(treeGPU.payload.dAvgIrradianceLeaf, treeGPU.leafCount);
-    CUDA_CHECK(cudaMemcpy(data.data() + offset,
-                          static_cast<void*>(halfConvertedMemory),
-                          byteSizes[3], cudaMemcpyDeviceToHost));
-    offset += byteSizes[3];
-    assert(offset == data.size());
-
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, static_cast<void*>(halfConvertedMemory),
+                          payloadSizes[6], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[6];
+    // "dNormalAndSpecLeaf"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dNormalAndSpecLeaf,
+                          payloadSizes[7], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[7];
+    // "dGuidingFactorLeaf"
+    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dGuidingFactorLeaf,
+                          payloadSizes[8], cudaMemcpyDeviceToHost));
+    offset += payloadSizes[8];
+    //// "dMicroQuadTreeLeaf"
+    //CUDA_CHECK(dSampleCountLeaf(data.data() + offset, treeGPU.payload.dMicroQuadTreeLeaf,
+    //                            payloadSizes[9], cudaMemcpyDeviceToHost));
+    //offset += payloadSizes[9];
     // All Done!
+    assert(offset == data.size());
 }
