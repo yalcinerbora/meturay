@@ -65,18 +65,24 @@ Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
 {
     assert(dirXY < dimensions);
     using namespace MathConstants;
-    // Spherical coordinate deltas
-    Vector2f deltaXY = Vector2f((2.0f * Pi) / static_cast<float>(dimensions[0]),
-                                Pi / static_cast<float>(dimensions[1]));
+    // Generate st coords [0, 1] from integer coords
+    Vector2f st = Vector2f(dirXY) + 0.5f;
+    st /= Vector2f(dimensions);
 
-    // Assume image space bottom left is (0,0)
-    // Center to the pixel as well
-    Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + Vector2f(0.5f);
-    Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
-                                   Pi - dirXYFloat[1] * deltaXY[1]);
-    Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
+    Vector3f result = Utility::CocentricOctohedralToDirection(st);
+
+    //// Spherical coordinate deltas
+    //Vector2f deltaXY = Vector2f((2.0f * Pi) / static_cast<float>(dimensions[0]),
+    //                            Pi / static_cast<float>(dimensions[1]));
+
+    //// Assume image space bottom left is (0,0)
+    //// Center to the pixel as well
+    //Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + Vector2f(0.5f);
+    //Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
+    //                               Pi - dirXYFloat[1] * deltaXY[1]);
+    //Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
     // Spherical Coords calculates as Z up change it to Y up
-    Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
 
     //METU_LOG("Pixel [{}, {}], ThetaPhi [{}, {}], Dir[{}, {}, {}]",
     //         dirXY[0], dirXY[1],
@@ -84,6 +90,8 @@ Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
     //         sphrCoords[1] * RadToDegCoef,
     //         dirYUp[0], dirYUp[1], dirYUp[2]);
 
+
+    Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
     return dirYUp;
 }
 
@@ -619,8 +627,7 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
 }
 
 GDebugRendererSVO::~GDebugRendererSVO()
-{
-}
+{}
 
 bool GDebugRendererSVO::LoadOctree(SVOctree& octree,
                                    const nlohmann::json& config,

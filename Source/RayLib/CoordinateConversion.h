@@ -105,19 +105,22 @@ FloatEnable<T, Vector<2, T>> Utility::DirectionToCocentricOctohedral(const Vecto
     static constexpr T TwoOvrPi = static_cast<T>(MathConstants::InvPi_d * 2.0);
     T xAbs = abs(dir[0]);
     T yAbs = abs(dir[1]);
-    T phiPrime = atan(xAbs / yAbs);
+    T phiPrime = atan(yAbs / xAbs);
 
     T radius = sqrt(1 - abs(dir[2]));
 
-    T u = radius * TwoOvrPi * phiPrime;
-    T v = radius - v;
+    T v = radius * TwoOvrPi * phiPrime;
+    T u = radius - v;
     // Now convert to the quadrant
     if(dir[2] < 0)
     {
-        u = 1.0f - u;
-        v = 1.0f - v;
-        std::swap(u, v);
+        u = 1.0f - v;
+        v = 1.0f - u;
     }
+    // Sign extend the uv
+    u *= (signbit(dir[0]) ? -1 : 1);
+    v *= (signbit(dir[1]) ? -1 : 1);
+
     // Finally
     // [-1,1] to [0,1]
     Vector<2, T> st = Vector<2, T>(u, v);
@@ -144,7 +147,7 @@ FloatEnable<T, Vector<3, T>> Utility::CocentricOctohedralToDirection(const Vecto
     // Coords
     T cosPhi = (signbit(uv[0]) ? -1 : 1) * cos(phiPrime);
     T sinPhi = (signbit(uv[1]) ? -1 : 1) * sin(phiPrime);
-    T z = (signbit(d) ? -1 : 1) * 1 - radius * radius;
+    T z = (signbit(d) ? -1 : 1) * (1 - radius * radius);
 
     // Now all is OK do the cocentric disk stuff
     T xyFactor = radius * sqrt(2 - radius * radius);

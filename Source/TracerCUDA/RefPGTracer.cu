@@ -113,6 +113,32 @@ void RefPGTracer::SendPixel() const
                                        currentPixel2D + Vector2i(1));
 }
 
+const RefPGTracer::ProjEnumNameArray RefPGTracer::ProjectionEnumNames =
+{
+    "Spherical",
+    "CoOctohedral"
+};
+
+TracerError RefPGTracer::ProjectionTypeToString(std::string& result, ProjectionType t)
+{
+    if(t >= ProjectionType::END) return TracerError::TRACER_INTERNAL_ERROR;
+    result = ProjectionEnumNames[static_cast<int>(t)];
+    return TracerError::OK;
+}
+
+TracerError RefPGTracer::StringToProjectionType(ProjectionType& pt, const std::string& s)
+{
+    for(int i = 0; i < static_cast<int>(ProjectionType::END); i++)
+    {
+        if(s == ProjectionEnumNames[i])
+        {
+            pt = static_cast<ProjectionType>(i);
+            return TracerError::OK;
+        }
+    }
+    return TracerError::TRACER_INTERNAL_ERROR;
+}
+
 Vector2i RefPGTracer::GlobalPixel2D() const
 {
     Vector2i segmentSize = iPortionEnd - iPortionStart;
@@ -260,6 +286,12 @@ TracerError RefPGTracer::SetOptions(const OptionsI& opts)
     if((err = LightSamplerCommon::StringToLightSamplerType(options.lightSamplerType, lightSamplerTypeString)) != TracerError::OK)
         return err;
 
+    std::string projectionTypeString;
+    if((err = opts.GetString(projectionTypeString, PROJECTION_TYPE_NAME)) != TracerError::OK)
+        return err;
+    if((err = StringToProjectionType(options.projType, projectionTypeString)) != TracerError::OK)
+        return err;
+
     if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
@@ -302,6 +334,7 @@ bool RefPGTracer::Render()
     globalData.rrStart = options.rrStart;
     globalData.directLightMIS = options.directLightMIS;
     globalData.gLightSampler = dLightSampler;
+    globalData.projType = options.projType;
     globalData.resolution = options.resolution;
 
     // Generate output partitions
@@ -561,6 +594,10 @@ void RefPGTracer::AskOptions()
     list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.samplePerIteration)));
     list.emplace(MAX_DEPTH_NAME, OptionVariable(static_cast<int64_t>(options.maximumDepth)));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
+
+    std::string projTypeString;
+    ProjectionTypeToString(projTypeString, options.projType);
+    list.emplace(PROJECTION_TYPE_NAME, OptionVariable(projTypeString));
 
     if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }

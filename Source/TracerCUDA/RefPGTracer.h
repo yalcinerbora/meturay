@@ -13,6 +13,14 @@
 struct ImageIOError;
 class GPUCameraPixel;
 
+enum class ProjectionType
+{
+    SPHERICAL,
+    COCENTRIC_OCTOHEDRAL,
+
+    END
+};
+
 class RefPGTracer : public RayTracer
 {
     public:
@@ -26,10 +34,11 @@ class RefPGTracer : public RayTracer
         static constexpr const char* RESOLUTION_NAME            = "Resolution";
         static constexpr const char* PIXEL_START_NAME           = "PixelStart";
         static constexpr const char* IMAGE_NAME                 = "ImageName";
-
+        static constexpr const char* PROJECTION_TYPE_NAME       = "ProjectionType";
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
 
+        using ProjEnumNameArray = std::array<std::string, static_cast<int>(ProjectionType::END)>;
 
         struct Options
         {
@@ -45,10 +54,16 @@ class RefPGTracer : public RayTracer
             std::string         refPGOutputName     = "refPGOut";
 
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
+            ProjectionType      projType            = ProjectionType::SPHERICAL;
             // Misc
             bool                nextEventEstimation = true;
             bool                directLightMIS      = false;
         };
+
+        static const ProjEnumNameArray  ProjectionEnumNames;
+        TracerError                     ProjectionTypeToString(std::string&, ProjectionType);
+        TracerError                     StringToProjectionType(ProjectionType&, const std::string&);
+
 
     private:
         Options                         options;

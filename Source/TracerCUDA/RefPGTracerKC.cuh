@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RayAuxStruct.cuh"
+#include "RefPGTracer.h"
 
 #include "GPULightI.h"
 #include "GPUMediumI.h"
@@ -23,6 +24,7 @@ struct RPGTracerGlobalState
     uint32_t                        totalMediumCount;
     // Render Resolution
     Vector2i                        resolution;
+    ProjectionType                  projType;
     // Options
     // Options for NEE
     bool                            directLightMIS;
@@ -36,12 +38,23 @@ struct RPGTracerLocalState
 };
 
 __device__ inline
-Vector2f CalculateSphericalSampleImgCoord(const Vector3& dir,
-                                          const Vector2i& resolution)
+Vector2f ProjectSampleCoOctohedral(const Vector3& dir,
+                                   const Vector2i& resolution)
+{
+    Vector3 dirZUp = Vector3(dir[2], dir[0], dir[1]);
+    Vector2f st = Utility::DirectionToCocentricOctohedral(dirZUp);
+    Vector2f sampleImgCoord = Vector2f(st[0] * static_cast<float>(resolution[0]),
+                                       st[1] * static_cast<float>(resolution[1]));
+    return sampleImgCoord;
+}
+
+__device__ inline
+Vector2f ProjectSampleSpherical(const Vector3& dir,
+                                const Vector2i& resolution)
 {
     // Convert Y up from Z up
-    Vector3 dirZup = Vector3(dir[2], dir[0], dir[1]);
-    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(dirZup);
+    Vector3 dirZUp = Vector3(dir[2], dir[0], dir[1]);
+    Vector2f thetaPhi = Utility::CartesianToSphericalUnit(dirZUp);
 
     // Normalize to generate UV [0, 1]
     // theta range [-pi, pi]
@@ -182,6 +195,15 @@ void RPGTracerPathWork(// Output
                        const HitKey::Type matIndex)
 {
     static constexpr Vector3 ZERO_3 = Zero3;
+
+    using SampleProjectionFunc = Vector2f(*)(const Vector3& dir,
+                                             const Vector2i& resolution);
+
+    static constexpr SampleProjectionFunc PROJECTION_FUNCTIONS[static_cast<int>(ProjectionType::END)] =
+    {
+        ProjectSampleSpherical,
+        ProjectSampleCoOctohedral
+    };
 
     // TODO: change this currently only first strategy is sampled
     static constexpr int PATH_RAY_INDEX = 0;
@@ -384,8 +406,8 @@ void RPGTracerPathWork(// Output
         if(isCameraRay)
         {
             // Set the actual image coordinate
-            Vector2f sampleImgCoord = CalculateSphericalSampleImgCoord(rayPath.getDirection(),
-                                                                       renderState.resolution);
+            auto ProjectionFunction = PROJECTION_FUNCTIONS[static_cast<int>(renderState.projType)];
+            Vector2f sampleImgCoord = ProjectionFunction(rayPath.getDirection(), renderState.resolution);
             //printf("NewCoord: %f, %f\n", sampleImgCoord[0], sampleImgCoord[1]);
             renderState.gSamples.gImgCoords[aux.sampleIndex] = sampleImgCoord;
 
