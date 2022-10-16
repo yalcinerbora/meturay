@@ -110,7 +110,7 @@ FloatEnable<T, Vector<2, T>> Utility::DirectionToCocentricOctohedral(const Vecto
     T radius = sqrt(1 - abs(dir[2]));
 
     T u = radius * TwoOvrPi * phiPrime;
-    T v = r - v;
+    T v = radius - v;
     // Now convert to the quadrant
     if(dir[2] < 0)
     {
@@ -121,7 +121,7 @@ FloatEnable<T, Vector<2, T>> Utility::DirectionToCocentricOctohedral(const Vecto
     // Finally
     // [-1,1] to [0,1]
     Vector<2, T> st = Vector<2, T>(u, v);
-    st = (st + 1.0f) * 0.5f;
+    st = (st + 1) * static_cast<T>(0.5);
     return st;
 }
 

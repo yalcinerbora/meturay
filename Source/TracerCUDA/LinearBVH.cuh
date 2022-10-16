@@ -4,12 +4,12 @@
 #include <queue>
 
 #include "RayLib/AABB.h"
+#include "RayLib/MortonCode.h"
 
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
 #include "CudaSystem.hpp"
 // Algorithms and functors required for the operations
-#include "MortonCode.cuh"
 #include "ParallelReduction.cuh"
 #include "ParallelSequence.cuh"
 #include "ParallelRadixSort.cuh"

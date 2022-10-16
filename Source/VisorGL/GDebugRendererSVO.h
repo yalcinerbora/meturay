@@ -10,6 +10,8 @@
 #include "ShaderGL.h"
 #include "TextureGL.h"
 
+using IntegerNameList = std::vector<std::pair<uint32_t, std::string>>;
+
 // TODO: Make this "DRY"
 struct SVOctree
 {
@@ -113,12 +115,16 @@ struct SVOctree
     float                       leafVoxelSize;
     uint32_t                    levelOffsetCount;
 
-    float       ConeTraceRay(bool& isLeaf, uint32_t& nodeId, const RayF&,
-                             float tMin, float tMax, uint32_t maxQueryLevel,
-                             float coneAperture = 0.0f) const;
+    float       NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const;
+    bool        Descend(uint32_t& index, uint64_t mortonCode, uint32_t levelCap) const;
 
-    bool        LeafIndex(uint32_t& index, const Vector3f& worldPos,
-                          bool checkNeighbours = false) const;
+    float       ConeTraceRay(bool& isLeaf, uint32_t& nodeId, const RayF&,
+                             float tMin, float tMax,
+                             float coneAperture = 0.0f,
+                             uint32_t maxQueryLevel = 0) const;
+
+    bool        NodeIndex(uint32_t& index, const Vector3f& worldPos,
+                          uint32_t levelCap, bool checkNeighbours = false) const;
 
     Vector3f    ReadNormalAndSpecular(float& stdDev, float& specularity,
                                       uint32_t nodeIndex, bool isLeaf) const;
@@ -149,6 +155,7 @@ class GDebugRendererSVO : public GDebugRendererI
     private:
         static constexpr const char* SVO_TREE_NAME = "svoTrees";
         static constexpr const char* MAP_SIZE_NAME = "mapSize";
+        static constexpr const char* TRACE_LEVEL_NAME = "minRayBinLevel";
 
         const SamplerGL         linearSampler;
         const TextureGL&        gradientTexture;
@@ -159,10 +166,15 @@ class GDebugRendererSVO : public GDebugRendererI
         std::string             name;
         //
         Vector2ui               mapSize;
+        uint32_t                minBinLevel;
         //
         TextureGL               currentTexture;
         std::vector<float>      currentValues;
         float                   maxValueDisplay;
+        //
+        IntegerNameList         nameList;
+        uint32_t                currentIndex;
+
         // Shaders
         ShaderGL                compReduction;
         ShaderGL                compRefRender;

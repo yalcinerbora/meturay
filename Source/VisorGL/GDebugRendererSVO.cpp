@@ -11,31 +11,53 @@
 #include "RayLib/RandomColor.h"
 #include "RayLib/CoordinateConversion.h"
 #include "RayLib/BitManipulation.h"
+#include "RayLib/FileUtility.h"
+#include "RayLib/MortonCode.h"
 
 #include "TextureGL.h"
 #include "GuideDebugStructs.h"
 #include "GuideDebugGUIFuncs.h"
 #include "GLConversionFunctions.h"
 
-uint64_t ExpandTo64(uint32_t val)
+// TODO: dont copy these
+template <int32_t N>
+class StaticGaussianFilter1D
 {
-    // https://stackoverflow.com/questions/18529057/produce-interleaving-bit-patterns-morton-keys-for-32-bit-64-bit-and-128bit
-    uint64_t x = val;
-    x &= 0x1fffff;
-    x = (x | x << 32) & 0x001f00000000ffff;
-    x = (x | x << 16) & 0x001f0000ff0000ff;
-    x = (x | x << 8) & 0x100f00f00f00f00f;
-    x = (x | x << 4) & 0x10c30c30c30c30c3;
-    x = (x | x << 2) & 0x1249249249249249;
-    return x;
+    static_assert(N % 2 == 1, "Filter kernel size must be odd");
+    public:
+    static constexpr Vector2i   KERNEL_RANGE = Vector2i(-N / 2, N / 2);
+    private:
+    float                       kernel[N];
+
+    public:
+                                StaticGaussianFilter1D(float alpha);
+    float                       operator()(int32_t i) const;
+};
+
+template <int32_t N>
+StaticGaussianFilter1D<N>::StaticGaussianFilter1D(float alpha)
+{
+    auto Gauss = [&](float t)
+    {
+        constexpr float W = 1.0f / MathConstants::SqrtPi / MathConstants::Sqrt2;
+        return W / std::sqrt(alpha) * std::exp(-(t * t) * 0.5f / alpha);
+    };
+    // Generate weights
+    for(int i = KERNEL_RANGE[0]; i <= KERNEL_RANGE[1]; i++)
+    {
+        kernel[i + N / 2] = Gauss(static_cast<float>(i));
+    };
+
+    // Normalize the Kernel
+    float total = 0.0f;
+    for(int i = 0; i < N; i++) { total += kernel[i]; }
+    for(int i = 0; i < N; i++) { kernel[i] /= total; }
 }
 
-uint64_t ComposeMortonCode64(const Vector3ui& val)
+template <int32_t N>
+float StaticGaussianFilter1D<N>::operator()(int32_t i) const
 {
-    uint64_t x = ExpandTo64(val[0]);
-    uint64_t y = ExpandTo64(val[1]);
-    uint64_t z = ExpandTo64(val[2]);
-    return ((x << 0) | (y << 1) | (z << 2));
+    return kernel[i + (N / 2)];
 }
 
 Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
@@ -110,8 +132,8 @@ bool SVOctree::HasChild(uint64_t packedData, uint32_t childId)
 }
 
 float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
-                             float tMin, float tMax, uint32_t maxQueryLevel,
-                             float coneAperture = 0.0f) const
+                             float tMin, float tMax, float coneAperture,
+                             uint32_t maxQueryLevelOffset) const
 {
     static constexpr float EPSILON = MathConstants::Epsilon;
     // We wrap the exp2f function here
@@ -168,7 +190,7 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
     };
 
     // Aperture Related Routines
-    const float CONE_DIAMETER_FACTOR = tan(0.5 * coneAperture) * 2.0f;
+    const float CONE_DIAMETER_FACTOR = tan(0.5f * coneAperture) * 2.0f;
     auto ConeDiameter = [&CONE_DIAMETER_FACTOR](float distance)
     {
         return CONE_DIAMETER_FACTOR * distance;
@@ -344,7 +366,7 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
                 // current voxel size, then terminate
                 uint32_t voxelLevel = stack3BitCount + 1;
                 bool isTerminated = ConeDiameter(tMin) > LevelVoxelSize(stack3BitCount + 1);
-                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevel;
+                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevelOffset;
                 bool isChildLeaf = IsChildrenLeaf(node);
                 // If it is leaf just return the
                 // "nodeId" it is actually leaf id
@@ -375,39 +397,51 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
     return tMin;
 }
 
-bool SVOctree::LeafIndex(uint32_t& index, const Vector3f& worldPos,
-                         bool checkNeighbours) const
+float SVOctree::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
+{
+    if(isLeaf) return leafVoxelSize;
+
+    auto it = std::upper_bound(levelNodeOffsets.cbegin(), levelNodeOffsets.cend(),
+                               nodeIndex);
+    uint32_t distance = static_cast<uint32_t>(std::distance(levelNodeOffsets.cbegin(), it));
+
+    uint32_t levelDiff = leafDepth - distance + 1;
+    float multiplier = static_cast<float>(1 << levelDiff);
+    return leafVoxelSize * multiplier;
+}
+
+bool SVOctree::Descend(uint32_t& index, uint64_t mortonCode,
+                       uint32_t levelCap) const
 {
     // Useful constants
     static constexpr uint32_t DIMENSION = 3;
     static constexpr uint32_t DIM_MASK = (1 << DIMENSION) - 1;
 
-    // Descend module (may be called multiple times
-    // when checkNeighbours is on)
-    auto Descend = [&](uint64_t mortonCode) -> bool
+    uint32_t mortonLevelShift = (leafDepth - 1) * DIMENSION;
+    // Now descend down
+    uint32_t currentNodeIndex = 0;
+    for(uint32_t i = 0; i < levelCap; i++)
     {
-        uint32_t mortonLevelShift = (leafDepth - 1) * DIMENSION;
-        // Now descend down
-        uint32_t currentNodeIndex = 0;
-        for(uint32_t i = 0; i < leafDepth; i++)
-        {
-            uint64_t currentNode = nodes[currentNodeIndex];
-            uint32_t childId = (mortonCode >> mortonLevelShift) & DIM_MASK;
-            // Check if this node has that child avail
-            if(!((ChildMask(currentNode) >> childId) & 0b1))
-                return false;
+        uint64_t currentNode = nodes[currentNodeIndex];
+        uint32_t childId = (mortonCode >> mortonLevelShift) & DIM_MASK;
+        // Check if this node has that child avail
+        if(!((ChildMask(currentNode) >> childId) & 0b1))
+            return false;
 
-            uint32_t childOffset = FindChildOffset(currentNode, childId);
-            uint32_t childrenIndex = ChildrenIndex(currentNode);
-            currentNodeIndex = childrenIndex + childOffset;
-            mortonLevelShift -= DIMENSION;
-        }
-        // If we descended down properly currentNode should point to the
-        // index. Notice that, last level's children ptr will point to the leaf arrays
-        index = currentNodeIndex;
-        return true;
-    };
+        uint32_t childOffset = FindChildOffset(currentNode, childId);
+        uint32_t childrenIndex = ChildrenIndex(currentNode);
+        currentNodeIndex = childrenIndex + childOffset;
+        mortonLevelShift -= DIMENSION;
+    }
+    // If we descended down properly currentNode should point to the
+    // index. Notice that, last level's children ptr will point to the leaf arrays
+    index = currentNodeIndex;
+    return true;
+};
 
+bool SVOctree::NodeIndex(uint32_t& index, const Vector3f& worldPos,
+                         uint32_t levelCap, bool checkNeighbours) const
+{
     index = UINT32_MAX;
     if(svoAABB.IsOutside(worldPos))
     {
@@ -468,9 +502,9 @@ bool SVOctree::LeafIndex(uint32_t& index, const Vector3f& worldPos,
                                        denseIndex[2] + curShfl[2] * inc[2]);
 
         // Generate Morton code of the index
-        uint64_t voxelMorton = ComposeMortonCode64(voxIndex);
+        uint64_t voxelMorton = MortonCode::Compose<uint32_t>(voxIndex);
         // Traverse this morton code
-        found = Descend(voxelMorton);
+        found = Descend(index, voxelMorton, levelCap);
         // Terminate if we are only checking a single voxel
         // or a voxel is found
         if(!checkNeighbours || found) break;
@@ -517,6 +551,10 @@ float SVOctree::ReadRadiance(const Vector3f& coneDirection,
                              float coneAperture, uint32_t nodeIndex,
                              bool isLeaf) const
 {
+    // Debug Visualizer does not have access to the boundary light
+    // just return zero here
+    if(nodeIndex == UINT32_MAX) return 0.0f;
+
     const Vector2f* gIrradArray = (isLeaf) ? avgIrradianceLeaf.data() : avgIrradianceNode.data();
 
     float normalDeviation, specularity;
@@ -556,8 +594,19 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     name = config[GuideDebug::NAME];
     mapSize = SceneIO::LoadVector<2, uint32_t>(config[MAP_SIZE_NAME]);
 
+    minBinLevel = config[TRACE_LEVEL_NAME];
+
     // Load Exact Sized Texture
     currentTexture = TextureGL(mapSize, PixelFormat::RGBA8_UNORM);
+    currentValues.resize(mapSize.Multiply());
+
+    // Preload some integer names for bin level selection
+    // 2^16 x 2^16 x 2^16  SVO should be impossible
+    // TODO: maybe change later
+    for(int i = 0; i < 16; i++)
+    {
+        nameList.push_back(std::make_pair(i, std::to_string(i)));
+    }
 
     // Load SDTrees to memory
     octrees.resize(depthCount);
@@ -565,6 +614,7 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     {
         LoadOctree(octrees[i], config, configPath, i);
     }
+    currentIndex = minBinLevel;
     // All done!
 }
 
@@ -583,37 +633,134 @@ bool GDebugRendererSVO::LoadOctree(SVOctree& octree,
 
     std::string fileName = (*loc)[depth];
     std::string fileMergedPath = Utility::MergeFileFolder(configPath, fileName);
-    std::ifstream file(fileMergedPath, std::ios::binary);
-    if(!file.good()) return false;
-
     static_assert(sizeof(char) == sizeof(Byte), "\"Byte\" is not have sizeof(char)");
-    // Read Info First (Leaf Count AABB etc)
-    file.read(reinterpret_cast<char*>(&octree.svoAABB), sizeof(AABB3f));
-    file.read(reinterpret_cast<char*>(&octree.voxelResolution), sizeof(uint32_t));
-    file.read(reinterpret_cast<char*>(&octree.leafDepth), sizeof(uint32_t));
-    file.read(reinterpret_cast<char*>(&octree.nodeCount), sizeof(uint32_t));
-    file.read(reinterpret_cast<char*>(&octree.leafCount), sizeof(uint32_t));
-    file.read(reinterpret_cast<char*>(&octree.leafVoxelSize), sizeof(float));
-    file.read(reinterpret_cast<char*>(&octree.levelOffsetCount), sizeof(uint32_t));
 
-    // Read SVO Buffers in order
+    METU_LOG("Loading: {:s}", fileMergedPath);
+
+    std::vector<Byte> data;
+    Utility::DevourFileToStdVector(data, fileMergedPath);
+
+    // Init Zeroes
+    octree = {};
+    // Start by fetching the "header"
+    size_t offset = 0;
+    std::memcpy(&octree.svoAABB, data.data() + offset, sizeof(AABB3f));
+    offset += sizeof(AABB3f);
+    std::memcpy(&octree.voxelResolution, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&octree.leafDepth, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&octree.nodeCount, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&octree.leafCount, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    std::memcpy(&octree.leafVoxelSize, data.data() + offset, sizeof(float));
+    offset += sizeof(float);
+    std::memcpy(&octree.levelOffsetCount, data.data() + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+    // After that generate the sizes
+    std::array<size_t, 5> treeSizes = {};
+    // Actual Tree Related Sizes
+    // Node Amount
+    treeSizes[0] = octree.nodeCount * sizeof(uint64_t);       // "dNodes" Size
+    treeSizes[1] = octree.nodeCount * sizeof(uint16_t);        // "dBinInfo" Size
+    // Leaf Amount
+    treeSizes[2] = octree.leafCount * sizeof(uint32_t);        // "dLeafParents" Size
+    treeSizes[3] = octree.leafCount * sizeof(uint16_t);        // "dLeafBinInfo" Size
+    // Misc
+    treeSizes[4] = octree.levelOffsetCount * sizeof(uint32_t); // "dLevelNodeOffsets" Size
+
+    // Payload Related Sizes
+    std::array<size_t, 10> payloadSizes = {};
+    // Node Amount
+    payloadSizes[0] = octree.nodeCount * sizeof(Vector2f);     // "dAvgIrradianceNode" Size
+    payloadSizes[1] = octree.nodeCount * sizeof(uint32_t);     // "dNormalAndSpecNode" Size
+    payloadSizes[2] = octree.nodeCount * sizeof(uint8_t);      // "dGuidingFactorNode" Size
+    //payloadSizes[3] = octree.nodeCount * sizeof(uint64_t);   // "dMicroQuadTreeNode" Size
+    //Leaf Amount
+    payloadSizes[4] = octree.leafCount * sizeof(Vector2f);    // "dTotalIrradianceLeaf" Size
+    payloadSizes[5] = octree.leafCount * sizeof(Vector2ui);    // "dSampleCountLeaf" Size
+    payloadSizes[6] = octree.leafCount * sizeof(Vector2f);     // "dAvgIrradianceLeaf" Size
+    payloadSizes[7] = octree.leafCount * sizeof(uint32_t);     // "dNormalAndSpecLeaf" Size
+    payloadSizes[8] = octree.leafCount * sizeof(uint8_t);      // "dGuidingFactorLeaf" Size
+    //payloadSizes[9] = octree.leafCount * sizeof(uint64_t);   // "dMicroQuadTreeNode" Size
+
+    // Calculate the offsets and total size
+    size_t treeTotalSize = std::reduce(treeSizes.cbegin(), treeSizes.cend(), 0ull);
+    size_t payloadTotalSize = std::reduce(payloadSizes.cbegin(), payloadSizes.cend(), 0ull);
+
+    // Sanity check the calculated size
+    size_t totalSize = (treeTotalSize + payloadTotalSize +
+                        sizeof(AABB3f) + 5 * sizeof(uint32_t) +
+                        sizeof(float));
+    if(totalSize != data.size()) return false;
+
+    // Allocate
+    octree.levelNodeOffsets.resize(octree.levelOffsetCount);
     octree.nodes.resize(octree.nodeCount);
-    file.read(reinterpret_cast<char*>(octree.nodes.data()),
-              octree.nodeCount * sizeof(uint64_t));
-    //
-    octree.radianceRead.resize(octree.nodeCount);
-    file.read(reinterpret_cast<char*>(octree.radianceRead.data()),
-              octree.nodeCount * sizeof(SVOctree::AnisoRadianceF));
-    //
+    octree.binInfo.resize(octree.nodeCount);
     octree.leafParents.resize(octree.leafCount);
-    file.read(reinterpret_cast<char*>(octree.leafParents.data()),
-              octree.leafCount * sizeof(uint32_t));
-    //
-    octree.leafRadianceRead.resize(octree.leafCount);
-    file.read(reinterpret_cast<char*>(octree.leafRadianceRead.data()),
-              octree.leafCount * sizeof(SVOctree::AnisoRadianceF));
+    octree.leafBinInfo.resize(octree.leafCount);
+    octree.totalIrradianceLeaf.resize(octree.leafCount);
+    octree.sampleCountLeaf.resize(octree.leafCount);
+    octree.avgIrradianceLeaf.resize(octree.leafCount);
+    octree.normalAndSpecLeaf.resize(octree.leafCount);
+    octree.guidingFactorLeaf.resize(octree.leafCount);
+    octree.avgIrradianceNode.resize(octree.nodeCount);
+    octree.normalAndSpecNode.resize(octree.nodeCount);
+    octree.guidingFactorNode.resize(octree.nodeCount);
 
-     // All of the Data is Loaded
+    // Now copy stuff
+    // Tree Related
+    // "dNodes"
+    std::memcpy(octree.nodes.data(), data.data() + offset, treeSizes[0]);
+    offset += treeSizes[0];
+    // "dBinInfo"
+    std::memcpy(octree.binInfo.data(), data.data() + offset, treeSizes[1]);
+    offset += treeSizes[1];
+    // "dLeafParents"
+    std::memcpy(octree.leafParents.data(), data.data() + offset, treeSizes[2]);
+    offset += treeSizes[2];
+    // "dLeafBinInfo"
+    std::memcpy(octree.leafBinInfo.data(), data.data() + offset, treeSizes[3]);
+    offset += treeSizes[3];
+    // "dLevelNodeOffsets"
+    std::memcpy(octree.levelNodeOffsets.data(), data.data() + offset, treeSizes[4]);
+    offset += treeSizes[4];
+    // Payload Related
+    // "dAvgIrradianceNode"
+    std::memcpy(octree.avgIrradianceNode.data(), data.data() + offset, payloadSizes[0]);
+    offset += payloadSizes[0];
+    // "dNormalAndSpecNode"
+    std::memcpy(octree.normalAndSpecNode.data(), data.data() + offset, payloadSizes[1]);
+    offset += payloadSizes[1];
+    // "dGuidingFactorNode"
+    std::memcpy(octree.guidingFactorNode.data(), data.data() + offset, payloadSizes[2]);
+    offset += payloadSizes[2];
+    //// "dMicroQuadTreeNode"
+    //std::memcpy(octree.microQuadTreeNode.data(), data.data() + offset, payloadSizes[3]);
+    //offset += payloadSizes[3];
+    // "dTotalIrradianceLeaf"
+    std::memcpy(octree.totalIrradianceLeaf.data(), data.data() + offset, payloadSizes[4]);
+    offset += payloadSizes[4];
+    // "dTotalIrradianceLeaf"
+    std::memcpy(octree.sampleCountLeaf.data(), data.data() + offset, payloadSizes[5]);
+    offset += payloadSizes[5];
+    // "dSampleCountLeaf"
+    std::memcpy(octree.avgIrradianceLeaf.data(), data.data() + offset, payloadSizes[6]);
+    offset += payloadSizes[6];
+    // "dNormalAndSpecLeaf"
+    std::memcpy(octree.normalAndSpecLeaf.data(), data.data() + offset, payloadSizes[7]);
+    offset += payloadSizes[7];
+    // "dGuidingFactorLeaf"
+    std::memcpy(octree.guidingFactorLeaf.data(), data.data() + offset, payloadSizes[8]);
+    offset += payloadSizes[8];
+    //// "dMicroQuadTreeLeaf"
+    //std::memcpy(octree.microQuadTreeLeaf.data(), data.data() + offset, payloadSizes[9]);
+    //offset += payloadSizes[9];
+    // All Done!
+    assert(offset == data.size());
     return true;
 }
 
@@ -634,9 +781,11 @@ void GDebugRendererSVO::RenderSpatial(TextureGL& overlayTex, uint32_t depth,
                       const SVOctree& svo = octrees[depth];
 
                       //
-                      uint32_t svoLeafIndex;
-                      bool found = svo.LeafIndex(svoLeafIndex, pos, true);
-                      Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
+                      uint32_t svoNodeIndex;
+                      bool found = svo.NodeIndex(svoNodeIndex, pos,
+                                                 std::min(minBinLevel, svo.leafDepth),
+                                                 true);
+                      Vector3f locColor = (found) ? Utility::RandomColorRGB(svoNodeIndex)
                                                   : Vector3f(0.0f);
 
                       Vector4uc color;
@@ -660,7 +809,30 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                                           bool doLogScale,
                                           uint32_t depth)
 {
-    // Calculate on CPU
+    auto ConeAperture = [](Vector2ui mapSize) -> float
+    {
+        // Octo mapping has equal area so directly divide
+        static constexpr float MAX_STERAD = 4.0f * MathConstants::Pi;
+        uint32_t totalPix = mapSize.Multiply();
+        return MAX_STERAD / static_cast<float>(totalPix);
+    };
+    const SVOctree& svo = octrees[depth];
+
+
+    //
+    Vector3f pos = worldPos;
+    // Convert location to the
+    uint32_t nodeIndex;
+    bool found = svo.NodeIndex(nodeIndex, pos,
+                               std::min(minBinLevel, svo.leafDepth),
+                               true);
+    if(!found) METU_ERROR_LOG("Unable to locate a voxel! Using direct world space for ray position!");
+
+    // Now find out the node id and offset the tmin accordingly
+    float voxSize = svo.NodeVoxelSize(nodeIndex, (minBinLevel == svo.leafDepth));
+    float tMin = voxSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
+
+    float coneAperture = ConeAperture(mapSize);
     currentValues.resize(mapSize.Multiply());
     // Generate iota array for parallel process
     std::vector<uint32_t> indices(mapSize.Multiply());
@@ -670,30 +842,61 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                   indices.cbegin(), indices.cend(),
                   [&](uint32_t index)
                   {
-                      Vector3f pos = worldPos;
-                      const SVOctree& svo = octrees[depth];
-
                       // Calculate Direction
                       Vector2ui pixelId(index % mapSize[0],
                                         index / mapSize[0]);
                       Vector3f direction = DirIdToWorldDir(pixelId, mapSize);
-
                       RayF ray(direction, pos);
 
+                      bool isLeaf;
                       uint32_t leafIndex;
-                      svo.TraceRay(leafIndex, ray,
-                                   svo.leafVoxelSize * 3.05f,
-                                   std::numeric_limits<float>::max());
+                      svo.ConeTraceRay(isLeaf, leafIndex, ray, tMin,
+                                       std::numeric_limits<float>::max(),
+                                       coneAperture);
 
-                      //Vector3f locColor = (leafIndex != UINT32_MAX)
-                      //                          ? Utility::RandomColorRGB(leafIndex)
-                      //                          : Vector3f(0.0f);
-                      //float radiance = Utility::RGBToLuminance(locColor);
-
-                      float radiance = svo.ReadRadiance(leafIndex, true, -ray.getDirection());
-                      //if(radiance == 0.0f && leafIndex != UINT32_MAX)
-                      //    radiance = 0.01f;
+                      float radiance = svo.ReadRadiance(ray.getDirection(), coneAperture,
+                                                        leafIndex, isLeaf);
                       currentValues[index] = radiance;
+                  });
+
+
+    std::vector<float> valuesBuffer(currentValues.size(), 0.0f);
+    using FilterType = StaticGaussianFilter1D<5>;
+    FilterType gaussFilter(1.0f);
+    auto KERNEL_RANGE = FilterType::KERNEL_RANGE;
+    // Do Gauss Pass over Values
+    std::for_each(std::execution::par_unseq,
+                  indices.cbegin(), indices.cend(),
+                  [&](uint32_t index)
+                  {
+                      // Calculate Direction
+                      Vector2i pixelId(index % mapSize[0],
+                                       index / mapSize[0]);
+
+                      for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
+                      {
+                          int32_t row = pixelId[1];
+                          int32_t col = HybridFuncs::Clamp<int32_t>(pixelId[0] + j, 0, mapSize[0] - 1);
+                          int32_t linear = row * mapSize[0] + col;
+                          valuesBuffer[index] += currentValues[linear] * gaussFilter(j);
+                      }
+                  });
+    currentValues.resize(currentValues.size(), 0.0f);
+    std::for_each(std::execution::par_unseq,
+                  indices.cbegin(), indices.cend(),
+                  [&](uint32_t index)
+                  {
+                      // Calculate Direction
+                      Vector2i pixelId(index % mapSize[0],
+                                       index / mapSize[0]);
+
+                      for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
+                      {
+                          int32_t row = HybridFuncs::Clamp<int32_t>(pixelId[1] + j, 0, mapSize[1] - 1);
+                          int32_t col = pixelId[0];
+                          int32_t linear = row * mapSize[0] + col;
+                          currentValues[index] += valuesBuffer[linear] * gaussFilter(j);
+                      }
                   });
 
     // Normalize the indices
@@ -801,9 +1004,35 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
 
         ImGui::Text("Resolution: [%u, %u]", mapSize[1], mapSize[0]);
         ImGui::Text("Max Value: %f", maxValueDisplay);
+        ImGui::Text("BinLevel"); ImGui::SameLine();
+        if(ImGui::BeginCombo("##BinLevelCombo", nameList[currentIndex].second.c_str()))
+        {
+            // TODO: assuming all trees are the same here change if necessary
+            for(uint32_t i = 1; i <= octrees[0].leafDepth; i++)
+            {
+                bool isSelected = (currentIndex == i);
+                if(ImGui::Selectable(nameList[i].second.c_str(), isSelected))
+                    currentIndex = i;
+                if(isSelected)
+                {
+
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
         ImGui::EndPopup();
 
     }
     ImGui::EndChild();
+
+    if(minBinLevel != currentIndex)
+    {
+        minBinLevel = currentIndex;
+        overlayCheckboxChanged = true;
+        changed = true;
+    }
+
     return changed;
 }

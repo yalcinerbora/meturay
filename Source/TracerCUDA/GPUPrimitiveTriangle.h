@@ -20,6 +20,7 @@ All of them should be provided
 #include "RayLib/Vector.h"
 #include "RayLib/Triangle.h"
 #include "RayLib/CoordinateConversion.h"
+#include "RayLib/MortonCode.h"
 
 #include "RNGenerator.h"
 #include "GPUPrimitiveP.cuh"
@@ -31,7 +32,7 @@ All of them should be provided
 #include "DeviceMemory.h"
 #include "TypeTraits.h"
 #include "TextureFunctions.h"
-#include "MortonCode.cuh"
+
 
 class SurfaceDataLoaderI;
 using SurfaceDataLoaders = std::vector<std::unique_ptr<SurfaceDataLoaderI>>;

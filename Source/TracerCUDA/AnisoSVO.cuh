@@ -7,10 +7,10 @@
 #include "RayLib/TracerStructs.h"
 #include "RayLib/CoordinateConversion.h"
 #include "RayLib/HybridFunctions.h"
+#include "RayLib/MortonCode.h"
 
 #include "GPULightI.h"
 #include "DeviceMemory.h"
-#include "MortonCode.cuh"
 #include "BinarySearch.cuh"
 
 struct WFPGPathNode;
@@ -214,8 +214,8 @@ class AnisoSVOctreeGPU
     // cone can terminate on a node due to its aperture
     __device__
     float               ConeTraceRay(bool& isLeaf, uint32_t& nodeId, const RayF&,
-                                     float tMin, float tMax, uint32_t maxQueryLevel,
-                                     float coneAperture = 0.0f) const;
+                                     float tMin, float tMax, float coneAperture = 0.0f,
+                                     uint32_t maxQueryLevel = 0) const;
 
     // Deposit radiance to the nearest voxel leaf
     // Uses atomics, returns false if no leaf is found on this location
@@ -669,8 +669,8 @@ uint16_t AnisoSVOctreeGPU::GetRayCount(uint16_t binInfo)
 
 __device__ inline
 float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
-                                     float tMin, float tMax, uint32_t maxQueryLevel,
-                                     float coneAperture) const
+                                     float tMin, float tMax,  float coneAperture,
+                                     uint32_t maxQueryLevelOffset) const
 {
     static constexpr float EPSILON = MathConstants::Epsilon;
     // We wrap the exp2f function here
@@ -727,7 +727,7 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
     };
 
     // Aperture Related Routines
-    const float CONE_DIAMETER_FACTOR = tan(0.5 * coneAperture) * 2.0f;
+    const float CONE_DIAMETER_FACTOR = tan(0.5f * coneAperture) * 2.0f;
     auto ConeDiameter = [&CONE_DIAMETER_FACTOR](float distance)
     {
         return CONE_DIAMETER_FACTOR * distance;
@@ -903,7 +903,7 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
                 // current voxel size, then terminate
                 uint32_t voxelLevel = stack3BitCount + 1;
                 bool isTerminated = ConeDiameter(tMin) > LevelVoxelSize(stack3BitCount + 1);
-                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevel;
+                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevelOffset;
                 bool isChildLeaf = IsChildrenLeaf(node);
                 // If it is leaf just return the
                 // "nodeId" it is actually leaf id

@@ -855,10 +855,10 @@ void WFPGTracer::Finalize()
     if(options.renderMode == WFPGRenderMode::RENDER ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     {
-        //uint32_t totalPathNodeCount = TotalPathNodeCount();
-        //svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
-        //                        MaximumPathNodePerPath(), cudaSystem);
-        //svo.NormalizeAndFilterRadiance(cudaSystem);
+        uint32_t totalPathNodeCount = TotalPathNodeCount();
+        svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
+                                MaximumPathNodePerPath(), cudaSystem);
+        svo.NormalizeAndFilterRadiance(cudaSystem);
 
         // Dump the SVO tree if requested
         uint32_t dumpInterval = static_cast<uint32_t>(std::pow(options.pgDumpInterval, treeDumpCount));
@@ -870,6 +870,7 @@ void WFPGTracer::Finalize()
                                             iterationCount,
                                             options.pgDumpDebugName);
             Utility::DumpStdVectorToFile(svoData, fName);
+            METU_LOG("Dumping {:s}", fName);
             treeDumpCount++;
         }
     }

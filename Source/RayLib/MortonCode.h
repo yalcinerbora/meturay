@@ -7,20 +7,20 @@ namespace MortonCode
     namespace Detail
     {
         template<class T>
-        __device__ __host__
+        __device__ __host__ HYBRID_INLINE
         T           Expand(uint32_t);
 
         template<class T>
-        __device__ __host__
+        __device__ __host__ HYBRID_INLINE
         uint32_t    Shrink(T x);
     }
 
     template <class T>
-    __device__ __host__
+    __device__ __host__ HYBRID_INLINE
     T           Compose(const Vector3ui&);
 
     template <class T>
-    __device__ __host__
+    __device__ __host__ HYBRID_INLINE
     Vector3ui   Decompose(T code);
 }
 
@@ -68,12 +68,6 @@ template<>
 __device__ __host__ inline
 uint32_t MortonCode::Detail::Shrink(uint64_t x)
 {
-    //x = x             & 0x5555555555555555;
-    //x = (x | x >> 1 ) & 0x3333333333333333;
-    //x = (x | x >> 2 ) & 0x0F0F0F0F0F0F0F0F;
-    //x = (x | x >> 4 ) & 0x00FF00FF00FF00FF;
-    //x = (x | x >> 8 ) & 0x0000FFFF0000FFFF;
-    //x = (x | x >> 16) & 0x00000000FFFFFFFF;
     x &=                  0x1249249249249249;
     x = (x ^ (x >> 2))  & 0x30c30c30c30c30c3;
     x = (x ^ (x >> 4))  & 0xf00f00f00f00f00f;

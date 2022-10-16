@@ -642,7 +642,7 @@ static void KCTraceSVO(// Output
                        // Constants
                        const float coneAperture,
                        WFPGRenderMode mode,
-                       uint32_t maxQueryLevel,
+                       uint32_t maxQueryLevelOffset,
                        uint32_t rayCount)
 {
     for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -655,8 +655,9 @@ static void KCTraceSVO(// Output
         bool isLeaf;
         uint32_t svoNodeIndex;
         float tMin = svo.ConeTraceRay(isLeaf, svoNodeIndex, ray.ray,
-                                      ray.tMin, ray.tMax, maxQueryLevel,
-                                      coneAperture);
+                                      ray.tMin, ray.tMax,
+                                      coneAperture,
+                                      maxQueryLevelOffset);
 
         Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
         // Octree Display Mode

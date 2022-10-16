@@ -383,7 +383,9 @@ void PPGTracer::Finalize()
             std::vector<Byte> sdTree;
             sTree->DumpSDTreeAsBinary(sdTree, true);
             std::string iterAsString = std::to_string(nextTreeSwap >> 1);
-            Utility::DumpStdVectorToFile(sdTree, iterAsString + "_ppg_sdTree");
+            std::string name = iterAsString + "_ppg_sdTree";
+            Utility::DumpStdVectorToFile(sdTree, name);
+            METU_LOG("Dumping {:s}", name);
 
             //// Write reference image
             //Vector2i pixelCount = imgMemory.SegmentSize();
