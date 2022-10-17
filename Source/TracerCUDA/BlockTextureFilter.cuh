@@ -52,22 +52,26 @@ class BlockTextureFilter2D
     static constexpr uint32_t DATA_PER_THREAD = std::max(1u, (X * Y) / TPB);
     static constexpr uint32_t PIX_COUNT = (X * Y);
 
+    using WrappingFunction = Vector2i(*)(const Vector2i& pixel, const Vector2i& size);
+
     struct TempStorage
     {
         float sTexture[Y][X];
     };
 
     private:
-    TempStorage&    sMem;
-    const Filter&   filterFunctor;
-    const uint32_t  threadId;
+    const WrappingFunction   wrapFunc;
+    TempStorage&             sMem;
+    const Filter&            filterFunctor;
+    const uint32_t           threadId;
 
     protected:
     public:
     // Constructors & Destructor
     __device__
                     BlockTextureFilter2D(TempStorage& storage,
-                                         const Filter& filterFunctor);
+                                         const Filter& filterFunctor,
+                                         const WrappingFunction&);
 
     __device__
     void            operator()(float(&dataOut)[DATA_PER_THREAD],
@@ -108,10 +112,12 @@ template <class F,
           uint32_t X, uint32_t Y>
 __device__ inline
 BlockTextureFilter2D<F, TPB, X, Y>::BlockTextureFilter2D(TempStorage& storage,
-                                                         const F& filterFunctor)
+                                                         const F& filterFunctor,
+                                                         const WrappingFunction& wf)
     : sMem(storage)
     , filterFunctor(filterFunctor)
     , threadId(threadIdx.x)
+    , wrapFunc(wf)
 {}
 
 template <class F,
@@ -121,6 +127,8 @@ __device__ inline
 void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THREAD],
                                                     const float(&data)[DATA_PER_THREAD])
 {
+    static constexpr Vector2i TexSize = Vector2i(X, Y);
+
     auto LoadToSMem = [&](const float(&threadData)[DATA_PER_THREAD])
     {
         for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
@@ -136,7 +144,6 @@ void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THR
             }
         }
     };
-
     // Directly load the data to the shared memory
     LoadToSMem(data); __syncthreads();
 
@@ -151,8 +158,10 @@ void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THR
         dataOut[i] = 0.0f;
         for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
         {
-            int32_t col = HybridFuncs::Clamp<int32_t>(columnId + j, 0, X - 1);
-            dataOut[i] += sMem.sTexture[rowId][col] * filterFunctor(j);
+            Vector2i neigPixel(columnId + j, rowId);
+            if(neigPixel[0] >= TexSize[0] || neigPixel[0] < 0)
+                neigPixel = wrapFunc(neigPixel, TexSize);
+            dataOut[i] += sMem.sTexture[neigPixel[1]][neigPixel[0]] * filterFunctor(j);
         }
     }
     __syncthreads();
@@ -172,8 +181,10 @@ void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THR
         dataOut[i] = 0.0f;
         for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
         {
-            int32_t row = HybridFuncs::Clamp<int32_t>(rowId + j, 0, Y - 1);
-            dataOut[i] += sMem.sTexture[row][columnId] * filterFunctor(j);
+            Vector2i neigPixel(columnId, rowId + j);
+            if(neigPixel[1] >= TexSize[1] || neigPixel[1] < 0)
+                neigPixel = wrapFunc(neigPixel, TexSize);
+            dataOut[i] += sMem.sTexture[neigPixel[1]][neigPixel[0]] * filterFunctor(j);
         }
     }
     // All Done!

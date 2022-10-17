@@ -94,7 +94,7 @@ void KCReduceVoxelPayload(// I-O
 
         // Each warp thread convert morton code to world position
         // we will use it to query SVO
-        Vector3ui denseIndex = MortonCode::Decompose<uint64_t>(mortonCode);
+        Vector3ui denseIndex = MortonCode::Decompose3D<uint64_t>(mortonCode);
         Vector3f worldPos = treeGPU.VoxelToWorld(denseIndex);
 
         /////////////////////////////////////

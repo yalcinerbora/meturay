@@ -62,6 +62,12 @@ class BlockPWCDistribution2D
     const bool      isRowLeader;
     const bool      isValidThread;
 
+    //// Eeach
+    //float           registerBuffer[DATA_PER_THREAD];
+    //// Swap the register buffer to shared memory and vice versa
+    //__device__
+    //void        Swap();
+
     protected:
     public:
     // Constructors & Destructor
@@ -75,6 +81,8 @@ class BlockPWCDistribution2D
 
     __device__
     float       Pdf(const Vector2f& index) const;
+
+
 
     __device__
     void        DumpSharedMem(float* pdfXOut, float* cdfXOut,

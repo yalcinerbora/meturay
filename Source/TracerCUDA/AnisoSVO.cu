@@ -1315,7 +1315,6 @@ TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
     std::locale::global(std::locale("en_US.UTF-8"));
     METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Loaded from disk in {:f} seconds. (Total {:.2f} MiB)",
              treeGPU.nodeCount, treeGPU.leafCount,
-
              timer.Elapsed<CPUTimeSeconds>(), svoMemSize);
     std::locale::global(std::locale::classic());
 

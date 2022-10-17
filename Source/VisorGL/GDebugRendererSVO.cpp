@@ -510,7 +510,7 @@ bool SVOctree::NodeIndex(uint32_t& index, const Vector3f& worldPos,
                                        denseIndex[2] + curShfl[2] * inc[2]);
 
         // Generate Morton code of the index
-        uint64_t voxelMorton = MortonCode::Compose<uint32_t>(voxIndex);
+        uint64_t voxelMorton = MortonCode::Compose3D<uint32_t>(voxIndex);
         // Traverse this morton code
         found = Descend(index, voxelMorton, levelCap);
         // Terminate if we are only checking a single voxel
@@ -850,8 +850,9 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                   [&](uint32_t index)
                   {
                       // Calculate Direction
-                      Vector2ui pixelId(index % mapSize[0],
-                                        index / mapSize[0]);
+                      //Vector2ui pixelId(index % mapSize[0],
+                      //                  index / mapSize[0]);
+                      Vector2ui pixelId = MortonCode::Decompose2D(index);
                       Vector3f direction = DirIdToWorldDir(pixelId, mapSize);
                       RayF ray(direction, pos);
 
@@ -863,7 +864,9 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
 
                       float radiance = svo.ReadRadiance(ray.getDirection(), coneAperture,
                                                         leafIndex, isLeaf);
-                      currentValues[index] = radiance;
+
+                      uint32_t writeIndex = pixelId[1] * mapSize[0] + pixelId[0];
+                      currentValues[writeIndex] = radiance;
                   });
 
 
@@ -877,14 +880,17 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                   [&](uint32_t index)
                   {
                       // Calculate Direction
-                      Vector2i pixelId(index % mapSize[0],
-                                       index / mapSize[0]);
+                      Vector2i mapSz = Vector2i(mapSize);
+                      Vector2i pixelId(index % mapSz[0],
+                                       index / mapSz[0]);
 
                       for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
                       {
-                          int32_t row = pixelId[1];
-                          int32_t col = HybridFuncs::Clamp<int32_t>(pixelId[0] + j, 0, mapSize[0] - 1);
-                          int32_t linear = row * mapSize[0] + col;
+                          int32_t newX = pixelId[0] + j;
+                          Vector2i neigPixel(newX, pixelId[1]);
+                          if(newX >= mapSz[0] || newX < 0)
+                              neigPixel = Utility::CocentricOctohedralWrapInt(neigPixel, mapSz);
+                          int32_t linear = neigPixel[1] * mapSz[0] + neigPixel[0];
                           valuesBuffer[index] += currentValues[linear] * gaussFilter(j);
                       }
                   });
@@ -894,14 +900,17 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                   [&](uint32_t index)
                   {
                       // Calculate Direction
+                      Vector2i mapSz = Vector2i(mapSize);
                       Vector2i pixelId(index % mapSize[0],
                                        index / mapSize[0]);
 
                       for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
                       {
-                          int32_t row = HybridFuncs::Clamp<int32_t>(pixelId[1] + j, 0, mapSize[1] - 1);
-                          int32_t col = pixelId[0];
-                          int32_t linear = row * mapSize[0] + col;
+                          int32_t newY = pixelId[1] + j;
+                          Vector2i neigPixel(pixelId[0], newY);
+                          if(newY >= mapSz[1] || newY < 0)
+                              neigPixel = Utility::CocentricOctohedralWrapInt(neigPixel, mapSz);
+                          int32_t linear = neigPixel[1] * mapSz[0] + neigPixel[0];
                           currentValues[index] += valuesBuffer[linear] * gaussFilter(j);
                       }
                   });

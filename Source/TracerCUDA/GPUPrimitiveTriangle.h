@@ -603,7 +603,7 @@ struct TriFunctions
                     // Clamp the Voxel due to numerical errors
                     voxelIndex.ClampSelf(0, resolutionXYZ - 1);
 
-                    uint64_t voxelIndexMorton = MortonCode::Compose<uint64_t>(voxelIndex);
+                    uint64_t voxelIndexMorton = MortonCode::Compose3D<uint64_t>(voxelIndex);
                     // Write the found voxel
                     assert(writeIndex < voxIndMaxCount);
                     if(writeIndex < voxIndMaxCount)

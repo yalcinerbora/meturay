@@ -2,6 +2,7 @@
 
 #include "Vector.h"
 #include "HybridFunctions.h"
+#include <type_traits>
 
 namespace Utility
 {
@@ -36,6 +37,14 @@ namespace Utility
     __host__ __device__ HYBRID_INLINE
     FloatEnable<T, Vector<3, T>> CocentricOctohedralToDirection(const Vector<2, T>&);
 
+    template<class T>
+    __host__ __device__ HYBRID_INLINE
+    FloatEnable<T, Vector<2, T>> CocentricOctohedralWrap(const Vector<2, T>&);
+
+    template<class T>
+    __host__ __device__ HYBRID_INLINE
+    IntegralEnable<T, Vector<2, T>> CocentricOctohedralWrapInt(const Vector<2, T>& st,
+                                                               const Vector<2, T>& dimensions);
 }
 
 template<class T>
@@ -155,4 +164,58 @@ FloatEnable<T, Vector<3, T>> Utility::CocentricOctohedralToDirection(const Vecto
     T y = sinPhi * xyFactor;
 
     return Vector<3, T>(x, y, z);
+}
+
+template<class T>
+__host__ __device__ HYBRID_INLINE
+FloatEnable<T, Vector<2, T>> Utility::CocentricOctohedralWrap(const Vector<2, T>& st)
+{
+    // TODO: do more proper implementation
+    static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>);
+    using IntType = typename std::conditional_t<std::is_same_v<T, double>, int64_t, int32_t>;
+
+    // Given st => (-inf, inf) convert to [0, 1]
+    // Octohedral Cocentric mapping has straightforward properties
+    // if either s or t is odd (integral part) we mirror the st on both sides
+    // If both is odd or even do not mirror
+
+    // Convert the negative numbers
+    Vector2f stConv = st;
+    if(st[0] < 0) stConv[0] = -2 - st[0];
+    if(st[1] < 0) stConv[1] = -2 - st[1];
+
+    T iS; T fS = abs(modf(stConv[0], &iS));
+    T iT; T fT = abs(modf(stConv[1], &iT));
+    IntType iSInt = static_cast<IntType>(iS);
+    IntType iTInt = static_cast<IntType>(iT);
+    bool doMirror = static_cast<bool>((iSInt & 0x1) ^ (iTInt & 0x1));
+    if(doMirror)
+    {
+        fS = 1 - fS;
+        fT = 1 - fT;
+    }
+    return Vector<2, T>(fS, fT);
+}
+
+template<class T>
+__host__ __device__ HYBRID_INLINE
+IntegralEnable<T, Vector<2, T>> Utility::CocentricOctohedralWrapInt(const Vector<2, T>& st,
+                                                                    const Vector<2, T>& dimensions)
+{
+    Vector<2, T> stConv = st;
+    if constexpr(std::is_signed_v<T>)
+    {
+        if(st[0] < 0) stConv[0] = -2 * dimensions[0] - st[0];
+        if(st[1] < 0) stConv[1] = -2 * dimensions[1] - st[1];
+    }
+
+    Vector<2, T> dimClamp = dimensions - 1;
+    Vector<2, T> intPart = stConv / dimensions;
+    Vector<2, T> fracPart = (stConv % dimensions).Abs();
+
+    T xOdd = (intPart[0] & 0x1);
+    T yOdd = (intPart[1] & 0x1);
+    bool doMirror = static_cast<bool>(xOdd ^ yOdd);
+    if(doMirror) fracPart = dimClamp - fracPart;
+    return fracPart;
 }

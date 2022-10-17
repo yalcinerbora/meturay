@@ -160,7 +160,7 @@ static void KCGenMortonCodes(uint64_t* gMortonCodes,
         // 64-bit morton code can only hold 21 bit for each value
         assert(x <= (1 << 21) && y <= (1 << 21) &&
                z <= (1 << 21));
-        uint64_t code = MortonCode::Compose<uint64_t>(Vector3ui(x, y, z));
+        uint64_t code = MortonCode::Compose3D<uint64_t>(Vector3ui(x, y, z));
         gMortonCodes[globalId] = code;
     }
 }

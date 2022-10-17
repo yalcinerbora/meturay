@@ -730,28 +730,40 @@ Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
 {
     assert(dirXY < dimensions);
     using namespace MathConstants;
-    // Spherical coordinate deltas
-    Vector2f deltaXY = Vector2f((2.0f * Pi) / static_cast<float>(dimensions[0]),
-                                Pi / static_cast<float>(dimensions[1]));
 
-    // Assume image space bottom left is (0,0)
-    // Center to the pixel as well
-    // Offset
     Vector2f xi = rng.Uniform2D();
-    //Vector2f xi = Vector2f(0.5f);
+    ////Vector2f xi = Vector2f(0.5f);
 
-    Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + xi;
-    Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
-                                   Pi - dirXYFloat[1] * deltaXY[1]);
-    Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
-    // Spherical Coords calculates as Z up change it to Y up
+    // Generate st coords [0, 1] from integer coords
+    Vector2f st = Vector2f(dirXY) + xi;
+    st /= Vector2f(dimensions);
+    Vector3f result = Utility::CocentricOctohedralToDirection(st);
     Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
 
-    //printf("Pixel [%u, %u], ThetaPhi [%f, %f], Dir[%f, %f, %f]\n",
-    //       dirXY[0], dirXY[1],
-    //       sphrCoords[0] * RadToDegCoef,
-    //       sphrCoords[1] * RadToDegCoef,
-    //       dirYUp[0], dirYUp[1], dirYUp[2]);
+    //assert(dirXY < dimensions);
+    //using namespace MathConstants;
+    //// Spherical coordinate deltas
+    //Vector2f deltaXY = Vector2f((2.0f * Pi) / static_cast<float>(dimensions[0]),
+    //                            Pi / static_cast<float>(dimensions[1]));
+
+    //// Assume image space bottom left is (0,0)
+    //// Center to the pixel as well
+    //// Offset
+    //Vector2f xi = rng.Uniform2D();
+    ////Vector2f xi = Vector2f(0.5f);
+
+    //Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + xi;
+    //Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
+    //                               Pi - dirXYFloat[1] * deltaXY[1]);
+    //Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
+    //// Spherical Coords calculates as Z up change it to Y up
+    //Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
+    ////printf("Pixel [%u, %u], ThetaPhi [%f, %f], Dir[%f, %f, %f]\n",
+    ////       dirXY[0], dirXY[1],
+    ////       sphrCoords[0] * RadToDegCoef,
+    ////       sphrCoords[1] * RadToDegCoef,
+    ////       dirYUp[0], dirYUp[1], dirYUp[2]);
 
     return dirYUp;
 }
@@ -909,7 +921,8 @@ static void KCGenAndSampleDistribution(// Output
     extern __shared__ Byte sharedMemRAW[];
     SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
 
-    Filter2D filter(sharedMem->sFilterMem, rFieldGaussFilter);
+    Filter2D filter(sharedMem->sFilterMem, rFieldGaussFilter,
+                    Utility::CocentricOctohedralWrapInt);
 
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
@@ -962,8 +975,12 @@ static void KCGenAndSampleDistribution(// Output
 
             // Determine your direction
             uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
-            Vector2ui dirIdXY = Vector2ui(directionId % X,
-                                          directionId / X);
+            // Make directions similar for tracing
+            // Use morton code to order
+            Vector2ui dirIdXY = MortonCode::Decompose2D(directionId);
+            // ONLY WORKS ON POW OF 2 TEX
+            //Vector2ui dirIdXY = Vector2ui(directionId % X,
+            //                              directionId / X);
             Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y), rng);
             // Get a random position from the pool
             Vector3f position = sharedMem->sPositions[THREAD_ID % sharedMem->sPositionCount];

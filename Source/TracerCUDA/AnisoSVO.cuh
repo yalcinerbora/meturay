@@ -1080,7 +1080,7 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
                                        denseIndex[2] + curShfl[2] * inc[2]);
 
         // Generate Morton code of the index
-        uint64_t voxelMorton = MortonCode::Compose<uint64_t>(voxIndex);
+        uint64_t voxelMorton = MortonCode::Compose3D<uint64_t>(voxIndex);
         // Traverse this morton code
         found = Descend(voxelMorton);
         // Terminate if we are only checking a single voxel
@@ -1144,7 +1144,7 @@ bool AnisoSVOctreeGPU::SetLeafRadiance(uint64_t mortonCode,
                                        const Vector2f& combinedLuminance,
                                        const Vector2ui& initialSampleCount)
 {
-    Vector3ui denseIndex = MortonCode::Decompose<uint64_t>(mortonCode);
+    Vector3ui denseIndex = MortonCode::Decompose3D<uint64_t>(mortonCode);
     Vector3f worldPos = VoxelToWorld(denseIndex);
 
     uint32_t leafIndex;
@@ -1168,7 +1168,7 @@ bool AnisoSVOctreeGPU::SetLeafRadiance(uint64_t mortonCode,
 __device__ inline
 bool AnisoSVOctreeGPU::SetLeafNormal(uint64_t mortonCode, Vector3f combinedNormal)
 {
-    Vector3ui denseIndex = MortonCode::Decompose<uint64_t>(mortonCode);
+    Vector3ui denseIndex = MortonCode::Decompose3D<uint64_t>(mortonCode);
     Vector3f worldPos = VoxelToWorld(denseIndex);
 
     uint32_t leafIndex;
