@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #include "RayLib/HitStructs.h"
-#include "RayLib/Vector.h"
+#include "RayLib/Ray.h"
 
 #include "NodeListing.h"
 
@@ -21,8 +21,62 @@ class ImageMemory;
 class GPUPrimitiveGroupI;
 class GPUTransformI;
 class GPUMediumI;
+class RNGeneratorGPUI;
+
+struct UVSurface;
 
 using TextureNodeMap = std::map<uint32_t, TextureStruct>;
+
+// Defines dynamic inheritance syle of interface for each material
+// on the group, normally static inheritance is used to evaluate materials
+// However user can use this device classes on non-templated kernels
+// for material evaluation
+// By default these are NOT allocated a tracer should specifically ask
+// material group to generate those
+//
+// Also these functions are only supports a single surface structure
+// "GPU meta surface" which has normal, position and UV
+class GPUMaterialI
+{
+    public:
+    virtual                         ~GPUMaterialI() = default;
+    // Interface
+    __device__ virtual bool        IsEmissive() const = 0;
+    __device__ virtual bool        Specularity(const UVSurface& surface) const = 0;
+    __device__ virtual Vector3f    Sample(// Sampled Output
+                                          RayF& wo,                       // Out direction
+                                          float& pdf,                     // PDF for Monte Carlo
+                                          const GPUMediumI*& outMedium,
+                                          // Input
+                                          const Vector3& wi,              // Incoming Radiance
+                                          const Vector3& pos,             // Position
+                                          const GPUMediumI& m,
+                                          //
+                                          const UVSurface& surface,  // Surface info (normals uvs etc.)
+                                          // I-O
+                                          RNGeneratorGPUI& rng) const = 0;
+    __device__ virtual Vector3f    Emit(// Input
+                                        const Vector3& wo,      // Outgoing Radiance
+                                        const Vector3& pos,     // Position
+                                        const GPUMediumI& m,
+                                        //
+                                        const UVSurface& surface) const = 0;
+    __device__ virtual Vector3f     Evaluate(// Input
+                                             const Vector3& wo,              // Outgoing Radiance
+                                             const Vector3& wi,              // Incoming Radiance
+                                             const Vector3& pos,             // Position
+                                             const GPUMediumI& m,
+                                             //
+                                             const UVSurface& surface) const = 0;
+
+    __device__ virtual float       Pdf(// Input
+                                       const Vector3& wo,      // Outgoing Radiance
+                                       const Vector3& wi,
+                                       const Vector3& pos,     // Position
+                                       const GPUMediumI& m,
+                                       //
+                                       const UVSurface& surface) const = 0;
+};
 
 // Defines the same type materials
 // Logics consists of loading certain material
@@ -67,4 +121,8 @@ class GPUMaterialGroupI
         // Returns the cached textures
         virtual uint8_t                     UsedTextureCount() const = 0;
         virtual std::vector<uint32_t>       UsedTextureIds() const = 0;
+
+        // Dynamic Inheritance Generation
+        virtual void                        GeneratePerMaterialInterfaces() = 0;
+        virtual const GPUMaterialI**        GPUMaterialInterfaces() const = 0;
 };

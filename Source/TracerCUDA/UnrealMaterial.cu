@@ -210,7 +210,7 @@ SceneError UnrealMat::InitializeGroup(const NodeListing& materialNodes,
                                    totalMatCount, totalMatCount});
 
     // Finally Initialize Struct
-    dData = UnrealMatData
+    hData = UnrealMatData
     {
         dNormal, dAlbedo, dRoughness,
         dMetallic, dSpecular
@@ -312,7 +312,7 @@ TracerError UnrealMat::ConstructTextureReferences()
     // Albedo
     gpu.AsyncGridStrideKC_X(0, materialCount,
                             GenerateEitherTexOrConstantReference<2, Vector3>,
-                            const_cast<TextureRefI<2, Vector3f>**>(dData.dAlbedo),
+                            const_cast<TextureRefI<2, Vector3f>**>(hData.dAlbedo),
                             const_cast<Constant3CRef*>(dConstAlbedo),
                             const_cast<Texture2D3CRef*>(dTextureAlbedoRef),
                             //
@@ -324,7 +324,7 @@ TracerError UnrealMat::ConstructTextureReferences()
     // Normal
     gpu.AsyncGridStrideKC_X(0, materialCount,
                             GenerateOptionalTexReference<2, Vector3>,
-                            const_cast<TextureRefI<2, Vector3f>**>(dData.dNormal),
+                            const_cast<TextureRefI<2, Vector3f>**>(hData.dNormal),
                             const_cast<Texture2D3CRef*>(dTextureNormalRef),
                             //
                             dCounters[2],
@@ -334,7 +334,7 @@ TracerError UnrealMat::ConstructTextureReferences()
     // Metallic
     gpu.AsyncGridStrideKC_X(0, materialCount,
                             GenerateEitherTexOrConstantReference<2, float>,
-                            const_cast<TextureRefI<2, float>**>(dData.dMetallic),
+                            const_cast<TextureRefI<2, float>**>(hData.dMetallic),
                             const_cast<Constant1CRef*>(dConstMetallic),
                             const_cast<Texture2D1CRef*>(dTextureMetallicRef),
                             //
@@ -346,7 +346,7 @@ TracerError UnrealMat::ConstructTextureReferences()
     // Specular
     gpu.AsyncGridStrideKC_X(0, materialCount,
                             GenerateEitherTexOrConstantReference<2, float>,
-                            const_cast<TextureRefI<2, float>**>(dData.dSpecular),
+                            const_cast<TextureRefI<2, float>**>(hData.dSpecular),
                             const_cast<Constant1CRef*>(dConstSpecular),
                             const_cast<Texture2D1CRef*>(dTextureSpecularRef),
                             //
@@ -358,7 +358,7 @@ TracerError UnrealMat::ConstructTextureReferences()
     // Roughness
     gpu.AsyncGridStrideKC_X(0, materialCount,
                             GenerateEitherTexOrConstantReference<2, float>,
-                            const_cast<TextureRefI<2, float>**>(dData.dRoughness),
+                            const_cast<TextureRefI<2, float>**>(hData.dRoughness),
                             const_cast<Constant1CRef*>(dConstRoughness),
                             const_cast<Texture2D1CRef*>(dTextureRoughnessRef),
                             //

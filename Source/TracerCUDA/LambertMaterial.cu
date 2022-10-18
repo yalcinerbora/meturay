@@ -128,7 +128,7 @@ SceneError LambertMat::InitializeGroup(const NodeListing& materialNodes,
     assert(totalSize == offset);
 
     // Finally Initialize Struct
-    dData = LambertMatData{dAlbedo, dNormal};
+    hData = LambertMatData{dAlbedo, dNormal};
     return SceneError::OK;
 }
 
@@ -209,7 +209,7 @@ TracerError LambertMat::ConstructTextureReferences()
     // Kernel Call For Albedo Texture Generation
     gpu.AsyncGridStrideKC_X(0, materialCount,
                             GenerateEitherTexOrConstantReference<2, Vector3>,
-                            const_cast<TextureRefI<2, Vector3f>**>(dData.dAlbedo),
+                            const_cast<TextureRefI<2, Vector3f>**>(hData.dAlbedo),
                             const_cast<ConstantAlbedoRef*>(dConstAlbedo),
                             const_cast<Texture2DRef*>(dTextureAlbedoRef),
                             //
@@ -222,7 +222,7 @@ TracerError LambertMat::ConstructTextureReferences()
     // Kernel Call For Normal Map Texture Generation
     gpu.AsyncGridStrideKC_X(0, materialCount,
                             GenerateOptionalTexReference<2, Vector3>,
-                            const_cast<TextureRefI<2, Vector3f>**>(dData.dNormal),
+                            const_cast<TextureRefI<2, Vector3f>**>(hData.dNormal),
                             const_cast<Texture2DRef*>(dTextureNormalRef),
                             //
                             *dNormalTexCounter,

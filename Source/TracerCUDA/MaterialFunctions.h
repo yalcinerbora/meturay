@@ -84,22 +84,3 @@ using PdfFunc = float(*)(// Input
                          // Constants
                          const Data&,
                          const HitKey::Type& matId);
-
-// TEXTURE CACHING IS SHELVED
-
-////===================================//
-//// Texture Caching Related Functions //
-////===================================//
-//
-//// This call is per-ray which returns multiple of UVs
-//// that is dependent of the material.
-////
-//// Each ray returns its own UV location which may be required by the texture cache
-////
-//template <class Data, class Surface>
-//using AcquireUVList = void(*)(//Output
-//                              TexCoords*,
-//                              const Surface& surface,
-//                              // Constants
-//                              const Data&,
-//                              const HitKey::Type& matId);

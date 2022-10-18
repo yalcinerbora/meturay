@@ -181,7 +181,7 @@ struct UVSurface
     Vector2     uv;             // Texture coordinates
     Vector3f    worldGeoNormal; // Geometric normal (useful when nudge the ray)
     bool        backSide;       // Returning the side of the surface (used on transmissive materials)
-        // If a mesh does try to approximate a curved surface
+    // If a mesh does try to approximate a curved surface
     // (by smoothed normals), sometimes ray geometrically hit the surface
     // but in theory they shouldn't (actually this mesh is badly modeled but
     // and rays should self-intersect with the mesh but w/e)
@@ -278,4 +278,33 @@ UVSurface DefaultGenUvSurface(const HitData&,
                               const PrimData&)
 {
     return UVSurface{Zero3f, t.ToLocalRotation(), Zero2f, Zero3f, false, 0.0f};
+}
+
+
+// Conversion Functions
+// Other surfaces will raise an overload resolution error which is nice
+// TODO: put these on a namespace
+template <class T>
+__device__ inline
+T ConvertUVSurface(const UVSurface& surf);
+
+template <>
+__device__ inline
+EmptySurface ConvertUVSurface(const UVSurface& surf)
+{
+    return EmptySurface{};
+}
+
+template <>
+__device__ inline
+BasicSurface ConvertUVSurface(const UVSurface& surf)
+{
+    return BasicSurface{surf.worldPosition, surf.worldToTangent, surf.worldGeoNormal};
+}
+
+template <>
+__device__ inline
+UVSurface ConvertUVSurface(const UVSurface& surf)
+{
+    return surf;
 }

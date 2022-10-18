@@ -27,7 +27,7 @@ SceneError LambertCMat::InitializeGroup(const NodeListing& materialNodes,
     CUDA_CHECK(cudaMemcpy(dAlbedo, albedoCPU.data(), dAlbedoSize,
                           cudaMemcpyHostToDevice));
 
-    dData = AlbedoMatData{dAlbedo};
+    hData = AlbedoMatData{dAlbedo};
     return SceneError::OK;
 }
 
@@ -73,7 +73,7 @@ SceneError ReflectMat::InitializeGroup(const NodeListing& materialNodes,
     CUDA_CHECK(cudaMemcpy(dMemory, matDataCPU.data(), dMatDataSize,
                           cudaMemcpyHostToDevice));
 
-    dData = ReflectMatData{dMemory};
+    hData = ReflectMatData{dMemory};
     return SceneError::OK;
 }
 
@@ -133,7 +133,7 @@ SceneError RefractMat::InitializeGroup(const NodeListing& materialNodes,
                           mediumIndicesCPU.size() * sizeof(uint32_t),
                           cudaMemcpyHostToDevice));
 
-    dData = RefractMatData{dAlbedos, dMedIndices, nullptr};
+    hData = RefractMatData{dAlbedos, dMedIndices, nullptr};
     return SceneError::OK;
 }
 
@@ -146,6 +146,6 @@ SceneError RefractMat::ChangeTime(const NodeListing&, double,
 void RefractMat::AttachGlobalMediumArray(const GPUMediumI* const* dMediumList,
                                          uint32_t baseMIndex)
 {
-    dData.dMediums = dMediumList;
-    dData.baseMediumIndex = baseMIndex;
+    hData.dMediums = dMediumList;
+    hData.baseMediumIndex = baseMIndex;
 }

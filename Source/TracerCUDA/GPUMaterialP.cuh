@@ -2,6 +2,10 @@
 
 #include "GPUMaterialI.h"
 #include "MaterialFunctions.h"
+#include "DeviceMemory.h"
+#include "GPUSurface.h"
+#include "CudaSystem.h"
+#include "CudaSystem.hpp"
 
 class GPUTransformI;
 
@@ -12,8 +16,25 @@ class GPUMaterialGroupD
     friend struct MatDataAccessor;
 
     protected:
-        Data    dData = Data{};
+        Data    hData = Data{};
+
 };
+
+template <class MatType, class MatData>
+__global__ static
+void KCGenMaterialInerface(MatType* gConstructionLocations,
+                           const GPUMaterialI** gPointerArray,
+                           // Input
+                           const MatData& gData,
+                           uint32_t totalCount)
+{
+    uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    if(totalCount >= globalId) return;
+
+    auto* ptr = new (gConstructionLocations + globalId) MatType(gData, globalId);
+    assert(ptr == (gConstructionLocations + globalId));
+    gPointerArray[globalId] = ptr;
+}
 
 // Striping GPU Functionality from the Material Group
 // for kernel usage.
@@ -60,12 +81,63 @@ class GPUMaterialGroupT
         static constexpr auto IsEmissive  = MatDeviceFunctions::IsEmissive;
         static constexpr auto Specularity = MatDeviceFunctions::Specularity;
 
+        class GPUMaterial final : public GPUMaterialI
+        {
+            private:
+            const Data&             gData;  // Struct of Arrays of material data
+            HitKey::Type            index;
+
+            public:
+            //
+            __device__              GPUMaterial(const Data& gData, HitKey::Type index);
+
+            // Interface
+            __device__  bool        IsEmissive() const override;
+            __device__  bool        Specularity(const UVSurface& surface) const override;
+            __device__ Vector3f     Sample(// Sampled Output
+                                        RayF& wo,                       // Out direction
+                                        float& pdf,                     // PDF for Monte Carlo
+                                        const GPUMediumI*& outMedium,
+                                        // Input
+                                        const Vector3& wi,              // Incoming Radiance
+                                        const Vector3& pos,             // Position
+                                        const GPUMediumI& m,
+                                        //
+                                        const UVSurface& surface,  // Surface info (normals uvs etc.)
+                                        // I-O
+                                        RNGeneratorGPUI& rng) const override;
+            __device__ Vector3f     Emit(// Input
+                                      const Vector3& wo,      // Outgoing Radiance
+                                      const Vector3& pos,     // Position
+                                      const GPUMediumI& m,
+                                      //
+                                      const UVSurface& surface) const override;
+            __device__ Vector3f     Evaluate(// Input
+                                             const Vector3& wo,              // Outgoing Radiance
+                                             const Vector3& wi,              // Incoming Radiance
+                                             const Vector3& pos,             // Position
+                                             const GPUMediumI& m,
+                                             //
+                                             const UVSurface& surface) const override;
+
+            __device__ float        Pdf(// Input
+                                        const Vector3& wo,      // Outgoing Radiance
+                                        const Vector3& wi,
+                                        const Vector3& pos,     // Position
+                                        const GPUMediumI& m,
+                                        //
+                                        const UVSurface& surface) const override;
+        };
+
     private:
     protected:
         // Designated GPU
         const CudaGPU&                  gpu;
         std::map<uint32_t, uint32_t>    innerIds;
         const GPUTransformI* const*     dTransforms;
+        // Dynamic Interface Related
+        const GPUMaterialI**            dMaterialInterfaces;
+        DeviceLocalMemory               interfaceMemory;
 
         SceneError                      GenerateInnerIds(const NodeListing&);
 
@@ -82,11 +154,18 @@ class GPUMaterialGroupT
 
         virtual void                    AttachGlobalMediumArray(const GPUMediumI* const*,
                                                                 uint32_t baseMediumIndex) override;
+
+        // Dynamic Inheritance Generation
+        virtual void                    GeneratePerMaterialInterfaces() override;
+        virtual const GPUMaterialI**    GPUMaterialInterfaces() const override;
 };
 
 template <class D, class S, class DF, class P>
 GPUMaterialGroupT<D, S, DF, P>::GPUMaterialGroupT(const CudaGPU& gpu)
     : gpu(gpu)
+    , dTransforms(nullptr)
+    , dMaterialInterfaces(nullptr)
+    , interfaceMemory(&gpu)
 {}
 
 template <class D, class S, class DF, class P>
@@ -136,6 +215,44 @@ void GPUMaterialGroupT<D, S, DF, P>::AttachGlobalMediumArray(const GPUMediumI* c
                                                              uint32_t)
 {}
 
+template <class D, class S, class DF, class P>
+void GPUMaterialGroupT<D, S, DF, P>::GeneratePerMaterialInterfaces()
+{
+    // Copy the SoA to Global memory
+    // Allocate enough for materials
+    size_t totalMatCount = innerIds.size();
+
+    // Allocate the materials
+    GPUMaterial*            dMaterials;
+    const GPUMaterialI**    dMaterialInterfaces;
+    Data*                   dData;
+    GPUMemFuncs::AllocateMultiData(std::tie(dMaterials,
+                                            dMaterialInterfaces,
+                                            dData),
+                                   interfaceMemory,
+                                   {totalMatCount, totalMatCount, 1});
+
+    CUDA_CHECK(cudaMemcpy(dData, &hData, sizeof(Data), cudaMemcpyHostToDevice));
+    // Set the pointer
+    this->dMaterialInterfaces = dMaterialInterfaces;
+    // Do actual object construction (virtual pointer set etc.)
+    gpu.KC_X(0,(cudaStream_t)0, totalMatCount,
+             //
+             KCGenMaterialInerface<GPUMaterial, Data>,
+             //
+             dMaterials,
+             dMaterialInterfaces,
+             std::ref(*dData),
+             static_cast<uint32_t>(totalMatCount));
+    // Interface is ready for usage!!
+}
+
+template <class D, class S, class DF, class P>
+const GPUMaterialI** GPUMaterialGroupT<D, S, DF, P>::GPUMaterialInterfaces() const
+{
+    return dMaterialInterfaces;
+}
+
 struct MatDataAccessor
 {
     // Data fetch function of the primitive
@@ -147,9 +264,170 @@ struct MatDataAccessor
     static typename MaterialGroupS::Data Data(const MaterialGroupS& mg)
     {
         using M = typename MaterialGroupS::Data;
-        return static_cast<const GPUMaterialGroupD<M>&>(mg).dData;
+        return static_cast<const GPUMaterialGroupD<M>&>(mg).hData;
     }
 };
+
+// Dynamic Inheritance Material Class
+template <class D, class S, class DF, class P>
+__device__ inline
+GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::GPUMaterial(const Data& gData, HitKey::Type index)
+    : gData(gData)
+    , index(index)
+{}
+
+template <class D, class S, class DF, class P>
+__device__ inline
+bool GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::IsEmissive() const
+{
+    return GPUMaterialGroupT<D, S, DF, P>::IsEmissive(gData, index);
+}
+
+template <class D, class S, class DF, class P>
+__device__
+bool GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Specularity(const UVSurface& surface) const
+{
+    static constexpr bool CAN_CONVERT_FROM_UV_SURFACE = (std::is_same_v<S, UVSurface> ||
+                                                         std::is_same_v<S, BasicSurface> ||
+                                                         std::is_same_v<S, EmptySurface>);
+
+        // Don't bother SNIFAE (there are enough templates on the signature)
+    // Delegate a runtime error
+    if constexpr(CAN_CONVERT_FROM_UV_SURFACE)
+    {
+        return GPUMaterialGroupT<D, S, DF, P>::Specularity(ConvertUVSurface<S>(surface),
+                                                           gData, index);
+    }
+    else
+    {
+        printf("Cuda Kernel Error: Dynamic Inheritance is used from"
+               " a material that uses a surface which cannot be"
+               "converted from UVSurface");
+        __trap();
+    }
+}
+
+template <class D, class S, class DF, class P>
+__device__ inline
+Vector3f GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Sample(RayF& wo,
+                                                             float& pdf,
+                                                             const GPUMediumI*& outMedium,
+                                                             // Input
+                                                             const Vector3& wi,
+                                                             const Vector3& pos,
+                                                             const GPUMediumI& m,
+                                                             const UVSurface& surface,
+                                                             RNGeneratorGPUI& rng) const
+{
+    static constexpr bool CAN_CONVERT_FROM_UV_SURFACE = (std::is_same_v<S, UVSurface> ||
+                                                         std::is_same_v<S, BasicSurface> ||
+                                                         std::is_same_v<S, EmptySurface>);
+    // Don't bother SNIFAE (there are enough templates on the signature)
+    // Delegate a runtime error
+    if constexpr(CAN_CONVERT_FROM_UV_SURFACE)
+    {
+        return GPUMaterialGroupT<D, S, DF, P>::Sample(wo, pdf, outMedium, wi, pos, m,
+                                                      ConvertUVSurface<S>(surface),
+                                                      rng, gData, index, 0);
+    }
+    else
+    {
+        printf("Cuda Kernel Error: Dynamic Inheritance is used from"
+               " a material that uses a surface which cannot be"
+               "converted from UVSurface");
+        __trap();
+    }
+}
+
+template <class D, class S, class DF, class P>
+__device__ inline
+Vector3f GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Emit(// Input
+                                                           const Vector3& wo,
+                                                           const Vector3& pos,
+                                                           const GPUMediumI& m,
+                                                           //
+                                                           const UVSurface& surface) const
+{
+    static constexpr bool CAN_CONVERT_FROM_UV_SURFACE = (std::is_same_v<S, UVSurface> ||
+                                                         std::is_same_v<S, BasicSurface> ||
+                                                         std::is_same_v<S, EmptySurface>);
+    // Don't bother SNIFAE (there are enough templates on the signature)
+    // Delegate a runtime error
+    if constexpr(CAN_CONVERT_FROM_UV_SURFACE)
+    {
+        return GPUMaterialGroupT<D, S, DF, P>::Emit(wo, pos, m,
+                                                    ConvertUVSurface<S>(surface),
+                                                    gData, index);
+    }
+    else
+    {
+        printf("Cuda Kernel Error: Dynamic Inheritance is used from"
+               " a material that uses a surface which cannot be"
+               "converted from UVSurface");
+        __trap();
+    }
+}
+
+
+template <class D, class S, class DF, class P>
+__device__ inline
+Vector3f GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Evaluate(// Input
+                                                               const Vector3& wo,
+                                                               const Vector3& wi,
+                                                               const Vector3& pos,
+                                                               const GPUMediumI& m,
+                                                               //
+                                                               const UVSurface& surface) const
+{
+    static constexpr bool CAN_CONVERT_FROM_UV_SURFACE = (std::is_same_v<S, UVSurface> ||
+                                                         std::is_same_v<S, BasicSurface> ||
+                                                         std::is_same_v<S, EmptySurface>);
+    // Don't bother SNIFAE (there are enough templates on the signature)
+    // Delegate a runtime error
+    if constexpr(CAN_CONVERT_FROM_UV_SURFACE)
+    {
+        return GPUMaterialGroupT<D, S, DF, P>::Evaluate(wo, wi, pos, m,
+                                                        ConvertUVSurface<S>(surface),
+                                                        gData, index);
+    }
+    else
+    {
+        printf("Cuda Kernel Error: Dynamic Inheritance is used from"
+               " a material that uses a surface which cannot be"
+               "converted from UVSurface");
+        __trap();
+    }
+}
+
+template <class D, class S, class DF, class P>
+__device__ inline
+float GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Pdf(// Input
+                                                       const Vector3& wo,
+                                                       const Vector3& wi,
+                                                       const Vector3& pos,
+                                                       const GPUMediumI& m,
+                                                       //
+                                                       const UVSurface& surface) const
+{
+    static constexpr bool CAN_CONVERT_FROM_UV_SURFACE = (std::is_same_v<S, UVSurface> ||
+                                                         std::is_same_v<S, BasicSurface> ||
+                                                         std::is_same_v<S, EmptySurface>);
+    // Don't bother SNIFAE (there are enough templates on the signature)
+    // Delegate a runtime error
+    if constexpr(CAN_CONVERT_FROM_UV_SURFACE)
+    {
+        return GPUMaterialGroupT<D, S, DF, P>::Pdf(wo, wi, pos, m,
+                                                   ConvertUVSurface<S>(surface),
+                                                   gData, index);
+    }
+    else
+    {
+        printf("Cuda Kernel Error: Dynamic Inheritance is used from"
+               " a material that uses a surface which cannot be"
+               "converted from UVSurface");
+        __trap();
+    }
+}
 
 template <class D, class S, class DevFuncs>
 using GPUMaterialGroup = GPUMaterialGroupT<D, S, DevFuncs, GPUMaterialGroupI>;
