@@ -125,4 +125,5 @@ class GPUMaterialGroupI
         // Dynamic Inheritance Generation
         virtual void                        GeneratePerMaterialInterfaces() = 0;
         virtual const GPUMaterialI**        GPUMaterialInterfaces() const = 0;
+        virtual bool                        CanSupportDynamicInheritance() const = 0;
 };

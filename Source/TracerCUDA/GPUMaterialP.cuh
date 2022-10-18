@@ -158,6 +158,7 @@ class GPUMaterialGroupT
         // Dynamic Inheritance Generation
         virtual void                    GeneratePerMaterialInterfaces() override;
         virtual const GPUMaterialI**    GPUMaterialInterfaces() const override;
+        virtual bool                    CanSupportDynamicInheritance() const override;
 };
 
 template <class D, class S, class DF, class P>
@@ -251,6 +252,12 @@ template <class D, class S, class DF, class P>
 const GPUMaterialI** GPUMaterialGroupT<D, S, DF, P>::GPUMaterialInterfaces() const
 {
     return dMaterialInterfaces;
+}
+
+template <class D, class S, class DF, class P>
+bool GPUMaterialGroupT<D, S, DF, P>::CanSupportDynamicInheritance() const
+{
+    return true;
 }
 
 struct MatDataAccessor

@@ -44,6 +44,8 @@ class BarycentricMat final
         // No Texture
         uint8_t                 UsedTextureCount() const override { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
+        // No Dynamic Inheritance
+        bool                    CanSupportDynamicInheritance() const override { return false; }
 };
 
 class SphericalMat final
@@ -85,6 +87,8 @@ class SphericalMat final
         // No Texture
         uint8_t                 UsedTextureCount() const override { return 0; }
         std::vector<uint32_t>   UsedTextureIds() const override { return std::vector<uint32_t>(); }
+        // No Dynamic Inheritance
+        bool                    CanSupportDynamicInheritance() const override { return false; }
 };
 
 class SphericalAnisoTestMat final
