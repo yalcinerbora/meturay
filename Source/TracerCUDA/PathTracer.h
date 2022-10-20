@@ -4,6 +4,7 @@
 #include "WorkPool.h"
 #include "GPULightI.h"
 #include "Tracers.h"
+#include "GPUMetaSurfaceHandler.h"
 
 class GPUDirectLightSamplerI;
 
@@ -26,6 +27,7 @@ class PathTracer final : public RayTracer
             uint32_t            rrStart             = 3;
             bool                directLightMIS      = false;
             LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
+            bool                runAsMegaKernel     = false;
         };
 
     private:
@@ -39,6 +41,9 @@ class PathTracer final : public RayTracer
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
+
+        GPUMetaSurfaceHandler           metaSurfHandler;
+        uint32_t                        conservativeOutRayPerMaterial;
 
     protected:
     public:

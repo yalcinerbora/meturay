@@ -438,14 +438,14 @@ SceneError GPUPrimitiveTriangle::InitializeGroup(const NodeListing& surfaceDataN
                           cudaMemcpyHostToDevice));
 
     // Set Main Pointers of batch
-    dData.positions = dPositions;
-    dData.uvs = dUVs;
-    dData.tbnRotations = dQuats;
-    dData.indexList = dIndices;
-    dData.cullFace = dCulls;
-    dData.alphaMaps = dAlphaMapPtrs;
-    dData.primOffsets = dOffsets;
-    dData.primBatchCount = static_cast<uint32_t>(batchOffsets.size());
+    hData.positions = dPositions;
+    hData.uvs = dUVs;
+    hData.tbnRotations = dQuats;
+    hData.indexList = dIndices;
+    hData.cullFace = dCulls;
+    hData.alphaMaps = dAlphaMapPtrs;
+    hData.primOffsets = dOffsets;
+    hData.primBatchCount = static_cast<uint32_t>(batchOffsets.size());
     return e;
 }
 

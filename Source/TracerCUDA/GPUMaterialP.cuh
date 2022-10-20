@@ -29,7 +29,7 @@ void KCGenMaterialInerface(MatType* gConstructionLocations,
                            uint32_t totalCount)
 {
     uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    if(totalCount >= globalId) return;
+    if(globalId >= totalCount) return;
 
     auto* ptr = new (gConstructionLocations + globalId) MatType(gData, globalId);
     assert(ptr == (gConstructionLocations + globalId));
@@ -81,6 +81,7 @@ class GPUMaterialGroupT
         static constexpr auto IsEmissive  = MatDeviceFunctions::IsEmissive;
         static constexpr auto Specularity = MatDeviceFunctions::Specularity;
 
+        // Dynamic Inheritance Implementation
         class GPUMaterial final : public GPUMaterialI
         {
             private:
@@ -139,6 +140,7 @@ class GPUMaterialGroupT
         const GPUMaterialI**            dMaterialInterfaces;
         DeviceLocalMemory               interfaceMemory;
 
+        // MetaSurface Generator
         SceneError                      GenerateInnerIds(const NodeListing&);
 
     public:

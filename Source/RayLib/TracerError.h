@@ -40,6 +40,9 @@ struct TracerError : public ErrorI
             // Optix Related
             OPTIX_ACCELERATOR_MISMATCH,
             OPTIX_PTX_FILE_NOT_FOUND,
+            // Dynamic Inheritance Related
+            MATERIAL_DOES_NOT_SUPPORT_DYN_INHERITANCE,
+            ENDPOINT_DOES_NOT_SUPPORT_DYN_INHERITANCE
             // Misc
             TRACER_INTERNAL_ERROR,
             // ...
@@ -125,6 +128,9 @@ inline TracerError::operator std::string() const
         // Optix Related
         "Scene file has OptiX/non-OptiX mixed accelerators",
         "PTX file for OptiX is not found",
+        // Dynamic Inheritance Related
+        "Material does not support dynamic inheritance",
+        "Endpoint does not support dynamic inheritance",
         // Misc
         "Tracer internal error"
     };

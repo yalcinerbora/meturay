@@ -8,11 +8,51 @@
 #include "WorkKernels.cuh"
 #include "GPULightNull.cuh"
 #include "RNGIndependent.cuh"
+#include "GPUMetaSurfaceGenerator.h"
 
 #include "RayLib/TracerError.h"
 
 // Meta Tracer Work Code
 // With custom global Data
+
+template <class EGroup>
+__global__
+static void KCGenBoundaryMetaSurfaceGenerator(GPUBoundaryMetaSurfaceGenerator<EGroup>* gInterfaceLocation,
+                                              const typename EGroup::PrimitiveData& gPrimData,
+                                              const typename EGroup::GPUType* gLocalLightInterfaces,
+                                              const GPUTransformI* const* gTransforms,
+                                              uint32_t count)
+{
+    //uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    //if(globalId >= count) return;
+
+    //auto* ptr = new (gInterfaceLocation + globalId)
+    //    GPUBoundaryMetaSurfaceGenerator<EGroup>(gPrimData,
+    //                                            gLocalLightInterfaces,
+    //                                            gTransforms);
+}
+
+template <class MGroup, class PGroup>
+__global__
+static void KCGenMetaSurfaceGenerator(GPUMetaSurfaceGenerator<PGroup, MGroup,
+                                                              PGroup::GetSurfaceFunction>* gInterfaceLocation,
+                                      const typename PGroup::PrimitiveData& gPrimData,
+                                      const GPUMaterialI** gLocalMaterialInterfaces,
+                                      const GPUTransformI* const* gTransforms,
+                                      uint32_t count)
+{
+
+
+    uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    if(globalId >= count) return;
+
+
+    auto* ptr = new (gInterfaceLocation + globalId)
+                GPUMetaSurfaceGenerator<PGroup, MGroup,
+                                        PGroup::GetSurfaceFunction>(gPrimData,
+                                                                    gLocalMaterialInterfaces,
+                                                                    gTransforms);
+}
 
 // Material/Primitive invariant part of the code
 template<class GlobalData, class RayData>
@@ -80,11 +120,19 @@ class GPUWorkBatch
         static constexpr SF             SurfF = SGen();
         static constexpr WF             WorkF = WFunc;
 
+        // Meta Surface Generator
+        using MetaSurfGen = GPUMetaSurfaceGenerator<PGroup, MGroup, PGroup::GetSurfaceFunction>;
+
     protected:
         const MGroup&                   materialGroup;
         const PGroup&                   primitiveGroup;
 
         const GPUTransformI* const*     dTransforms;
+
+        // Meta Surface Generator
+        // Only allocated if requested
+        MetaSurfGen*                    dMetaSurfaceGenerator;
+        DeviceLocalMemory               surfaceGenMemory;
 
         // Per-Batch Data
         LocalData                       localData;
@@ -111,6 +159,8 @@ class GPUWorkBatch
                                              const uint32_t rayCount,
                                              RNGeneratorCPUI& rngCPU) override;
 
+        TracerError                     CreateMetaSurfaceGenerator(GPUMetaSurfaceGeneratorI*& dSurfaceGenerator) override;
+
         const GPUPrimitiveGroupI&       PrimitiveGroup() const override { return primitiveGroup; }
         const GPUMaterialGroupI&        MaterialGroup() const override { return materialGroup; }
 };
@@ -135,6 +185,9 @@ class GPUBoundaryWorkBatch
         static constexpr SF             SurfF = EGroup::SurfF;
         static constexpr WF             WorkF = WFunc;
 
+        // Meta Surface Generator
+        using MetaSurfGen = GPUBoundaryMetaSurfaceGenerator<EGroup>;
+
     protected:
         const EGroup&                   endpointGroup;
 
@@ -142,6 +195,11 @@ class GPUBoundaryWorkBatch
 
         // Per-Batch Data
         LocalData                       localData;
+
+        // Meta Surface Generator
+        // Only allocated if requested
+        MetaSurfGen*                    dMetaSurfaceGenerator;
+        DeviceLocalMemory               surfaceGenMemory;
 
     public:
         // Constructors & Destructor
@@ -163,6 +221,8 @@ class GPUBoundaryWorkBatch
                                              //
                                              const uint32_t rayCount,
                                              RNGeneratorCPUI& rngCPU) override;
+
+        TracerError                     CreateMetaSurfaceGenerator(GPUMetaSurfaceGeneratorI*& dSurfaceGenerator) override;
 
         uint8_t                         OutRayCount() const override { return 0; };
         const CPUEndpointGroupI&        EndpointGroup() const override { return endpointGroup; }
@@ -215,6 +275,8 @@ GPUWorkBatch<GlobalData, LocalData, RayData,
     : materialGroup(static_cast<const MGroup&>(mg))
     , primitiveGroup(static_cast<const PGroup&>(pg))
     , dTransforms(t)
+    , dMetaSurfaceGenerator(nullptr)
+    , surfaceGenMemory(&materialGroup.GPU())
 {}
 
 template<class GlobalData, class LocalData, class RayData, class MGroup, class PGroup,
@@ -292,6 +354,52 @@ void GPUWorkBatch<GlobalData, LocalData, RayData,
     );
 }
 
+template<class GlobalData, class LocalData, class RayData, class MGroup, class PGroup,
+         WorkFunc<GlobalData, LocalData, RayData, MGroup> WFunc,
+         SurfaceFuncGenerator<typename MGroup::Surface,
+                              typename PGroup::HitData,
+                              typename PGroup::PrimitiveData> SGen>
+TracerError GPUWorkBatch<GlobalData, LocalData, RayData,
+                         MGroup, PGroup, WFunc, SGen>::CreateMetaSurfaceGenerator(GPUMetaSurfaceGeneratorI*& dSurfaceGeneratorOut)
+{
+    // Return if already created
+    if(dMetaSurfaceGenerator)
+    {
+        dSurfaceGeneratorOut = dMetaSurfaceGenerator;
+        return TracerError::OK;
+    }
+
+    // Generate
+    if(!materialGroup.CanSupportDynamicInheritance())
+        return TracerError::MATERIAL_DOES_NOT_SUPPORT_DYN_INHERITANCE;
+
+    // Generate the material interfaces on the device memory
+    const GPUMaterialI** dMaterialIPtrs = materialGroup.GPUMaterialInterfaces();
+
+    // Acquire Primitive Data
+    using PrimitiveData = typename PGroup::PrimitiveData;
+    const PrimitiveData* dPrimData = primitiveGroup.GetPrimDataGPUPtr();
+
+    // Allocate a location for this
+    GPUMemFuncs::AllocateMultiData(std::tie(dMetaSurfaceGenerator),
+                                   surfaceGenMemory, {1});
+
+    // Device Construct the Class
+    const auto& gpu = materialGroup.GPU();
+    gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                  //
+                  KCGenMetaSurfaceGenerator<MGroup, PGroup>,
+                  //
+                  dMetaSurfaceGenerator,
+                  std::ref(*dPrimData),
+                  dMaterialIPtrs,
+                  dTransforms,
+                  1);
+    // Return the ptr
+    dSurfaceGeneratorOut = dMetaSurfaceGenerator;
+    return TracerError::OK;
+}
+
 // ======================================================= //
 //                      BOUNDARY WORK                      //
 // ======================================================= //
@@ -317,6 +425,8 @@ GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
                                                           const GPUTransformI* const* t)
     : endpointGroup(static_cast<const EGroup&>(eg))
     , dTransforms(t)
+    , dMetaSurfaceGenerator(nullptr)
+    , surfaceGenMemory(&endpointGroup.GPU())
 {}
 
 template<class GlobalData, class LocalData,
@@ -399,4 +509,54 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
         primData,
         dTransforms
     );
+}
+
+template<class GlobalData, class LocalData,
+         class RayData, class EGroup,
+         BoundaryWorkFunc<GlobalData, LocalData, RayData, EGroup> WFunc>
+TracerError GPUBoundaryWorkBatch<GlobalData, LocalData, RayData, EGroup, WFunc>::
+CreateMetaSurfaceGenerator(GPUMetaSurfaceGeneratorI*& dSurfaceGeneratorOut)
+{
+    // Return if already created
+    if(dMetaSurfaceGenerator)
+    {
+        dSurfaceGeneratorOut = dMetaSurfaceGenerator;
+        return TracerError::OK;
+    }
+
+    // Generate
+    if(!endpointGroup.CanSupportDynamicInheritance())
+        return TracerError::ENDPOINT_DOES_NOT_SUPPORT_DYN_INHERITANCE;
+
+    using PrimitiveData = typename EGroup::PrimitiveData;
+    using GPUEndpointType = typename EGroup::GPUType;
+
+    // Acquire Primitive Data
+    const PrimitiveData* dPrimData;
+    if constexpr(std::is_same_v<EGroup, CPULightGroupNull>)
+        dPrimData = nullptr;
+    else
+        dPrimData = endpointGroup.PrimGroup().GetPrimDataGPUPtr();
+
+    // Acquire Endpoint derived class ptr list
+    const GPUEndpointType* dEndpoints = endpointGroup.GPULightsDerived();
+
+    // Allocate a location for this
+    GPUMemFuncs::AllocateMultiData(std::tie(dMetaSurfaceGenerator),
+                                   surfaceGenMemory, {1});
+
+    // Device Construct the Class
+    const CudaGPU& gpu = endpointGroup.GPU();
+    gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                  //
+                  KCGenBoundaryMetaSurfaceGenerator<EGroup>,
+                  //
+                  dMetaSurfaceGenerator,
+                  std::ref(*dPrimData),
+                  dEndpoints,
+                  dTransforms,
+                  1);
+    // Return the ptr
+    dSurfaceGeneratorOut = dMetaSurfaceGenerator;
+    return TracerError::OK;
 }

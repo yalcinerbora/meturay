@@ -12,6 +12,7 @@ class RNGeneratorCPUI;
 class GPUPrimitiveGroupI;
 class GPUMaterialGroupI;
 class CPUEndpointGroupI;
+class GPUMetaSurfaceGeneratorI;
 
 // Defines call action over a certain material group/ primitive group
 // pair
@@ -44,6 +45,8 @@ class GPUWorkBatchI
                                      //
                                      const uint32_t rayCount,
                                      RNGeneratorCPUI& rngCPU) = 0;
-
         virtual uint8_t         OutRayCount() const = 0;
+
+        // Meta Surface Related
+        virtual TracerError     CreateMetaSurfaceGenerator(GPUMetaSurfaceGeneratorI*&) = 0;
 };

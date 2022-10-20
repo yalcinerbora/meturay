@@ -107,6 +107,11 @@ TracerError PathTracer::Initialize()
         workMap.emplace(batchId, workBatchList);
     }
 
+    if(options.runAsMegaKernel)
+    {
+        if((err = metaSurfHandler.Initialize(scene, workMap)) != TracerError::OK)
+            return err;
+    }
     return TracerError::OK;
 }
 
@@ -140,21 +145,8 @@ bool PathTracer::Render()
        currentDepth >= options.maximumDepth)
         return false;
 
+    // Hit Rays
     rayCaster->HitRays();
-    const auto partitions = rayCaster->PartitionRaysWRTWork();
-
-    //Debug::DumpMemToFile("auxIn",
-    //                     static_cast<const RayAuxPath*>(*dAuxIn),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("rayIn",
-    //                     rayMemory.Rays(),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("rayIdIn", rayMemory.CurrentIds(),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("primIds", rayMemory.PrimitiveIds(),
-    //                     currentRayCount);
-    //Debug::DumpMemToFile("hitKeys", rayMemory.CurrentKeys(),
-    //                     currentRayCount);
 
     // Generate Global Data Struct
     PathTracerGlobalState globalData;
@@ -168,60 +160,68 @@ bool PathTracer::Render()
     globalData.directLightMIS = options.directLightMIS;
     globalData.gLightSampler = dLightSampler;
 
-    // Generate output partitions
-    uint32_t totalOutRayCount = 0;
-    auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
-                                                         partitions,
-                                                         workMap);
-
-    // Allocate new auxiliary buffer
-    // to fit all potential ray outputs
-    size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
-    GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
-
-    // Set Auxiliary Pointers
-    //for(auto pIt = workPartition.crbegin();
-    //    pIt != workPartition.crend(); pIt++)
-    for(auto p : outPartitions)
+    if(options.runAsMegaKernel)
     {
-        // Skip if null batch or not found material
-        if(p.portionId == HitKey::NullBatch) continue;
-        auto loc = workMap.find(p.portionId);
-        if(loc == workMap.end()) continue;
+        uint32_t totalOutRayCount = (rayCaster->CurrentRayCount() * conservativeOutRayPerMaterial);
 
-        // Set pointers
-        const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
-        using WorkData = GPUWorkBatchD<PathTracerGlobalState, RayAuxPath>;
-        int i = 0;
-        for(auto& work : loc->second)
-        {
-            RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offsets[i];
+        size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
+        GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
 
-            auto& wData = static_cast<WorkData&>(*work);
-            wData.SetGlobalData(globalData);
-            wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
-            i++;
-        }
+        // Pointers
+        // Input
+        const RayAuxPath* dAuxInGlobal = static_cast<const RayAuxPath*>(*dAuxIn);
+        const PrimitiveId* dPrimIds = rayMemory.PrimitiveIds();
+        const RayGMem* dRaysIn = rayMemory.Rays();
+        const HitKey* dKeysIn = rayMemory.CurrentKeys();
+
+        RayAuxPath* dAuxOutGlobal  = static_cast<RayAuxPath*>(*dAuxOut);
+        // TODO: partition the work between multiple GPUs
+        const auto& gpu = cudaSystem.BestGPU();
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, ray)
     }
+    else
+    {
+        const auto partitions = rayCaster->PartitionRaysWRTWork();
+        // Generate output partitions
+        uint32_t totalOutRayCount = 0;
+        auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
+                                                             partitions,
+                                                             workMap);
+        // Allocate new auxiliary buffer
+        // to fit all potential ray outputs
+        size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
+        GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
 
-    // Launch Kernels
-    rayCaster->WorkRays(workMap, outPartitions,
-                        partitions,
-                        *rngCPU.get(),
-                        totalOutRayCount,
-                        scene.BaseBoundaryMaterial());
+        // Set Auxiliary Pointers
+        for(auto p : outPartitions)
+        {
+            // Skip if null batch or not found material
+            if(p.portionId == HitKey::NullBatch) continue;
+            auto loc = workMap.find(p.portionId);
+            if(loc == workMap.end()) continue;
 
-    //Debug::DumpMemToFile("auxOut",
-    //                     static_cast<const RayAuxPath*>(*dAuxOut),
-    //                     totalOutRayCount);
-    //// Work rays swapped the ray buffer so read input rays
-    //Debug::DumpMemToFile("rayOut", rayMemory.Rays(),
-    //                     totalOutRayCount);
-    //Debug::DumpMemToFile("rayIdOut", rayMemory.CurrentIds(),
-    //                     totalOutRayCount);
+            // Set pointers
+            const RayAuxPath* dAuxInLocal = static_cast<const RayAuxPath*>(*dAuxIn);
+            using WorkData = GPUWorkBatchD<PathTracerGlobalState, RayAuxPath>;
+            int i = 0;
+            for(auto& work : loc->second)
+            {
+                RayAuxPath* dAuxOutLocal = static_cast<RayAuxPath*>(*dAuxOut) + p.offsets[i];
 
-    //METU_LOG("--");
+                auto& wData = static_cast<WorkData&>(*work);
+                wData.SetGlobalData(globalData);
+                wData.SetRayDataPtrs(dAuxOutLocal, dAuxInLocal);
+                i++;
+            }
+        }
 
+        // Launch Kernels
+        rayCaster->WorkRays(workMap, outPartitions,
+                            partitions,
+                            *rngCPU.get(),
+                            totalOutRayCount,
+                            scene.BaseBoundaryMaterial());
+    }
     // Swap auxiliary buffers since output rays are now input rays
     // for the next iteration
     SwapAuxBuffers();

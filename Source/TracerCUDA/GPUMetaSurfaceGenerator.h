@@ -25,17 +25,21 @@ class GPUMetaSurfaceGeneratorI
                                        HitKey workId,
                                        //This may change every frame
                                        // Thus provided as an argument
-                                       const HitStructPtr gHitStructs) const = 0;
+                                       const HitStructPtr gHitStructs,
+                                       const RayGMem* gRaysIn) const = 0;
 };
 
 // Every Work Group is responsible to maintain this struct
-template<class PrimGroup, class MatGroup>
-class GPUMetaSurfaceGenerator
+template<class PrimGroup, class MatGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PrimGroup::HitData,
+                              typename PrimGroup::PrimitiveData> SGen>
+class GPUMetaSurfaceGenerator : public GPUMetaSurfaceGeneratorI
 {
     public:
     using HitData   = typename PrimGroup::HitData;
     using PrimData  = typename PrimGroup::PrimitiveData;
-    using MatData   = typename MatGroup::PrimitiveData;
+    using MatData   = typename MatGroup::Data;
     using SF        = SurfaceFunc<UVSurface,
                                   typename PrimGroup::HitData,
                                   typename PrimGroup::PrimitiveData>;
@@ -43,26 +47,70 @@ class GPUMetaSurfaceGenerator
     // Get UV surface, if primitive does not support uv surface
     // this will compile time fail
     // TODO: Compile time determine non uv surface zero out the uv etc
-    static constexpr SF SurfFunc = PrimGroup::GetSurfaceFunction();
+    static constexpr SF SurfFunc = SGen();
 
     private:
     // Single Pointers (Struct of Arrays)
-    const PrimData&         gPrimData;
-    const GPUMaterialI**    gLocalMaterials;
-    const GPUTransformI**   gTransforms;
+    const PrimData&             gPrimData;
+    const GPUMaterialI**        gLocalMaterials;
+    const GPUTransformI* const* gTransforms;
 
-    __host__                GPUMetaSurfaceGenerator(const PrimData& gPData,
+    public:
+    // Constructors & Destructor
+    __device__              GPUMetaSurfaceGenerator(const PrimData& gPData,
                                                     const GPUMaterialI** gLocalMaterials,
-                                                    const GPUTransformI** gTransforms);
+                                                    const GPUTransformI* const* gTransforms);
+
     __device__
-    GPUMetaSurface          AcquireWork(// Ids
+    GPUMetaSurface          AcquireWork(// Rest is ID
                                         uint32_t rayId,
                                         TransformId tId,
                                         PrimitiveId primId,
                                         HitKey workId,
                                         //This may change every frame
                                         // Thus provided as an argument
-                                        const HitStructPtr gHitStructs) override;
+                                        const HitStructPtr gHitStructs,
+                                        const RayGMem* gRaysIn) const override;
+};
+
+template <class EndpointGroup>
+class GPUBoundaryMetaSurfaceGenerator : public GPUMetaSurfaceGeneratorI
+{
+    public:
+    using GPUEndpointType   = typename EndpointGroup::GPUType;
+    using PrimData          = typename EndpointGroup::PrimitiveData;
+    using HitData           = typename EndpointGroup::HitData;
+
+    private:
+    // Single Pointers (Struct of Arrays)
+    const PrimData&             gPrimData;
+    const GPUEndpointType*      gLocalLightInterfaces;
+    const GPUTransformI* const* gTransforms;
+
+    using SF        = SurfaceFunc<UVSurface,
+                                  typename EndpointGroup::HitData,
+                                  typename EndpointGroup::PrimitiveData>;
+    // Surface Generator Function
+    // TODO: lights (primitive backed) only supports UV surface
+    // so this is fine currently, but it may be changed later
+    static constexpr SF SurfFunc = EndpointGroup::SurfF;
+
+    public:
+    // Constructors & Destructor
+    __device__              GPUBoundaryMetaSurfaceGenerator(const PrimData& gPData,
+                                                            const GPUEndpointType* gLocalLightInterfaces,
+                                                            const GPUTransformI* const* gTransforms);
+
+    __device__
+    GPUMetaSurface AcquireWork(// Rest is ID
+                               uint32_t rayId,
+                               TransformId tId,
+                               PrimitiveId primId,
+                               HitKey workId,
+                               //This may change every frame
+                               // Thus provided as an argument
+                               const HitStructPtr gHitStructs,
+                               const RayGMem* gRaysIn) const override;
 };
 
 class GPUMetaSurfaceGeneratorGroup
@@ -70,12 +118,12 @@ class GPUMetaSurfaceGeneratorGroup
     private:
     const GPUMetaSurfaceGeneratorI**    gGeneratorInterfaces;
     const HitStructPtr                  gCurrentHitStructListPtr;
+    const RayGMem*                      gRaysIn;
 
     public:
     // Constructors & Destructor
-    __host__
-                    GPUMetaSurfaceGeneratorGroup(const GPUMetaSurfaceGeneratorI**,
-                                                 const HitStructPtr);
+    __host__        GPUMetaSurfaceGeneratorGroup(const GPUMetaSurfaceGeneratorI**,
+                                                 const HitStructPtr, const RayGMem*);
 
     __device__
     GPUMetaSurface  AcquireWork(uint32_t rayId,
@@ -87,37 +135,48 @@ class GPUMetaSurfaceGeneratorGroup
 class GPUMetaSurfaceHandler
 {
     private:
-    const GPUMetaSurfaceGeneratorI** gGeneratorInterfaces;
-    DeviceMemory                     genericMem;
+    const GPUMetaSurfaceGeneratorI** dGeneratorInterfaces;
+    DeviceMemory                     generatorMem;
 
     public:
+    // Constructors & Destructor
                                     GPUMetaSurfaceHandler();
 
-    TracerError                     Initialize(const GPUSceneI& scene);
-    GPUMetaSurfaceGeneratorGroup    GetMetaSurfaceGroup(const HitStructPtr currentHitStructs);
+    TracerError                     Initialize(const GPUSceneI& scene,
+                                               const WorkBatchMap& sceneWorkBatches);
+    GPUMetaSurfaceGeneratorGroup    GetMetaSurfaceGroup(const HitStructPtr currentHitStructs,
+                                                        const RayGMem* gRaysIn);
 };
 
-template<class P, class M>
-__host__ inline
-GPUMetaSurfaceGenerator<P,M>::GPUMetaSurfaceGenerator(const PrimData& gPData,
-                                                      const GPUMaterialI** gLocalMaterials,
-                                                      const GPUTransformI** gTransforms)
+template<class PrimGroup, class MatGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PrimGroup::HitData,
+                              typename PrimGroup::PrimitiveData> SGen>
+__device__ inline
+GPUMetaSurfaceGenerator<PrimGroup, MatGroup, SGen>::GPUMetaSurfaceGenerator(const PrimData& gPData,
+                                                                            const GPUMaterialI** gLocalMaterials,
+                                                                            const GPUTransformI* const* gTransforms)
     : gPrimData(gPData)
     , gLocalMaterials(gLocalMaterials)
     , gTransforms(gTransforms)
 {}
 
-template<class P, class M>
+template<class PrimGroup, class MatGroup,
+         SurfaceFuncGenerator<UVSurface,
+                              typename PrimGroup::HitData,
+                              typename PrimGroup::PrimitiveData> SGen>
 __device__ inline
-GPUMetaSurface GPUMetaSurfaceGenerator<P,M>::AcquireWork(// Ids
-                                                         uint32_t rayId,
-                                                         TransformId tId,
-                                                         PrimitiveId primId,
-                                                         HitKey workKey,
-                                                         //This may change every frame
-                                                         // Thus provided as an argument
-                                                         const HitStructPtr gHitStructs)
+GPUMetaSurface GPUMetaSurfaceGenerator<PrimGroup, MatGroup, SGen>::AcquireWork(// Ids
+                                                                               uint32_t rayId,
+                                                                               TransformId tId,
+                                                                               PrimitiveId primId,
+                                                                               HitKey workKey,
+                                                                               //This may change every frame
+                                                                               // Thus provided as an argument
+                                                                               const HitStructPtr gHitStructs,
+                                                                               const RayGMem* gRaysIn) const
 {
+    const RayReg ray(gRaysIn, rayId);
     // Find the material interface
     HitKey::Type workId = HitKey::FetchIdPortion(workKey);
     const GPUMaterialI* gMaterial = gLocalMaterials[workId];
@@ -127,18 +186,59 @@ GPUMetaSurface GPUMetaSurfaceGenerator<P,M>::AcquireWork(// Ids
     const HitData hit = gHitStructs.Ref<HitData>(rayId);
     UVSurface uvSurface = SurfFunc(hit, transform,
                                    ray.ray.getDirection(),
-                                   primitiveId, primData);
+                                   primId, gPrimData);
     // Return the class
     return GPUMetaSurface(transform,
                           uvSurface,
                           gMaterial);
 }
 
+template<class EndpointGroup>
+__device__ inline
+GPUBoundaryMetaSurfaceGenerator<EndpointGroup>::GPUBoundaryMetaSurfaceGenerator(const PrimData& gPData,
+                                                                                const GPUEndpointType* gLocalLightInterfaces,
+                                                                                const GPUTransformI* const* gTransforms)
+    : gPrimData(gPData)
+    , gLocalLightInterfaces(gLocalLightInterfaces)
+    , gTransforms(gTransforms)
+{}
+
+template <class EndpointGroup>
+__device__ inline
+GPUMetaSurface GPUBoundaryMetaSurfaceGenerator<EndpointGroup>::AcquireWork(// Rest is ID
+                                                                           uint32_t rayId,
+                                                                           TransformId tId,
+                                                                           PrimitiveId primId,
+                                                                           HitKey workKey,
+                                                                           //This may change every frame
+                                                                           // Thus provided as an argument
+                                                                           const HitStructPtr gHitStructs,
+                                                                           const RayGMem* gRaysIn) const
+{
+    const RayReg ray(gRaysIn, rayId);
+    // Find the material interface
+    HitKey::Type workId = HitKey::FetchIdPortion(workKey);
+    const GPULightI* gLightI = gLocalLightInterfaces + workId;
+    // Get Transform for surface generation and
+    const GPUTransformI& transform = *gTransforms[tId];
+    // Get hit data from the global array
+    const HitData hit = gHitStructs.Ref<HitData>(rayId);
+    UVSurface uvSurface = SurfFunc(hit, transform,
+                                   ray.ray.getDirection(),
+                                   primId, gPrimData);
+    // Return the class
+    return GPUMetaSurface(transform,
+                          uvSurface,
+                          gLightI);
+}
+
 __host__ inline
 GPUMetaSurfaceGeneratorGroup::GPUMetaSurfaceGeneratorGroup(const GPUMetaSurfaceGeneratorI** gGenPtrs,
-                                                           const HitStructPtr gHitStructPtr)
+                                                           const HitStructPtr gHitStructPtr,
+                                                           const RayGMem* gRaysIn)
     : gGeneratorInterfaces(gGenPtrs)
     , gCurrentHitStructListPtr(gHitStructPtr)
+    , gRaysIn(gRaysIn)
 {}
 
 __device__ inline
@@ -149,14 +249,15 @@ GPUMetaSurface GPUMetaSurfaceGeneratorGroup::AcquireWork(uint32_t rayId,
 {
     HitKey::Type workBatchId = HitKey::FetchBatchPortion(workId);
     const GPUMetaSurfaceGeneratorI* metaSurfGen = gGeneratorInterfaces[workBatchId];
-    return metaSurfGen->AcquireWork(rayId, tId, primId, workId, gCurrentHitStructListPtr);
+    return metaSurfGen->AcquireWork(rayId, tId, primId, workId, gCurrentHitStructListPtr, gRaysIn);
 }
 
 inline GPUMetaSurfaceHandler::GPUMetaSurfaceHandler()
-    : gGeneratorInterfaces(nullptr)
+    : dGeneratorInterfaces(nullptr)
 {}
 
-inline GPUMetaSurfaceGeneratorGroup GPUMetaSurfaceHandler::GetMetaSurfaceGroup(const HitStructPtr dCurrentHitStructs)
+inline GPUMetaSurfaceGeneratorGroup GPUMetaSurfaceHandler::GetMetaSurfaceGroup(const HitStructPtr dCurrentHitStructs,
+                                                                               const RayGMem* gRaysIn)
 {
-    return GPUMetaSurfaceGeneratorGroup(gGeneratorInterfaces, dCurrentHitStructs);
+    return GPUMetaSurfaceGeneratorGroup(dGeneratorInterfaces, dCurrentHitStructs, gRaysIn);
 }

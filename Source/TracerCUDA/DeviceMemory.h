@@ -244,7 +244,7 @@ inline constexpr DeviceMemory::operator const void*() const
 }
 
 template <class GPUMem>
-void GPUMemFuncs::EnlargeBuffer(GPUMem& mem, size_t s)
+inline void GPUMemFuncs::EnlargeBuffer(GPUMem& mem, size_t s)
 {
     if(s > mem.Size())
     {

@@ -44,6 +44,11 @@ class CPULightGroupI : public CPUEndpointGroupI
         // Interface
         virtual const GPULightList&     GPULights() const = 0;
         virtual const CudaGPU&          GPU() const = 0;
+
+        // TODO: maybe in future some lights does not support
+        // dynamic inheritance (it should since currently lights are
+        // dynamic interfaces)
+        bool                            CanSupportDynamicInheritance() const;
 };
 
 __device__
@@ -52,3 +57,8 @@ inline GPULightI::GPULightI(uint16_t mediumIndex,
                             const GPUTransformI& gTrans)
     : GPUEndpointI(mediumIndex, hk, gTrans)
 {}
+
+inline bool CPULightGroupI::CanSupportDynamicInheritance() const
+{
+    return true;
+}

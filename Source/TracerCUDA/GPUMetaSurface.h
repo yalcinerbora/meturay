@@ -6,6 +6,7 @@
 
 #include "GPUSurface.h"
 #include "GPUMaterialI.h"
+#include "GPULightI.h"
 
 class RNGeneratorGPUI;
 class GPUTransformI;
@@ -26,13 +27,24 @@ class GPUMetaSurface
     const GPUTransformI&        t;              // local to world
 
     UVSurface                   uvSurf;
-    const GPUMaterialI*         gMaterial;
+    // Surface can either be light or normal surface
+    union
+    {
+        const GPUMaterialI*     gMaterial;
+        const GPULightI*        gLight;
+    };
+    bool                        isLight;
 
     public:
-                                GPUMetaSurface(const GPUTransformI&,
-                                               const UVSurface& uvSurface,
-                                               const GPUMaterialI* gMaterial);
+    __device__              GPUMetaSurface(const GPUTransformI&,
+                                           const UVSurface& uvSurface,
+                                           const GPUMaterialI* gMaterial);
+    __device__              GPUMetaSurface(const GPUTransformI&,
+                                           const UVSurface& uvSurface,
+                                           const GPULightI* gLight);
 
+    // Surface Type
+    __device__ bool         IsLight() const;
     // Normal Stuff
     __device__ Vector3f     WorldNormal() const;
     __device__ Vector3f     WorldGeoNormal() const;
@@ -66,6 +78,32 @@ class GPUMetaSurface
                                 const Vector3& pos,     // Position
                                 const GPUMediumI& m);
 };
+
+__device__ inline
+GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
+                               const UVSurface& uvSurface,
+                               const GPUMaterialI* gMaterial)
+    : t(t)
+    , uvSurf(uvSurface)
+    , gMaterial(gMaterial)
+    , isLight(false)
+{}
+
+__device__ inline
+GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
+                               const UVSurface& uvSurface,
+                               const GPULightI* gLight)
+    : t(t)
+    , uvSurf(uvSurface)
+    , gLight(gLight)
+    , isLight(true)
+{}
+
+__device__ inline
+bool GPUMetaSurface::IsLight() const
+{
+    return isLight;
+}
 
 __device__ inline
 Vector3f GPUMetaSurface::WorldNormal() const
@@ -110,6 +148,7 @@ Vector3f GPUMetaSurface::Sample(// Sampled Output
                                 // I-O
                                 RNGeneratorGPUI& rng) const
 {
+    if(isLight) return Zero3f;
     return gMaterial->Sample(wo, pdf, outMedium,
                              wi, pos, m, uvSurf,
                              rng);
@@ -119,7 +158,10 @@ Vector3f GPUMetaSurface::Emit(const Vector3& wo,
                               const Vector3& pos,
                               const GPUMediumI& m) const
 {
-    return gMaterial->Emit(wo, pos, m, uvSurf);
+    if(isLight)
+        return gLight->Emit(wo, pos, uvSurf);
+    else
+        return gMaterial->Emit(wo, pos, m, uvSurf);
 }
 
 __device__ inline
@@ -128,6 +170,7 @@ Vector3f GPUMetaSurface::Evaluate(const Vector3& wo,
                                   const Vector3& pos,
                                   const GPUMediumI& m) const
 {
+    if(isLight) return Zero3f;
     return gMaterial->Evaluate(wo, wi, pos, m, uvSurf);
 }
 
@@ -137,5 +180,6 @@ float GPUMetaSurface::Pdf(const Vector3& wo,
                           const Vector3& pos,
                           const GPUMediumI& m)
 {
+    if(isLight) return 0.0f;
     return gMaterial->Pdf(wo, wi, pos, m, uvSurf);
 }

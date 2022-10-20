@@ -12,6 +12,7 @@ proper for combined templates
 
 #include "GPUPrimitiveI.h"
 #include "AcceleratorFunctions.h"
+#include "DeviceMemory.h"
 
 struct PrimDataAccessor;
 class GPUTransformI;
@@ -87,7 +88,7 @@ class GPUPrimitiveGroupP
     friend struct PrimDataAccessor;
 
     protected:
-    PrimitiveD dData = PrimitiveD{};
+    PrimitiveD hData = PrimitiveD{};
 };
 
 template <class HitD, class PrimitiveD, class LeafD,
@@ -156,7 +157,7 @@ class GPUPrimitiveGroup
         static constexpr auto Intersects        = PrimDeviceFunctions::Intersects;
         static constexpr auto Voxelize          = PrimDeviceFunctions::Voxelize;
 
-        // Templated Intersects Function
+        // Template Intersects Function
         // This is used by OptiX instead of virtual functions
         template <class GPUTransform>
         __device__ inline
@@ -165,18 +166,25 @@ class GPUPrimitiveGroup
                                 const PrimitiveData&);
 
     private:
+        DeviceMemory            primDataMem;
+
     protected:
+        const PrimitiveData*    dPrimitiveData;
+
     public:
         // Constructors & Destructor
-                            GPUPrimitiveGroup() = default;
-        virtual             ~GPUPrimitiveGroup() = default;
+                                GPUPrimitiveGroup();
+        virtual                 ~GPUPrimitiveGroup() = default;
 
-        uint32_t            PrimitiveHitSize() const override { return sizeof(HitData); };
+        uint32_t                PrimitiveHitSize() const override { return sizeof(HitData); };
         // Most primitives are intersectable
         // Derived classes that are not intersectable should override this
-        bool                IsIntersectable() const override { return true; }
-        bool                IsTriangle() const override { return false; }
-        PrimTransformType   TransformType() const override { return TType; };
+        bool                    IsIntersectable() const override { return true; }
+        bool                    IsTriangle() const override { return false; }
+        PrimTransformType       TransformType() const override { return TType; };
+        // GPU Allocation of SoA PrimitiveData
+        const PrimitiveData*    GetPrimDataGPUPtr() const;
+        void                    GeneratePrimDataGPUPtr() override;
 };
 
 struct PrimDataAccessor
@@ -190,9 +198,50 @@ struct PrimDataAccessor
     static typename PrimitiveGroupS::PrimitiveData Data(const PrimitiveGroupS& pg)
     {
         using P = typename PrimitiveGroupS::PrimitiveData;
-        return static_cast<const GPUPrimitiveGroupP<P>&>(pg).dData;
+        return static_cast<const GPUPrimitiveGroupP<P>&>(pg).hData;
     }
 };
+
+
+template <class HitD, class PrimitiveD, class LeafD,
+          class SurfaceFuncGenerator, class PrimDeviceFunctions,
+          PrimTransformType TType, uint32_t PositionPerPrimitive>
+GPUPrimitiveGroup<HitD, PrimitiveD, LeafD,
+                                    SurfaceFuncGenerator,
+                                    PrimDeviceFunctions,
+                                    TType, PositionPerPrimitive>
+::GPUPrimitiveGroup()
+    : dPrimitiveData(nullptr)
+{}
+
+template <class HitD, class PrimitiveD, class LeafD,
+          class SurfaceFuncGenerator, class PrimDeviceFunctions,
+          PrimTransformType TType, uint32_t PositionPerPrimitive>
+inline
+const PrimitiveD* GPUPrimitiveGroup<HitD, PrimitiveD, LeafD,
+                                    SurfaceFuncGenerator,
+                                    PrimDeviceFunctions,
+                                    TType, PositionPerPrimitive>
+::GetPrimDataGPUPtr() const
+{
+    return dPrimitiveData;
+}
+
+template <class HitD, class PrimitiveD, class LeafD,
+          class SurfaceFuncGenerator, class PrimDeviceFunctions,
+          PrimTransformType TType, uint32_t PositionPerPrimitive>
+inline void GPUPrimitiveGroup<HitD, PrimitiveD, LeafD,
+                                    SurfaceFuncGenerator,
+                                    PrimDeviceFunctions,
+                                    TType, PositionPerPrimitive>
+::GeneratePrimDataGPUPtr()
+{
+    GPUMemFuncs::AllocateMultiData(std::tie(dPrimitiveData),
+                                   primDataMem, {1});
+    CUDA_CHECK(cudaMemcpy(const_cast<PrimitiveD*>(dPrimitiveData),
+                          &this->hData, sizeof(PrimitiveData),
+                          cudaMemcpyHostToDevice));
+}
 
 template <class HitD, class PrimitiveD, class LeafD,
           class SurfaceFuncGenerator, class PrimDeviceFunctions,

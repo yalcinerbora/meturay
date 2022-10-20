@@ -144,7 +144,7 @@ SceneError GPUPrimitiveSphere::InitializeGroup(const NodeListing& surfaceDataNod
                             cudaMemcpyHostToDevice));
 
     // Set Main Pointers of batch
-    dData.centerRadius = reinterpret_cast<Vector4f*>(dCentersRadius);
+    hData.centerRadius = reinterpret_cast<Vector4f*>(dCentersRadius);
     return e;
 }
 

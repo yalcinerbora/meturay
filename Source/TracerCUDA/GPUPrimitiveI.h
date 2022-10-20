@@ -86,4 +86,7 @@ class GPUPrimitiveGroupI
         // Queries in order to check if this primitive group supports certain primitive data
         // Material may need that data
         virtual bool                CanGenerateData(const std::string& s) const = 0;
+
+        // Dynamic Inheritance Related
+        virtual void                GeneratePrimDataGPUPtr() = 0;
 };
