@@ -8,9 +8,7 @@ TracerError GPUMetaSurfaceHandler::Initialize(const GPUSceneI& scene,
                                               const WorkBatchMap& sceneWorkBatches)
 {
     std::vector<GPUMetaSurfaceGeneratorI*> hMetaSurfaceGenGPUPtrs;
-
     TracerError err = TracerError::OK;
-
     // Generate Material Interfaces
     for(const auto& matGroup : scene.MaterialGroups())
     {
@@ -22,6 +20,18 @@ TracerError GPUMetaSurfaceHandler::Initialize(const GPUSceneI& scene,
         primGroup.second->GeneratePrimDataGPUPtr();
     }
 
+    // Work Batch Ids are not linear (some tracers may not use some work
+    // batches). For example, a camera->light path tracer
+    // does not need to create camera batches etc.
+    // Loop the work batches first to find the max amount of batches
+    uint32_t totalBatchCount = 0;
+    for(const auto& workList : sceneWorkBatches)
+    {
+        uint32_t batchId = workList.first;
+        totalBatchCount = std::max(batchId, totalBatchCount);
+    }
+    hMetaSurfaceGenGPUPtrs.resize(totalBatchCount + 1, nullptr);
+
     // Now ask work batches to generate the MetaSurfaceGenerator class
     for(const auto& workList : sceneWorkBatches)
     {
@@ -32,8 +42,7 @@ TracerError GPUMetaSurfaceHandler::Initialize(const GPUSceneI& scene,
             GPUMetaSurfaceGeneratorI* metaSurfaceGenerator;
             if((err = work->CreateMetaSurfaceGenerator(metaSurfaceGenerator)) != TracerError::OK)
                 return err;
-
-            hMetaSurfaceGenGPUPtrs.push_back(metaSurfaceGenerator);
+            hMetaSurfaceGenGPUPtrs.at(batchId) = metaSurfaceGenerator;
         }
     }
 
@@ -42,4 +51,5 @@ TracerError GPUMetaSurfaceHandler::Initialize(const GPUSceneI& scene,
     CUDA_CHECK(cudaMemcpy(dGeneratorInterfaces, hMetaSurfaceGenGPUPtrs.data(),
                           sizeof(GPUMetaSurfaceGeneratorI*) * hMetaSurfaceGenGPUPtrs.size(),
                           cudaMemcpyHostToDevice));
+    return TracerError::OK;
 }

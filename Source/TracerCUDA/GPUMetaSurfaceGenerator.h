@@ -218,7 +218,7 @@ GPUMetaSurface GPUBoundaryMetaSurfaceGenerator<EndpointGroup>::AcquireWork(// Re
     const RayReg ray(gRaysIn, rayId);
     // Find the material interface
     HitKey::Type workId = HitKey::FetchIdPortion(workKey);
-    const GPULightI* gLightI = gLocalLightInterfaces + workId;
+    const GPULightI* gLightI = (gLocalLightInterfaces) ? gLocalLightInterfaces + workId : nullptr;
     // Get Transform for surface generation and
     const GPUTransformI& transform = *gTransforms[tId];
     // Get hit data from the global array
@@ -248,8 +248,8 @@ GPUMetaSurface GPUMetaSurfaceGeneratorGroup::AcquireWork(uint32_t rayId,
                                                          HitKey workId)
 {
     HitKey::Type workBatchId = HitKey::FetchBatchPortion(workId);
-    const GPUMetaSurfaceGeneratorI* metaSurfGen = gGeneratorInterfaces[workBatchId];
-    return metaSurfGen->AcquireWork(rayId, tId, primId, workId, gCurrentHitStructListPtr, gRaysIn);
+    const GPUMetaSurfaceGeneratorI* gMetaSurfGen = gGeneratorInterfaces[workBatchId];
+    return gMetaSurfGen->AcquireWork(rayId, tId, primId, workId, gCurrentHitStructListPtr, gRaysIn);
 }
 
 inline GPUMetaSurfaceHandler::GPUMetaSurfaceHandler()

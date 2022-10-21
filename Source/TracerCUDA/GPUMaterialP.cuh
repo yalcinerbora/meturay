@@ -96,23 +96,23 @@ class GPUMaterialGroupT
             __device__  bool        IsEmissive() const override;
             __device__  bool        Specularity(const UVSurface& surface) const override;
             __device__ Vector3f     Sample(// Sampled Output
-                                        RayF& wo,                       // Out direction
-                                        float& pdf,                     // PDF for Monte Carlo
-                                        const GPUMediumI*& outMedium,
-                                        // Input
-                                        const Vector3& wi,              // Incoming Radiance
-                                        const Vector3& pos,             // Position
-                                        const GPUMediumI& m,
-                                        //
-                                        const UVSurface& surface,  // Surface info (normals uvs etc.)
-                                        // I-O
-                                        RNGeneratorGPUI& rng) const override;
+                                           RayF& wo,                       // Out direction
+                                           float& pdf,                     // PDF for Monte Carlo
+                                           const GPUMediumI*& outMedium,
+                                           // Input
+                                           const Vector3& wi,              // Incoming Radiance
+                                           const Vector3& pos,             // Position
+                                           const GPUMediumI& m,
+                                           //
+                                           const UVSurface& surface,  // Surface info (normals uvs etc.)
+                                           // I-O
+                                           RNGeneratorGPUI& rng) const override;
             __device__ Vector3f     Emit(// Input
-                                      const Vector3& wo,      // Outgoing Radiance
-                                      const Vector3& pos,     // Position
-                                      const GPUMediumI& m,
-                                      //
-                                      const UVSurface& surface) const override;
+                                         const Vector3& wo,      // Outgoing Radiance
+                                         const Vector3& pos,     // Position
+                                         const GPUMediumI& m,
+                                         //
+                                         const UVSurface& surface) const override;
             __device__ Vector3f     Evaluate(// Input
                                              const Vector3& wo,              // Outgoing Radiance
                                              const Vector3& wi,              // Incoming Radiance

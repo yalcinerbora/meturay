@@ -44,7 +44,7 @@ static void KCPathTracerMegaKernel(// Output
                                    RayGMem* gOutRays,
                                    RayAuxPath* gOutRayAux,
                                    const uint32_t maxOutRay,
-                                   // Input as registers
+                                   // Inputs
                                    const RayGMem* gInRays,
                                    const RayAuxPath* gInRayAux,
                                    const PrimitiveId* gPrimitiveIds,
@@ -52,7 +52,6 @@ static void KCPathTracerMegaKernel(// Output
                                    const HitStructPtr gHitStructs,
                                    const HitKey* gMatIds,
                                    // I-O
-                                   PathTracerLocalState localState,
                                    PathTracerGlobalState renderState,
                                    RNGeneratorGPUI** gRNGs,
                                    // MetaSurfaceGenerator
@@ -71,10 +70,14 @@ static void KCPathTracerMegaKernel(// Output
         static constexpr int PATH_RAY_INDEX = 0;
         static constexpr int NEE_RAY_INDEX = 1;
         // Helper Class for better code readability
-        OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys,
-                                              gOutRays,
-                                              gOutRayAux,
+        OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys + globalId * maxOutRay,
+                                              gOutRays + globalId * maxOutRay,
+                                              gOutRayAux + globalId * maxOutRay,
                                               maxOutRay);
+
+        // If Invalid ray, completely skip
+        if(HitKey::FetchBatchPortion(hitKey) == HitKey::NullBatch)
+            continue;
 
         // Load Input to Registers
         const RayReg ray(gInRays, rayId);
@@ -82,13 +85,13 @@ static void KCPathTracerMegaKernel(// Output
         const PrimitiveId primitiveId = gPrimitiveIds[rayId];
         const TransformId transformId = gTransformIds[rayId];
 
-        // Acquire transform for surface generation
-        const GPUTransformI& transform = *gTransforms[transformId];
-
         GPUMetaSurface metaSurface = surfaceGenerator.AcquireWork(rayId, transformId, primitiveId, hitKey);
-
+        // Normal Path Tracing
         if(metaSurface.IsLight())
         {
+            // Special Case: Null Light just skip
+            if(metaSurface.IsNullLight()) continue;
+
             const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
             const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
             const bool isSpecularPathRay = aux.type == RayType::SPECULAR_PATH_RAY;
@@ -98,7 +101,7 @@ static void KCPathTracerMegaKernel(// Output
             // Always eval boundary mat if NEE is off
             // or NEE is on and hit endpoint and requested endpoint is same
             const GPULightI* requestedLight = (isNeeRayNEEOn) ? renderState.gLightList[aux.endpointIndex] : nullptr;
-            const bool isCorrectNEERay = (isNeeRayNEEOn && (requestedLight->EndpointId() == gLight.EndpointId()));
+            const bool isCorrectNEERay = (isNeeRayNEEOn && (requestedLight->EndpointId() == metaSurface.EndpointId()));
 
             float misWeight = 1.0f;
             if(isPathRayAsMISRay)
@@ -110,11 +113,11 @@ static void KCPathTracerMegaKernel(// Output
                 float pdfLightM, pdfLightC;
                 renderState.gLightSampler->Pdf(pdfLightM, pdfLightC,
                                                //
-                                               gLight.GlobalLightIndex(),
+                                               metaSurface.GlobalLightIndex(),
                                                ray.tMax,
                                                position,
                                                direction,
-                                               metaSurface.worldToTangent);
+                                               metaSurface.WorldToTangent());
 
                 // We are sub-sampling (discretely sampling) a single light
                 // pdf of BxDF should also incorporate this
@@ -140,10 +143,9 @@ static void KCPathTracerMegaKernel(// Output
                 Vector3 transFactor = m.Transmittance(ray.tMax);
                 Vector3 radianceFactor = aux.radianceFactor * transFactor;
 
-                Vector3 emission = gLight.Emit(// Input
-                                               -r.getDirection(),
-                                               position,
-                                               metaSurface);
+                Vector3 emission = metaSurface.Emit(// Input
+                                                    -r.getDirection(),
+                                                    position, m);
 
                 // And accumulate pixel// and add as a sample
                 Vector3f total = emission * radianceFactor;
@@ -225,10 +227,12 @@ static void KCPathTracerMegaKernel(// Output
                 {
                     // Evaluate mat for this direction
                     neeReflectance = metaSurface.Evaluate(// Input
-                                                      lDirection,
-                                                      wi,
-                                                      position,
-                                                      m);
+                                                          lDirection,
+                                                          wi,
+                                                          position,
+                                                          m);
+                    //printf("nee refl %f, %f, %f, pdf %f\n", neeReflectance[0], neeReflectance[1],
+                    //       neeReflectance[2], pdfLight);
                 }
 
                 // Check if mis ray should be sampled
@@ -242,9 +246,11 @@ static void KCPathTracerMegaKernel(// Output
                 if(shouldLaunchMISRay)
                 {
                     float pdfBxDF = metaSurface.Pdf(lDirection,
-                                                wi,
-                                                position,
-                                                m);
+                                                    wi,
+                                                    position,
+                                                    m);
+
+
 
                     pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
 
@@ -262,7 +268,7 @@ static void KCPathTracerMegaKernel(// Output
                     // Generate Ray
                     RayF rayNEE = RayF(lDirection, position);
                     RayReg rayOut;
-                    rayOut.ray = rayNEE.Nudge(surface.WorldGeoNormal(), surface.curvatureOffset);
+                    rayOut.ray = rayNEE.Nudge(metaSurface.WorldGeoNormal(), 0.0f);
                     rayOut.tMin = 0.0f;
                     rayOut.tMax = lDistance;
                     // Aux
@@ -288,6 +294,8 @@ static void KCPathTracerMegaKernel(// Output
                                                      m,
                                                      // I-O
                                                      rng);
+            //printf("myrefl %f, %f, %f\n",
+            //       reflectance[0], reflectance[1], reflectance[2]);
             // Factor the radiance of the surface
             Vector3f pathRadianceFactor = radianceFactor * reflectance;
             // Check singularities

@@ -42,7 +42,7 @@ struct TracerError : public ErrorI
             OPTIX_PTX_FILE_NOT_FOUND,
             // Dynamic Inheritance Related
             MATERIAL_DOES_NOT_SUPPORT_DYN_INHERITANCE,
-            ENDPOINT_DOES_NOT_SUPPORT_DYN_INHERITANCE
+            ENDPOINT_DOES_NOT_SUPPORT_DYN_INHERITANCE,
             // Misc
             TRACER_INTERNAL_ERROR,
             // ...

@@ -44,6 +44,10 @@ class RayCaster : public RayCasterI
                                              RNGeneratorCPUI& rngCPU,
                                              uint32_t totalRayOut,
                                              HitKey baseBoundMatKey) override;
+        //
+        void                        PartitionRaysWRTNothing(HitKey baseBoundMatKey,
+                                                            uint32_t totalRayOut) override;
+        void                        AssumeRaysAreWorked(uint32_t newRayCount) override;
 
         template <class KeyType, class FetchType,
                   class FetchFunction,
@@ -64,10 +68,18 @@ class RayCaster : public RayCasterI
         uint32_t                    CurrentRayCount() const override;
         void                        ResizeRayOut(uint32_t rayCount,
                                                  HitKey baseBoundMatKey) override;
-        RayGMem*                    RaysOut() override;
+        // RayMemory Fetch
+        // Input
         const RayGMem*              RaysIn() const override;
         const RayId*                RayIds() const override;
-        const HitKey*               WorkKeys() const override;
+        const HitKey*               KeysIn() const override;
+        const PrimitiveId*          PrimitiveIds() const override;
+        const TransformId*          TransformIds() const override;
+        const HitStructPtr          HitSturctPtr() const override;
+        // Output
+        RayGMem*                    RaysOut() override;
+        HitKey*                     KeysOut() override;
+        // Misc
         void                        SwapRays() override;
         // Work Related
         void                        OverrideWorkBits(const Vector2i newWorkBits) override;
@@ -88,11 +100,6 @@ inline void RayCaster::ResizeRayOut(uint32_t rayCount,
     return rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
 }
 
-inline RayGMem* RayCaster::RaysOut()
-{
-    return rayMemory.RaysOut();
-}
-
 inline const RayGMem* RayCaster::RaysIn() const
 {
     return rayMemory.Rays();
@@ -103,7 +110,32 @@ inline const RayId* RayCaster::RayIds() const
     return rayMemory.CurrentIds();
 }
 
-inline const HitKey* RayCaster::WorkKeys() const
+inline const HitKey* RayCaster::KeysIn() const
+{
+    return rayMemory.CurrentKeys();
+}
+
+inline const PrimitiveId* RayCaster::PrimitiveIds() const
+{
+    return rayMemory.PrimitiveIds();
+}
+
+inline const TransformId* RayCaster::TransformIds() const
+{
+    return rayMemory.TransformIds();
+}
+
+inline const HitStructPtr RayCaster::HitSturctPtr() const
+{
+    return rayMemory.HitStructs();
+}
+
+inline RayGMem* RayCaster::RaysOut()
+{
+    return rayMemory.RaysOut();
+}
+
+inline HitKey* RayCaster::KeysOut()
 {
     return rayMemory.WorkKeys();
 }

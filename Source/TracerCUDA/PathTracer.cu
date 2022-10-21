@@ -16,12 +16,13 @@
 //std::ostream& operator<<(std::ostream& stream, const RayAuxPath& v)
 //{
 //    stream << std::setw(0)
-//        << v.pixelIndex << ", "
+//        << v.sampleIndex << ", "
 //        << "{" << v.radianceFactor[0]
 //        << "," << v.radianceFactor[1]
 //        << "," << v.radianceFactor[2] << "} "
-//        << v.endPointIndex << ", "
-//        << v.mediumIndex << " ";
+//        << v.endpointIndex << ", "
+//        << v.mediumIndex << " "
+//        << v.prevPDF << " ";
 //    switch(v.type)
 //    {
 //        case RayType::CAMERA_RAY:
@@ -44,6 +45,7 @@ PathTracer::PathTracer(const CudaSystem& s,
                        const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
+    , conservativeOutRayPerMaterial(0)
 {
     // Append Work Types for generation
     boundaryWorkPool.AppendGenerators(PTBoundaryWorkerList{});
@@ -81,6 +83,11 @@ TracerError PathTracer::Initialize()
                                             options.nextEventEstimation,
                                             options.directLightMIS)) != TracerError::OK)
             return err;
+
+        if(options.runAsMegaKernel)
+            conservativeOutRayPerMaterial = std::max(conservativeOutRayPerMaterial,
+                                                     static_cast<uint32_t>(batch->OutRayCount()));
+
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
@@ -103,6 +110,11 @@ TracerError PathTracer::Initialize()
                                        options.nextEventEstimation,
                                        options.directLightMIS)) != TracerError::OK)
             return err;
+
+        if(options.runAsMegaKernel)
+            conservativeOutRayPerMaterial = std::max(conservativeOutRayPerMaterial,
+                                                     static_cast<uint32_t>(batch->OutRayCount()));
+
         workBatchList.push_back(batch);
         workMap.emplace(batchId, workBatchList);
     }
@@ -127,6 +139,8 @@ TracerError PathTracer::SetOptions(const OptionsI& opts)
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetBool(options.runAsMegaKernel, MEGA_KERNEL_NAME)) != TracerError::OK)
         return err;
 
     std::string lightSamplerTypeString;
@@ -162,22 +176,54 @@ bool PathTracer::Render()
 
     if(options.runAsMegaKernel)
     {
-        uint32_t totalOutRayCount = (rayCaster->CurrentRayCount() * conservativeOutRayPerMaterial);
-
-        size_t auxOutSize = totalOutRayCount * sizeof(RayAuxPath);
+        uint32_t totalRayOut = (rayCaster->CurrentRayCount() * conservativeOutRayPerMaterial);
+        size_t auxOutSize = totalRayOut * sizeof(RayAuxPath);
         GPUMemFuncs::EnlargeBuffer(*dAuxOut, auxOutSize);
+        // Do not partition the rays
+        // However call this so that ray memory is properly initialized
+        rayCaster->PartitionRaysWRTNothing(scene.BaseBoundaryMaterial(),
+                                           totalRayOut);
 
-        // Pointers
+        // Get Pointers
         // Input
-        const RayAuxPath* dAuxInGlobal = static_cast<const RayAuxPath*>(*dAuxIn);
-        const PrimitiveId* dPrimIds = rayMemory.PrimitiveIds();
-        const RayGMem* dRaysIn = rayMemory.Rays();
-        const HitKey* dKeysIn = rayMemory.CurrentKeys();
+        const RayAuxPath* dAuxInPtr         = static_cast<const RayAuxPath*>(*dAuxIn);
+        const RayGMem* dRaysIn              = rayCaster->RaysIn();
+        const HitKey* dKeysIn               = rayCaster->KeysIn();
+        const HitStructPtr dHitStructs      = rayCaster->HitSturctPtr();
+        const TransformId* dTransformIds    = rayCaster->TransformIds();
+        const PrimitiveId* dPrimIdsIn       = rayCaster->PrimitiveIds();
+        // Output
+        RayAuxPath* dAuxOutPtr  = static_cast<RayAuxPath*>(*dAuxOut);
+        RayGMem* dRaysOut       = rayCaster->RaysOut();
+        HitKey* dKeysOut        = rayCaster->KeysOut();
 
-        RayAuxPath* dAuxOutGlobal  = static_cast<RayAuxPath*>(*dAuxOut);
         // TODO: partition the work between multiple GPUs
         const auto& gpu = cudaSystem.BestGPU();
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, ray)
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCaster->CurrentRayCount(),
+                           //
+                           KCPathTracerMegaKernel,
+                           // Output
+                           dKeysOut,
+                           dRaysOut,
+                           dAuxOutPtr,
+                           conservativeOutRayPerMaterial,
+                           // Input
+                           dRaysIn,
+                           dAuxInPtr,
+                           dPrimIdsIn,
+                           dTransformIds,
+                           dHitStructs,
+                           dKeysIn,
+                           // I-O
+                           globalData,
+                           rngCPU->GetGPUGenerators(gpu),
+                           // MetaSurface Generator
+                           metaSurfHandler.GetMetaSurfaceGroup(dHitStructs, dRaysIn),
+                           //
+                           rayCaster->CurrentRayCount(),
+                           dTransforms);
+
+        rayCaster->AssumeRaysAreWorked(totalRayOut);
     }
     else
     {
@@ -293,6 +339,7 @@ void PathTracer::AskOptions()
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
     list.emplace(DIRECT_LIGHT_MIS_NAME, OptionVariable(options.directLightMIS));
     list.emplace(RR_START_NAME, OptionVariable(static_cast<int64_t>(options.rrStart)));
+    list.emplace(MEGA_KERNEL_NAME, OptionVariable(options.runAsMegaKernel));
 
     std::string lightSamplerTypeString = LightSamplerCommon::LightSamplerTypeToString(options.lightSamplerType);
     list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(lightSamplerTypeString));

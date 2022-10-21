@@ -27,13 +27,13 @@ class GPUMetaSurface
     const GPUTransformI&        t;              // local to world
 
     UVSurface                   uvSurf;
+    bool                        isLight;
     // Surface can either be light or normal surface
     union
     {
         const GPUMaterialI*     gMaterial;
         const GPULightI*        gLight;
     };
-    bool                        isLight;
 
     public:
     __device__              GPUMetaSurface(const GPUTransformI&,
@@ -45,10 +45,12 @@ class GPUMetaSurface
 
     // Surface Type
     __device__ bool         IsLight() const;
+    __device__ bool         IsNullLight() const;
     // Normal Stuff
     __device__ Vector3f     WorldNormal() const;
     __device__ Vector3f     WorldGeoNormal() const;
     __device__ Vector3f     WorldPosition() const;
+    __device__ QuatF        WorldToTangent() const;
     //
     __device__ bool         IsEmissive() const;
     __device__ bool         Specularity() const;
@@ -71,12 +73,14 @@ class GPUMetaSurface
                                      const Vector3& wi,              // Incoming Radiance
                                      const Vector3& pos,             // Position
                                      const GPUMediumI& m) const;
-
     __device__ float        Pdf(// Input
                                 const Vector3& wo,      // Outgoing Radiance
                                 const Vector3& wi,
                                 const Vector3& pos,     // Position
                                 const GPUMediumI& m);
+    // Boundary Type Related (Light, Camera)
+    __device__ uint32_t         EndpointId() const;
+    __device__ uint32_t         GlobalLightIndex() const;
 };
 
 __device__ inline
@@ -106,6 +110,12 @@ bool GPUMetaSurface::IsLight() const
 }
 
 __device__ inline
+bool GPUMetaSurface::IsNullLight() const
+{
+    return isLight && (gLight == nullptr);
+}
+
+__device__ inline
 Vector3f GPUMetaSurface::WorldNormal() const
 {
     return uvSurf.WorldNormal();
@@ -122,6 +132,12 @@ __device__ inline
 Vector3f GPUMetaSurface::WorldPosition() const
 {
     return uvSurf.WorldPosition();
+}
+
+__device__ inline
+QuatF GPUMetaSurface::WorldToTangent() const
+{
+    return uvSurf.worldToTangent;
 }
 
 __device__ inline
@@ -182,4 +198,18 @@ float GPUMetaSurface::Pdf(const Vector3& wo,
 {
     if(isLight) return 0.0f;
     return gMaterial->Pdf(wo, wi, pos, m, uvSurf);
+}
+
+__device__ inline
+uint32_t GPUMetaSurface::EndpointId() const
+{
+    if(isLight) return gLight->EndpointId();
+    else return UINT32_MAX;
+}
+
+__device__ inline
+uint32_t GPUMetaSurface::GlobalLightIndex() const
+{
+    if(isLight) return gLight->GlobalLightIndex();
+    else return UINT32_MAX;
 }

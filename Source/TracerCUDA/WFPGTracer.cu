@@ -253,7 +253,7 @@ void WFPGTracer::GenerateGuidedDirections()
                        //
                        dRayAux,
                        dRays,
-                       rayCaster->WorkKeys(),
+                       rayCaster->KeysOut(),
                        scene.BaseBoundaryMaterial(),
                        svo.TreeGPU(),
                        rayCount);

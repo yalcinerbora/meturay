@@ -23,13 +23,13 @@ static void KCGenBoundaryMetaSurfaceGenerator(GPUBoundaryMetaSurfaceGenerator<EG
                                               const GPUTransformI* const* gTransforms,
                                               uint32_t count)
 {
-    //uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-    //if(globalId >= count) return;
+    using ConstructingType = GPUBoundaryMetaSurfaceGenerator<EGroup>;
 
-    //auto* ptr = new (gInterfaceLocation + globalId)
-    //    GPUBoundaryMetaSurfaceGenerator<EGroup>(gPrimData,
-    //                                            gLocalLightInterfaces,
-    //                                            gTransforms);
+    uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    if(globalId >= count) return;
+    new (gInterfaceLocation + globalId) ConstructingType(gPrimData,
+                                                         gLocalLightInterfaces,
+                                                         gTransforms);
 }
 
 template <class MGroup, class PGroup>
@@ -41,17 +41,13 @@ static void KCGenMetaSurfaceGenerator(GPUMetaSurfaceGenerator<PGroup, MGroup,
                                       const GPUTransformI* const* gTransforms,
                                       uint32_t count)
 {
-
-
+    using ConstructingType = GPUMetaSurfaceGenerator<PGroup, MGroup,
+                                                     PGroup::GetSurfaceFunction>;
     uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
     if(globalId >= count) return;
-
-
-    auto* ptr = new (gInterfaceLocation + globalId)
-                GPUMetaSurfaceGenerator<PGroup, MGroup,
-                                        PGroup::GetSurfaceFunction>(gPrimData,
-                                                                    gLocalMaterialInterfaces,
-                                                                    gTransforms);
+    new (gInterfaceLocation + globalId) ConstructingType(gPrimData,
+                                                         gLocalMaterialInterfaces,
+                                                         gTransforms);
 }
 
 // Material/Primitive invariant part of the code

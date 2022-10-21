@@ -116,6 +116,22 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
     rayMemory.SwapRays();
 }
 
+void RayCaster::PartitionRaysWRTNothing(HitKey baseBoundMatKey,
+                                        uint32_t totalRayOut)
+{
+    // Just fill the material ids and resize the ray out
+    // Thats it
+    rayMemory.FillMatIdsForSort(currentRayCount);
+    rayMemory.ResizeRayOut(totalRayOut, baseBoundMatKey);
+}
+
+void RayCaster::AssumeRaysAreWorked(uint32_t newRayCount)
+{
+    cudaSystem.SyncAllGPUs();
+    currentRayCount = newRayCount;
+    rayMemory.SwapRays();
+}
+
 size_t RayCaster::UsedGPUMemory() const
 {
     size_t mem = 0;

@@ -35,6 +35,7 @@ class RayCasterI
                                                               uint32_t identityTransformIndex) = 0;
 
         virtual void                    HitRays() = 0;
+        // Work Partition and Call Functions
         virtual RayPartitions<uint32_t> PartitionRaysWRTWork() = 0;
         virtual void                    WorkRays(const WorkBatchMap& workMap,
                                                  const RayPartitionsMulti<uint32_t>& outPortions,
@@ -42,19 +43,29 @@ class RayCasterI
                                                  RNGeneratorCPUI& rngCPU,
                                                  uint32_t totalRayOut,
                                                  HitKey baseBoundMatKey) = 0;
+        // Non-partition and finalize functions
+        virtual void                    PartitionRaysWRTNothing(HitKey baseBoundMatKey,
+                                                                uint32_t totalRayOut) = 0;
+        virtual void                    AssumeRaysAreWorked(uint32_t newRayCount) = 0;
         // Ray Related
         virtual uint32_t                CurrentRayCount() const = 0;
         virtual void                    ResizeRayOut(uint32_t rayCount,
                                                      HitKey baseBoundMatKey) = 0;
-
-        virtual RayGMem*                RaysOut() = 0;
+        // RayMemory Fetch
+        // Input
         virtual const RayGMem*          RaysIn() const = 0;
         virtual const RayId*            RayIds() const = 0;
-        virtual const HitKey*           WorkKeys() const = 0;
+        virtual const HitKey*           KeysIn() const = 0;
+        virtual const PrimitiveId*      PrimitiveIds() const = 0;
+        virtual const TransformId*      TransformIds() const = 0;
+        virtual const HitStructPtr      HitSturctPtr() const = 0;
+        // Output
+        virtual RayGMem*                RaysOut() = 0;
+        virtual HitKey*                 KeysOut() = 0;
+        // Misc
         virtual void                    SwapRays() = 0;
         // Work Related
         virtual void                    OverrideWorkBits(const Vector2i newWorkBits) = 0;
-
         // Memory Usage
         virtual size_t                  UsedGPUMemory() const = 0;
 

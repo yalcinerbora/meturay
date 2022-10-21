@@ -4,7 +4,7 @@
 #include "WorkPool.h"
 #include "GPULightI.h"
 #include "Tracers.h"
-#include "GPUMetaSurfaceHandler.h"
+#include "GPUMetaSurfaceGenerator.h"
 
 class GPUDirectLightSamplerI;
 
@@ -18,6 +18,7 @@ class PathTracer final : public RayTracer
         static constexpr const char*    RR_START_NAME = "RussianRouletteStart";
         static constexpr const char*    DIRECT_LIGHT_MIS_NAME = "DirectLightMIS";
         static constexpr const char*    LIGHT_SAMPLER_TYPE_NAME = "NEESampler";
+        static constexpr const char*    MEGA_KERNEL_NAME = "RunAsMegaKernel";
 
         struct Options
         {
