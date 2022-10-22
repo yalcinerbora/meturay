@@ -7,6 +7,7 @@
 #include "GPUMetaSurfaceGenerator.h"
 
 class GPUDirectLightSamplerI;
+class OutputRayFinderCPU;
 
 class PathTracer final : public RayTracer
 {
@@ -43,8 +44,9 @@ class PathTracer final : public RayTracer
         DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
 
-        GPUMetaSurfaceHandler           metaSurfHandler;
-        uint32_t                        conservativeOutRayPerMaterial;
+        // ONLY USED ON MEGA KERNEL MODE
+        GPUMetaSurfaceHandler               metaSurfHandler;
+        std::unique_ptr<OutputRayFinderCPU> outRayFinder;
 
     protected:
     public:

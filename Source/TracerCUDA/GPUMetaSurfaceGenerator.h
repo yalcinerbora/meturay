@@ -129,13 +129,18 @@ class GPUMetaSurfaceGeneratorGroup
     GPUMetaSurface  AcquireWork(uint32_t rayId,
                                 TransformId tId,
                                 PrimitiveId primId,
-                                HitKey workId);
+                                HitKey workId) const;
+    __device__
+    uint32_t        BatchOutRayCountPerRay(HitKey::Type batchId) const;
+    __device__
+    uint32_t        RayLocalOutRayIndex(HitKey::Type batchId, uint32_t globalInIndex) const;
 };
 
 class GPUMetaSurfaceHandler
 {
     private:
     const GPUMetaSurfaceGeneratorI** dGeneratorInterfaces;
+    const uint32_t*                  dOutRayOffsetPerBatch;
     DeviceMemory                     generatorMem;
 
     public:
@@ -245,12 +250,14 @@ __device__ inline
 GPUMetaSurface GPUMetaSurfaceGeneratorGroup::AcquireWork(uint32_t rayId,
                                                          TransformId tId,
                                                          PrimitiveId primId,
-                                                         HitKey workId)
+                                                         HitKey workId) const
 {
     HitKey::Type workBatchId = HitKey::FetchBatchPortion(workId);
     const GPUMetaSurfaceGeneratorI* gMetaSurfGen = gGeneratorInterfaces[workBatchId];
     return gMetaSurfGen->AcquireWork(rayId, tId, primId, workId, gCurrentHitStructListPtr, gRaysIn);
 }
+
+
 
 inline GPUMetaSurfaceHandler::GPUMetaSurfaceHandler()
     : dGeneratorInterfaces(nullptr)

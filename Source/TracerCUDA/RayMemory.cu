@@ -63,6 +63,7 @@ void ResetHitIdsKC(HitKey* gAcceleratorKeys, RayId* gIds,
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void FindSplitsSparseKC(uint32_t* gPartLoc,
                         const HitKey* gKeys,
+                        // Constants
                         const uint32_t locCount)
 {
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
@@ -75,8 +76,9 @@ void FindSplitsSparseKC(uint32_t* gPartLoc,
         uint16_t keyBatch = HitKey::FetchBatchPortion(key);
         uint16_t keyNBatch = HitKey::FetchBatchPortion(keyN);
 
-        // Write location if split is found
-        if(keyBatch != keyNBatch) gPartLoc[globalId + 1] = globalId + 1;
+        bool foundSplit = (keyBatch != keyNBatch);
+
+        if(foundSplit) gPartLoc[globalId + 1] = globalId + 1;
         else gPartLoc[globalId + 1] = INVALID_LOCATION;
     }
 
@@ -182,9 +184,8 @@ void RayMemory::ResetHitMemory(TransformId identityTransformIndex,
                                 static_cast<uint32_t>(rayCount));
 }
 
-void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
-                         uint32_t count,
-                         const Vector2i& bitMaxValues)
+void RayMemory::SortKeys(RayId*& ids, HitKey*& keys, uint32_t count,
+                         const Vector2i& bitMaxValues, bool onlySortForBatches)
 {
     CUDA_CHECK(cudaSetDevice(leaderDevice.DeviceId()));
 
@@ -199,7 +200,7 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys,
     // First sort internals
     int bitStart = 0;
     int bitEnd = bitMaxValues[1];
-    if(bitStart != bitEnd)
+    if((bitStart != bitEnd) && !onlySortForBatches)
     {
         CUDA_CHECK(cub::DeviceRadixSort::SortPairsDescending(dTempMemory, cubSortMemSize,
                                                              dbKeys, dbIds,
@@ -260,7 +261,8 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
     else
         leaderDevice.GridStrideKC_X(0, 0, locCount,
                                     FindSplitsSparseKC,
-                                    dSparseSplitIndices, dCurrentKeys, locCount);
+                                    dSparseSplitIndices, dCurrentKeys,
+                                    locCount);
 
     // Make Splits Dense
     // From dEmptyKeys -> dEmptyIds

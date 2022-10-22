@@ -18,7 +18,7 @@ RayCaster::RayCaster(const GPUSceneI& gpuScene,
     , currentRayCount(0)
 {}
 
-RayPartitions<uint32_t> RayCaster::PartitionRaysWRTWork()
+RayPartitions<uint32_t> RayCaster::PartitionRaysWRTWork(bool skipInternalPartitioning)
 {
     HitKey* dCurrentKeys = rayMemory.CurrentKeys();
     RayId* dCurrentRayIds = rayMemory.CurrentIds();
@@ -27,12 +27,12 @@ RayPartitions<uint32_t> RayCaster::PartitionRaysWRTWork()
     // to make it ready for sorting
     rayMemory.FillMatIdsForSort(currentRayCount);
     // Sort with respect to the materials keys
-    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys, currentRayCount, maxWorkBits);
+    rayMemory.SortKeys(dCurrentRayIds, dCurrentKeys,
+                       currentRayCount, maxWorkBits,
+                       skipInternalPartitioning);
     // Partition w.r.t. material batch
     RayPartitions<uint32_t> workPartition;
-    workPartition.clear();
     workPartition = rayMemory.Partition(currentRayCount);
-
     return workPartition;
 }
 
@@ -113,22 +113,6 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
     // Shading complete
     // Now make "RayOut" -> "RayIn"
     // and continue
-    rayMemory.SwapRays();
-}
-
-void RayCaster::PartitionRaysWRTNothing(HitKey baseBoundMatKey,
-                                        uint32_t totalRayOut)
-{
-    // Just fill the material ids and resize the ray out
-    // Thats it
-    rayMemory.FillMatIdsForSort(currentRayCount);
-    rayMemory.ResizeRayOut(totalRayOut, baseBoundMatKey);
-}
-
-void RayCaster::AssumeRaysAreWorked(uint32_t newRayCount)
-{
-    cudaSystem.SyncAllGPUs();
-    currentRayCount = newRayCount;
     rayMemory.SwapRays();
 }
 

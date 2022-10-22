@@ -36,17 +36,13 @@ class RayCasterI
 
         virtual void                    HitRays() = 0;
         // Work Partition and Call Functions
-        virtual RayPartitions<uint32_t> PartitionRaysWRTWork() = 0;
+        virtual RayPartitions<uint32_t> PartitionRaysWRTWork(bool skipInternalPartitioning = false) = 0;
         virtual void                    WorkRays(const WorkBatchMap& workMap,
                                                  const RayPartitionsMulti<uint32_t>& outPortions,
                                                  const RayPartitions<uint32_t>& inPartitions,
                                                  RNGeneratorCPUI& rngCPU,
                                                  uint32_t totalRayOut,
                                                  HitKey baseBoundMatKey) = 0;
-        // Non-partition and finalize functions
-        virtual void                    PartitionRaysWRTNothing(HitKey baseBoundMatKey,
-                                                                uint32_t totalRayOut) = 0;
-        virtual void                    AssumeRaysAreWorked(uint32_t newRayCount) = 0;
         // Ray Related
         virtual uint32_t                CurrentRayCount() const = 0;
         virtual void                    ResizeRayOut(uint32_t rayCount,

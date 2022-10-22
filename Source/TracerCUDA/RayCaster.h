@@ -37,17 +37,13 @@ class RayCaster : public RayCasterI
                                     ~RayCaster() = default;
 
         // Interface
-        RayPartitions<uint32_t>     PartitionRaysWRTWork() override;
+        RayPartitions<uint32_t>     PartitionRaysWRTWork(bool skipInternalPartitioning = false) override;
         void                        WorkRays(const WorkBatchMap& workMap,
                                              const RayPartitionsMulti<uint32_t>& outPortions,
                                              const RayPartitions<uint32_t>& inPartitions,
                                              RNGeneratorCPUI& rngCPU,
                                              uint32_t totalRayOut,
                                              HitKey baseBoundMatKey) override;
-        //
-        void                        PartitionRaysWRTNothing(HitKey baseBoundMatKey,
-                                                            uint32_t totalRayOut) override;
-        void                        AssumeRaysAreWorked(uint32_t newRayCount) override;
 
         template <class KeyType, class FetchType,
                   class FetchFunction,

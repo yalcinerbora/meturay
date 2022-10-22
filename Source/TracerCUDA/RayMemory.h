@@ -130,8 +130,8 @@ class RayMemory
         // Common Functions
         // Sorts the hit list for multi-kernel calls
         void                        SortKeys(RayId*& ids, HitKey*& keys,
-                                             uint32_t count,
-                                             const Vector2i& bitRange);
+                                             uint32_t count, const Vector2i& bitRange,
+                                             bool onlySortForBatches = false);
         // Partitions the segments for multi-kernel calls
         RayPartitions<uint32_t>     Partition(uint32_t rayCount);
         // Initialize HitIds and indices

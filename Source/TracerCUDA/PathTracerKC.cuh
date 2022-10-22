@@ -38,14 +38,44 @@ struct PathTracerLocalState
     bool    emptyPrimitive;
 };
 
+class OutputRayFinderGPU
+{
+    private:
+    //
+    const uint8_t*      dOutRayCountBatchRay;   // Number of output rays of this batch
+                                                // (amount of rays per ray)
+    const uint32_t*     dOutRayOffsetBatch;     // Output offset of the batches
+    const uint32_t*     dInRayOffsetBatch;      // Input offset of the batches
+
+    public:
+    __host__ OutputRayFinderGPU(const uint8_t* dOutRayCountBatchRay,
+                                const uint32_t* dOutRayOffsetBatch,
+                                const uint32_t* dInRayOffsetBatch)
+        : dOutRayCountBatchRay(dOutRayCountBatchRay)
+        , dOutRayOffsetBatch(dOutRayOffsetBatch)
+        , dInRayOffsetBatch(dInRayOffsetBatch)
+    {}
+
+    __device__  uint32_t BatchOutRayCountPerRay(HitKey::Type batchId) const
+    {
+        return dOutRayCountBatchRay[batchId];
+    }
+
+    __device__ uint32_t RayLocalOutRayIndex(HitKey::Type batchId, uint32_t globalInIndex) const
+    {
+        uint32_t localOffset = globalInIndex - dInRayOffsetBatch[batchId];
+        return dOutRayOffsetBatch[batchId] + localOffset * dOutRayCountBatchRay[batchId];
+    }
+};
+
 __global__
 static void KCPathTracerMegaKernel(// Output
                                    HitKey* gOutBoundKeys,
                                    RayGMem* gOutRays,
                                    RayAuxPath* gOutRayAux,
-                                   const uint32_t maxOutRay,
                                    // Inputs
                                    const RayGMem* gInRays,
+                                   const RayId* gRayIds,
                                    const RayAuxPath* gInRayAux,
                                    const PrimitiveId* gPrimitiveIds,
                                    const TransformId* gTransformIds,
@@ -56,6 +86,7 @@ static void KCPathTracerMegaKernel(// Output
                                    RNGeneratorGPUI** gRNGs,
                                    // MetaSurfaceGenerator
                                    GPUMetaSurfaceGeneratorGroup surfaceGenerator,
+                                   OutputRayFinderGPU outputRayFinder,
                                    // Constants
                                    const uint32_t rayCount,
                                    const GPUTransformI* const* gTransforms)
@@ -64,16 +95,12 @@ static void KCPathTracerMegaKernel(// Output
     for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
         globalId < rayCount; globalId += blockDim.x * gridDim.x)
     {
-        const RayId rayId = globalId;
+        const RayId rayId = gRayIds[globalId];
         const HitKey hitKey = gMatIds[globalId];
+        const HitKey::Type batchId = HitKey::FetchBatchPortion(hitKey);
 
-        static constexpr int PATH_RAY_INDEX = 0;
-        static constexpr int NEE_RAY_INDEX = 1;
-        // Helper Class for better code readability
-        OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys + globalId * maxOutRay,
-                                              gOutRays + globalId * maxOutRay,
-                                              gOutRayAux + globalId * maxOutRay,
-                                              maxOutRay);
+        uint32_t maxOutRay = outputRayFinder.BatchOutRayCountPerRay(batchId);
+        uint32_t rayOutIndex = outputRayFinder.RayLocalOutRayIndex(batchId, globalId);
 
         // If Invalid ray, completely skip
         if(HitKey::FetchBatchPortion(hitKey) == HitKey::NullBatch)
@@ -89,6 +116,7 @@ static void KCPathTracerMegaKernel(// Output
         // Normal Path Tracing
         if(metaSurface.IsLight())
         {
+            assert(maxOutRay == 0);
             // Special Case: Null Light just skip
             if(metaSurface.IsNullLight()) continue;
 
@@ -161,6 +189,14 @@ static void KCPathTracerMegaKernel(// Output
         }
         else
         {
+            static constexpr int PATH_RAY_INDEX = 0;
+            static constexpr int NEE_RAY_INDEX = 1;
+            // Helper Class for better code readability
+            OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys + rayOutIndex,
+                                                  gOutRays + rayOutIndex,
+                                                  gOutRayAux + rayOutIndex,
+                                                  maxOutRay);
+
             static constexpr Vector3 ZERO_3 = Zero3;
             // Inputs
             // Current Ray
