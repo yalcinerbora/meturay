@@ -32,7 +32,7 @@ struct UnrealMatData
     const TextureRefI<2, Vector3f>** dAlbedo;
     const TextureRefI<2, float>**    dRoughness;
     const TextureRefI<2, float>**    dMetallic;
-    const TextureRefI<2, float>**    dSpecular;    
+    const TextureRefI<2, float>**    dSpecular;
 };
 
 struct LambertMatData

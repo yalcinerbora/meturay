@@ -132,10 +132,10 @@ static void KCPathTracerMegaKernel(// Output
             }
 
             // Accumulate Light if
-            if(isPathRayNEEOff || // We hit a light with a path ray while NEE is off
+            if(isPathRayNEEOff ||   // We hit a light with a path ray while NEE is off
                isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
-               isCorrectNEERay || // We hit the correct light as a NEE ray while NEE is on
-               isCameraRay || // We hit as a camera ray which should not be culled when NEE is on
+               isCorrectNEERay ||   // We hit the correct light as a NEE ray while NEE is on
+               isCameraRay ||       // We hit as a camera ray which should not be culled when NEE is on
                isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contribute
             {
                 // Data Fetch
@@ -192,7 +192,7 @@ static void KCPathTracerMegaKernel(// Output
 
             // If NEE ray hits to this material
             // just skip since this is not a light material
-            if(aux.type == RayType::NEE_RAY) return;
+            if(aux.type == RayType::NEE_RAY) continue;
 
             // Calculate Transmittance factor of the medium
             // And reduce the radiance wrt the medium transmittance
@@ -203,9 +203,9 @@ static void KCPathTracerMegaKernel(// Output
             if(metaSurface.IsEmissive())
             {
                 Vector3 emission = metaSurface.Emit(// Input
-                                                    wi,
-                                                    position,
-                                                    m);
+                                                wi,
+                                                position,
+                                                m);
                 Vector3f total = emission * radianceFactor;
                 AccumulateRaySample(renderState.gSamples,
                                     aux.sampleIndex,
@@ -213,7 +213,7 @@ static void KCPathTracerMegaKernel(// Output
             }
 
             // If this material does not require to have any samples just quit
-            if(sampleCount == 0) return;
+            if(sampleCount == 0) continue;
 
             bool shouldLaunchMISRay = false;
             // ===================================== //
@@ -239,12 +239,10 @@ static void KCPathTracerMegaKernel(// Output
                 {
                     // Evaluate mat for this direction
                     neeReflectance = metaSurface.Evaluate(// Input
-                                                          lDirection,
-                                                          wi,
-                                                          position,
-                                                          m);
-                    //printf("nee refl %f, %f, %f, pdf %f\n", neeReflectance[0], neeReflectance[1],
-                    //       neeReflectance[2], pdfLight);
+                                                      lDirection,
+                                                      wi,
+                                                      position,
+                                                      m);
                 }
 
                 // Check if mis ray should be sampled
@@ -261,8 +259,6 @@ static void KCPathTracerMegaKernel(// Output
                                                     wi,
                                                     position,
                                                     m);
-
-
 
                     pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
 
@@ -304,10 +300,7 @@ static void KCPathTracerMegaKernel(// Output
                                                      wi,
                                                      position,
                                                      m,
-                                                     // I-O
                                                      rng);
-            //printf("myrefl %f, %f, %f\n",
-            //       reflectance[0], reflectance[1], reflectance[2]);
             // Factor the radiance of the surface
             Vector3f pathRadianceFactor = radianceFactor * reflectance;
             // Check singularities

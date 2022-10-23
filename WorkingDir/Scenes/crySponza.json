@@ -672,8 +672,8 @@
 	{
 		// Walls
 		"id": 3,
-		//"type": "Unreal",
-		"type": "Lambert",
+		"type": "Unreal",
+		//"type": "Lambert",
 		"albedo": {"texture": 5, "channels": "rgb"},
 		"normal": {"texture": 6, "channels": "rgb"},
 		"roughness": {"texture": 7, "channels": "r"},
@@ -690,6 +690,7 @@
 		// Floor
 		"id": 5,
 		"type": "Unreal",
+		//"type": "Lambert",
 		"albedo": {"texture": 9, "channels": "rgb"},
 		"normal": {"texture": 10, "channels": "rgb"},
 		"roughness": {"texture": 11, "channels": "r"},
