@@ -11,6 +11,7 @@
 #include "WorkOutputWriter.cuh"
 #include "WFPGCommon.h"
 #include "GPUCameraI.h"
+#include "GPUMetaSurfaceGenerator.h"
 
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
@@ -22,6 +23,7 @@
 #include "GPUBlockPWCDistribution.cuh"
 #include "GPUBlockPWLDistribution.cuh"
 #include "BlockTextureFilter.cuh"
+
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -886,8 +888,8 @@ static void KCGenAndSampleDistribution(// Output
                                        RNGeneratorGPUI** gRNGs,
                                        // Input
                                        // Per-ray
-                                       const RayGMem* gRays,
                                        const RayId* gRayIds,
+                                       const GPUMetaSurfaceGeneratorGroup metaSurfGenerator,
                                        // Per bin
                                        const uint32_t* gBinOffsets,
                                        const uint32_t* gNodeIds,
@@ -957,7 +959,7 @@ static void KCGenAndSampleDistribution(// Output
         if(THREAD_ID < sharedMem->sPositionCount)
         {
             uint32_t rayId = gRayIds[sharedMem->sOffsetStart + THREAD_ID];
-            RayReg ray(gRays, rayId);
+            RayReg ray = metaSurfGenerator.Ray(rayId);
             // Hit Position
             Vector3 position = ray.ray.AdvancedPos(ray.tMax);
             sharedMem->sPositions[THREAD_ID] = position;

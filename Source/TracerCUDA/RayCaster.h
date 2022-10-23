@@ -66,9 +66,10 @@ class RayCaster : public RayCasterI
                                                  HitKey baseBoundMatKey) override;
         // RayMemory Fetch
         // Input
+        const RayId*                SortedRayIds() const override;
+        // Unsorted Data
         const RayGMem*              RaysIn() const override;
-        const RayId*                RayIds() const override;
-        const HitKey*               KeysIn() const override;
+        const HitKey*               WorkKeys() const override;
         const PrimitiveId*          PrimitiveIds() const override;
         const TransformId*          TransformIds() const override;
         const HitStructPtr          HitSturctPtr() const override;
@@ -96,19 +97,19 @@ inline void RayCaster::ResizeRayOut(uint32_t rayCount,
     return rayMemory.ResizeRayOut(rayCount, baseBoundMatKey);
 }
 
+inline const RayId* RayCaster::SortedRayIds() const
+{
+    return rayMemory.CurrentIds();
+}
+
 inline const RayGMem* RayCaster::RaysIn() const
 {
     return rayMemory.Rays();
 }
 
-inline const RayId* RayCaster::RayIds() const
+inline const HitKey* RayCaster::WorkKeys() const
 {
-    return rayMemory.CurrentIds();
-}
-
-inline const HitKey* RayCaster::KeysIn() const
-{
-    return rayMemory.CurrentKeys();
+    return rayMemory.WorkKeys();
 }
 
 inline const PrimitiveId* RayCaster::PrimitiveIds() const

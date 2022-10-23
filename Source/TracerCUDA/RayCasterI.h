@@ -49,9 +49,10 @@ class RayCasterI
                                                      HitKey baseBoundMatKey) = 0;
         // RayMemory Fetch
         // Input
+        virtual const RayId*            SortedRayIds() const = 0;
+        // Unsorted Data
         virtual const RayGMem*          RaysIn() const = 0;
-        virtual const RayId*            RayIds() const = 0;
-        virtual const HitKey*           KeysIn() const = 0;
+        virtual const HitKey*           WorkKeys() const = 0;
         virtual const PrimitiveId*      PrimitiveIds() const = 0;
         virtual const TransformId*      TransformIds() const = 0;
         virtual const HitStructPtr      HitSturctPtr() const = 0;

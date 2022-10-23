@@ -44,7 +44,7 @@ class PathTracer final : public RayTracer
         DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
         // Mega kernel required props
-        GPUMetaSurfaceHandler               metaSurfHandler;
+        GPUMetaSurfaceHandler           metaSurfHandler;
 
     protected:
     public:

@@ -10,6 +10,7 @@
 #include "RNGSobol.cuh"
 #include "RNGIndependent.cuh"
 #include "BlockTextureFilter.cuh"
+#include "GPUMetaSurfaceGenerator.h"
 
 class GPUDirectLightSamplerI;
 
@@ -35,6 +36,7 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    RENDER_LEVEL_NAME           = "SVORenderLevel";
     static constexpr const char*    SVO_INIT_PATH_NAME          = "InitialSVO";
     static constexpr const char*    SKIP_PG_NAME                = "SkipPG";
+    static constexpr const char*    PRODUCT_PG_NAME             = "DoProductPathGuiding";
 
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
 
@@ -64,6 +66,7 @@ class WFPGTracer final : public RayTracer
             std::string         svoInitPath         =  "";
             float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
             bool                skipPG              = false;
+            bool                productPG           = true;
             //
             bool                pgDumpDebugData     = false;
             uint32_t            pgDumpInterval      = 2;
@@ -98,6 +101,8 @@ class WFPGTracer final : public RayTracer
         // Path Memory
         DeviceMemory                    pathMemory;
         WFPGPathNode*                   dPathNodes;
+        // Product Path Guiding Related
+        GPUMetaSurfaceHandler           metaSurfHandler;
         // Debug mode cone aperture
         float                           coneAperture;
         // Misc

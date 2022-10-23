@@ -102,55 +102,66 @@ class GPUBoundaryMetaSurfaceGenerator : public GPUMetaSurfaceGeneratorI
                                                             const GPUTransformI* const* gTransforms);
 
     __device__
-    GPUMetaSurface AcquireWork(// Rest is ID
-                               uint32_t rayId,
-                               TransformId tId,
-                               PrimitiveId primId,
-                               HitKey workId,
-                               //This may change every frame
-                               // Thus provided as an argument
-                               const HitStructPtr gHitStructs,
-                               const RayGMem* gRaysIn) const override;
+    GPUMetaSurface          AcquireWork(// Rest is ID
+                                        uint32_t rayId,
+                                        TransformId tId,
+                                        PrimitiveId primId,
+                                        HitKey workId,
+                                        //This may change every frame
+                                        // Thus provided as an argument
+                                        const HitStructPtr gHitStructs,
+                                        const RayGMem* gRaysIn) const override;
 };
 
 class GPUMetaSurfaceGeneratorGroup
 {
     private:
     const GPUMetaSurfaceGeneratorI**    gGeneratorInterfaces;
-    const HitStructPtr                  gCurrentHitStructListPtr;
+    // Unsorted Current Ray Related Memory
     const RayGMem*                      gRaysIn;
+    const HitKey*                       gWorkKeys;
+    const PrimitiveId*                  gPrimIds;
+    const TransformId*                  gTransformIds;
+    const HitStructPtr                  gHitStructPtr;
 
     public:
     // Constructors & Destructor
     __host__        GPUMetaSurfaceGeneratorGroup(const GPUMetaSurfaceGeneratorI**,
-                                                 const HitStructPtr, const RayGMem*);
+                                                 const RayGMem* dRaysIn,
+                                                 const HitKey* dWorkKeys,
+                                                 const PrimitiveId* dPrimIds,
+                                                 const TransformId* dTransformIds,
+                                                 const HitStructPtr dHitStructPtr);
 
     __device__
-    GPUMetaSurface  AcquireWork(uint32_t rayId,
-                                TransformId tId,
-                                PrimitiveId primId,
-                                HitKey workId) const;
+    GPUMetaSurface  AcquireWork(uint32_t rayId) const;
     __device__
-    uint32_t        BatchOutRayCountPerRay(HitKey::Type batchId) const;
+    PrimitiveId     PrimId(uint32_t rayId) const;
     __device__
-    uint32_t        RayLocalOutRayIndex(HitKey::Type batchId, uint32_t globalInIndex) const;
+    HitKey          WorkKey(uint32_t rayId) const;
+    __device__
+    TransformId     TransId(uint32_t rayId) const;
+    __device__
+    RayReg          Ray(uint32_t rayId) const;
 };
 
 class GPUMetaSurfaceHandler
 {
     private:
-    const GPUMetaSurfaceGeneratorI** dGeneratorInterfaces;
-    const uint32_t*                  dOutRayOffsetPerBatch;
-    DeviceMemory                     generatorMem;
+    const GPUMetaSurfaceGeneratorI**    dGeneratorInterfaces;
+    DeviceMemory                        generatorMem;
 
     public:
     // Constructors & Destructor
-                                    GPUMetaSurfaceHandler();
+                                        GPUMetaSurfaceHandler();
 
-    TracerError                     Initialize(const GPUSceneI& scene,
-                                               const WorkBatchMap& sceneWorkBatches);
-    GPUMetaSurfaceGeneratorGroup    GetMetaSurfaceGroup(const HitStructPtr currentHitStructs,
-                                                        const RayGMem* gRaysIn);
+    TracerError                         Initialize(const GPUSceneI& scene,
+                                                   const WorkBatchMap& sceneWorkBatches);
+    GPUMetaSurfaceGeneratorGroup        GetMetaSurfaceGroup(const RayGMem* dRaysIn,
+                                                            const HitKey* dWorkKeys,
+                                                            const PrimitiveId* dPrimIds,
+                                                            const TransformId* dTransformIds,
+                                                            const HitStructPtr dHitStructPtr);
 };
 
 template<class PrimGroup, class MatGroup,
@@ -250,30 +261,65 @@ GPUMetaSurface GPUBoundaryMetaSurfaceGenerator<EndpointGroup>::AcquireWork(// Re
 
 __host__ inline
 GPUMetaSurfaceGeneratorGroup::GPUMetaSurfaceGeneratorGroup(const GPUMetaSurfaceGeneratorI** gGenPtrs,
-                                                           const HitStructPtr gHitStructPtr,
-                                                           const RayGMem* gRaysIn)
+                                                           const RayGMem* dRaysIn,
+                                                           const HitKey* dWorkKeys,
+                                                           const PrimitiveId* dPrimIds,
+                                                           const TransformId* dTransformIds,
+                                                           const HitStructPtr dHitStructPtr)
     : gGeneratorInterfaces(gGenPtrs)
-    , gCurrentHitStructListPtr(gHitStructPtr)
-    , gRaysIn(gRaysIn)
+    , gRaysIn(dRaysIn)
+    , gWorkKeys(dWorkKeys)
+    , gPrimIds(dPrimIds)
+    , gTransformIds(dTransformIds)
+    , gHitStructPtr(dHitStructPtr)
 {}
 
 __device__ inline
-GPUMetaSurface GPUMetaSurfaceGeneratorGroup::AcquireWork(uint32_t rayId,
-                                                         TransformId tId,
-                                                         PrimitiveId primId,
-                                                         HitKey workId) const
+GPUMetaSurface GPUMetaSurfaceGeneratorGroup::AcquireWork(uint32_t rayId) const
 {
+    TransformId tId = gTransformIds[rayId];
+    PrimitiveId pId = gPrimIds[rayId];
+    HitKey workId = gWorkKeys[rayId];
+
     HitKey::Type workBatchId = HitKey::FetchBatchPortion(workId);
     const GPUMetaSurfaceGeneratorI* gMetaSurfGen = gGeneratorInterfaces[workBatchId];
-    return gMetaSurfGen->AcquireWork(rayId, tId, primId, workId, gCurrentHitStructListPtr, gRaysIn);
+    return gMetaSurfGen->AcquireWork(rayId, tId, pId, workId, gHitStructPtr, gRaysIn);
+}
+
+__device__ inline
+PrimitiveId GPUMetaSurfaceGeneratorGroup::PrimId(uint32_t rayId) const
+{
+    return gPrimIds[rayId];
+}
+
+__device__ inline
+HitKey GPUMetaSurfaceGeneratorGroup::WorkKey(uint32_t rayId) const
+{
+    return gWorkKeys[rayId];
+}
+
+__device__ inline
+TransformId GPUMetaSurfaceGeneratorGroup::TransId(uint32_t rayId) const
+{
+    return gTransformIds[rayId];
+}
+
+__device__ inline
+RayReg GPUMetaSurfaceGeneratorGroup::Ray(uint32_t rayId) const
+{
+    return RayReg(gRaysIn, rayId);
 }
 
 inline GPUMetaSurfaceHandler::GPUMetaSurfaceHandler()
     : dGeneratorInterfaces(nullptr)
 {}
 
-inline GPUMetaSurfaceGeneratorGroup GPUMetaSurfaceHandler::GetMetaSurfaceGroup(const HitStructPtr dCurrentHitStructs,
-                                                                               const RayGMem* gRaysIn)
+inline GPUMetaSurfaceGeneratorGroup GPUMetaSurfaceHandler::GetMetaSurfaceGroup(const RayGMem* dRaysIn,
+                                                                               const HitKey* dWorkKeys,
+                                                                               const PrimitiveId* dPrimIds,
+                                                                               const TransformId* dTransformIds,
+                                                                               const HitStructPtr dHitStructPtr)
 {
-    return GPUMetaSurfaceGeneratorGroup(dGeneratorInterfaces, dCurrentHitStructs, gRaysIn);
+    return GPUMetaSurfaceGeneratorGroup(dGeneratorInterfaces, dRaysIn, dWorkKeys,
+                                        dPrimIds, dTransformIds, dHitStructPtr);
 }

@@ -67,8 +67,8 @@ using PathGuideKernelFunction = void (*)(// Output
                                          RNGeneratorGPUI**,
                                          // Input
                                          // Per-ray
-                                         const RayGMem*,
                                          const RayId*,
+                                         const GPUMetaSurfaceGeneratorGroup,
                                          // Per bin
                                          const uint32_t*,
                                          const uint32_t*,
@@ -84,10 +84,10 @@ using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
     std::make_tuple(512, 64, 64), // First bounce good approximation
-    std::make_tuple(512, 64, 64),   // Second bounce as well
-    std::make_tuple(256, 32, 32),   // Third bounce not so much
-    std::make_tuple(256, 16, 16),   // Fourth bounce as well
-    std::make_tuple(128, 8, 8)     // Fifth is bad
+    std::make_tuple(512, 32, 32), // Second bounce as well
+    std::make_tuple(256, 16, 16), // Third bounce not so much
+    std::make_tuple(256, 16, 16), // Fourth bounce as well
+    std::make_tuple(128, 8, 8)    // Fifth is bad
 };
 
 static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),
@@ -290,6 +290,18 @@ void WFPGTracer::GenerateGuidedDirections()
                                           rayCount,
                                           cudaSystem);
 
+    // Get Meta Surface
+    const RayGMem* dRaysIn = rayCaster->RaysIn();
+    const HitKey* dWorkKeys = rayCaster->WorkKeys();
+    const PrimitiveId* dPrimIds = rayCaster->PrimitiveIds();
+    const TransformId* dTransformIds = rayCaster->TransformIds();
+    const HitStructPtr dHitStructPtr = rayCaster->HitSturctPtr();
+    const auto metaSurfGenerator = metaSurfHandler.GetMetaSurfaceGroup(dRaysIn,
+                                                                       dWorkKeys,
+                                                                       dPrimIds,
+                                                                       dTransformIds,
+                                                                       dHitStructPtr);
+
     // Call the Trace and Sample Kernel
     // Select the kernel depending on the depth
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
@@ -324,8 +336,8 @@ void WFPGTracer::GenerateGuidedDirections()
                   gpuGenerators,
                   // Input
                   // Per-ray
-                  dRays,
-                  rayCaster->RayIds(),
+                  rayCaster->SortedRayIds(),
+                  metaSurfGenerator,
                   // Per bin
                   dPartitionOffsets,
                   dPartitionBinIds,
@@ -474,11 +486,14 @@ TracerError WFPGTracer::Initialize()
     // Generate a Sampler for the
     // Path Guide Sampling (Conservatively generate maximum amount of RNGs)
     const auto& gpu = cudaSystem.BestGPU();
-
     uint32_t rngCount = (gpu.MaxActiveBlockPerSM(KERNEL_TBP_MAX) *
                          gpu.SMCount() * KERNEL_TBP_MAX);
     pgKernelBlockCount = rngCount / KERNEL_TBP_MAX;
     pgSampleRNG = RNGIndependentCPU(params.seed, gpu, rngCount);
+
+    // Initialize The Meta Surface for Product Path Guiding
+    if((err = metaSurfHandler.Initialize(scene, workMap)) != TracerError::OK)
+        return err;
 
     return TracerError::OK;
 }
@@ -527,6 +542,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.skipPG, SKIP_PG_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.productPG, PRODUCT_PG_NAME)) != TracerError::OK)
+        return err;
 
     if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
@@ -558,6 +575,7 @@ void WFPGTracer::AskOptions()
     list.emplace(SVO_INIT_PATH_NAME, OptionVariable(options.svoInitPath));
     list.emplace(R_FIELD_GAUSS_ALPHA_NAME, OptionVariable(options.rFieldGaussAlpha));
     list.emplace(SKIP_PG_NAME, OptionVariable(options.skipPG));
+    list.emplace(PRODUCT_PG_NAME, OptionVariable(options.productPG));
 
     list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));
     list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));

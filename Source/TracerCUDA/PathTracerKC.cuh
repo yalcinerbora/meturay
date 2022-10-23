@@ -45,18 +45,14 @@ static void KCPathTracerMegaKernel(// Output
                                    RayAuxPath* gOutRayAux,
                                    const uint8_t maxOutRay,
                                    // Inputs
-                                   const RayGMem* gInRays,
                                    const RayId* gRayIds,
                                    const RayAuxPath* gInRayAux,
-                                   const PrimitiveId* gPrimitiveIds,
-                                   const TransformId* gTransformIds,
-                                   const HitStructPtr gHitStructs,
-                                   const HitKey* gMatIds,
+                                   GPUMetaSurfaceGeneratorGroup surfaceGenerator,
                                    // I-O
                                    PathTracerGlobalState renderState,
                                    RNGeneratorGPUI** gRNGs,
                                    // MetaSurfaceGenerator
-                                   GPUMetaSurfaceGeneratorGroup surfaceGenerator,
+
                                    // Constants
                                    const uint32_t rayCount,
                                    const GPUTransformI* const* gTransforms)
@@ -66,20 +62,20 @@ static void KCPathTracerMegaKernel(// Output
         globalId < rayCount; globalId += blockDim.x * gridDim.x)
     {
         const RayId rayId = gRayIds[globalId];
-        const HitKey hitKey = gMatIds[globalId];
-        const HitKey::Type batchId = HitKey::FetchBatchPortion(hitKey);
+        //const HitKey hitKey = gMatIds[globalId];
+        //const HitKey::Type batchId = HitKey::FetchBatchPortion(hitKey);
 
-        // If Invalid ray, completely skip
-        if(HitKey::FetchBatchPortion(hitKey) == HitKey::NullBatch)
-            continue;
+        //// If Invalid ray, completely skip
+        //if(HitKey::FetchBatchPortion(hitKey) == HitKey::NullBatch)
+        //    continue;
 
         // Load Input to Registers
-        const RayReg ray(gInRays, rayId);
+        const RayReg ray = surfaceGenerator.Ray(rayId);
         const RayAuxPath aux = gInRayAux[rayId];
-        const PrimitiveId primitiveId = gPrimitiveIds[rayId];
-        const TransformId transformId = gTransformIds[rayId];
+        const PrimitiveId primitiveId = surfaceGenerator.PrimId(rayId);
+        //const TransformId transformId = gTransformIds[rayId];
 
-        GPUMetaSurface metaSurface = surfaceGenerator.AcquireWork(rayId, transformId, primitiveId, hitKey);
+        GPUMetaSurface metaSurface = surfaceGenerator.AcquireWork(rayId);
         // Normal Path Tracing
         if(metaSurface.IsLight())
         {

@@ -14,10 +14,10 @@ class GPUMediumI;
 
 // Surface Class
 // Primitive Type / Material Type Agnostic
-// beacuse of that it does not have full functionality
+// because of that it does not have full functionality
 // of a templated MaterialGroup / PrimtiveGroup / WorkGroup
 // triplet
-// This is created so that a non workgroup related kernel can
+// This is created so that a non work group related kernel can
 // do shading calculations if needed
 // (In our case WFPG Tracer uses this to access per-ray shading data)
 // and do product path guiding
@@ -80,8 +80,8 @@ class GPUMetaSurface
                                 const Vector3& pos,     // Position
                                 const GPUMediumI& m);
     // Boundary Type Related (Light, Camera)
-    __device__ uint32_t         EndpointId() const;
-    __device__ uint32_t         GlobalLightIndex() const;
+    __device__ uint32_t     EndpointId() const;
+    __device__ uint32_t     GlobalLightIndex() const;
 };
 
 __device__ inline
@@ -119,7 +119,7 @@ bool GPUMetaSurface::IsNullLight() const
 __device__ inline
 bool GPUMetaSurface::IsPrimitiveBackedLight() const
 {
-    return isLight && gLight->IsPrimitiveBackedLight();
+    return isLight && (gLight->IsPrimitiveBackedLight());
 }
 
 __device__ inline

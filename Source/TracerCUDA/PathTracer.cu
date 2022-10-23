@@ -180,13 +180,20 @@ bool PathTracer::Render()
         const auto& gpu = cudaSystem.BestGPU();
         // Get Pointers
         // Input
+        const RayId* dIdsIn                 = rayCaster->SortedRayIds();
+
         const RayAuxPath* dAuxInPtr         = static_cast<const RayAuxPath*>(*dAuxIn);
         const RayGMem* dRaysIn              = rayCaster->RaysIn();
-        const HitKey* dKeysIn               = rayCaster->KeysIn();
-        const RayId* dIdsIn                 = rayCaster->RayIds();
-        const HitStructPtr dHitStructs      = rayCaster->HitSturctPtr();
+        const HitKey* dWorkKeys             = rayCaster->WorkKeys();
+        const PrimitiveId* dPrimIds         = rayCaster->PrimitiveIds();
         const TransformId* dTransformIds    = rayCaster->TransformIds();
-        const PrimitiveId* dPrimIdsIn       = rayCaster->PrimitiveIds();
+        const HitStructPtr dHitStructPtr    = rayCaster->HitSturctPtr();
+
+        const auto metaSurfGenerator = metaSurfHandler.GetMetaSurfaceGroup(dRaysIn,
+                                                                           dWorkKeys,
+                                                                           dPrimIds,
+                                                                           dTransformIds,
+                                                                           dHitStructPtr);
 
         // Output
         // Allocate Enough for output rays first
@@ -214,7 +221,6 @@ bool PathTracer::Render()
             // Find relative input & output pointers
             // Input
             const RayId* dRayIdStart = dIdsIn + p.offset;
-            const HitKey* dKeyStart = dKeysIn + p.offset;
             // Output
             RayGMem* dRayOutStart = dRaysOut + pOut.offsets[0];
             HitKey* dBoundKeyStart = dKeysOut + pOut.offsets[0];
@@ -231,18 +237,12 @@ bool PathTracer::Render()
                                dAuxOutStart,
                                loc->second[0]->OutRayCount(),
                                // Input
-                               dRaysIn,
                                dRayIdStart,
                                dAuxInPtr,
-                               dPrimIdsIn,
-                               dTransformIds,
-                               dHitStructs,
-                               dKeyStart,
+                               metaSurfGenerator,
                                // I-O
                                globalData,
                                rngCPU->GetGPUGenerators(gpu),
-                               // MetaSurface Generator
-                               metaSurfHandler.GetMetaSurfaceGroup(dHitStructs, dRaysIn),
                                //
                                static_cast<uint32_t>(p.count),
                                dTransforms);
