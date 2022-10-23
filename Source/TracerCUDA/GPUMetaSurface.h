@@ -46,6 +46,7 @@ class GPUMetaSurface
     // Surface Type
     __device__ bool         IsLight() const;
     __device__ bool         IsNullLight() const;
+    __device__ bool         IsPrimitiveBackedLight() const;
     // Normal Stuff
     __device__ Vector3f     WorldNormal() const;
     __device__ Vector3f     WorldGeoNormal() const;
@@ -113,6 +114,12 @@ __device__ inline
 bool GPUMetaSurface::IsNullLight() const
 {
     return isLight && (gLight == nullptr);
+}
+
+__device__ inline
+bool GPUMetaSurface::IsPrimitiveBackedLight() const
+{
+    return isLight && gLight->IsPrimitiveBackedLight();
 }
 
 __device__ inline

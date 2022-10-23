@@ -71,10 +71,9 @@ void RayCaster::WorkRays(const WorkBatchMap& workMap,
         if(loc == workMap.end()) continue;
 
         // TODO: change this loop to combine iterator instead of find
-        //const auto& pIn = *(workPartition.find<uint32_t>(p.portionId));
         const auto& pOut = *(outPortions.find(MultiArrayPortion<uint32_t>{p.portionId}));
 
-        // Relativize input & output pointers
+        // Find relative input & output pointers
         const RayId* dRayIdStart = dCurrentRayIds + p.offset;
         const HitKey* dKeyStart = dCurrentKeys + p.offset;
 

@@ -43,10 +43,8 @@ class PathTracer final : public RayTracer
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
         const GPUDirectLightSamplerI*   dLightSampler;
-
-        // ONLY USED ON MEGA KERNEL MODE
+        // Mega kernel required props
         GPUMetaSurfaceHandler               metaSurfHandler;
-        std::unique_ptr<OutputRayFinderCPU> outRayFinder;
 
     protected:
     public:

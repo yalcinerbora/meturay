@@ -40,88 +40,6 @@
 //    return stream;
 //}
 
-class OutputRayFinderCPU
-{
-    private:
-    DeviceMemory        mem;
-    uint8_t*            dOutRayCountBatchRay;
-    uint32_t*           dOutRayOffsetBatch;
-    uint32_t*           dInRayOffsetBatch;
-    uint32_t            maxBatchCount;
-
-    public:
-                        OutputRayFinderCPU(const WorkBatchMap& workMap);
-    OutputRayFinderGPU  CalculateRayOut(const RayPartitions<uint32_t>& inPartitions,
-                                        const RayPartitionsMulti<uint32_t>& outPartitions);
-};
-
-
-OutputRayFinderCPU::OutputRayFinderCPU(const WorkBatchMap& workMap)
-    : maxBatchCount(0)
-{
-    for(const auto& workList : workMap)
-    {
-        uint32_t batchId = workList.first;
-        maxBatchCount = std::max(batchId, maxBatchCount);
-
-    }
-    maxBatchCount++;
-
-    std::vector<uint8_t> hOutRayCountPerBatchRay(maxBatchCount, 0);
-    GPUMemFuncs::AllocateMultiData(std::tie(dOutRayCountBatchRay,
-                                            dOutRayOffsetBatch,
-                                            dInRayOffsetBatch),
-                                   mem,
-                                   {maxBatchCount,
-                                    maxBatchCount,
-                                    maxBatchCount});
-
-    for(const auto& workList : workMap)
-    {
-        uint32_t batchId = workList.first;
-        hOutRayCountPerBatchRay[batchId] = workList.second[0]->OutRayCount();
-    }
-    CUDA_CHECK(cudaMemcpy(dOutRayCountBatchRay, hOutRayCountPerBatchRay.data(),
-                          maxBatchCount * sizeof(uint8_t),
-                          cudaMemcpyHostToDevice));
-}
-
-OutputRayFinderGPU OutputRayFinderCPU::CalculateRayOut(const RayPartitions<uint32_t>& inPartitions,
-                                                       const RayPartitionsMulti<uint32_t>& outPartitions)
-{
-    std::vector<uint32_t> hRayInOffsets(maxBatchCount);
-    std::vector<uint32_t> hRayOutOffsets(maxBatchCount);
-
-    for(uint32_t i = 0; i < maxBatchCount; i++)
-    {
-        // In
-        if(auto loc = inPartitions.find(ArrayPortion<uint32_t>{i, 0, 0});
-           loc != inPartitions.cend())
-        {
-            hRayInOffsets[i] = static_cast<uint32_t>(loc->offset);
-        }
-        else hRayInOffsets[i] = 0;
-        // Out
-        if(auto loc = outPartitions.find(MultiArrayPortion<uint32_t>{i, {}, {}});
-           loc != outPartitions.cend())
-        {
-            hRayOutOffsets[i] = static_cast<uint32_t>(loc->offsets[0]);
-        }
-        else hRayOutOffsets[i] = 0;
-
-    }
-    CUDA_CHECK(cudaMemcpy(dInRayOffsetBatch, hRayInOffsets.data(),
-                          maxBatchCount * sizeof(uint32_t),
-                          cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(dOutRayOffsetBatch, hRayOutOffsets.data(),
-                          maxBatchCount * sizeof(uint32_t),
-                          cudaMemcpyHostToDevice));
-
-    return OutputRayFinderGPU(dOutRayCountBatchRay,
-                              dOutRayOffsetBatch,
-                              dInRayOffsetBatch);
-}
-
 PathTracer::PathTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
                        const TracerParameters& p)
@@ -195,8 +113,6 @@ TracerError PathTracer::Initialize()
     {
         if((err = metaSurfHandler.Initialize(scene, workMap)) != TracerError::OK)
             return err;
-
-        outRayFinder = std::make_unique<OutputRayFinderCPU>(workMap);
     }
     return TracerError::OK;
 }
@@ -248,11 +164,11 @@ bool PathTracer::Render()
     globalData.directLightMIS = options.directLightMIS;
     globalData.gLightSampler = dLightSampler;
 
-    const auto partitions = rayCaster->PartitionRaysWRTWork();
+    const auto inPartitions = rayCaster->PartitionRaysWRTWork();
     // Generate output partitions
     uint32_t totalOutRayCount = 0;
     auto outPartitions = RayCasterI::PartitionOutputRays(totalOutRayCount,
-                                                         partitions,
+                                                         inPartitions,
                                                          workMap);
     // Allocate new auxiliary buffer
     // to fit all potential ray outputs
@@ -261,13 +177,7 @@ bool PathTracer::Render()
 
     if(options.runAsMegaKernel)
     {
-        uint32_t totalRayIn = rayCaster->CurrentRayCount();
-        rayCaster->ResizeRayOut(totalOutRayCount, scene.BaseBoundaryMaterial());
-
-        // Flatten the Partitions and generate output ray finder
-        auto outRayFinderGPU = outRayFinder->CalculateRayOut(partitions,
-                                                             outPartitions);
-
+        const auto& gpu = cudaSystem.BestGPU();
         // Get Pointers
         // Input
         const RayAuxPath* dAuxInPtr         = static_cast<const RayAuxPath*>(*dAuxIn);
@@ -279,39 +189,66 @@ bool PathTracer::Render()
         const PrimitiveId* dPrimIdsIn       = rayCaster->PrimitiveIds();
 
         // Output
+        // Allocate Enough for output rays first
+        rayCaster->ResizeRayOut(totalOutRayCount, scene.BaseBoundaryMaterial());
+
         RayAuxPath* dAuxOutPtr  = static_cast<RayAuxPath*>(*dAuxOut);
         RayGMem* dRaysOut       = rayCaster->RaysOut();
         HitKey* dKeysOut        = rayCaster->KeysOut();
 
-        // TODO: partition the work between multiple GPUs
-        const auto& gpu = cudaSystem.BestGPU();
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayIn,
-                           //
-                           KCPathTracerMegaKernel,
-                           // Output
-                           dKeysOut,
-                           dRaysOut,
-                           dAuxOutPtr,
-                           // Input
-                           dRaysIn,
-                           dIdsIn,
-                           dAuxInPtr,
-                           dPrimIdsIn,
-                           dTransformIds,
-                           dHitStructs,
-                           dKeysIn,
-                           // I-O
-                           globalData,
-                           rngCPU->GetGPUGenerators(gpu),
-                           // MetaSurface Generator
-                           metaSurfHandler.GetMetaSurfaceGroup(dHitStructs, dRaysIn),
-                           outRayFinderGPU,
-                           //
-                           totalRayIn,
-                           dTransforms);
+        // This is not a single mega kernel but
+        // this way it is easier to incorporate
+        for(const auto& p : inPartitions)
+        {
+            // Skip null batch
+            if(p.portionId == HitKey::NullBatch) continue;
+            auto loc = workMap.find(p.portionId);
+            if(loc == workMap.end()) continue;
 
-        rayCaster->SwapRays();
+            // Find the output locations
+            const auto& pOut = *(outPartitions.find(MultiArrayPortion<uint32_t>{p.portionId}));
+            assert(pOut.counts.size() == 1);
+            assert(pOut.counts.size() == pOut.offsets.size());
+            assert(pOut.counts.size() == loc->second.size());
+
+            // Find relative input & output pointers
+            // Input
+            const RayId* dRayIdStart = dIdsIn + p.offset;
+            const HitKey* dKeyStart = dKeysIn + p.offset;
+            // Output
+            RayGMem* dRayOutStart = dRaysOut + pOut.offsets[0];
+            HitKey* dBoundKeyStart = dKeysOut + pOut.offsets[0];
+            RayAuxPath* dAuxOutStart = dAuxOutPtr + pOut.offsets[0];
+
+            // TODO: partition the work between multiple GPUs
+            const auto& gpu = cudaSystem.BestGPU();
+            gpu.GridStrideKC_X(0, (cudaStream_t)0, p.count,
+                               //
+                               KCPathTracerMegaKernel,
+                               // Output
+                               dBoundKeyStart,
+                               dRayOutStart,
+                               dAuxOutStart,
+                               loc->second[0]->OutRayCount(),
+                               // Input
+                               dRaysIn,
+                               dRayIdStart,
+                               dAuxInPtr,
+                               dPrimIdsIn,
+                               dTransformIds,
+                               dHitStructs,
+                               dKeyStart,
+                               // I-O
+                               globalData,
+                               rngCPU->GetGPUGenerators(gpu),
+                               // MetaSurface Generator
+                               metaSurfHandler.GetMetaSurfaceGroup(dHitStructs, dRaysIn),
+                               //
+                               static_cast<uint32_t>(p.count),
+                               dTransforms);
+        }
         cudaSystem.SyncAllGPUs();
+        rayCaster->SwapRays();
     }
     else
     {
@@ -337,10 +274,10 @@ bool PathTracer::Render()
                 i++;
             }
         }
-
         // Launch Kernels
-        rayCaster->WorkRays(workMap, outPartitions,
-                            partitions,
+        rayCaster->WorkRays(workMap,
+                            outPartitions,
+                            inPartitions,
                             *rngCPU.get(),
                             totalOutRayCount,
                             scene.BaseBoundaryMaterial());

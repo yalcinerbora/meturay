@@ -228,13 +228,26 @@ GPUMetaSurface GPUBoundaryMetaSurfaceGenerator<EndpointGroup>::AcquireWork(// Re
     const GPUTransformI& transform = *gTransforms[tId];
     // Get hit data from the global array
     const HitData hit = gHitStructs.Ref<HitData>(rayId);
-    UVSurface uvSurface = SurfFunc(hit, transform,
-                                   ray.ray.getDirection(),
-                                   primId, gPrimData);
-    // Return the class
-    return GPUMetaSurface(transform,
-                          uvSurface,
-                          gLightI);
+
+    // Somehow we missed the light with a
+    bool primLight = (gLightI && gLightI->IsPrimitiveBackedLight());
+    bool primLightButMissed = (primLight && primId >= INVALID_PRIMITIVE_ID);
+
+    if((!primLight) || primLightButMissed)
+    {
+        return GPUMetaSurface(transform,
+                              UVSurface{},
+                              gLightI);
+    }
+    else
+    {
+        UVSurface uvSurface = SurfFunc(hit, transform,
+                                       ray.ray.getDirection(),
+                                       primId, gPrimData);
+        return GPUMetaSurface(transform,
+                              uvSurface,
+                              gLightI);
+    }
 }
 
 __host__ inline

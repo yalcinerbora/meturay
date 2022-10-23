@@ -38,41 +38,12 @@ struct PathTracerLocalState
     bool    emptyPrimitive;
 };
 
-class OutputRayFinderGPU
-{
-    private:
-    //
-    const uint8_t*      dOutRayCountBatchRay;   // Number of output rays of this batch
-                                                // (amount of rays per ray)
-    const uint32_t*     dOutRayOffsetBatch;     // Output offset of the batches
-    const uint32_t*     dInRayOffsetBatch;      // Input offset of the batches
-
-    public:
-    __host__ OutputRayFinderGPU(const uint8_t* dOutRayCountBatchRay,
-                                const uint32_t* dOutRayOffsetBatch,
-                                const uint32_t* dInRayOffsetBatch)
-        : dOutRayCountBatchRay(dOutRayCountBatchRay)
-        , dOutRayOffsetBatch(dOutRayOffsetBatch)
-        , dInRayOffsetBatch(dInRayOffsetBatch)
-    {}
-
-    __device__  uint32_t BatchOutRayCountPerRay(HitKey::Type batchId) const
-    {
-        return dOutRayCountBatchRay[batchId];
-    }
-
-    __device__ uint32_t RayLocalOutRayIndex(HitKey::Type batchId, uint32_t globalInIndex) const
-    {
-        uint32_t localOffset = globalInIndex - dInRayOffsetBatch[batchId];
-        return dOutRayOffsetBatch[batchId] + localOffset * dOutRayCountBatchRay[batchId];
-    }
-};
-
 __global__
 static void KCPathTracerMegaKernel(// Output
                                    HitKey* gOutBoundKeys,
                                    RayGMem* gOutRays,
                                    RayAuxPath* gOutRayAux,
+                                   const uint8_t maxOutRay,
                                    // Inputs
                                    const RayGMem* gInRays,
                                    const RayId* gRayIds,
@@ -86,7 +57,6 @@ static void KCPathTracerMegaKernel(// Output
                                    RNGeneratorGPUI** gRNGs,
                                    // MetaSurfaceGenerator
                                    GPUMetaSurfaceGeneratorGroup surfaceGenerator,
-                                   OutputRayFinderGPU outputRayFinder,
                                    // Constants
                                    const uint32_t rayCount,
                                    const GPUTransformI* const* gTransforms)
@@ -98,9 +68,6 @@ static void KCPathTracerMegaKernel(// Output
         const RayId rayId = gRayIds[globalId];
         const HitKey hitKey = gMatIds[globalId];
         const HitKey::Type batchId = HitKey::FetchBatchPortion(hitKey);
-
-        uint32_t maxOutRay = outputRayFinder.BatchOutRayCountPerRay(batchId);
-        uint32_t rayOutIndex = outputRayFinder.RayLocalOutRayIndex(batchId, globalId);
 
         // If Invalid ray, completely skip
         if(HitKey::FetchBatchPortion(hitKey) == HitKey::NullBatch)
@@ -119,6 +86,16 @@ static void KCPathTracerMegaKernel(// Output
             assert(maxOutRay == 0);
             // Special Case: Null Light just skip
             if(metaSurface.IsNullLight()) continue;
+            // Skip if primitiveId is invalid only if the light is
+            // primitive backed.
+            // This happens when NEE generates a ray with a
+            // predefined workId (which did invoke this thread)
+            // However the light is missed somehow
+            // (planar rays, numeric instability etc.)
+            // Because of that primitive id did not get populated
+            // Skip this ray
+            if(metaSurface.IsPrimitiveBackedLight() && primitiveId >= INVALID_PRIMITIVE_ID)
+                continue;
 
             const bool isPathRayAsMISRay = renderState.directLightMIS && (aux.type == RayType::PATH_RAY);
             const bool isCameraRay = aux.type == RayType::CAMERA_RAY;
@@ -155,10 +132,10 @@ static void KCPathTracerMegaKernel(// Output
             }
 
             // Accumulate Light if
-            if(isPathRayNEEOff ||   // We hit a light with a path ray while NEE is off
+            if(isPathRayNEEOff || // We hit a light with a path ray while NEE is off
                isPathRayAsMISRay || // We hit a light with a path ray while MIS option is enabled
-               isCorrectNEERay ||   // We hit the correct light as a NEE ray while NEE is on
-               isCameraRay ||       // We hit as a camera ray which should not be culled when NEE is on
+               isCorrectNEERay || // We hit the correct light as a NEE ray while NEE is on
+               isCameraRay || // We hit as a camera ray which should not be culled when NEE is on
                isSpecularPathRay)   // We hit as spec ray which did not launched any NEE rays thus it should contribute
             {
                 // Data Fetch
@@ -174,7 +151,6 @@ static void KCPathTracerMegaKernel(// Output
                 Vector3 emission = metaSurface.Emit(// Input
                                                     -r.getDirection(),
                                                     position, m);
-
                 // And accumulate pixel// and add as a sample
                 Vector3f total = emission * radianceFactor;
                 // Incorporate MIS weight if applicable
@@ -192,9 +168,9 @@ static void KCPathTracerMegaKernel(// Output
             static constexpr int PATH_RAY_INDEX = 0;
             static constexpr int NEE_RAY_INDEX = 1;
             // Helper Class for better code readability
-            OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys + rayOutIndex,
-                                                  gOutRays + rayOutIndex,
-                                                  gOutRayAux + rayOutIndex,
+            OutputWriter<RayAuxPath> outputWriter(gOutBoundKeys + maxOutRay * globalId,
+                                                  gOutRays + maxOutRay * globalId,
+                                                  gOutRayAux + maxOutRay * globalId,
                                                   maxOutRay);
 
             static constexpr Vector3 ZERO_3 = Zero3;
