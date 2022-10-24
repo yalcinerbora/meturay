@@ -634,6 +634,37 @@ void WFPGTracerDebugWork(// Output
                         Vector4f(locColor, 1.0f));
 }
 
+template <class T, class WrapFunctor>
+class Span2D
+{
+    private:
+    T*                  memory;
+    Vector2i            size;
+    const WrapFunctor&  wrapFunc;
+
+    public:
+    // Constructor
+    __device__ Span2D(const WrapFunctor& wf, T* memory, Vector2i sz)
+                        : memory(memory)
+                        , size(sz)
+                        , wrapFunc(wf)
+    {}
+    // I-O
+    __device__
+    float& operator()(int x, int y)
+    {
+        Vector2i xy = wrapFunc(Vector2i(x, y), size);
+        return memory[xy[1] * size[0] + xy[0]];
+    }
+
+    __device__
+    const float& operator()(int x, int y) const
+    {
+        Vector2i xy = wrapFunc(Vector2i(x, y), mapSz);
+        return memory[xy[1] * size[0] + xy[0]];
+    }
+};
+
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCTraceSVO(// Output
                        CamSampleGMem<Vector4f> gSamples,
@@ -660,7 +691,6 @@ static void KCTraceSVO(// Output
                                       ray.tMin, ray.tMax,
                                       coneAperture,
                                       maxQueryLevelOffset);
-
         Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
         // Octree Display Mode
         if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
