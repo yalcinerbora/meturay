@@ -366,6 +366,90 @@ void WFPGTracer::GenerateGuidedDirections()
              currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
 }
 
+void WFPGTracer::LaunchDebugConeTraceKernel()
+{
+    // Calculate segment sizes etc
+    static constexpr Vector2i REGION_SIZE = Vector2i(32, 32);
+    Vector2i totalPixelCount = imgMemory.SegmentSize();
+    Vector2i totalSegments = (totalPixelCount + (REGION_SIZE - Vector2i(1))) / REGION_SIZE;
+    sampleMemory.Resize(imgMemory.Format(), totalPixelCount.Multiply());
+
+    // Generate rays appropriate to the camera type
+    switch(currentCamera.type)
+    {
+        case SCENE_CAMERA:
+        {
+            // Now we can call the kernel
+            const auto& gpu = cudaSystem.BestGPU();
+            gpu.ExactKC_X(0, (cudaStream_t)0, 512, gpu.SMCount() * 2,
+                          //
+                          KCTraceSVOFromArrayCam<512, REGION_SIZE[0], REGION_SIZE[1]>,
+                          // Output
+                          sampleMemory.GMem<Vector4f>(),
+                          // Input
+                          dCameras,
+                          currentCamera.nonTransformedCamIndex,
+                          // Constants
+                          svo.TreeGPU(),
+                          coneAperture,
+                          options.renderMode,
+                          options.svoRenderLevel,
+                          // Camera region related
+                          totalPixelCount,
+                          totalSegments);
+            break;
+        }
+
+        case CUSTOM_CAMERA:
+        {
+            // Now we can call the kernel
+            const auto& gpu = cudaSystem.BestGPU();
+            gpu.ExactKC_X(0, (cudaStream_t)0, 512, gpu.SMCount() * 2,
+                               //
+                          KCTraceSVOFromObjectCam<512, REGION_SIZE[0], REGION_SIZE[1]>,
+                          // Output
+                          sampleMemory.GMem<Vector4f>(),
+                          // Input
+                          currentCamera.dCustomCamera,
+                          // Constants
+                          svo.TreeGPU(),
+                          coneAperture,
+                          options.renderMode,
+                          options.svoRenderLevel,
+                          // Camera region related
+                          totalPixelCount,
+                          totalSegments);
+            break;
+        }
+        case TRANSFORMED_SCENE_CAMERA:
+        {
+            uint32_t camIndex = currentCamera.transformedSceneCam.cameraIndex;
+            VisorTransform t = currentCamera.transformedSceneCam.transform;
+            const GPUCameraI* dCamera = GenerateCameraWithTransform(t, camIndex);
+                        // Now we can call the kernel
+            const auto& gpu = cudaSystem.BestGPU();
+            gpu.ExactKC_X(0, (cudaStream_t)0, 512, gpu.SMCount() * 2,
+                               //
+                          KCTraceSVOFromObjectCam<512, REGION_SIZE[0], REGION_SIZE[1]>,
+                          // Output
+                          sampleMemory.GMem<Vector4f>(),
+                          // Input
+                          dCamera,
+                          // Constants
+                          svo.TreeGPU(),
+                          coneAperture,
+                          options.renderMode,
+                          options.svoRenderLevel,
+                          // Camera region related
+                          totalPixelCount,
+                          totalSegments);
+            break;
+        }
+    }
+
+
+}
+
 WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const GPUSceneI& scene,
                        const TracerParameters& p)
@@ -779,20 +863,7 @@ bool WFPGTracer::Render()
        options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
         // Just call the voxel trace kernel on a GPU and call it a day
-        const auto& gpu = cudaSystem.BestGPU();
-        uint32_t totalRayCount = rayCaster->CurrentRayCount();
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
-                            //
-                           KCTraceSVO,
-                           //
-                           sampleMemory.GMem<Vector4f>(),
-                           svo.TreeGPU(),
-                           rayCaster->RaysIn(),
-                           static_cast<RayAuxWFPG*>(*dAuxIn),
-                           coneAperture,
-                           options.renderMode,
-                           options.svoRenderLevel,
-                           totalRayCount);
+        LaunchDebugConeTraceKernel();
         // Signal as if we finished processing
         return false;
     }
@@ -900,71 +971,7 @@ void WFPGTracer::Finalize()
     {
         // Clear the image buffer
         imgMemory.Reset(cudaSystem);
-
-        // Generate rays appropriate to the camera type
-        switch(currentCamera.type)
-        {
-            case SCENE_CAMERA:
-            {
-                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
-                (
-                    currentCamera.nonTransformedCamIndex, options.sampleCount,
-                    RayAuxInitWFPG(InitialWFPGAux,
-                                   options.sampleCount *
-                                   options.sampleCount),
-                    true,
-                    false
-                );
-                break;
-            }
-            case CUSTOM_CAMERA:
-            {
-                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
-                (
-                    *currentCamera.dCustomCamera, options.sampleCount,
-                    RayAuxInitWFPG(InitialWFPGAux,
-                                   options.sampleCount *
-                                   options.sampleCount),
-                    true,
-                    false
-                );
-                break;
-            }
-            case TRANSFORMED_SCENE_CAMERA:
-            {
-                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
-                (
-                    currentCamera.transformedSceneCam.transform,
-                    currentCamera.transformedSceneCam.cameraIndex,
-                    options.sampleCount,
-                    RayAuxInitWFPG(InitialWFPGAux,
-                                   options.sampleCount *
-                                   options.sampleCount),
-                    true,
-                    false
-                );
-                break;
-            }
-
-        }
-
-        // Now call the voxel trace kernel
-        const auto& gpu = cudaSystem.BestGPU();
-        uint32_t totalRayCount = rayCaster->CurrentRayCount();
-
-
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, totalRayCount,
-                           //
-                           KCTraceSVO,
-                           //
-                           sampleMemory.GMem<Vector4f>(),
-                           svo.TreeGPU(),
-                           rayCaster->RaysIn(),
-                           static_cast<RayAuxWFPG*>(*dAuxIn),
-                           coneAperture,
-                           WFPGRenderMode::SVO_RADIANCE,
-                           options.svoRenderLevel,
-                           totalRayCount);
+        LaunchDebugConeTraceKernel();
 
         // Completely Reset the Image
         // This is done to eliminate old data from prev samples

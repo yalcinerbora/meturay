@@ -6,6 +6,7 @@
 #include "GPUCameraPixel.cuh"
 #include "MangledNames.h"
 
+#include "RayLib/VisorTransform.h"
 #include "RayLib/CoordinateConversion.h"
 
 class GPUCameraSpherical final : public GPUCameraI
@@ -72,8 +73,10 @@ class GPUCameraSpherical final : public GPUCameraI
         __device__ VisorTransform   GenVisorTransform() const override;
         __device__ void             SwapTransform(const VisorTransform&) override;
 
-        __device__ GPUCameraPixel   GeneratePixelCamera(const Vector2i& pixelId,
-                                                        const Vector2i& resolution) const override;
+        __device__
+        GPUCameraI*                 GenerateSubCamera(Byte* memoryRegion, size_t memSize,
+                                                      const Vector2i& regionId,
+                                                      const Vector2i& regionCount) const override;
 };
 
 class CPUCameraGroupSpherical final : public CPUCameraGroupP<GPUCameraSpherical>
@@ -312,24 +315,12 @@ inline void GPUCameraSpherical::SwapTransform(const VisorTransform& t)
 }
 
 __device__
-inline GPUCameraPixel GPUCameraSpherical::GeneratePixelCamera(const Vector2i& pixelId,
-                                                              const Vector2i& resolution) const
+inline GPUCameraI* GPUCameraSpherical::GenerateSubCamera(Byte* memoryRegion, size_t memSize,
+                                                       const Vector2i& regionId,
+                                                       const Vector2i& regionCount) const
 {
-    const auto ZERO3 = Zero3;
-    const auto ZERO2 = Zero2;
     // TODO: Implement
-    return GPUCameraPixel(ZERO3,
-                          ZERO3,
-                          ZERO3,
-                          ZERO3,
-                          ZERO2,
-                          ZERO2,
-                          ZERO2,
-                          pixelId,
-                          resolution,
-                          mediumIndex,
-                          workKey,
-                          gTransform);
+    return nullptr;
 }
 
 inline CPUCameraGroupSpherical::CPUCameraGroupSpherical(const GPUPrimitiveGroupI* pg)

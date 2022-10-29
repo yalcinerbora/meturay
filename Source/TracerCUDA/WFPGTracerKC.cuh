@@ -24,6 +24,10 @@
 #include "GPUBlockPWLDistribution.cuh"
 #include "BlockTextureFilter.cuh"
 
+#include "GPUCameraPixel.cuh"
+#include "RecursiveConeTrace.cuh"
+#include "RNGConstant.cuh"
+
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -634,98 +638,190 @@ void WFPGTracerDebugWork(// Output
                         Vector4f(locColor, 1.0f));
 }
 
-template <class T, class WrapFunctor>
-class Span2D
+template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__device__
+inline void TraceSVO(// Output
+                     CamSampleGMem<Vector4f> gSamples,
+                     // Input
+                     const GPUCameraI* gCamera,
+                     // Constants
+                     const AnisoSVOctreeGPU& svo,
+                     const float coneAperture,
+                     WFPGRenderMode mode,
+                     uint32_t maxQueryLevelOffset,
+
+                     const Vector2i& totalPixelCount,
+                     const Vector2i& totalSegments)
 {
-    private:
-    T*                  memory;
-    Vector2i            size;
-    const WrapFunctor&  wrapFunc;
+    const uint32_t totalBlockCount = totalSegments.Multiply();
 
-    public:
-    // Constructor
-    __device__ Span2D(const WrapFunctor& wf, T* memory, Vector2i sz)
-                        : memory(memory)
-                        , size(sz)
-                        , wrapFunc(wf)
-    {}
-    // I-O
-    __device__
-    float& operator()(int x, int y)
+    // TODO change this to dynamic
+    static constexpr size_t MAX_CAM_CLASS_SIZE = 512;
+    using ConeTracer = BatchConeTracer<THREAD_PER_BLOCK, X, Y>;
+    using ConeTraceMem = typename ConeTracer::TempStorage;
+
+    // SharedMemory
+    __shared__ ConeTraceMem sConeTraceMem;
+    __shared__ Byte sSubCamMemory[MAX_CAM_CLASS_SIZE];
+    __shared__ GPUCameraI* sSubCam;
+
+    ConeTracer batchedConeTracer(sConeTraceMem, svo);
+    RNGConstantGPU rng(0.0f);
+
+    // Block stride loop
+    for(int32_t blockId = blockIdx.x;
+        blockId < totalBlockCount; blockId += gridDim.x)
     {
-        Vector2i xy = wrapFunc(Vector2i(x, y), size);
-        return memory[xy[1] * size[0] + xy[0]];
-    }
+        int32_t localThreadId = threadIdx.x;
+        // Calculate image segment size offset for this block
+        Vector2i segmentSize = Vector2i(X, Y);
+        Vector2i segmentId2D = Vector2i(blockId % totalSegments[0],
+                                        blockId / totalSegments[0]);
 
-    __device__
-    const float& operator()(int x, int y) const
-    {
-        Vector2i xy = wrapFunc(Vector2i(x, y), mapSz);
-        return memory[xy[1] * size[0] + xy[0]];
-    }
-};
+        // Leader Generates Camera etc.
+        if(localThreadId == 0)
+        {
+            sSubCam = gCamera->GenerateSubCamera(sSubCamMemory,
+                                                 MAX_CAM_CLASS_SIZE,
+                                                 segmentId2D,
+                                                 totalSegments);
+        }
+        __syncthreads();
 
+        // Gen proj functor
+        const GPUCameraI* sCam = sSubCam;
+        auto ProjectionFunc = [sCam, &rng](const Vector2i& localPixelId,
+                                           const Vector2i& segmentSize)
+        {
+            //
+            RayReg ray; Vector2f uv;
+            sCam->GenerateRay(ray, uv, localPixelId, segmentSize,
+                              rng, false);
+            return ray.ray.getDirection();
+        };
+        // Gen wrap functor
+        auto WrapFunc = [](const Vector2i& pixelId,
+                           const Vector2i& segmentSize)
+        {
+            return pixelId.Clamp(Vector2i(0), segmentSize);
+        };
+
+        Vector3f rayStart = Zero3f;
+
+        float tMin[ConeTracer::DATA_PER_THREAD];
+        bool  isLeaf[ConeTracer::DATA_PER_THREAD];
+        uint32_t nodeIndex[ConeTracer::DATA_PER_THREAD];
+        Vector3f rayDir[ConeTracer::DATA_PER_THREAD];
+
+        batchedConeTracer.RecursiveConeTraceRay(rayDir, tMin, isLeaf,
+                                                nodeIndex,
+                                                // Inputs
+                                                rayStart,
+                                                0, 2000,
+                                                coneAperture,
+                                                0,
+                                                ProjectionFunc,
+                                                WrapFunc);
+
+        // Write as color
+        for(int i = 0; i < ConeTracer::DATA_PER_THREAD; i++)
+        {
+            Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
+            // Octree Display Mode
+            if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
+                locColor = (nodeIndex[i] != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(nodeIndex[i]), 1.0f)
+                                                        : Vector4f(Vector3f(0.0f), 1.0f);
+            // Payload Display Mode
+            else if(nodeIndex[i] == UINT32_MAX)
+                locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
+            else if(mode == WFPGRenderMode::SVO_RADIANCE)
+            {
+                half radiance = svo.ReadRadiance(rayDir[i], coneAperture,
+                                                 nodeIndex[i], isLeaf[i]);
+                float radianceF = radiance;
+                if(radiance != static_cast<half>(MRAY_HALF_MAX))
+                    locColor = Vector4f(Vector3f(radianceF), 1.0f);
+            }
+            else if(mode == WFPGRenderMode::SVO_NORMAL)
+            {
+                float stdDev;
+                Vector3f normal = svo.DebugReadNormal(stdDev, nodeIndex[i], isLeaf[i]);
+
+                // Voxels are two sided show the normal for the current direction
+                normal = (normal.Dot(rayDir[i]) >= 0.0f) ? normal : -normal;
+
+                // Convert normal to 0-1 range
+                //normal += Vector3f(1.0f);
+                //normal *= Vector3f(0.5f);
+                locColor = Vector4f(normal, stdDev);
+            }
+
+            // Determine output
+            int32_t linearInnerSampleId = THREAD_PER_BLOCK * i + localThreadId;
+            Vector2i innerSampleId = Vector2i(linearInnerSampleId % segmentSize[0],
+                                              linearInnerSampleId / segmentSize[0]);
+            Vector2i globalSampleId = segmentId2D * segmentSize + innerSampleId;
+            int32_t globalLinearSampleId = (globalSampleId[1] * totalPixelCount[0] +
+                                            globalSampleId[0]);
+            // Create the img coords
+            Vector2f imgCoords = Vector2f(globalSampleId) + Vector2f(0.5f);
+
+            gSamples.gImgCoords[globalLinearSampleId] = imgCoords;
+            gSamples.gValues[globalLinearSampleId] = locColor;
+        }
+    }
+}
+
+template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 __global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCTraceSVO(// Output
-                       CamSampleGMem<Vector4f> gSamples,
-                       // Input
-                       const AnisoSVOctreeGPU svo,
-                       const RayGMem* gRays,
-                       const RayAuxWFPG* gRayAux,
-                       // Constants
-                       const float coneAperture,
-                       WFPGRenderMode mode,
-                       uint32_t maxQueryLevelOffset,
-                       uint32_t rayCount)
+static void KCTraceSVOFromObjectCam(// Output
+                                    CamSampleGMem<Vector4f> gSamples,
+                                    // Input
+                                    const GPUCameraI* gCamera,
+                                    // Constants
+                                    const AnisoSVOctreeGPU svo,
+                                    const float coneAperture,
+                                    WFPGRenderMode mode,
+                                    uint32_t maxQueryLevelOffset,
+
+                                    Vector2i totalPixelCount,
+                                    Vector2i totalSegments)
 {
-    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
-        threadId < rayCount;
-        threadId += (blockDim.x * gridDim.x))
-    {
-        RayReg ray = RayReg(gRays, threadId);
-        RayAuxWFPG aux = gRayAux[threadId];
+    TraceSVO<THREAD_PER_BLOCK, X, Y>(// Output
+             gSamples,
+             // Input
+             gCamera,
+             // Constants
+             svo, coneAperture,
+             mode, maxQueryLevelOffset,
+             totalPixelCount,
+             totalSegments);
+}
 
-        bool isLeaf;
-        uint32_t svoNodeIndex;
-        float tMin = svo.ConeTraceRay(isLeaf, svoNodeIndex, ray.ray,
-                                      ray.tMin, ray.tMax,
-                                      coneAperture,
-                                      maxQueryLevelOffset);
-        Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
-        // Octree Display Mode
-        if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
-            locColor = (svoNodeIndex != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(svoNodeIndex), 1.0f)
-                                                    : Vector4f(Vector3f(0.0f), 1.0f);
-        // Payload Display Mode
-        else if(svoNodeIndex == UINT32_MAX)
-            locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
-        else if(mode == WFPGRenderMode::SVO_RADIANCE)
-        {
-            Vector3f coneDir = ray.ray.getDirection();
-            half radiance = svo.ReadRadiance(coneDir, coneAperture,
-                                             svoNodeIndex, isLeaf);
-            float radianceF = radiance;
-            if(radiance != static_cast<half>(MRAY_HALF_MAX))
-                locColor = Vector4f(Vector3f(radianceF), 1.0f);
-        }
-        else if(mode == WFPGRenderMode::SVO_NORMAL)
-        {
-            float stdDev;
-            Vector3f normal = svo.DebugReadNormal(stdDev, svoNodeIndex, isLeaf);
-
-            // Voxels are two sided show the normal for the current direction
-            normal = (normal.Dot(ray.ray.getDirection()) >= 0.0f) ? normal : -normal;
-
-            // Convert normal to 0-1 range
-            //normal += Vector3f(1.0f);
-            //normal *= Vector3f(0.5f);
-            locColor = Vector4f(normal, stdDev);
-        }
-        // Accumulate the pixel
-        AccumulateRaySample(gSamples,
-                            aux.sampleIndex,
-                            locColor);
-    }
+template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__global__ CUDA_LAUNCH_BOUNDS_1D
+static void KCTraceSVOFromArrayCam(// Output
+                                   CamSampleGMem<Vector4f> gSamples,
+                                   // Input
+                                   const GPUCameraI** gCameras,
+                                   uint32_t cameraIndex,
+                                   // Constants
+                                   const AnisoSVOctreeGPU svo,
+                                   const float coneAperture,
+                                   WFPGRenderMode mode,
+                                   uint32_t maxQueryLevelOffset,
+                                   Vector2i totalPixelCount,
+                                   Vector2i totalSegments)
+{
+    TraceSVO<THREAD_PER_BLOCK, X, Y>(// Output
+                                     gSamples,
+                                     // Input
+                                     gCameras[cameraIndex],
+                                     // Constants
+                                     svo, coneAperture,
+                                     mode, maxQueryLevelOffset,
+                                     totalPixelCount,
+                                     totalSegments);
 }
 
 __device__ inline

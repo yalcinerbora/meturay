@@ -13,7 +13,7 @@ class CudaSystem;
 class RNGIndependentGPU : public RNGeneratorGPUI
 {
     private:
-        curandStateMRG32k3a_t       rState;
+        curandStateMRG32k3a_t   rState;
 
     protected:
     public:

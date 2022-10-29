@@ -64,6 +64,9 @@ class RefPGTracer : public RayTracer
         TracerError                     ProjectionTypeToString(std::string&, ProjectionType);
         TracerError                     StringToProjectionType(ProjectionType&, const std::string&);
 
+        // (it will be initialized (will be constructed later)
+        // TODO: Dynamically allocate mem wrt. all potential camera types
+        static constexpr size_t MAX_CAM_CLASS_SIZE = 512;
 
     private:
         Options                         options;
@@ -82,7 +85,7 @@ class RefPGTracer : public RayTracer
         const GPUDirectLightSamplerI*   dLightSampler;
         // Pixel Camera
         DeviceMemory                    camMemory;
-        GPUCameraPixel*                 dPixelCamera;
+        GPUCameraI*                     dRegionCamera;
         bool                            doInitCameraCreation;
         // Image Related
         Vector2i                        iResolution;     // Image Resolution

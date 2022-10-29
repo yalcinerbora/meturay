@@ -56,6 +56,20 @@ void KCAccumulateToBuffer(ImageGMem<float> accumBuffer,
     }
 }
 
+__global__
+void KCConstructSubCamera(Byte* gCameraMemRegion,
+                          size_t memSize,
+                                     //
+                                     const GPUCameraI& baseCam,
+                                     Vector2i segmentIndex,
+                                     Vector2i segmentCount)
+{
+    if(threadIdx.x != 0) return;
+    baseCam.GenerateSubCamera(gCameraMemRegion, memSize,
+                              segmentIndex,
+                              segmentCount);
+}
+
 void RefPGTracer::SendPixel() const
 {
     const Vector2i currentPixel2D = GlobalPixel2D();
@@ -261,10 +275,9 @@ TracerError RefPGTracer::Initialize()
 
     }
 
-    // Allocate a pixel camera
-    // (it will be initialized (will be constructed later)
-    camMemory = DeviceMemory(sizeof(GPUCameraPixel));
-    dPixelCamera = static_cast<GPUCameraPixel*>(camMemory);
+    // Allocate a pixel camera memory
+    camMemory = DeviceMemory(MAX_CAM_CLASS_SIZE);
+    dRegionCamera = static_cast<GPUCameraI*>(camMemory);
 
     // Initialize the required members
     return TracerError::OK;
@@ -421,13 +434,13 @@ void RefPGTracer::GenerateWork(uint32_t cameraIndex)
         // Construct a New camera
         cudaSystem.BestGPU().KC_X(0, (cudaStream_t)0, 1,
                                   // Function
-                                  KCConstructSingleGPUCameraPixel,
+                                  KCConstructSubCamera,
                                   // Args
-                                  dPixelCamera,
+                                  static_cast<Byte*>(camMemory),
+                                  MAX_CAM_CLASS_SIZE,
                                   //
                                   *(dCameras[cameraIndex]),
-                                  pixelId,
-                                  iResolution);
+                                  pixelId, iResolution);
 
         // Reset sample count for this img
         currentSampleCount = 0;
@@ -436,7 +449,7 @@ void RefPGTracer::GenerateWork(uint32_t cameraIndex)
     // Generate Work for current Camera
     GenerateRays<RayAuxPath, RayAuxInitRefPG, RNGIndependentGPU, float>
     (
-        *dPixelCamera, options.samplePerIteration,
+        *dRegionCamera, options.samplePerIteration,
         RayAuxInitRefPG(InitialPathAux),
         false
     );

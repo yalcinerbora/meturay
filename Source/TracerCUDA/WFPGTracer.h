@@ -111,8 +111,9 @@ class WFPGTracer final : public RayTracer
         uint32_t                        MaximumPathNodePerPath() const;
 
         void                            GenerateGuidedDirections();
+        void                            LaunchDebugConeTraceKernel();
 
-        // TODO: Change
+        // TODO: Change bad design
         // Temporarily store the current camera
         // For SVO_RADIANCE Mode
         enum CameraType
@@ -135,6 +136,8 @@ class WFPGTracer final : public RayTracer
                 uint32_t nonTransformedCamIndex;
             };
         } currentCamera;
+
+
 
     protected:
     public:

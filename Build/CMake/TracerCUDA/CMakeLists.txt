@@ -200,6 +200,7 @@ set(SRC_RNG
     ${CURRENT_SOURCE_DIR}/RNGenerator.h
     ${CURRENT_SOURCE_DIR}/RNGIndependent.cu
     ${CURRENT_SOURCE_DIR}/RNGIndependent.cuh
+    ${CURRENT_SOURCE_DIR}/RNGConstant.cuh
     ${CURRENT_SOURCE_DIR}/RNGSobol.cu
     ${CURRENT_SOURCE_DIR}/RNGSobol.cuh)
 
@@ -339,6 +340,7 @@ set(SRC_WFPG_TRACER
     ${CURRENT_SOURCE_DIR}/WFPGTracerWorks.cuh)
 
 set(SRC_WFPG_TRACER_AUX_CLASSES
+    ${CURRENT_SOURCE_DIR}/RecursiveConeTrace.cuh
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cu
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cuh
     ${CURRENT_SOURCE_DIR}/AnisoSVOKC.cuh)

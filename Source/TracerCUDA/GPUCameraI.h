@@ -46,9 +46,17 @@ class GPUCameraI : public GPUEndpointI
         __device__
         virtual void            SwapTransform(const VisorTransform&) = 0;
 
+        // TODO: Change this later
+        // This is a weird interface but it is simpler to implement
+        // Given a memory region construct the child class over the region
+        // Return the interface as parent class.
+        // Interface is like this because, a kernel want to construct a sub camera
+        // over a shared memory without knowing the underlying type (or register space
+        // local memory).
         __device__
-        virtual GPUCameraPixel  GeneratePixelCamera(const Vector2i& pixelId,
-                                                    const Vector2i& resolution) const = 0;
+        virtual GPUCameraI*     GenerateSubCamera(Byte* memoryRegion, size_t size,
+                                                  const Vector2i& regionId,
+                                                  const Vector2i& regionCount) const = 0;
 };
 
 class CPUCameraGroupI : public CPUEndpointGroupI
