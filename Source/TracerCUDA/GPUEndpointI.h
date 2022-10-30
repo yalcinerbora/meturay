@@ -40,6 +40,7 @@ class GPUEndpointI
     public:
         __device__              GPUEndpointI(uint16_t mediumIndex,
                                              HitKey, const GPUTransformI&);
+                                GPUEndpointI(const GPUEndpointI&) = default;
         virtual                 ~GPUEndpointI() = default;
 
         // Interface

@@ -45,20 +45,72 @@ std::ostream& operator<<(std::ostream& stream, const RayAuxWFPG& v)
     return stream;
 }
 
+
+
+template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__global__ __launch_bounds__(THREAD_PER_BLOCK)
+void KCTraceSVOFromObjectCam(// Output
+                             CamSampleGMem<Vector4f> gSamples,
+                             // Input
+                             const GPUCameraI* gCamera,
+                             // Constants
+                             const AnisoSVOctreeGPU svo,
+                             const float coneAperture,
+                             WFPGRenderMode mode,
+                             uint32_t maxQueryLevelOffset,
+
+                             Vector2i totalPixelCount,
+                             Vector2i totalSegments)
+{
+    TraceSVO<THREAD_PER_BLOCK, X, Y>(// Output
+                                     gSamples,
+                                     // Input
+                                     gCamera,
+                                     // Constants
+                                     svo, coneAperture,
+                                     mode, maxQueryLevelOffset,
+                                     totalPixelCount,
+                                     totalSegments);
+}
+
+template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__global__ __launch_bounds__(THREAD_PER_BLOCK)
+void KCTraceSVOFromArrayCam(// Output
+                            CamSampleGMem<Vector4f> gSamples,
+                            // Input
+                            const GPUCameraI** gCameras,
+                            uint32_t cameraIndex,
+                            // Constants
+                            const AnisoSVOctreeGPU svo,
+                            const float coneAperture,
+                            WFPGRenderMode mode,
+                            uint32_t maxQueryLevelOffset,
+                            // Camera region related
+                            Vector2i totalPixelCount,
+                            Vector2i totalSegments)
+{
+    TraceSVO<THREAD_PER_BLOCK, X, Y>(// Output
+                                     gSamples,
+                                     // Input
+                                     gCameras[cameraIndex],
+                                     // Constants
+                                     svo, coneAperture,
+                                     mode, maxQueryLevelOffset,
+                                     totalPixelCount,
+                                     totalSegments);
+}
+
 // Currently These are compile time constants
 // since most of the internal call rely on compile time constants
 static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
 
-constexpr float SphericalConeAperture(uint32_t pixelCountX,
-                                      uint32_t pixelCountY)
+constexpr float OctohedralConeAperture(uint32_t pixelCountX,
+                                       uint32_t pixelCountY)
 {
-    constexpr float SPHERICAL_X = MathConstants::Pi * 2.0f;
-    constexpr float SPHERICAL_Y = MathConstants::Pi;
-
-    float coneAngleX = SPHERICAL_X / static_cast<float>(pixelCountX);
-    float coneAngleY = SPHERICAL_Y / static_cast<float>(pixelCountY);
-    // Return average
-    return (coneAngleX + coneAngleY) * 0.5f;
+    constexpr float MAX_SOLID_ANGLE = 4.0f * MathConstants::Pi;
+    float totalPixCount = (static_cast<float>(pixelCountX) *
+                           static_cast<float>(pixelCountX));
+    return MAX_SOLID_ANGLE / totalPixCount;
 }
 
 using PathGuideKernelFunction = void (*)(// Output
@@ -118,11 +170,11 @@ static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_SHMEM_SIZE
 
 static constexpr std::array<float, PG_KERNEL_TYPE_COUNT> CONE_APERTURES =
 {
-    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])),
-    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])),
-    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])),
-    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])),
-    SphericalConeAperture(std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4]))
+    OctohedralConeAperture(std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])),
+    OctohedralConeAperture(std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])),
+    OctohedralConeAperture(std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])),
+    OctohedralConeAperture(std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])),
+    OctohedralConeAperture(std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4]))
 };
 
 __global__
@@ -314,7 +366,7 @@ void WFPGTracer::GenerateGuidedDirections()
     uint32_t kernelTBP = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
-    //auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
+    auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
 
     CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
                                     cudaFuncAttributeMaxDynamicSharedMemorySize,
@@ -370,8 +422,12 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
 {
     // Calculate segment sizes etc
     static constexpr Vector2i REGION_SIZE = Vector2i(32, 32);
+    static constexpr int32_t THREAD_COUNT = 512;
     Vector2i totalPixelCount = imgMemory.SegmentSize();
     Vector2i totalSegments = (totalPixelCount + (REGION_SIZE - Vector2i(1))) / REGION_SIZE;
+    Vector2i extras = totalPixelCount % REGION_SIZE;
+    totalPixelCount += extras;
+    // Change the sample to nearest multiple the region size
     sampleMemory.Resize(imgMemory.Format(), totalPixelCount.Multiply());
 
     // Generate rays appropriate to the camera type
@@ -381,9 +437,9 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
         {
             // Now we can call the kernel
             const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(0, (cudaStream_t)0, 512, gpu.SMCount() * 2,
+            gpu.ExactKC_X(0, (cudaStream_t)0, THREAD_COUNT, gpu.SMCount() * 2,
                           //
-                          KCTraceSVOFromArrayCam<512, REGION_SIZE[0], REGION_SIZE[1]>,
+                          KCTraceSVOFromArrayCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
                           // Output
                           sampleMemory.GMem<Vector4f>(),
                           // Input
@@ -404,9 +460,9 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
         {
             // Now we can call the kernel
             const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(0, (cudaStream_t)0, 512, gpu.SMCount() * 2,
+            gpu.ExactKC_X(0, (cudaStream_t)0, THREAD_COUNT, gpu.SMCount() * 2,
                                //
-                          KCTraceSVOFromObjectCam<512, REGION_SIZE[0], REGION_SIZE[1]>,
+                          KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
                           // Output
                           sampleMemory.GMem<Vector4f>(),
                           // Input
@@ -428,9 +484,9 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
             const GPUCameraI* dCamera = GenerateCameraWithTransform(t, camIndex);
                         // Now we can call the kernel
             const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(0, (cudaStream_t)0, 512, gpu.SMCount() * 2,
+            gpu.ExactKC_X(0, (cudaStream_t)0, THREAD_COUNT, gpu.SMCount() * 2,
                                //
-                          KCTraceSVOFromObjectCam<512, REGION_SIZE[0], REGION_SIZE[1]>,
+                          KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
                           // Output
                           sampleMemory.GMem<Vector4f>(),
                           // Input
@@ -445,9 +501,8 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                           totalSegments);
             break;
         }
+        default: { crashed = true; break;}
     }
-
-
 }
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,
@@ -707,11 +762,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 
         CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
                               sizeof(float), cudaMemcpyDeviceToHost));
-    }
 
-    // Save the camera if SVO RADIANCE Mode
-    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
-    {
+        // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::SCENE_CAMERA;
         currentCamera.nonTransformedCamIndex = cameraIndex;
     }
@@ -760,11 +812,8 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 
         CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
                               sizeof(float), cudaMemcpyDeviceToHost));
-    }
 
-    // Save the camera if SVO RADIANCE Mode
-    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
-    {
+        // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::TRANSFORMED_SCENE_CAMERA;
         currentCamera.transformedSceneCam.cameraIndex = cameraIndex;
         currentCamera.transformedSceneCam.transform = t;
@@ -812,10 +861,8 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
 
         CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
                               sizeof(float), cudaMemcpyDeviceToHost));
-    }
-    // Save the camera if SVO RADIANCE Mode
-    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
-    {
+
+        // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::CUSTOM_CAMERA;
         currentCamera.dCustomCamera = &dCam;
     }

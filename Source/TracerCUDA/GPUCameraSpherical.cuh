@@ -77,6 +77,21 @@ class GPUCameraSpherical final : public GPUCameraI
         GPUCameraI*                 GenerateSubCamera(Byte* memoryRegion, size_t memSize,
                                                       const Vector2i& regionId,
                                                       const Vector2i& regionCount) const override;
+
+
+        __device__ void     Test(// Output
+                                 RayReg& ray,
+                                 Vector2f& localCoords,
+                                 // Input,
+                                 const Vector2i& sampleIdInner,
+                                 const Vector2i& sampleIdOuter,
+                                 const Vector2i& sampleCountInner,
+                                 const Vector2i& sampleCountOuter,
+                                 // I-O
+                                 RNGeneratorGPUI& rng,
+                                 // Options
+                                 bool antiAliasOn) const override
+        {};
 };
 
 class CPUCameraGroupSpherical final : public CPUCameraGroupP<GPUCameraSpherical>

@@ -32,15 +32,6 @@ class GPUCameraPinhole final : public GPUCameraI
                                              // Base Class Related
                                              uint16_t mediumId, HitKey hk,
                                              const GPUTransformI& gTrans);
-        __device__          GPUCameraPinhole(const Vector3& position,
-                                             const Vector3& gaze,
-                                             const Vector3& up,
-                                             const Vector2& nearFar,
-                                             const Vector2& fov,
-                                             const Vector2f& regionOffset,
-                                             // Base Class Related
-                                             uint16_t mediumId, HitKey hk,
-                                             const GPUTransformI& gTrans);
                             ~GPUCameraPinhole() = default;
 
         // Interface
@@ -87,6 +78,21 @@ class GPUCameraPinhole final : public GPUCameraI
         __device__ GPUCameraI*      GenerateSubCamera(Byte* memoryRegion, size_t size,
                                                       const Vector2i& regionId,
                                                       const Vector2i& regionCount) const override;
+
+
+        __device__ void     Test(// Output
+                                 RayReg& ray,
+                                 Vector2f& localCoords,
+                                 // Input,
+                                 const Vector2i& sampleIdInner,
+                                 const Vector2i& sampleIdOuter,
+                                 const Vector2i& sampleCountInner,
+                                 const Vector2i& sampleCountOuter,
+                                 // I-O
+                                 RNGeneratorGPUI& rng,
+                                 // Options
+                                 bool antiAliasOn) const;
+
 };
 
 class CPUCameraGroupPinhole final : public CPUCameraGroupP<GPUCameraPinhole>
@@ -178,24 +184,6 @@ inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
     planeSize = Vector2(widthHalf, heightHalf) * 2.0f;
 }
 
-
-__device__
-inline GPUCameraPinhole::GPUCameraPinhole(const Vector3& pos,
-                                          const Vector3& gz,
-                                          const Vector3& upp,
-                                          const Vector2& nF,
-                                          const Vector2& fov,
-                                          const Vector2& regionOffset,
-                                          // Base Class Related
-                                          uint16_t mediumId, HitKey hk,
-                                          const GPUTransformI& gTrans)
-    : GPUCameraPinhole(pos, gz, upp, nF,
-                       fov, mediumId, hk, gTrans)
-{
-    bottomLeft += (regionOffset[0] * right);
-    bottomLeft += (regionOffset[1] * up);
-}
-
 __device__
 inline void GPUCameraPinhole::Sample(// Output
                                      float& distance,
@@ -231,10 +219,56 @@ inline void GPUCameraPinhole::Sample(// Output
 }
 
 __device__
+inline void GPUCameraPinhole::Test(// Output
+                                   RayReg& ray,
+                                   Vector2f& localCoords,
+                                   // Input,
+                                   //const Vector2i& offset,
+                                   const Vector2i& sampleIdInner,
+                                   const Vector2i& sampleIdOuter,
+                                   const Vector2i& sampleCountInner,
+                                   const Vector2i& sampleCountOuter,
+                                   // I-O
+                                   RNGeneratorGPUI& rng,
+                                   // Options
+                                   bool antiAliasOn) const
+{
+    // DX DY from stratified sample
+    Vector2 delta = Vector2(planeSize[0] / static_cast<float>(sampleCountOuter[0]),
+                            planeSize[1] / static_cast<float>(sampleCountOuter[1]));
+    Vector2 deltaSub = Vector2(delta[0] / static_cast<float>(sampleCountInner[0]),
+                               delta[1] / static_cast<float>(sampleCountInner[1]));
+
+    // Create random location over sample rectangle
+    Vector2 randomOffset = (antiAliasOn)
+                            ? Vector2(rng.Uniform(), rng.Uniform())
+                            : Vector2(0.5f);
+
+    Vector2 outerDistance = Vector2(static_cast<float>(sampleIdOuter[0]),
+                                    static_cast<float>(sampleIdOuter[1])) * delta;
+    Vector2 innerDistance = Vector2(static_cast<float>(sampleIdInner[0]),
+                                    static_cast<float>(sampleIdInner[1])) * deltaSub;
+    //sampleDistance += (randomOffset * deltaSub);
+    Vector2 dist = outerDistance + innerDistance + (randomOffset * deltaSub);
+
+    Vector3 samplePoint = bottomLeft + ((dist[0] * right) +
+                                        (dist[1] * up));
+    Vector3 rayDir = (samplePoint - position).Normalize();
+
+    // Local Coords
+    localCoords = Zero2;
+
+    // Initialize Ray
+    ray.ray = RayF(rayDir, position);
+    ray.tMin = nearFar[0];
+    ray.tMax = nearFar[1];
+}
+
+__device__
 inline void GPUCameraPinhole::GenerateRay(// Output
                                           RayReg& ray,
                                           Vector2f& localCoords,
-                                          // Input
+                                          // Input,
                                           const Vector2i& sampleId,
                                           const Vector2i& sampleMax,
                                           // I-O
@@ -385,16 +419,19 @@ inline GPUCameraI* GPUCameraPinhole::GenerateSubCamera(Byte* memoryRegion, size_
                             planeSize[1] / static_cast<float>(regionCount[1]));
 
     Vector2 regionlDistance = Vector2(static_cast<float>(regionId[0]),
-                                    static_cast<float>(regionId[1])) * delta;
-    Vector3 regionBottomLeft = ((regionlDistance[0] * right) +
-                                (regionlDistance[1] * up));
+                                      static_cast<float>(regionId[1])) * delta;
+    Vector3 regionBottomLeft = bottomLeft + ((regionlDistance[0] * right) +
+                                             (regionlDistance[1] * up));
 
     Vector2 fovRegion = Vector2f(fov[0] / regionCount[0],
                                  fov[1] / regionCount[1]);
 
-    return new (memoryRegion) GPUCameraPinhole(position, gazeDir, up, nearFar, fov,
-                                               regionBottomLeft,
-                                               mediumIndex, workKey, gTransform);
+    GPUCameraPinhole* p = new (memoryRegion) GPUCameraPinhole(*this);
+    // Change the bottom left, and the FoV
+    p->fov = fovRegion;
+    p->planeSize = delta;
+    p->bottomLeft = regionBottomLeft;
+    return p;
 }
 
 inline CPUCameraGroupPinhole::CPUCameraGroupPinhole(const GPUPrimitiveGroupI* pg)

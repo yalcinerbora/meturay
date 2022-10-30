@@ -28,6 +28,8 @@
 #include "RecursiveConeTrace.cuh"
 #include "RNGConstant.cuh"
 
+#include "GPUCameraPinhole.cuh"
+
 
 static constexpr uint32_t INVALID_BIN_ID = std::numeric_limits<uint32_t>::max();
 
@@ -663,7 +665,9 @@ inline void TraceSVO(// Output
     // SharedMemory
     __shared__ ConeTraceMem sConeTraceMem;
     __shared__ Byte sSubCamMemory[MAX_CAM_CLASS_SIZE];
-    __shared__ GPUCameraI* sSubCam;
+    __shared__ const GPUCameraI* sSubCam;
+    __shared__ Vector3f sPosition;
+    __shared__ Vector2f tMinMax;
 
     ConeTracer batchedConeTracer(sConeTraceMem, svo);
     RNGConstantGPU rng(0.0f);
@@ -685,28 +689,34 @@ inline void TraceSVO(// Output
                                                  MAX_CAM_CLASS_SIZE,
                                                  segmentId2D,
                                                  totalSegments);
+            // This should only work pinhole style cameras
+            // Main thread chooses the starting position
+            // min max
+            RayReg ray; Vector2f pixCoords;
+            sSubCam->GenerateRay(ray, pixCoords, Vector2i(0), segmentSize,
+                                 rng, false);
+            sPosition = ray.ray.getPosition();
+            tMinMax = Vector2f(ray.tMin, ray.tMax);
         }
         __syncthreads();
 
-        // Gen proj functor
         const GPUCameraI* sCam = sSubCam;
+        // Gen proj functor
         auto ProjectionFunc = [sCam, &rng](const Vector2i& localPixelId,
                                            const Vector2i& segmentSize)
         {
             //
             RayReg ray; Vector2f uv;
             sCam->GenerateRay(ray, uv, localPixelId, segmentSize,
-                              rng, false);
+                                 rng, false);
             return ray.ray.getDirection();
         };
         // Gen wrap functor
         auto WrapFunc = [](const Vector2i& pixelId,
                            const Vector2i& segmentSize)
         {
-            return pixelId.Clamp(Vector2i(0), segmentSize);
+            return pixelId.Clamp(Vector2i(0), segmentSize - 1);
         };
-
-        Vector3f rayStart = Zero3f;
 
         float tMin[ConeTracer::DATA_PER_THREAD];
         bool  isLeaf[ConeTracer::DATA_PER_THREAD];
@@ -716,12 +726,28 @@ inline void TraceSVO(// Output
         batchedConeTracer.RecursiveConeTraceRay(rayDir, tMin, isLeaf,
                                                 nodeIndex,
                                                 // Inputs
-                                                rayStart,
-                                                0, 2000,
+                                                sPosition,
+                                                tMinMax[0], tMinMax[1],
                                                 coneAperture,
                                                 0,
                                                 ProjectionFunc,
                                                 WrapFunc);
+
+        //for(int i = 0; i < ConeTracer::DATA_PER_THREAD; i++)
+        //{
+        //    int32_t linearInnerSampleId = THREAD_PER_BLOCK * i + localThreadId;
+        //    if(linearInnerSampleId >= segmentSize.Multiply()) continue;
+
+        //    Vector2i innerPixelId = Vector2i(linearInnerSampleId % segmentSize[0],
+        //                                     linearInnerSampleId / segmentSize[0]);
+        //    RayReg ray; Vector2f pixCoords;
+        //    sCam->GenerateRay(ray, pixCoords, innerPixelId, segmentSize,
+        //                      rng, false);
+
+        //    tMin[i] = svo.ConeTraceRay(isLeaf[i], nodeIndex[i],
+        //                                ray.ray, ray.tMin, ray.tMax,
+        //                                coneAperture, maxQueryLevelOffset);
+        //}
 
         // Write as color
         for(int i = 0; i < ConeTracer::DATA_PER_THREAD; i++)
@@ -730,7 +756,8 @@ inline void TraceSVO(// Output
             // Octree Display Mode
             if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
                 locColor = (nodeIndex[i] != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(nodeIndex[i]), 1.0f)
-                                                        : Vector4f(Vector3f(0.0f), 1.0f);
+                                                        //: Vector4f(Vector3f(0.0f), 1.0f);
+                                                        : Vector4f(0.0f, 1000, 0, 1.0f);
             // Payload Display Mode
             else if(nodeIndex[i] == UINT32_MAX)
                 locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
@@ -758,6 +785,9 @@ inline void TraceSVO(// Output
 
             // Determine output
             int32_t linearInnerSampleId = THREAD_PER_BLOCK * i + localThreadId;
+            if(linearInnerSampleId >= segmentSize.Multiply()) continue;
+
+            // Actual write
             Vector2i innerSampleId = Vector2i(linearInnerSampleId % segmentSize[0],
                                               linearInnerSampleId / segmentSize[0]);
             Vector2i globalSampleId = segmentId2D * segmentSize + innerSampleId;
@@ -766,62 +796,15 @@ inline void TraceSVO(// Output
             // Create the img coords
             Vector2f imgCoords = Vector2f(globalSampleId) + Vector2f(0.5f);
 
-            gSamples.gImgCoords[globalLinearSampleId] = imgCoords;
-            gSamples.gValues[globalLinearSampleId] = locColor;
+            if(globalLinearSampleId < totalPixelCount.Multiply())
+            {
+                gSamples.gImgCoords[globalLinearSampleId] = imgCoords;
+                gSamples.gValues[globalLinearSampleId] = locColor;
+            }
+            else printf("fail\n");
         }
+        __syncthreads();
     }
-}
-
-template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
-__global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCTraceSVOFromObjectCam(// Output
-                                    CamSampleGMem<Vector4f> gSamples,
-                                    // Input
-                                    const GPUCameraI* gCamera,
-                                    // Constants
-                                    const AnisoSVOctreeGPU svo,
-                                    const float coneAperture,
-                                    WFPGRenderMode mode,
-                                    uint32_t maxQueryLevelOffset,
-
-                                    Vector2i totalPixelCount,
-                                    Vector2i totalSegments)
-{
-    TraceSVO<THREAD_PER_BLOCK, X, Y>(// Output
-             gSamples,
-             // Input
-             gCamera,
-             // Constants
-             svo, coneAperture,
-             mode, maxQueryLevelOffset,
-             totalPixelCount,
-             totalSegments);
-}
-
-template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
-__global__ CUDA_LAUNCH_BOUNDS_1D
-static void KCTraceSVOFromArrayCam(// Output
-                                   CamSampleGMem<Vector4f> gSamples,
-                                   // Input
-                                   const GPUCameraI** gCameras,
-                                   uint32_t cameraIndex,
-                                   // Constants
-                                   const AnisoSVOctreeGPU svo,
-                                   const float coneAperture,
-                                   WFPGRenderMode mode,
-                                   uint32_t maxQueryLevelOffset,
-                                   Vector2i totalPixelCount,
-                                   Vector2i totalSegments)
-{
-    TraceSVO<THREAD_PER_BLOCK, X, Y>(// Output
-                                     gSamples,
-                                     // Input
-                                     gCameras[cameraIndex],
-                                     // Constants
-                                     svo, coneAperture,
-                                     mode, maxQueryLevelOffset,
-                                     totalPixelCount,
-                                     totalSegments);
 }
 
 __device__ inline
@@ -986,10 +969,12 @@ struct KCGenSampleShMem
     using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
     //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
+    using ConeTracer = BatchConeTracer<THREAD_PER_BLOCK, X, Y>;
     union
     {
         typename BlockDist2D::TempStorage   sDistMem;
         typename BlockFilter2D::TempStorage sFilterMem;
+        typename ConeTracer::TempStorage sTraceMem;
     };
     // Starting positions of the rays (at most TPB)
     Vector3f sPositions[THREAD_PER_BLOCK];
@@ -1044,6 +1029,26 @@ static void KCGenAndSampleDistribution(// Output
     using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
     using Distribution2D = typename SharedMemType::BlockDist2D;
     using Filter2D = typename SharedMemType::BlockFilter2D;
+    using ConeTracer = typename SharedMemType::ConeTracer;
+    static_assert(RT_ITER_COUNT == ConeTracer::DATA_PER_THREAD);
+
+    // Functors for batched cone trace
+    auto ProjectionFunc = [](const Vector2i& localPixelId,
+                             const Vector2i& segmentSize)
+    {
+        Vector2f xi = Vector2f(0.5f);
+        Vector2f st = Vector2f(localPixelId) + xi;
+        st /= Vector2f(segmentSize);
+        Vector3 result = Utility::CocentricOctohedralToDirection(st);
+        Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+        return dirYUp;
+    };
+    // Gen wrap functor
+    auto WrapFunc = [](const Vector2i& pixelId,
+                       const Vector2i& segmentSize)
+    {
+        return Utility::CocentricOctohedralWrapInt(pixelId, segmentSize);
+    };
 
     // Change the type of the shared memory
     extern __shared__ Byte sharedMemRAW[];
@@ -1051,7 +1056,7 @@ static void KCGenAndSampleDistribution(// Output
 
     Filter2D filter(sharedMem->sFilterMem, rFieldGaussFilter,
                     Utility::CocentricOctohedralWrapInt);
-
+    ConeTracer coneTracer(sharedMem->sTraceMem, svo);
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
     for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
@@ -1082,7 +1087,8 @@ static void KCGenAndSampleDistribution(// Output
 
         // Load positions of the rays to the shared memory
         // Try to load minimum of TPB or ray count
-        if(THREAD_ID < sharedMem->sPositionCount)
+        //if(THREAD_ID < sharedMem->sPositionCount)
+        if(isMainThread)
         {
             uint32_t rayId = gRayIds[sharedMem->sOffsetStart + THREAD_ID];
             RayReg ray = metaSurfGenerator.Ray(rayId);
@@ -1092,57 +1098,95 @@ static void KCGenAndSampleDistribution(// Output
         }
         __syncthreads();
 
-        // Incoming radiance (result of the trace)
+        float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
+                      MathConstants::LargeEpsilon);
         float incRadiances[RT_ITER_COUNT];
 
-        // Trace the rays
+        // Batched Cone Trace
+        Vector3f    rayDirOut[RT_ITER_COUNT];
+        float       tMinOut[RT_ITER_COUNT];
+        bool        isLeaf[RT_ITER_COUNT];
+        uint32_t    nodeId[RT_ITER_COUNT];
+        coneTracer.RecursiveConeTraceRay(rayDirOut,
+                                         tMinOut,
+                                         isLeaf,
+                                         nodeId,
+                                         // Inputs
+                                         sharedMem->sPositions[0],
+                                         tMin, FLT_MAX,
+                                         coneAperture,
+                                         0,
+                                         // Functors
+                                         ProjectionFunc,
+                                         WrapFunc);
+        __syncthreads();
+
+        // Incoming radiance query (result of the trace)
         for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
         {
             // This case occurs only when there is more threads than pixels
             if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
 
-            // Determine your direction
-            uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
-            // Make directions similar for tracing
-            // Use morton code to order
-            Vector2ui dirIdXY = MortonCode::Decompose2D(directionId);
-            // ONLY WORKS ON POW OF 2 TEX
-            //Vector2ui dirIdXY = Vector2ui(directionId % X,
-            //                              directionId / X);
-            Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y), rng);
-            // Get a random position from the pool
-            Vector3f position = sharedMem->sPositions[THREAD_ID % sharedMem->sPositionCount];
-            //Vector3f position = sPositions[0];
-
-            // Now this is the interesting part
-            // We need to offset the ray in order to prevent
-            // self intersections.
-            // However it is not easy since we use arbitrary locations
-            // over the voxel, most fool-proof (but inaccurate)
-            // way is to offset the ray with the current level voxel size.
-            // This will be highly inaccurate when current bin(node) level is low.
-            // TODO: Change it to a better solution
-            float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
-                          MathConstants::LargeEpsilon);
-
-            bool isLeaf;
-            uint32_t nodeId;
-            float hitT = svo.ConeTraceRay(isLeaf, nodeId, RayF(worldDir, position),
-                                          tMin, FLT_MAX, coneAperture);
-
-            // TODO: change this
-            float radiance;
-            if(nodeId != UINT32_MAX)
+            if(nodeId[i] != UINT32_MAX)
             {
-                radiance = svo.ReadRadiance(worldDir, coneAperture,
-                                            nodeId, isLeaf);
-                //printf("HitT: %f, tMin %f n:%u r:%f\n", hitT, tMin, nodeId, radiance);
+                incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
+                                                   nodeId[i], isLeaf[i]);
+                //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
             }
-            else radiance = 0.0001f;
-            //else radiance = 2.0f;
-
-            incRadiances[i] = radiance;
+            else incRadiances[i] = 0.0001f;
+            //else incRadiances[i] = 2.0f;
         }
+
+
+
+        //// Trace the rays
+        //for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
+        //{
+        //    // This case occurs only when there is more threads than pixels
+        //    if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
+
+        //    // Determine your direction
+        //    uint32_t directionId = (i * THREAD_PER_BLOCK) + THREAD_ID;
+        //    // Make directions similar for tracing
+        //    // Use morton code to order
+        //    Vector2ui dirIdXY = MortonCode::Decompose2D(directionId);
+        //    // ONLY WORKS ON POW OF 2 TEX
+        //    //Vector2ui dirIdXY = Vector2ui(directionId % X,
+        //    //                              directionId / X);
+        //    Vector3f worldDir = DirIdToWorldDir(dirIdXY, Vector2ui(X, Y), rng);
+        //    // Get a random position from the pool
+        //    Vector3f position = sharedMem->sPositions[THREAD_ID % sharedMem->sPositionCount];
+        //    //Vector3f position = sPositions[0];
+
+        //    // Now this is the interesting part
+        //    // We need to offset the ray in order to prevent
+        //    // self intersections.
+        //    // However it is not easy since we use arbitrary locations
+        //    // over the voxel, most fool-proof (but inaccurate)
+        //    // way is to offset the ray with the current level voxel size.
+        //    // This will be highly inaccurate when current bin(node) level is low.
+        //    // TODO: Change it to a better solution
+        //    float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
+        //                  MathConstants::LargeEpsilon);
+
+        //    bool isLeaf;
+        //    uint32_t nodeId;
+        //    float hitT = svo.ConeTraceRay(isLeaf, nodeId, RayF(worldDir, position),
+        //                                  tMin, FLT_MAX, coneAperture);
+
+        //    // TODO: change this
+        //    float radiance;
+        //    if(nodeId != UINT32_MAX)
+        //    {
+        //        radiance = svo.ReadRadiance(worldDir, coneAperture,
+        //                                    nodeId, isLeaf);
+        //        //printf("HitT: %f, tMin %f n:%u r:%f\n", hitT, tMin, nodeId, radiance);
+        //    }
+        //    else radiance = 0.0001f;
+        //    //else radiance = 2.0f;
+
+        //    incRadiances[i] = radiance;
+        //}
         // We finished tracing rays from the scene
         // Now generate distribution from the data
         // and sample for each ray

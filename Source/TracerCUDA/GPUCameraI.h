@@ -57,6 +57,20 @@ class GPUCameraI : public GPUEndpointI
         virtual GPUCameraI*     GenerateSubCamera(Byte* memoryRegion, size_t size,
                                                   const Vector2i& regionId,
                                                   const Vector2i& regionCount) const = 0;
+
+
+        virtual __device__ void     Test(// Output
+                                 RayReg& ray,
+                                 Vector2f& localCoords,
+                                 // Input,
+                                 const Vector2i& sampleIdInner,
+                                 const Vector2i& sampleIdOuter,
+                                 const Vector2i& sampleCountInner,
+                                 const Vector2i& sampleCountOuter,
+                                 // I-O
+                                 RNGeneratorGPUI& rng,
+                                 // Options
+                                 bool antiAliasOn) const = 0;
 };
 
 class CPUCameraGroupI : public CPUEndpointGroupI
