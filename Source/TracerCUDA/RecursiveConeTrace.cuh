@@ -75,13 +75,26 @@ class BatchConeTracer
                                               uint32_t(&nodeIndex)[DATA_PER_THREAD],
                                               // Inputs Common
                                               const Vector3f& rayPos,
-                                              float tMin,
-                                              float tMax,
+                                              const Vector2f& tMinMaxInit,
                                               float pixelSolidAngle,
                                               int32_t recursionDepth,
+                                              int32_t recursionJump,
                                               // Functors
                                               RayProjectFunc&& ProjFunc,
                                               ProjWrapFunc&& WrapFunc);
+
+    template<class RayProjectFunc>
+    __device__ void     BatchedConeTraceRay(//Outputs
+                                            Vector3f(&rayDirOut)[DATA_PER_THREAD],
+                                            float(&tMinOut)[DATA_PER_THREAD],
+                                            bool(&isLeaf)[DATA_PER_THREAD],
+                                            uint32_t(&nodeIndex)[DATA_PER_THREAD],
+                                            // Inputs Common
+                                            const Vector3f& rayPos,
+                                            const Vector2f& tMinMax,
+                                            float pixelSolidAngle,
+                                            // Functors
+                                            RayProjectFunc&& ProjFunc);
 };
 
 template <int32_t TPB, int32_t X, int32_t Y>
@@ -103,55 +116,37 @@ void BatchConeTracer<TPB, X, Y>::RecursiveConeTraceRay(//Outputs
                                                        uint32_t(&nodeIndex)[DATA_PER_THREAD],
                                                        // Inputs Common
                                                        const Vector3f& rayPos,
-                                                       float tMin,
-                                                       float tMax,
+                                                       const Vector2f& tMinMaxInit,
                                                        float pixelSolidAngle,
                                                        int32_t recursionDepth,
+                                                       int32_t recursionJump,
                                                        // Functors
                                                        RayProjectFunc&& ProjFunc,
                                                        ProjWrapFunc&& WrapFunc)
 {
+    auto FindBottomLeft = [](const Vector2i& id, int32_t recursionJump)
+    {
+        return Vector2i(((id[0] + recursionJump) >> recursionJump) - 1,
+                        ((id[1] + recursionJump) >> recursionJump) - 1);
+    };
+
     #pragma unroll
     for(int i = 0; i < DATA_PER_THREAD; i++)
-        tMinOut[i] = tMin;
+        tMinOut[i] = tMinMaxInit[0];
 
-    for(int32_t r = recursionDepth; r >= 0; r--)
+    const bool isSingleTrace = (recursionDepth == 0);
+
+    // recursion jump
+    recursionJump = max(1, recursionJump);
+    recursionDepth *= recursionJump;
+    for(int32_t r = recursionDepth; r >= 0; r -= recursionJump)
     {
         // Current iteration region data
-        Vector2i currentRegion = Vector2i(X >> r,
-                                          Y >> r);
+        Vector2i currentRegion = Vector2i(X >> r, Y >> r);
         int32_t currentTotalWork = currentRegion.Multiply();
-        // Before writing to the system find out your tMin
         int32_t dataPerThread = max(1, (currentTotalWork) / TPB);
-
-        // Do not fetch from the shared memory the first iteration
-        // We already set the currentTMin to initial tMin
-        for(int i = 0; i < dataPerThread; i++)
-        {
-            // Skip loading tMin on first iteration
-            if(r == recursionDepth) continue;
-
-            int32_t localId = i * TPB + threadId;
-            if(localId >= currentTotalWork) continue;
-
-            // This rays rayId
-            Vector2i rayId(localId % currentRegion[0],
-                           localId / currentRegion[0]);
-            // Generate previous tMinBuffer
-            Vector2i previousRegion = Vector2i(X >> (r + 1),
-                                               Y >> (r + 1));
-            Span2D tMinBuffer(WrapFunc, sMem.sTMinBuffer, previousRegion);
-            Vector2i oldBottomLeft = Vector2i((rayId[0] - 1) >> 1,
-                                              (rayId[1] - 1) >> 1);
-            Vector4f tMins(tMinBuffer(oldBottomLeft[0], oldBottomLeft[1]),
-                           tMinBuffer(oldBottomLeft[0] + 1, oldBottomLeft[1]),
-                           tMinBuffer(oldBottomLeft[0], oldBottomLeft[1] + 1),
-                           tMinBuffer(oldBottomLeft[0] + 1, oldBottomLeft[1] + 1));
-            // Conservatively estimate the next iteration tMin
-            tMinOut[i] = tMins[tMins.Min()];
-        }
-        // Make sure all threads read a tMin
-        if(recursionDepth != 0) __syncthreads();
+        // Mask the linear array according to current region size
+        Span2D tMinBuffer(WrapFunc, sMem.sTMinBuffer, currentRegion);
         // Launch Cone Trace Rays for the region
         for(int i = 0; i < dataPerThread; i++)
         {
@@ -160,25 +155,89 @@ void BatchConeTracer<TPB, X, Y>::RecursiveConeTraceRay(//Outputs
 
             Vector2i rayId(localId % currentRegion[0],
                            localId / currentRegion[0]);
-
-            // Generate current iteration data
-            Span2D tMinBuffer(WrapFunc, sMem.sTMinBuffer, currentRegion);
             // Generate Ray
             rayDirOut[i] = ProjFunc(rayId, currentRegion);
             RayF ray(rayDirOut[i], rayPos);
 
             float currentSolidAngle = pixelSolidAngle;
-            if(r != 0)
-                currentSolidAngle *= static_cast<float>(1 << r) * MathConstants::Sqrt3;
+            // Conservatively expand the solid angle of this iteration
+            // solid angle grows by factor of 4 also multiply it accordingly.
+            // add extra padding to make sure it covers every inner pixel
+            //static constexpr float Factor = 3.0f / 2.0f * MathConstants::Sqrt2;
+            float solidAngleMultiplier = static_cast<float>(1 << (r << 2));// *Factor;
+            if(r != 0) currentSolidAngle *=  solidAngleMultiplier;
 
             tMinOut[i] = svo.ConeTraceRay(isLeaf[i], nodeIndex[i], ray,
-                                          tMinOut[i], tMax,
+                                          tMinOut[i], tMinMaxInit[1],
                                           currentSolidAngle, 0);
-            // Write the found out tMin
+            // Write the found out tMin (except on the last iteration)
             if(r != 0) tMinBuffer(rayId[0], rayId[1]) = tMinOut[i];
         }
-        if(recursionDepth != 0) __syncthreads();
+
+        // Single trace mode just exit
+        if(isSingleTrace) break;
+
+        // Make sure everybody written to the shared mem
+        __syncthreads();
+        // Change the thread logic, load the tMin of the threads for next iteration
+        // Current iteration region data
+        int32_t nextR = r - recursionJump;
+        Vector2i nextRegion = Vector2i(X >> nextR, Y >> nextR);
+        int32_t nextTotalWork = nextRegion.Multiply();
+        int32_t nextDataPerThread = max(1, (nextTotalWork) / TPB);
+        // Next iteration's thread will fetch the tMins from the current buffer
+        for(int i = 0; i < nextDataPerThread; i++)
+        {
+            int32_t localId = i * TPB + threadId;
+            if(localId >= nextTotalWork) continue;
+
+            // This rays rayId
+            Vector2i nextRayId(localId % nextRegion[0],
+                               localId / nextRegion[0]);
+            // Generate previous tMinBuffer
+            Vector2i oldBottomLeft = FindBottomLeft(nextRayId, recursionJump);
+            Vector4f tMins(tMinBuffer(oldBottomLeft[0], oldBottomLeft[1]),
+                           tMinBuffer(oldBottomLeft[0] + 1, oldBottomLeft[1]),
+                           tMinBuffer(oldBottomLeft[0], oldBottomLeft[1] + 1),
+                           tMinBuffer(oldBottomLeft[0] + 1, oldBottomLeft[1] + 1));
+            // Conservatively estimate the next iteration tMin
+            tMinOut[i] = tMins[tMins.Min()];
+        }
+        // Make sure all threads read a tMin
+        __syncthreads();
     }
     // On last iteration found out stuff is written to proper locations
     // All Done!
+}
+
+template <int32_t TPB, int32_t X, int32_t Y>
+template<class RayProjectFunc>
+__device__ inline
+void BatchConeTracer<TPB, X, Y>::BatchedConeTraceRay(//Outputs
+                                                     Vector3f(&rayDirOut)[DATA_PER_THREAD],
+                                                     float(&tMinOut)[DATA_PER_THREAD],
+                                                     bool(&isLeaf)[DATA_PER_THREAD],
+                                                     uint32_t(&nodeIndex)[DATA_PER_THREAD],
+                                                     // Inputs Common
+                                                     const Vector3f& rayPos,
+                                                     const Vector2f& tMinMax,
+                                                     float pixelSolidAngle,
+                                                     // Functors
+                                                     RayProjectFunc&& ProjFunc)
+{
+    // Launch Cone Trace Rays for the region
+    for(int i = 0; i < DATA_PER_THREAD; i++)
+    {
+        int32_t localId = i * TPB + threadId;
+        if(localId >= X * Y) continue;
+
+        Vector2i rayId(localId % X, localId / X);
+        // Generate Ray
+        rayDirOut[i] = ProjFunc(rayId, Vector2i(X, Y));
+        RayF ray(rayDirOut[i], rayPos);
+
+        tMinOut[i] = svo.ConeTraceRay(isLeaf[i], nodeIndex[i], ray,
+                                      tMinMax[0], tMinMax[1],
+                                      pixelSolidAngle, 0);
+    }
 }

@@ -111,10 +111,15 @@ template<class T>
 __host__ __device__ HYBRID_INLINE
 FloatEnable<T, Vector<2, T>> Utility::DirectionToCocentricOctohedral(const Vector<3, T>& dir)
 {
+    // Edge case
+    if(dir[0] == 0 && dir[1] == 0) return Vector<2, T>(0);
+
     static constexpr T TwoOvrPi = static_cast<T>(MathConstants::InvPi_d * 2.0);
+
     T xAbs = abs(dir[0]);
     T yAbs = abs(dir[1]);
-    T phiPrime = atan(yAbs / xAbs);
+    T atanIn = yAbs / xAbs;
+    T phiPrime = atan(atanIn);
 
     T radius = sqrt(1 - abs(dir[2]));
 
@@ -123,8 +128,10 @@ FloatEnable<T, Vector<2, T>> Utility::DirectionToCocentricOctohedral(const Vecto
     // Now convert to the quadrant
     if(dir[2] < 0)
     {
-        u = 1.0f - v;
-        v = 1.0f - u;
+        T uPrime = 1.0f - v;
+        T vPrime = 1.0f - u;
+        u = uPrime;
+        v = vPrime;
     }
     // Sign extend the uv
     u *= (signbit(dir[0]) ? -1 : 1);

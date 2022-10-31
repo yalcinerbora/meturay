@@ -103,8 +103,6 @@ class WFPGTracer final : public RayTracer
         WFPGPathNode*                   dPathNodes;
         // Product Path Guiding Related
         GPUMetaSurfaceHandler           metaSurfHandler;
-        // Debug mode cone aperture
-        float                           coneAperture;
         // Misc
         void                            ResizeAndInitPathMemory();
         uint32_t                        TotalPathNodeCount() const;

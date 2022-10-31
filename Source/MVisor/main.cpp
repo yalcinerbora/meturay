@@ -16,6 +16,8 @@
 
 #include <array>
 
+#include "RayLib/CoordinateConversion.h"
+
 int main(int argc, const char* argv[])
 {
     // Fancy CMD

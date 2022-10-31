@@ -55,7 +55,6 @@ void KCTraceSVOFromObjectCam(// Output
                              const GPUCameraI* gCamera,
                              // Constants
                              const AnisoSVOctreeGPU svo,
-                             const float coneAperture,
                              WFPGRenderMode mode,
                              uint32_t maxQueryLevelOffset,
 
@@ -67,8 +66,8 @@ void KCTraceSVOFromObjectCam(// Output
                                      // Input
                                      gCamera,
                                      // Constants
-                                     svo, coneAperture,
-                                     mode, maxQueryLevelOffset,
+                                     svo, mode,
+                                     maxQueryLevelOffset,
                                      totalPixelCount,
                                      totalSegments);
 }
@@ -82,7 +81,6 @@ void KCTraceSVOFromArrayCam(// Output
                             uint32_t cameraIndex,
                             // Constants
                             const AnisoSVOctreeGPU svo,
-                            const float coneAperture,
                             WFPGRenderMode mode,
                             uint32_t maxQueryLevelOffset,
                             // Camera region related
@@ -94,8 +92,8 @@ void KCTraceSVOFromArrayCam(// Output
                                      // Input
                                      gCameras[cameraIndex],
                                      // Constants
-                                     svo, coneAperture,
-                                     mode, maxQueryLevelOffset,
+                                     svo, mode,
+                                     maxQueryLevelOffset,
                                      totalPixelCount,
                                      totalSegments);
 }
@@ -430,6 +428,18 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
     // Change the sample to nearest multiple the region size
     sampleMemory.Resize(imgMemory.Format(), totalPixelCount.Multiply());
 
+    //
+    uint32_t sharedMemSize = sizeof(KCTraceSVOSharedMem<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>);
+
+    auto Kernel0 = KCTraceSVOFromArrayCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>;
+    auto Kernel1 = KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>;
+    CUDA_CHECK(cudaFuncSetAttribute(Kernel0,
+                                    cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                    sharedMemSize));
+    CUDA_CHECK(cudaFuncSetAttribute(Kernel1,
+                                    cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                    sharedMemSize));
+
     // Generate rays appropriate to the camera type
     switch(currentCamera.type)
     {
@@ -437,7 +447,8 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
         {
             // Now we can call the kernel
             const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(0, (cudaStream_t)0, THREAD_COUNT, gpu.SMCount() * 2,
+            gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
+                          THREAD_COUNT, gpu.SMCount() * 2,
                           //
                           KCTraceSVOFromArrayCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
                           // Output
@@ -447,7 +458,6 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                           currentCamera.nonTransformedCamIndex,
                           // Constants
                           svo.TreeGPU(),
-                          coneAperture,
                           options.renderMode,
                           options.svoRenderLevel,
                           // Camera region related
@@ -460,7 +470,8 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
         {
             // Now we can call the kernel
             const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(0, (cudaStream_t)0, THREAD_COUNT, gpu.SMCount() * 2,
+            gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
+                          THREAD_COUNT, gpu.SMCount() * 2,
                                //
                           KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
                           // Output
@@ -469,7 +480,6 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                           currentCamera.dCustomCamera,
                           // Constants
                           svo.TreeGPU(),
-                          coneAperture,
                           options.renderMode,
                           options.svoRenderLevel,
                           // Camera region related
@@ -484,8 +494,9 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
             const GPUCameraI* dCamera = GenerateCameraWithTransform(t, camIndex);
                         // Now we can call the kernel
             const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(0, (cudaStream_t)0, THREAD_COUNT, gpu.SMCount() * 2,
-                               //
+            gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
+                          THREAD_COUNT, gpu.SMCount() * 2,
+                            //
                           KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
                           // Output
                           sampleMemory.GMem<Vector4f>(),
@@ -493,7 +504,6 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                           dCamera,
                           // Constants
                           svo.TreeGPU(),
-                          coneAperture,
                           options.renderMode,
                           options.svoRenderLevel,
                           // Camera region related
@@ -510,7 +520,6 @@ WFPGTracer::WFPGTracer(const CudaSystem& s,
                        const TracerParameters& p)
     : RayTracer(s, scene, p)
     , currentDepth(0)
-    , coneAperture(0.0f)
     , rFieldGaussFilter(options.rFieldGaussAlpha)
 {
     // Append Work Types for generation
@@ -746,23 +755,6 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
        options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
        options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
-        // Generate cone aperture
-        DeviceMemory mem(sizeof(float));
-        float* dConeAperture = static_cast<float*>(mem);
-        const auto& gpu = cudaSystem.BestGPU();
-        gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
-                      //
-                      KCGenConeApertureFromArray,
-                      //
-                      *dConeAperture,
-                      dCameras,
-                      cameraIndex,
-                      imgMemory.Resolution()
-        );
-
-        CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
-                              sizeof(float), cudaMemcpyDeviceToHost));
-
         // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::SCENE_CAMERA;
         currentCamera.nonTransformedCamIndex = cameraIndex;
@@ -796,23 +788,6 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
        options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
        options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
-        // Generate cone aperture
-        DeviceMemory mem(sizeof(float));
-        float* dConeAperture = static_cast<float*>(mem);
-        const auto& gpu = cudaSystem.BestGPU();
-        gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
-                      //
-                      KCGenConeApertureFromArray,
-                      //
-                      *dConeAperture,
-                      dCameras,
-                      cameraIndex,
-                      imgMemory.Resolution()
-        );
-
-        CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
-                              sizeof(float), cudaMemcpyDeviceToHost));
-
         // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::TRANSFORMED_SCENE_CAMERA;
         currentCamera.transformedSceneCam.cameraIndex = cameraIndex;
@@ -846,22 +821,6 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
        options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
        options.renderMode == WFPGRenderMode::SVO_NORMAL)
     {
-        // Generate cone aperture
-        DeviceMemory mem(sizeof(float));
-        float* dConeAperture = static_cast<float*>(mem);
-        const auto& gpu = cudaSystem.BestGPU();
-        gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
-                      //
-                      KCGenConeApertureFromObject,
-                      //
-                      *dConeAperture,
-                      dCam,
-                      imgMemory.Resolution()
-        );
-
-        CUDA_CHECK(cudaMemcpy(&coneAperture, dConeAperture,
-                              sizeof(float), cudaMemcpyDeviceToHost));
-
         // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::CUSTOM_CAMERA;
         currentCamera.dCustomCamera = &dCam;

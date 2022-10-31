@@ -44,8 +44,9 @@
 			"type" : "Primitive",
 			"primitive": 0,
 			"accelerator": 0,
-			"radiance": [1.7, 1.2, 0.4]
-            //"radiance": [68, 48, 16]
+            "radiance": [68, 48, 16]
+            //"radiance": [136, 96, 32]
+            //"radiance": [1.7, 1.2, 0.4]
 		}
 	],
 
@@ -117,15 +118,16 @@
             "layout": "trs",
             "translate": [-0.005, 1.98, -0.03],
             "rotate": [90, 0, 0],
-            //"scale": [0.47, 1, 0.38]
-            "scale": [2.47, 1, 2.38]
+            "scale": [0.47, 1, 0.38]
+            //"scale": [0.235, 1, 0.19]
+            //"scale": [2.47, 1, 2.38]
         },
         {
             // Occluder Box
             "id": 11,
             "type": "Single",
             "layout": "trs",
-            "translate": [-0.005, 1.7, -0.03],
+            "translate": [-0.005, 1.5, -0.03],
             "rotate": [0, 0, 0],
             "scale": [0.80, 0.025, 0.80]
         }
@@ -186,18 +188,18 @@
     [
         // Floor
         { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0},
-        // // Ceiling
-        // { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
-        // // Back Wall
-        // { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
-        // // Left Wall
-        // { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
-        // // Right Wall
-        // { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
-        // // Tall Box
-        // { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
-        // // Short Box
-        // { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
+        // Ceiling
+        { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
+        // Back Wall
+        { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
+        // Left Wall
+        { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
+        // Right Wall
+        { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
+        // Tall Box
+        { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
+        // Short Box
+        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
 
          // Occuluder Prism
          { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
