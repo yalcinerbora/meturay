@@ -156,6 +156,7 @@ class GDebugRendererSVO : public GDebugRendererI
         static constexpr const char* SVO_TREE_NAME = "svoTrees";
         static constexpr const char* MAP_SIZE_NAME = "mapSize";
         static constexpr const char* TRACE_LEVEL_NAME = "minRayBinLevel";
+        static constexpr const char* NORMALS_NAME = "normals";
 
         const SamplerGL         linearSampler;
         const TextureGL&        gradientTexture;
@@ -174,6 +175,9 @@ class GDebugRendererSVO : public GDebugRendererI
         //
         IntegerNameList         nameList;
         uint32_t                currentIndex;
+        //
+        Vector2ui               normalTexSize;
+        std::vector<Vector3f>   pixelNormals;
 
         // Shaders
         ShaderGL                compReduction;
@@ -200,6 +204,7 @@ class GDebugRendererSVO : public GDebugRendererI
         void                RenderSpatial(TextureGL&, uint32_t depth,
                                           const std::vector<Vector3f>& worldPositions) override;
         void                UpdateDirectional(const Vector3f& worldPos,
+                                              const Vector2i& worldPixel,
                                               bool doLogScale,
                                               uint32_t depth) override;
 

@@ -19,6 +19,8 @@
 #include "GuideDebugGUIFuncs.h"
 #include "GLConversionFunctions.h"
 
+#include "ImageIO/EntryPoint.h"
+
 // TODO: dont copy these
 template <int32_t N>
 class StaticGaussianFilter1D
@@ -587,6 +589,25 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     currentTexture = TextureGL(mapSize, PixelFormat::RGBA8_UNORM);
     currentValues.resize(mapSize.Multiply());
 
+    // Load Normals for at least multiplying with cos(theta).
+    std::string normalPath = Utility::MergeFileFolder(configPath, config[NORMALS_NAME]);
+    PixelFormat pf;
+    std::vector<Byte> wpByte;
+    ImageIOError e = ImageIOInstance()->ReadImage(wpByte,
+                                                  pf, normalTexSize,
+                                                  normalPath);
+    if(e != ImageIOError::OK) throw e;
+
+    pixelNormals.resize(normalTexSize[0] * normalTexSize[1]);
+    std::memcpy(reinterpret_cast<Byte*>(pixelNormals.data()),
+                wpByte.data(), wpByte.size());
+    std::for_each(std::execution::par_unseq,
+                  pixelNormals.begin(), pixelNormals.end(),
+                  [](Vector3f& normal)
+                  {
+                      normal = (normal * Vector3f(2.0f)) - Vector3f(1.0f);
+                  });
+
     // Preload some integer names for bin level selection
     // 2^16 x 2^16 x 2^16  SVO should be impossible
     // TODO: maybe change later
@@ -792,6 +813,7 @@ void GDebugRendererSVO::RenderSpatial(TextureGL& overlayTex, uint32_t depth,
 }
 
 void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
+                                          const Vector2i& pixelIndex,
                                           bool doLogScale,
                                           uint32_t depth)
 {
@@ -813,6 +835,8 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                                std::min(minBinLevel, svo.leafDepth),
                                true);
     if(!found) METU_ERROR_LOG("Unable to locate a voxel! Using direct world space for ray position!");
+
+    Vector3f normal = pixelNormals[pixelIndex[1] * normalTexSize[0] + pixelIndex[0]];
 
     // Now find out the node id and offset the tmin accordingly
     float voxSize = svo.NodeVoxelSize(nodeIndex, (minBinLevel == svo.leafDepth));
@@ -844,14 +868,17 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                       float radiance = svo.ReadRadiance(ray.getDirection(), coneAperture,
                                                         leafIndex, isLeaf);
 
+                      // Fake the cos theta
+                      radiance *= std::max(0.0f, direction.Dot(normal));
+
                       uint32_t writeIndex = pixelId[1] * mapSize[0] + pixelId[0];
                       currentValues[writeIndex] = radiance;
                   });
 
 
     std::vector<float> valuesBuffer(currentValues.size(), 0.0f);
-    using FilterType = StaticGaussianFilter1D<5>;
-    FilterType gaussFilter(1.0f);
+    using FilterType = StaticGaussianFilter1D<7>;
+    FilterType gaussFilter(1.5f);
     auto KERNEL_RANGE = FilterType::KERNEL_RANGE;
     // Do Gauss Pass over Values
     std::for_each(std::execution::par_unseq,

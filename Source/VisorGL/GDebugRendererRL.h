@@ -112,6 +112,7 @@ class GDebugRendererRL : public GDebugRendererI
         void                RenderSpatial(TextureGL&, uint32_t depth,
                                           const std::vector<Vector3f>& worldPositions) override;
         void                UpdateDirectional(const Vector3f& worldPos,
+                                              const Vector2i& worldPixel,
                                               bool doLogScale,
                                               uint32_t depth) override;
 

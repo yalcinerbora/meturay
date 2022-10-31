@@ -289,7 +289,8 @@ void GuideDebugGUI::Render()
         // Do Guide Debuggers
         for(const auto& renderer : debugRenderers)
         {
-            renderer->UpdateDirectional(worldPos, doLogScale, currentDepth);
+            renderer->UpdateDirectional(worldPos, Vector2i(selectedPixel),
+                                        doLogScale, currentDepth);
         }
         updateDirectionalTextures = false;
     }
@@ -312,7 +313,8 @@ void GuideDebugGUI::Render()
             uint32_t linearIndex = (static_cast<uint32_t>(selectedPixel[1]) * refTexture.Size()[0] +
                                     static_cast<uint32_t>(selectedPixel[0]));
             Vector3f worldPos = worldPositions[linearIndex];
-            renderer->UpdateDirectional(worldPos, doLogScale, currentDepth);
+            renderer->UpdateDirectional(worldPos, Vector2i(selectedPixel),
+                                        doLogScale, currentDepth);
         }
         if(overlayChanged)
         {

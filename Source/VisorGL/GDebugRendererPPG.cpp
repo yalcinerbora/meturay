@@ -252,6 +252,7 @@ void GDebugRendererPPG::RenderSpatial(TextureGL& overlayTex, uint32_t depth,
 }
 
 void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
+                                          const Vector2i&,
                                           bool doLogScale,
                                           uint32_t depth)
 {
