@@ -741,7 +741,7 @@ inline void TraceSVO(// Output
                                                 shMem->sPosition,
                                                 shMem->sTMinMax,
                                                 shMem->sConeAperture,
-                                                1, 3,
+                                                0, 1, maxQueryLevelOffset,
                                                 ProjectionFunc,
                                                 WrapFunc);
 
@@ -796,7 +796,7 @@ inline void TraceSVO(// Output
                 gSamples.gImgCoords[globalLinearSampleId] = imgCoords;
                 gSamples.gValues[globalLinearSampleId] = locColor;
             }
-            else printf("fail\n");
+            //else printf("fail\n");
         }
         __syncthreads();
     }
@@ -1069,9 +1069,11 @@ static void KCGenAndSampleDistribution(// Output
                 bool isLeaf = ReadSVONodeId(nodeId, sharedMem->sNodeId);
                 sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
+                uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * sharedMem->sRayCount);
+
                 // TODO: Change this
                 // Use the first rays hit position
-                uint32_t rayId = gRayIds[rayRange[0] + 0];
+                uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
                 Vector3 position = metaSurfGenerator.AcquireWork(rayId).WorldPosition();
                 sharedMem->sRadianceFieldOrigin = position;
             };
@@ -1102,7 +1104,7 @@ static void KCGenAndSampleDistribution(// Output
         //                                 sharedMem->sRadianceFieldOrigin,
         //                                 Vector2f(tMin, FLT_MAX),
         //                                 coneAperture,
-        //                                 0, 1,
+        //                                 0, 1, 0,
         //                                 // Functors
         //                                 ProjectionFunc,
         //                                 WrapFunc);
@@ -1113,7 +1115,7 @@ static void KCGenAndSampleDistribution(// Output
                                        // Inputs
                                        sharedMem->sRadianceFieldOrigin,
                                        Vector2f(tMin, FLT_MAX),
-                                       coneAperture,
+                                       coneAperture, 0,
                                        // Functors
                                        ProjectionFunc);
 
@@ -1129,8 +1131,8 @@ static void KCGenAndSampleDistribution(// Output
                                                    nodeId[i], isLeaf[i]);
                 //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
             }
-            else incRadiances[i] = 0.0001f;
-            //else incRadiances[i] = 2.0f;
+            //else incRadiances[i] = 0.0001f;
+            else incRadiances[i] = 0.0f;
         }
 
         // We finished tracing rays from the scene

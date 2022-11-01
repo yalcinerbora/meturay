@@ -196,10 +196,10 @@
         { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
         // Right Wall
         { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
-        // Tall Box
-        { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
-        // Short Box
-        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
+        // // Tall Box
+        // { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
+        // // Short Box
+        // { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
 
          // Occuluder Prism
          { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}

@@ -356,8 +356,6 @@ void WFPGTracer::GenerateGuidedDirections()
     // Select the kernel depending on the depth
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
 
-    //uint32_t kernelIndex = 3;
-
     auto KCSampleKernel = PG_KERNELS[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
     uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];

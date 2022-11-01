@@ -79,6 +79,7 @@ class BatchConeTracer
                                               float pixelSolidAngle,
                                               int32_t recursionDepth,
                                               int32_t recursionJump,
+                                              uint32_t maxQueryLevelOffset,
                                               // Functors
                                               RayProjectFunc&& ProjFunc,
                                               ProjWrapFunc&& WrapFunc);
@@ -93,6 +94,7 @@ class BatchConeTracer
                                             const Vector3f& rayPos,
                                             const Vector2f& tMinMax,
                                             float pixelSolidAngle,
+                                            uint32_t maxQueryLevelOffset,
                                             // Functors
                                             RayProjectFunc&& ProjFunc);
 };
@@ -120,6 +122,7 @@ void BatchConeTracer<TPB, X, Y>::RecursiveConeTraceRay(//Outputs
                                                        float pixelSolidAngle,
                                                        int32_t recursionDepth,
                                                        int32_t recursionJump,
+                                                       uint32_t maxQueryLevelOffset,
                                                        // Functors
                                                        RayProjectFunc&& ProjFunc,
                                                        ProjWrapFunc&& WrapFunc)
@@ -169,7 +172,7 @@ void BatchConeTracer<TPB, X, Y>::RecursiveConeTraceRay(//Outputs
 
             tMinOut[i] = svo.ConeTraceRay(isLeaf[i], nodeIndex[i], ray,
                                           tMinOut[i], tMinMaxInit[1],
-                                          currentSolidAngle, 0);
+                                          currentSolidAngle, maxQueryLevelOffset);
             // Write the found out tMin (except on the last iteration)
             if(r != 0) tMinBuffer(rayId[0], rayId[1]) = tMinOut[i];
         }
@@ -222,6 +225,7 @@ void BatchConeTracer<TPB, X, Y>::BatchedConeTraceRay(//Outputs
                                                      const Vector3f& rayPos,
                                                      const Vector2f& tMinMax,
                                                      float pixelSolidAngle,
+                                                     uint32_t maxQueryLevelOffset,
                                                      // Functors
                                                      RayProjectFunc&& ProjFunc)
 {
@@ -238,6 +242,6 @@ void BatchConeTracer<TPB, X, Y>::BatchedConeTraceRay(//Outputs
 
         tMinOut[i] = svo.ConeTraceRay(isLeaf[i], nodeIndex[i], ray,
                                       tMinMax[0], tMinMax[1],
-                                      pixelSolidAngle, 0);
+                                      pixelSolidAngle, maxQueryLevelOffset);
     }
 }
