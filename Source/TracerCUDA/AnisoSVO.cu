@@ -348,8 +348,8 @@ void KCCCopyRadianceToHalfBufferLeaf(// I-O
         Vector2f avgRadiance = Vector2f(irradiance[0] / static_cast<float>(count[0]),
                                         irradiance[1] / static_cast<float>(count[1]));
         // Avoid NaN if not accumulation occurred
-        avgRadiance[0] = (count[0] == 0) ? MRAY_HALF_MAX : avgRadiance[0];
-        avgRadiance[1] = (count[1] == 0) ? MRAY_HALF_MAX : avgRadiance[1];
+        avgRadiance[0] = (count[0] == 0) ? 0.0f : avgRadiance[0];
+        avgRadiance[1] = (count[1] == 0) ? 0.0f : avgRadiance[1];
         // Normalize & Clamp the half range for now
         Vector2f irradClampled = Vector2f::Min(avgRadiance, Vector2f(MRAY_HALF_MAX));
 

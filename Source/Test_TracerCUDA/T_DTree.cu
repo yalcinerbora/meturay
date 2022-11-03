@@ -87,24 +87,6 @@ static void KCPdfDivide(Vector3f* gDirections,
     }
 }
 
-//__global__
-//static void KCSampleDivide(float* gPixelsOut,
-//                           const float* gPixels,
-//                           const uint32_t* gSamples,
-//                           //
-//                           uint32_t sampleCount)
-//{
-//    // Grid Stride Loop
-//    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-//        globalId < sampleCount; globalId += blockDim.x * gridDim.x)
-//    {
-//        if(gSamples[globalId] == 0)
-//            gPixelsOut[globalId] = 0.0f;
-//        else
-//            gPixelsOut[globalId] = gPixels[globalId] / static_cast<float>(gSamples[globalId]);
-//    }
-//}
-
 __global__
 static void KCFurnaceDTree(// Output
                            Vector3d* gValues,

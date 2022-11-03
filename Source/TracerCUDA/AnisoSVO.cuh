@@ -9,9 +9,11 @@
 #include "RayLib/HybridFunctions.h"
 #include "RayLib/MortonCode.h"
 
+
 #include "GPULightI.h"
 #include "DeviceMemory.h"
 #include "BinarySearch.cuh"
+#include "GaussianLobe.cuh"
 
 struct WFPGPathNode;
 class CudaSystem;
@@ -239,13 +241,17 @@ class AnisoSVOctreeGPU
     // Atomically Increment the ray count for that leafIndex
     __device__
     void                IncrementLeafRayCount(uint32_t leafIndex);
+
+    __device__
+    bool                Descend(uint32_t& index, uint64_t mortonCode, uint32_t depth) const;
     // Return the leaf index of this position
     // Return false if no such leaf exists
     // Due to numerical precision, "worldPos" may be slightly outside of a voxel
     // user can set "checkNeighbours" to find the closest neighboring voxel
     __device__
-    bool                LeafIndex(uint32_t& index, const Vector3f& worldPos,
-                                  bool checkNeighbours = false) const;
+    bool                NearestNodeIndex(uint32_t& index, const Vector3f& worldPos,
+                                         uint32_t depth,
+                                         bool checkNeighbours = false) const;
     // Find the bin from the leaf
     // Bin is the node that is the highest non-collapsed node
     __device__
@@ -392,13 +398,28 @@ float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
     // Convert it back
     // Sample the value using tetha (coneDir o normal)
 
+    //// TODO: Change these to somewhat proper values
+    //static constexpr float MAX_SOLID_ANGLE = 4.0f * MathConstants::Pi;
+    //static constexpr float INV_MAX_SOLID_ANGLE = 1.0f / MAX_SOLID_ANGLE;
+    //static constexpr float SHARPNESS_EXPANSION = 100.0f;
+    //float solidDeviation = 1.0f - ((MAX_SOLID_ANGLE - coneAperture) * INV_MAX_SOLID_ANGLE);
+
+    //// Generate Gaussian Lobe for cone
+    //Vector2h irrads = gIrradArray[nodeIndex];
+    //GaussianLobe normalLobe0(normal, irrads[0], 0.01);// normalDeviation* SHARPNESS_EXPANSION);
+    //GaussianLobe normalLobe1(-normal, irrads[1], 0.01);// normalDeviation* SHARPNESS_EXPANSION);
+    //GaussianLobe coneLobe(-coneDirection, 1.0f, 0.01);// solidDeviation* SHARPNESS_EXPANSION);
+
+    //float totalIrrad = max(0.0f, normalLobe0.Dot(coneLobe)) + max(0.0f, normalLobe1.Dot(coneLobe));
+    //return totalIrrad;
+
     // Currently we are just fetching irradiance
     // which side are we on
     // Note that "coneDirection" is towards to the surface
     bool towardsNormal = (normal.Dot(-coneDirection) >= 0.0f);
     uint32_t index = towardsNormal ? 0 : 1;
-
-    return gIrradArray[nodeIndex][index];
+    float result = gIrradArray[nodeIndex][index];
+    return result * abs(normal.Dot(-coneDirection));
 }
 
 __device__ inline
@@ -728,7 +749,7 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
 
     // Aperture Related Routines
     const float CONE_DIAMETER_FACTOR = tan(0.5f * coneAperture) * 2.0f;
-    auto ConeDiameter = [&CONE_DIAMETER_FACTOR](float distance)
+    auto ConeDiameter = [CONE_DIAMETER_FACTOR](float distance)
     {
         return CONE_DIAMETER_FACTOR * distance;
     };
@@ -899,16 +920,26 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
                 // Only update the node if it has an actual children
                 nodeId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
 
-                // Check if the current cone aperture is larger than the
-                // current voxel size, then terminate
-                uint32_t voxelLevel = stack3BitCount + 1;
+                // We can terminate the traversal on several conditions
+                // Condition #1: This child is a leaf voxel, terminate (basic case)
+                // Condition #2: Consider this voxel as leaf (due to maxQueryLevelOffset parameter)
+                //               and terminate as if this node is leaf
+                // Condition #3: ConeApterture is larger than the this level's voxel size,
+                //               Again terminate, this voxel is assumed to cover the entire solid angle
+                //               of the cone
+                // Condition #3
                 bool isTerminated = ConeDiameter(tMin) > LevelVoxelSize(stack3BitCount + 1);
-                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevelOffset;
+                // Condition #1
                 bool isChildLeaf = IsChildrenLeaf(node);
-                // If it is leaf just return the
-                // "nodeId" it is actually leaf id
+                // Condition #2
+                uint32_t voxelLevel = stack3BitCount + 1;
+                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevelOffset;
+
                 if(isChildLeaf || isTerminated)
                 {
+                    // Now return the interpolation coefficients
+
+
                     isLeaf = isChildLeaf;
                     leafId = nodeId;
                     break;
@@ -917,10 +948,8 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
             // If this node does not have a child
             // "Fake" traverse down to child node
             // (don't update the node variable)
-
             // Set empty node for next iteration
             emptyNode = !HasChild(node, mirChildId);
-            // Unfortunately it is not leaf
             // Traverse down, update Corner
             corner += Vector3f(((childId >> 0) & 0b1) ? childVoxSpan : 0.0f,
                                ((childId >> 1) & 0b1) ? childVoxSpan : 0.0f,
@@ -967,7 +996,7 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 {
     // Find the leaf here
     uint32_t lIndex;
-    bool leafFound = LeafIndex(lIndex, worldPos, true);
+    bool leafFound = NearestNodeIndex(lIndex, worldPos, leafDepth, true);
 
     // We should always find a leaf with the true flag
     if(leafFound)
@@ -986,38 +1015,38 @@ void AnisoSVOctreeGPU::IncrementLeafRayCount(uint32_t leafIndex)
 }
 
 __device__ inline
-bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
-                                 bool checkNeighbours) const
+bool AnisoSVOctreeGPU::Descend(uint32_t& index, uint64_t mortonCode, uint32_t depth) const
 {
     // Useful constants
     static constexpr uint32_t DIMENSION = 3;
     static constexpr uint32_t DIM_MASK = (1 << DIMENSION) - 1;
 
-    // Descend module (may be called multiple times
-    // when checkNeighbours is on)
-    auto Descend = [&](uint64_t mortonCode) -> bool
+    uint32_t mortonLevelShift = (leafDepth - 1) * DIMENSION;
+    // Now descend down
+    uint32_t currentNodeIndex = 0;
+    for(uint32_t i = 0; i < depth; i++)
     {
-        uint32_t mortonLevelShift = (leafDepth - 1) * DIMENSION;
-        // Now descend down
-        uint32_t currentNodeIndex = 0;
-        for(uint32_t i = 0; i < leafDepth; i++)
-        {
-            uint64_t currentNode = dNodes[currentNodeIndex];
-            uint32_t childId = (mortonCode >> mortonLevelShift) & DIM_MASK;
-            // Check if this node has that child avail
-            if(!((ChildMask(currentNode) >> childId) & 0b1))
-                return false;
+        uint64_t currentNode = dNodes[currentNodeIndex];
+        uint32_t childId = (mortonCode >> mortonLevelShift) & DIM_MASK;
+        // Check if this node has that child avail
+        if(!((ChildMask(currentNode) >> childId) & 0b1))
+            return false;
 
-            uint32_t childOffset = FindChildOffset(currentNode, childId);
-            uint32_t childrenIndex = ChildrenIndex(currentNode);
-            currentNodeIndex = childrenIndex + childOffset;
-            mortonLevelShift -= DIMENSION;
-        }
-        // If we descended down properly currentNode should point to the
-        // index. Notice that, last level's children ptr will point to the leaf arrays
-        index = currentNodeIndex;
-        return true;
-    };
+        uint32_t childOffset = FindChildOffset(currentNode, childId);
+        uint32_t childrenIndex = ChildrenIndex(currentNode);
+        currentNodeIndex = childrenIndex + childOffset;
+        mortonLevelShift -= DIMENSION;
+    }
+    // If we descended down properly currentNode should point to the
+    // index. Notice that, last level's children ptr will point to the leaf arrays
+    index = currentNodeIndex;
+    return true;
+};
+
+__device__ inline
+bool AnisoSVOctreeGPU::NearestNodeIndex(uint32_t& index, const Vector3f& worldPos,
+                                        uint32_t depth, bool checkNeighbours) const
+{
 
     index = UINT32_MAX;
     if(svoAABB.IsOutside(worldPos))
@@ -1026,8 +1055,10 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
         return false;
     }
 
+    float levelVoxelSize = leafVoxelSize * static_cast<float>(1 << (leafDepth - depth));
+
     // Calculate Dense Voxel Id
-    Vector3f lIndex = ((worldPos - svoAABB.Min()) / leafVoxelSize);
+    Vector3f lIndex = ((worldPos - svoAABB.Min()) / levelVoxelSize);
     Vector3f lIndexInt;
     Vector3f lIndexFrac = Vector3f(modff(lIndex[0], &(lIndexInt[0])),
                                    modff(lIndex[1], &(lIndexInt[1])),
@@ -1082,7 +1113,7 @@ bool AnisoSVOctreeGPU::LeafIndex(uint32_t& index, const Vector3f& worldPos,
         // Generate Morton code of the index
         uint64_t voxelMorton = MortonCode::Compose3D<uint64_t>(voxIndex);
         // Traverse this morton code
-        found = Descend(voxelMorton);
+        found = Descend(index, voxelMorton, depth);
         // Terminate if we are only checking a single voxel
         // or a voxel is found
         if(!checkNeighbours || found) break;
@@ -1148,7 +1179,7 @@ bool AnisoSVOctreeGPU::SetLeafRadiance(uint64_t mortonCode,
     Vector3f worldPos = VoxelToWorld(denseIndex);
 
     uint32_t leafIndex;
-    bool found = LeafIndex(leafIndex, worldPos, true);
+    bool found = NearestNodeIndex(leafIndex, worldPos, leafDepth, true);
     if(!found)
     {
         KERNEL_DEBUG_LOG("Error: SVO leaf not found!\n");
@@ -1172,7 +1203,7 @@ bool AnisoSVOctreeGPU::SetLeafNormal(uint64_t mortonCode, Vector3f combinedNorma
     Vector3f worldPos = VoxelToWorld(denseIndex);
 
     uint32_t leafIndex;
-    bool found = LeafIndex(leafIndex, worldPos, true);
+    bool found = NearestNodeIndex(leafIndex, worldPos, leafDepth, true);
     if(!found)
     {
         KERNEL_DEBUG_LOG("Error: SVO leaf not found!\n");

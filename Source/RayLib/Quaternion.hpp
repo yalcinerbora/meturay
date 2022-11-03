@@ -178,8 +178,8 @@ bool Quaternion<T>::operator!=(const Quaternion& right) const
 }
 
 template<class T>
-[[nodiscard]] __device__ __host__ HYBRID_INLINE
-Quaternion<T> Quaternion<T>::Normalize() const
+__device__ __host__ HYBRID_INLINE
+[[nodiscard]] Quaternion<T> Quaternion<T>::Normalize() const
 {
     return Quaternion(vec.Normalize());
 }
@@ -207,8 +207,8 @@ T Quaternion<T>::LengthSqr() const
 }
 
 template<class T>
-[[nodiscard]] __device__ __host__ HYBRID_INLINE
-Quaternion<T> Quaternion<T>::Conjugate() const
+__device__ __host__ HYBRID_INLINE
+[[nodiscard]] Quaternion<T> Quaternion<T>::Conjugate() const
 {
     return Quaternion(vec[0], -vec[1], -vec[2], -vec[3]);
 }

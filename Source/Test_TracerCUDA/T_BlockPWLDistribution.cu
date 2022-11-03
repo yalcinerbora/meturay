@@ -2,8 +2,9 @@
 #include "TracerCUDA/CudaSystem.h"
 #include "TracerCUDA/CudaSystem.hpp"
 #include "TracerCUDA/DeviceMemory.h"
-
 #include "TracerCUDA/BlockTextureFilter.cuh"
+#include "TracerCUDA/RNGIndependent.cuh"
+#include "TracerCUDA/GaussianLobe.cuh"
 
 #include "RayLib/Constants.h"
 
@@ -44,6 +45,47 @@ void KCPiecewiseLinearDistInitCheck(float* gPDFXOut,
 
 }
 
+template <uint32_t TPB, uint32_t X, uint32_t Y>
+__global__ __launch_bounds__(TPB)
+void KCPiecewiseLinearGenSamples(float* gSamplePdfOut,
+                                    Vector2f* gSampleLocationsOut,
+                                    // I-O
+                                    RNGeneratorGPUI** gRNGs,
+                                    // Inputs
+                                    const float* gData,
+                                    uint32_t sampleCount)
+{
+    using BlockPWL2D = BlockPWLDistribution2D<TPB, X, Y>;
+    static constexpr auto DATA_PER_THREAD = BlockPWL2D::DATA_PER_THREAD;
+    static constexpr auto PIXEL_COUNT = BlockPWL2D::PIX_COUNT;
+
+
+    const uint32_t threadId = threadIdx.x;
+    auto& rng = RNGAccessor::Acquire<RNGIndependentGPU>(gRNGs, threadId);
+
+    // Allocate shared memory for Block Operations
+    __shared__ typename BlockPWL2D::TempStorage sPWLMem;
+
+
+
+    float data[DATA_PER_THREAD];
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
+    {
+        data[i] = (threadId < PIXEL_COUNT) ? gData[i * TPB + threadId] : 0.0f;
+    }
+
+    // Init the class
+    BlockPWL2D dist2D(sPWLMem, data);
+
+    Vector2f index;
+    float pdf;
+    dist2D.Sample(pdf, index, rng);
+
+    gSampleLocationsOut[threadId] = index;
+    gSamplePdfOut[threadId] = pdf;
+
+}
+
 template <uint32_t TPB_VAL, uint32_t X_VAL, uint32_t Y_VAL>
 struct BlockPWL2DTestParams
 {
@@ -72,6 +114,26 @@ TYPED_TEST_SUITE(BlockPWL2DTest, Implementations);
 
 TYPED_TEST(BlockPWL2DTest, BasicInit)
 {
+    float angle = 45.0f * MathConstants::DegToRadCoef;
+    GaussianLobe lobe0(YAxis, 1, 4);
+    Vector3f newDir = QuatF(-angle, ZAxis).ApplyRotation(YAxis);
+    GaussianLobe lobe1(newDir, 1, 4);
+    GaussianLobe l = lobe0.Mult(lobe1);
+
+    float angleTest = acos(l.direction.Dot(XAxis));
+
+    for (float angle = 0; angle < 2 * MathConstants::Pi; angle += 0.05f)
+    {
+        Vector3f test = QuatF(angle, ZAxis).ApplyRotation(YAxis);
+
+        GaussianLobe lobe1(test, 1, 4);
+        float asd = lobe0.Dot(lobe1);
+        lobe1.NormalizeSelf();
+        METU_LOG("Angle {}=> {}, {}",
+                 angle * MathConstants::RadToDegCoef,
+                 asd, asd / MathConstants::Pi);
+    }
+
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
 
@@ -343,4 +405,88 @@ TYPED_TEST(BlockPWL2DTest, Stress)
             EXPECT_NEAR(hCDFYExpected[i], hCDFY[i], MathConstants::LargeEpsilon);
         }
     }
+}
+
+
+TYPED_TEST(BlockPWL2DTest, Sample)
+{
+    //static constexpr uint32_t ITERATION_COUNT = 100;
+    //static constexpr uint32_t TPB = TypeParam::TPB;
+    //static constexpr uint32_t X = TypeParam::X;
+    //static constexpr uint32_t Y = TypeParam::Y;
+    //static constexpr uint32_t PIX_COUNT = TypeParam::PIX_COUNT;
+    //static constexpr uint32_t SAMPLE_COUNT = TPB;
+
+    //CudaSystem system;
+    //ASSERT_EQ(CudaError::OK, system.Initialize());
+
+    //std::vector<float> hData(PIX_COUNT);
+
+    //// GPU Allocations
+    //float* dData;
+    //float* dSamplePDFs;
+    //Vector2f* dSampleLocations;
+    //DeviceMemory mem;
+    //GPUMemFuncs::AllocateMultiData(std::tie(dData, dSamplePDFs, dSampleLocations),
+    //                               mem,
+    //                               {PIX_COUNT, SAMPLE_COUNT, SAMPLE_COUNT});
+
+    //constexpr uint32_t SEED = 0;
+    //RNGIndependentCPU rngCPU(SEED, system.BestGPU(), TPB);
+
+    //std::mt19937 rng;
+    //rng.seed(0);
+    //std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
+    //for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    //{
+    //    // Generate new batch of random numbers
+    //    for(float& d : hData)
+    //    {
+    //        d = uniformDist(rng);
+    //    }
+
+    //    // Copy to GPU
+    //    CUDA_CHECK(cudaMemcpy(dData, hData.data(), sizeof(float) * PIX_COUNT,
+    //                          cudaMemcpyHostToDevice));
+    //    CUDA_CHECK(cudaMemset(dSamplePDFs, 0xFF, sizeof(float) * SAMPLE_COUNT));
+    //    CUDA_CHECK(cudaMemset(dSampleLocations, 0xFF, sizeof(Vector2f) * SAMPLE_COUNT));
+
+
+
+    //    // PWC Initialization and Dump to Global Memory Call
+    //    const CudaGPU& bestGPU = system.BestGPU();
+    //    bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
+    //        //
+    //        KCPiecewiseLinearGenSamples<TPB, X, Y>,
+    //        //
+    //        dSamplePDFs,
+    //        dSampleLocations,
+    //        // I-O
+    //        rngCPU.GetGPUGenerators(bestGPU),
+    //        // Input
+    //        dData,
+    //        SAMPLE_COUNT);
+
+
+    //    // Now do monte carlo here using the same thing
+    //    std::vector<float> hPDFs;
+    //    std::vector<Vector2f> hSamples;
+
+    //    auto TrapezoidArea = [](float a, float b, float h)
+    //    {
+    //        return (a + b) * h * 0.5f;
+    //    };
+
+    //    std::mdspan(hData.data(), X, Y);
+    //    float totalSum = 0;
+    //    // Calculate the integral
+    //    for(int j = 0; j < Y-1; j++)
+    //    for(int i = 0; i < X-1; i++)
+    //    {
+    //        // Calculate the trapezoid
+    //        hData[i, j], h
+    //    }
+
+
+    //}
 }

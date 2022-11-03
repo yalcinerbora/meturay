@@ -579,7 +579,8 @@ void WFPGTracerDebugBWork(// Output
 
     // Query SVO find a leaf
     uint32_t svoLeafIndex;
-    bool found = svo.LeafIndex(svoLeafIndex, position, true);
+    bool found = svo.NearestNodeIndex(svoLeafIndex, position,
+                                      svo.LeafDepth(), true);
     Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
                                 : Vector3f(0.0f);
     // Accumulate the pixel
@@ -622,13 +623,67 @@ void WFPGTracerDebugWork(// Output
 
     // Query SVO find a leaf
     uint32_t svoLeafIndex;
-    bool found = svo.LeafIndex(svoLeafIndex, position, true);
+    bool found = svo.NearestNodeIndex(svoLeafIndex, position,
+                                      svo.LeafDepth(), true);
     Vector3f locColor = (found) ? Utility::RandomColorRGB(svoLeafIndex)
                                 : Vector3f(0.0f);
     // Accumulate the pixel
     AccumulateRaySample(renderState.gSamples,
                         aux.sampleIndex,
                         Vector4f(locColor, 1.0f));
+}
+
+__device__ inline
+float ReadInterpolatedRadiance(const Vector3f& hitPos,
+                               const Vector3f& direction, float coneApterture,
+                               const AnisoSVOctreeGPU& svo)
+{
+    float queryVoxelSize = svo.LeafVoxelSize();
+    Vector3f offsetPos = hitPos + direction.Normalize() * queryVoxelSize * 0.5f;
+
+
+    // Interp values for currentLevel
+    Vector3f lIndex = (offsetPos - svo.OctreeAABB().Min()) / queryVoxelSize;
+    Vector3f lIndexInt;
+    Vector3f lIndexFrac = Vector3f(modff(lIndex[0], &(lIndexInt[0])),
+                                   modff(lIndex[1], &(lIndexInt[1])),
+                                   modff(lIndex[2], &(lIndexInt[2])));
+    Vector3ui denseIndex = Vector3ui(lIndexInt);
+
+    Vector3ui inc = Vector3ui((lIndexFrac[0] < 0.5f) ? -1 : 0,
+                              (lIndexFrac[1] < 0.5f) ? -1 : 0,
+                              (lIndexFrac[2] < 0.5f) ? -1 : 0);
+
+    // Calculate Interp start index and values
+    denseIndex += inc;
+    Vector3f interpValues = (lIndexFrac + Vector3f(0.5f));
+    interpValues -= interpValues.Floor();
+
+    // Get 8x value
+    float irradiance[8];
+    for(int i = 0; i < 8; i++)
+    {
+        Vector3ui curIndex = Vector3ui(((i >> 0) & 0b1) ? 1 : 0,
+                                       ((i >> 1) & 0b1) ? 1 : 0,
+                                       ((i >> 2) & 0b1) ? 1 : 0);
+        Vector3ui voxIndex = denseIndex + curIndex;
+        uint64_t voxelMorton = MortonCode::Compose3D<uint64_t>(voxIndex);
+
+        uint32_t nodeId;
+        bool found = svo.Descend(nodeId, voxelMorton, svo.LeafDepth());
+
+        irradiance[i] = (found) ? static_cast<float>(svo.ReadRadiance(direction, coneApterture,
+                                                                      nodeId, true))
+                                : 0.0f;
+    }
+
+    float x0 = HybridFuncs::Lerp(irradiance[0], irradiance[1], interpValues[0]);
+    float x1 = HybridFuncs::Lerp(irradiance[2], irradiance[3], interpValues[0]);
+    float x2 = HybridFuncs::Lerp(irradiance[4], irradiance[5], interpValues[0]);
+    float x3 = HybridFuncs::Lerp(irradiance[6], irradiance[7], interpValues[0]);
+    float y0 = HybridFuncs::Lerp(x0, x1, interpValues[1]);
+    float y1 = HybridFuncs::Lerp(x2, x3, interpValues[1]);
+    return HybridFuncs::Lerp(y0, y1, interpValues[2]);
 }
 
 template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
@@ -758,10 +813,15 @@ inline void TraceSVO(// Output
                 locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
             else if(mode == WFPGRenderMode::SVO_RADIANCE)
             {
-                half radiance = svo.ReadRadiance(rayDir[i], shMem->sConeAperture,
-                                                 nodeIndex[i], isLeaf[i]);
-                float radianceF = radiance;
-                if(radiance != static_cast<half>(MRAY_HALF_MAX))
+                Vector3f hitPos = shMem->sPosition + rayDir[i].Normalize() * tMin[i];
+                float radianceF = ReadInterpolatedRadiance(hitPos, rayDir[i],
+                                                           shMem->sConeAperture,
+                                                           svo);
+
+                //half radiance = svo.ReadRadiance(rayDir[i], shMem->sConeAperture,
+                //                                 nodeIndex[i], isLeaf[i]);
+                //float radianceF = radiance;
+                //if(radiance != static_cast<half>(MRAY_HALF_MAX))
                     locColor = Vector4f(Vector3f(radianceF), 1.0f);
             }
             else if(mode == WFPGRenderMode::SVO_NORMAL)
@@ -916,7 +976,8 @@ static void KCInitializeSVOBins(// Outputs
         // Traverse all 8 neighbors of the ray hit position
         // due to numerical inaccuracies
         uint32_t leafIndex;
-        bool found = svo.LeafIndex(leafIndex, position, true);
+        bool found = svo.NearestNodeIndex(leafIndex, position,
+                                          svo.LeafDepth(), true);
 
         // DEBUG
         if(!found) printf("Leaf Not found!\n");
@@ -1096,18 +1157,6 @@ static void KCGenAndSampleDistribution(// Output
         float       tMinOut[RT_ITER_COUNT];
         bool        isLeaf[RT_ITER_COUNT];
         uint32_t    nodeId[RT_ITER_COUNT];
-        //coneTracer.RecursiveConeTraceRay(rayDirOut,
-        //                                 tMinOut,
-        //                                 isLeaf,
-        //                                 nodeId,
-        //                                 // Inputs
-        //                                 sharedMem->sRadianceFieldOrigin,
-        //                                 Vector2f(tMin, FLT_MAX),
-        //                                 coneAperture,
-        //                                 0, 1, 0,
-        //                                 // Functors
-        //                                 ProjectionFunc,
-        //                                 WrapFunc);
         coneTracer.BatchedConeTraceRay(rayDirOut,
                                        tMinOut,
                                        isLeaf,
@@ -1119,21 +1168,36 @@ static void KCGenAndSampleDistribution(// Output
                                        // Functors
                                        ProjectionFunc);
 
-        // Incoming radiance query (result of the trace)
+        //// Incoming radiance query (result of the trace)
+        //for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
+        //{
+        //    // This case occurs only when there is more threads than pixels
+        //    if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
+
+        //    if(nodeId[i] != UINT32_MAX)
+        //    {
+        //        incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
+        //                                           nodeId[i], isLeaf[i]);
+        //        //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
+        //    }
+        //    else incRadiances[i] = 0.0001f;
+        //    //else incRadiances[i] = 0.0f;
+        //}
+
         for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
         {
-            // This case occurs only when there is more threads than pixels
             if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
 
-            if(nodeId[i] != UINT32_MAX)
-            {
-                incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
-                                                   nodeId[i], isLeaf[i]);
-                //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
-            }
-            //else incRadiances[i] = 0.0001f;
-            else incRadiances[i] = 0.0f;
+            Vector3f hitPos = (sharedMem->sRadianceFieldOrigin +
+                               rayDirOut[i].Normalize() * tMinOut[i]);
+            incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
+                                                       coneAperture,
+                                                       svo);
+            if(incRadiances[i] == 0.0f) incRadiances[i] = 0.0001f;
         }
+
+
+
 
         // We finished tracing rays from the scene
         // Now generate distribution from the data
@@ -1142,6 +1206,16 @@ static void KCGenAndSampleDistribution(// Output
         float filteredRadiances[RT_ITER_COUNT];
         filter(filteredRadiances, incRadiances);
         __syncthreads();
+
+        // Kernel Parallelization changes now, before that though
+        // Generate 8x8 radiance field texture from the generated data
+        //static constexpr Vector2i MAT_MASKED_RF_SIZE(8, 8);
+        //static constexpr Vector2i NON_MASKED_RF_PER_REGION(X / MAT_MASKED_RF_SIZE[0],
+        //                                                   Y / MAT_MASKED_RF_SIZE[1]);
+        //float
+
+
+
 
         // Generate PWC Distribution over the radiances
         Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
