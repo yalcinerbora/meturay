@@ -100,9 +100,9 @@ void VisorGUI::RenderGUI()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    if(ImGui::IsKeyPressed(GLFW_KEY_M))
+    if(ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_M))
         topBarOn = !topBarOn;
-    if(ImGui::IsKeyPressed(GLFW_KEY_N))
+    if(ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_N))
         bottomBarOn = !bottomBarOn;
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar |

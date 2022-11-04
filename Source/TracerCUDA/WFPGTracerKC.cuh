@@ -1017,18 +1017,86 @@ static void KCCheckReducedSVOBins(// I-O
     }
 }
 
+template <uint32_t TPB, uint32_t X, uint32_t Y,
+          uint32_t PX, uint32_t PY>
+class ProductSampler
+{
+    public:
+    static constexpr Vector2ui PRODUCT_MAP_SIZE = Vecto2ui(PX, PY);
+    static constexpr uint32_t WARP_PER_BLOCK = TPB / WARP_SIZE;
+    static_assert(TPB % WARP_SIZE == 0);
+
+    struct SharedStorage
+    {
+        // Scratch pad for each warp
+        //float sLocalProducts[WARP_PER_BLOCK][PRODUCT_MAP_SIZE[0]][PRODUCT_MAP_SIZE[1]];
+        // Main radiance field
+        float sRadianceField[X][Y];
+        // Reduced radiance field (will be multiplied by the BxDF field)
+        float sRadianceFieldSmall[PRODUCT_MAP_SIZE[0]][PRODUCT_MAP_SIZE[1]];
+        //
+        GPUMetaSurface sSurfaces[WARP_PER_BLOCK];
+    };
+
+    private:
+    SharedStorage&                          shMem;
+
+    const RayId*                            gRayIds;
+    const GPUMetaSurfaceGeneratorGroup&     metaSurfGenerator;
+    uint32_t                                rayCount;
+    bool                                    isWarpLeader;
+
+    uint32_t                                warpLocalId;
+    uint32_t                                warpId;
+
+    public:
+    __device__ ProductSampler(SharedStorage& sharedMem,
+                              const RayId* asd,
+                              const GPUMetaSurfaceGeneratorGroup& def)
+        : shMem(sharedMem)
+        , gRayIds(asd)
+        , metaSurfGenerator(def)
+    {}
+
+    __device__
+    Vector2f SampleProductMaterial(float& pdf,
+                                   RNGeneratorGPUI& rng) const
+    {
+        // Load material..
+        if(isWarpLeader)
+            shMem.sSurfaces[warpId] = metaSurfGenerator.AcquireWork(rayId);
+
+        // No need to sync here used threads are in lockstep
+        float test[2];
+
+        Vector3f a = shMem.sSurfaces[warpId].Evaluate(Vector3f(1.0f),
+                                                      Vector3f(1.0f),
+                                                      medium,
+                                                      shMem.sSurfaces[warpId].WorldPosition());
+        test[0] = Utility::RGBToLuminance(a);
+    }
+
+};
+
 // Shared Memory Class of the kernel below
 template <uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
 struct KCGenSampleShMem
 {
+
+
     // PWC Distribution over the shared memory
-    using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    using ProductSampler8x8 = ProductSampler<TPB, X, Y, 8, 8>;
+    //using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
     //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
     using ConeTracer = BatchConeTracer<THREAD_PER_BLOCK, X, Y>;
     union
     {
-        typename BlockDist2D::TempStorage   sDistMem;
+        //typename BlockDist2D::TempStorage   sDistMem;
+
+        typename ProductSampler8x8 sProductSamplerMem;
+
+
         typename BlockFilter2D::TempStorage sFilterMem;
         typename ConeTracer::TempStorage sTraceMem;
     };
@@ -1080,10 +1148,12 @@ static void KCGenAndSampleDistribution(// Output
 
     // PWC Distribution over the shared memory
     using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
-    using Distribution2D = typename SharedMemType::BlockDist2D;
+    //using Distribution2D = typename SharedMemType::BlockDist2D;
     using Filter2D = typename SharedMemType::BlockFilter2D;
     using ConeTracer = typename SharedMemType::ConeTracer;
     static_assert(RT_ITER_COUNT == ConeTracer::DATA_PER_THREAD);
+
+    using ProductSampler8x8 = typename SharedMemType::ProductSampler8x8;
 
     // Functors for batched cone trace
     auto ProjectionFunc = [&](const Vector2i& localPixelId,
@@ -1145,7 +1215,7 @@ static void KCGenAndSampleDistribution(// Output
         }
         __syncthreads();
 
-        // Kill the entire block if Node Id is invalid
+        //// Kill the entire block if Node Id is invalid
         if(sharedMem->sNodeId == INVALID_BIN_ID) continue;
 
         float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
@@ -1168,33 +1238,33 @@ static void KCGenAndSampleDistribution(// Output
                                        // Functors
                                        ProjectionFunc);
 
-        //// Incoming radiance query (result of the trace)
-        //for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
-        //{
-        //    // This case occurs only when there is more threads than pixels
-        //    if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
-
-        //    if(nodeId[i] != UINT32_MAX)
-        //    {
-        //        incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
-        //                                           nodeId[i], isLeaf[i]);
-        //        //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
-        //    }
-        //    else incRadiances[i] = 0.0001f;
-        //    //else incRadiances[i] = 0.0f;
-        //}
-
+        // Incoming radiance query (result of the trace)
         for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
         {
+            // This case occurs only when there is more threads than pixels
             if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
 
-            Vector3f hitPos = (sharedMem->sRadianceFieldOrigin +
-                               rayDirOut[i].Normalize() * tMinOut[i]);
-            incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
-                                                       coneAperture,
-                                                       svo);
-            if(incRadiances[i] == 0.0f) incRadiances[i] = 0.0001f;
+            if(nodeId[i] != UINT32_MAX)
+            {
+                incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
+                                                   nodeId[i], isLeaf[i]);
+                //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
+            }
+            else incRadiances[i] = 0.0001f;
+            //else incRadiances[i] = 0.0f;
         }
+
+        //for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
+        //{
+        //    if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
+
+        //    Vector3f hitPos = (sharedMem->sRadianceFieldOrigin +
+        //                       rayDirOut[i].Normalize() * tMinOut[i]);
+        //    incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
+        //                                               coneAperture,
+        //                                               svo);
+        //    if(incRadiances[i] == 0.0f) incRadiances[i] = 0.0001f;
+        //}
 
 
 
@@ -1208,40 +1278,38 @@ static void KCGenAndSampleDistribution(// Output
         __syncthreads();
 
         // Kernel Parallelization changes now, before that though
-        // Generate 8x8 radiance field texture from the generated data
-        //static constexpr Vector2i MAT_MASKED_RF_SIZE(8, 8);
-        //static constexpr Vector2i NON_MASKED_RF_PER_REGION(X / MAT_MASKED_RF_SIZE[0],
-        //                                                   Y / MAT_MASKED_RF_SIZE[1]);
-        //float
+        ProductSampler8x8 productSampler(sharedMem->sProductSamplerMem,
+                                         gRayIds, metaSurfGenerator);
 
 
-
+        float pdf;
+        Vector2f uv = productSampler.Sample(pdf, rng);
 
         // Generate PWC Distribution over the radiances
-        Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
+        //Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
         // Block threads will loop over the every ray in this bin
         for(uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
             rayIndex += THREAD_PER_BLOCK)
         {
-            float pdf;
-            Vector2f index;
-            Vector2f uv = dist2D.Sample(pdf, index, rng);
-            pdf *= 0.25f * MathConstants::InvPi;
+            //float pdf;
+            //Vector2f index;
+            //Vector2f uv = dist2D.Sample(pdf, index, rng);
+            //pdf *= 0.25f * MathConstants::InvPi;
 
-            Vector3f dirZUp = Utility::CocentricOctohedralToDirection(uv);
-            Vector3f dirYUp = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);
+            /*Vector3f dirZUp = Utility::CocentricOctohedralToDirection(uv);
+            Vector3f dirYUp = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);*/
 
-            // TEST
-            if(uv.HasNaN() || isnan(pdf))
-                printf("[%u] uv(%f, %f) = (%f, %f, %f) pdf %f\n",
-                       binIndex, uv[0], uv[1],
-                       dirYUp[0], dirYUp[1], dirYUp[2],
-                       pdf);
+            //// TEST
+            //if(uv.HasNaN() || isnan(pdf))
+            //    printf("[%u] uv(%f, %f) = (%f, %f, %f) pdf %f\n",
+            //           binIndex, uv[0], uv[1],
+            //           dirYUp[0], dirYUp[1], dirYUp[2],
+            //           pdf);
 
-            // Store the sampled direction of the ray
-            uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
-            gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
-            gRayAux[rayId].guidePDF = pdf;
+            //// Store the sampled direction of the ray
+            //uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
+            //gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
+            //gRayAux[rayId].guidePDF = pdf;
         }
 
         // Sync every thread before processing another bin

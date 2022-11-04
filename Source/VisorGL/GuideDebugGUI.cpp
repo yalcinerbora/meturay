@@ -191,13 +191,13 @@ void GuideDebugGUI::Render()
     // TODO: Properly do this no platform/lib dependent enums etc.
     // Check Input operation if left or right arrows are pressed to change the depth
     bool updateDirectionalTextures = false;
-    if(ImGui::IsKeyReleased(GLFW_KEY_LEFT) &&
+    if(ImGui::IsKeyReleased(ImGuiKey::ImGuiKey_LeftArrow) &&
        DecrementDepth())
     {
         updateDirectionalTextures = true;
         updateSpatialTexture = true;
     }
-    if(ImGui::IsKeyReleased(GLFW_KEY_RIGHT) &&
+    if(ImGui::IsKeyReleased(ImGuiKey::ImGuiKey_RightArrow) &&
        IncrementDepth())
     {
         updateDirectionalTextures = true;

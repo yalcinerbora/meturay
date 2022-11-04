@@ -134,10 +134,10 @@ using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
     std::make_tuple(512, 64, 64), // First bounce good approximation
-    std::make_tuple(512, 32, 32), // Second bounce as well
-    std::make_tuple(256, 16, 16), // Third bounce not so much
-    std::make_tuple(256, 16, 16), // Fourth bounce as well
-    std::make_tuple(128, 8, 8)    // Fifth is bad
+    std::make_tuple(512, 32, 32),  // Second bounce as well
+    std::make_tuple(256, 16, 16),  // Third bounce not so much
+    std::make_tuple(256, 16, 16),  // Fourth bounce as well
+    std::make_tuple(128, 8, 8)     // Fifth is bad
 };
 
 static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),

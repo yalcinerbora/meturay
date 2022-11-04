@@ -5,6 +5,7 @@
 #include "RayLib/Constants.h"
 #include "RayLib/HybridFunctions.h"
 
+
 // TODO: Implement more filters later,
 // Change its location etc.
 template <int32_t N>
