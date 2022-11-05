@@ -146,7 +146,7 @@ static void KCPathTracerMegaKernel(// Output
 
                 Vector3 emission = metaSurface.Emit(// Input
                                                     -r.getDirection(),
-                                                    position, m);
+                                                    m);
                 // And accumulate pixel// and add as a sample
                 Vector3f total = emission * radianceFactor;
                 // Incorporate MIS weight if applicable
@@ -184,7 +184,7 @@ static void KCPathTracerMegaKernel(// Output
             uint32_t sampleCount = maxOutRay;
             // Check Material's specularity;
             float specularity = metaSurface.Specularity();
-            bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+            bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_THRESHOLD);
 
             // If NEE ray hits to this material
             // just skip since this is not a light material
@@ -200,7 +200,6 @@ static void KCPathTracerMegaKernel(// Output
             {
                 Vector3 emission = metaSurface.Emit(// Input
                                                 wi,
-                                                position,
                                                 m);
                 Vector3f total = emission * radianceFactor;
                 AccumulateRaySample(renderState.gSamples,
@@ -237,7 +236,6 @@ static void KCPathTracerMegaKernel(// Output
                     neeReflectance = metaSurface.Evaluate(// Input
                                                       lDirection,
                                                       wi,
-                                                      position,
                                                       m);
                 }
 
@@ -253,7 +251,6 @@ static void KCPathTracerMegaKernel(// Output
                 {
                     float pdfBxDF = metaSurface.Pdf(lDirection,
                                                     wi,
-                                                    position,
                                                     m);
 
                     pdfNEE /= TracerFunctions::PowerHeuristic(1, pdfLight, 1, pdfBxDF);
@@ -294,7 +291,6 @@ static void KCPathTracerMegaKernel(// Output
                                                      rayPath, pdfPath, outM,
                                                      // Inputs
                                                      wi,
-                                                     position,
                                                      m,
                                                      rng);
             // Factor the radiance of the surface
@@ -472,7 +468,7 @@ void PathTracerPathWork(// Output
     uint32_t sampleCount = maxOutRay;
     // Check Material's specularity;
     float specularity = MGroup::Specularity(surface, gMatData, matIndex);
-    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_THRESHOLD);
 
     // If NEE ray hits to this material
     // just skip since this is not a light material

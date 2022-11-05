@@ -12,6 +12,7 @@
 #include "WFPGCommon.h"
 #include "GPUCameraI.h"
 #include "GPUMetaSurfaceGenerator.h"
+#include "ProductSampler.cuh"
 
 #include "TracerFunctions.cuh"
 #include "TracerConstants.h"
@@ -239,7 +240,7 @@ void WFPGTracerPathWork(// Output
     uint32_t sampleCount = maxOutRay;
     // Check Material's specularity;
     float specularity = MGroup::Specularity(surface, gMatData, matIndex);
-    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_THRESHOLD);
 
     // If NEE ray hits to this material
     // just skip since this is not a light material
@@ -1017,75 +1018,13 @@ static void KCCheckReducedSVOBins(// I-O
     }
 }
 
-template <uint32_t TPB, uint32_t X, uint32_t Y,
-          uint32_t PX, uint32_t PY>
-class ProductSampler
-{
-    public:
-    static constexpr Vector2ui PRODUCT_MAP_SIZE = Vecto2ui(PX, PY);
-    static constexpr uint32_t WARP_PER_BLOCK = TPB / WARP_SIZE;
-    static_assert(TPB % WARP_SIZE == 0);
-
-    struct SharedStorage
-    {
-        // Scratch pad for each warp
-        //float sLocalProducts[WARP_PER_BLOCK][PRODUCT_MAP_SIZE[0]][PRODUCT_MAP_SIZE[1]];
-        // Main radiance field
-        float sRadianceField[X][Y];
-        // Reduced radiance field (will be multiplied by the BxDF field)
-        float sRadianceFieldSmall[PRODUCT_MAP_SIZE[0]][PRODUCT_MAP_SIZE[1]];
-        //
-        GPUMetaSurface sSurfaces[WARP_PER_BLOCK];
-    };
-
-    private:
-    SharedStorage&                          shMem;
-
-    const RayId*                            gRayIds;
-    const GPUMetaSurfaceGeneratorGroup&     metaSurfGenerator;
-    uint32_t                                rayCount;
-    bool                                    isWarpLeader;
-
-    uint32_t                                warpLocalId;
-    uint32_t                                warpId;
-
-    public:
-    __device__ ProductSampler(SharedStorage& sharedMem,
-                              const RayId* asd,
-                              const GPUMetaSurfaceGeneratorGroup& def)
-        : shMem(sharedMem)
-        , gRayIds(asd)
-        , metaSurfGenerator(def)
-    {}
-
-    __device__
-    Vector2f SampleProductMaterial(float& pdf,
-                                   RNGeneratorGPUI& rng) const
-    {
-        // Load material..
-        if(isWarpLeader)
-            shMem.sSurfaces[warpId] = metaSurfGenerator.AcquireWork(rayId);
-
-        // No need to sync here used threads are in lockstep
-        float test[2];
-
-        Vector3f a = shMem.sSurfaces[warpId].Evaluate(Vector3f(1.0f),
-                                                      Vector3f(1.0f),
-                                                      medium,
-                                                      shMem.sSurfaces[warpId].WorldPosition());
-        test[0] = Utility::RGBToLuminance(a);
-    }
-
-};
 
 // Shared Memory Class of the kernel below
-template <uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
+template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 struct KCGenSampleShMem
 {
-
-
     // PWC Distribution over the shared memory
-    using ProductSampler8x8 = ProductSampler<TPB, X, Y, 8, 8>;
+    using ProductSampler8x8 = ProductSampler<THREAD_PER_BLOCK, X, Y, 8, 8>;
     //using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
     //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
@@ -1094,9 +1033,7 @@ struct KCGenSampleShMem
     {
         //typename BlockDist2D::TempStorage   sDistMem;
 
-        typename ProductSampler8x8 sProductSamplerMem;
-
-
+        typename ProductSampler8x8::SharedStorage sProductSamplerMem;
         typename BlockFilter2D::TempStorage sFilterMem;
         typename ConeTracer::TempStorage sTraceMem;
     };
@@ -1112,7 +1049,7 @@ struct KCGenSampleShMem
 // Each block is responsible of a single bin
 // Each block will trace the SVO to generate
 //  omni-directional distribution map.
-template <class RNG, uint32_t THREAD_PER_BLOCK, uint32_t X, uint32_t Y>
+template <class RNG, int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 __global__ __launch_bounds__(THREAD_PER_BLOCK)
 static void KCGenAndSampleDistribution(// Output
                                        RayAuxWFPG* gRayAux,
@@ -1132,28 +1069,30 @@ static void KCGenAndSampleDistribution(// Output
                                        uint32_t binCount)
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
-    const uint32_t THREAD_ID = threadIdx.x;
-    const uint32_t isMainThread = (THREAD_ID == 0);
+    const int32_t THREAD_ID = threadIdx.x;
+    const int32_t isMainThread = (THREAD_ID == 0);
+    static constexpr uint32_t WARP_PER_BLOCK = THREAD_PER_BLOCK / WARP_SIZE;
 
     // Number of threads that contributes to the ray tracing operation
-    static constexpr uint32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X * Y) ? THREAD_PER_BLOCK : (X * Y);
+    static constexpr int32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X * Y) ? THREAD_PER_BLOCK : (X * Y);
     // How many rows can we process in parallel
-    static constexpr uint32_t ROW_PER_ITERATION = RT_CONTRIBUTING_THREAD_COUNT / X;
+    static constexpr int32_t ROW_PER_ITERATION = RT_CONTRIBUTING_THREAD_COUNT / X;
     // How many iterations the entire image would take
-    static constexpr uint32_t ROW_ITER_COUNT = Y / ROW_PER_ITERATION;
+    static constexpr int32_t ROW_ITER_COUNT = Y / ROW_PER_ITERATION;
     static_assert(RT_CONTRIBUTING_THREAD_COUNT % X == 0, "RT_THREADS must be multiple of X or vice versa.");
     static_assert(Y % ROW_PER_ITERATION == 0, "RT_THREADS must exactly iterate over X * Y");
     // Ray tracing related
-    static constexpr uint32_t RT_ITER_COUNT = ROW_ITER_COUNT;
+    static constexpr int32_t RT_ITER_COUNT = ROW_ITER_COUNT;
 
     // PWC Distribution over the shared memory
     using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
     //using Distribution2D = typename SharedMemType::BlockDist2D;
+    using ProductSampler8x8 = typename SharedMemType::ProductSampler8x8;
     using Filter2D = typename SharedMemType::BlockFilter2D;
     using ConeTracer = typename SharedMemType::ConeTracer;
     static_assert(RT_ITER_COUNT == ConeTracer::DATA_PER_THREAD);
 
-    using ProductSampler8x8 = typename SharedMemType::ProductSampler8x8;
+
 
     // Functors for batched cone trace
     auto ProjectionFunc = [&](const Vector2i& localPixelId,
@@ -1238,6 +1177,8 @@ static void KCGenAndSampleDistribution(// Output
                                        // Functors
                                        ProjectionFunc);
 
+        #if 1
+        // Non-filetered version
         // Incoming radiance query (result of the trace)
         for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
         {
@@ -1253,18 +1194,20 @@ static void KCGenAndSampleDistribution(// Output
             else incRadiances[i] = 0.0001f;
             //else incRadiances[i] = 0.0f;
         }
+        #else
+        // Filtered version
+        for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
+        {
+            if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
 
-        //for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
-        //{
-        //    if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
-
-        //    Vector3f hitPos = (sharedMem->sRadianceFieldOrigin +
-        //                       rayDirOut[i].Normalize() * tMinOut[i]);
-        //    incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
-        //                                               coneAperture,
-        //                                               svo);
-        //    if(incRadiances[i] == 0.0f) incRadiances[i] = 0.0001f;
-        //}
+            Vector3f hitPos = (sharedMem->sRadianceFieldOrigin +
+                               rayDirOut[i].Normalize() * tMinOut[i]);
+            incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
+                                                       coneAperture,
+                                                       svo);
+            if(incRadiances[i] == 0.0f) incRadiances[i] = 0.0001f;
+        }
+        #endif
 
 
 
@@ -1277,40 +1220,48 @@ static void KCGenAndSampleDistribution(// Output
         filter(filteredRadiances, incRadiances);
         __syncthreads();
 
-        // Kernel Parallelization changes now, before that though
-        ProductSampler8x8 productSampler(sharedMem->sProductSamplerMem,
-                                         gRayIds, metaSurfGenerator);
-
-
-        float pdf;
-        Vector2f uv = productSampler.Sample(pdf, rng);
-
+        // Non product sample version
+        #if 0
         // Generate PWC Distribution over the radiances
-        //Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
+        Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
         // Block threads will loop over the every ray in this bin
         for(uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
             rayIndex += THREAD_PER_BLOCK)
         {
-            //float pdf;
-            //Vector2f index;
-            //Vector2f uv = dist2D.Sample(pdf, index, rng);
-            //pdf *= 0.25f * MathConstants::InvPi;
+            float pdf;
+            Vector2f index;
+            Vector2f uv = dist2D.Sample(pdf, index, rng);
+            pdf *= 0.25f * MathConstants::InvPi;
 
-            /*Vector3f dirZUp = Utility::CocentricOctohedralToDirection(uv);
-            Vector3f dirYUp = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);*/
-
-            //// TEST
-            //if(uv.HasNaN() || isnan(pdf))
-            //    printf("[%u] uv(%f, %f) = (%f, %f, %f) pdf %f\n",
-            //           binIndex, uv[0], uv[1],
-            //           dirYUp[0], dirYUp[1], dirYUp[2],
-            //           pdf);
-
-            //// Store the sampled direction of the ray
-            //uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
-            //gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
-            //gRayAux[rayId].guidePDF = pdf;
+            // Store the sampled direction of the ray
+            uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
+            gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
+            gRayAux[rayId].guidePDF = pdf;
         }
+        #else
+
+
+
+        // Parallelization logic changes now it is one ray per warp
+        // Generate the product sampler first
+        ProductSampler8x8 productSampler(sharedMem->sProductSamplerMem,
+                                         gRayIds + sharedMem->sOffsetStart,
+                                         metaSurfGenerator);
+        uint32_t warpId = THREAD_ID / WARP_SIZE;
+        // For each ray
+        for(uint32_t rayIndex = warpId; rayIndex < sharedMem->sRayCount;
+            rayIndex += WARP_PER_BLOCK)
+        {
+            float pdf;
+            Vector2f uv = productSampler.SampleProduct(rayIndex, pdf, rng);
+
+            pdf *= 0.25f * MathConstants::InvPi;
+            // Store the sampled direction of the ray
+            uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
+            gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
+            gRayAux[rayId].guidePDF = pdf;
+        }
+        #endif
 
         // Sync every thread before processing another bin
         __syncthreads();

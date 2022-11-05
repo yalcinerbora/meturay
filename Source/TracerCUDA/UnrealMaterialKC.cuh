@@ -113,7 +113,7 @@ struct UnrealDeviceFuncs
         // Note that this is true only for sampling, evaluate and pdf will return
         // zero (since you can't find perfect reflection of the view vector by chance)
         using namespace TracerConstants;
-        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_TRESHOLD);
+        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
         if(isSpecular)
         {
             pdf = 1.0f;
@@ -167,7 +167,7 @@ struct UnrealDeviceFuncs
         // It is impossible to find exact wo <=> wi
         // with a chance
         using namespace TracerConstants;
-        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_TRESHOLD);
+        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
         if(isSpecular)
         {
             return 0.0f;
@@ -208,7 +208,7 @@ struct UnrealDeviceFuncs
     {
         // It is impossible to evaluate if object is highly specular
         using namespace TracerConstants;
-        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_TRESHOLD);
+        bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
         if(isSpecular)
         {
             return Zero3f;

@@ -229,7 +229,7 @@ void RPGTracerPathWork(// Output
     uint32_t sampleCount = maxOutRay;
     // Check Material's specularity;
     float specularity = MGroup::Specularity(surface, gMatData, matIndex);
-    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_TRESHOLD);
+    bool isSpecularMat = (specularity >= TracerConstants::SPECULAR_THRESHOLD);
 
     // If NEE ray hits to this material
     // just skip since this is not a light material

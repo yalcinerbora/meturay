@@ -341,6 +341,7 @@ set(SRC_WFPG_TRACER
 
 set(SRC_WFPG_TRACER_AUX_CLASSES
     ${CURRENT_SOURCE_DIR}/RecursiveConeTrace.cuh
+    ${CURRENT_SOURCE_DIR}/ProductSampler.cuh
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cu
     ${CURRENT_SOURCE_DIR}/AnisoSVO.cuh
     ${CURRENT_SOURCE_DIR}/AnisoSVOKC.cuh)

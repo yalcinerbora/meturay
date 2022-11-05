@@ -61,30 +61,26 @@ class GPUMetaSurface
                                    const GPUMediumI*& outMedium,
                                    // Input
                                    const Vector3& wi,              // Incoming Radiance
-                                   const Vector3& pos,             // Position
                                    const GPUMediumI& m,
                                    // I-O
                                    RNGeneratorGPUI& rng) const;
     __device__ Vector3f     Emit(// Input
                                  const Vector3& wo,      // Outgoing Radiance
-                                 const Vector3& pos,     // Position
                                  const GPUMediumI& m) const;
     __device__ Vector3f     Evaluate(// Input
                                      const Vector3& wo,              // Outgoing Radiance
                                      const Vector3& wi,              // Incoming Radiance
-                                     const Vector3& pos,             // Position
                                      const GPUMediumI& m) const;
     __device__ float        Pdf(// Input
                                 const Vector3& wo,      // Outgoing Radiance
                                 const Vector3& wi,
-                                const Vector3& pos,     // Position
                                 const GPUMediumI& m);
     // Boundary Type Related (Light, Camera)
     __device__ uint32_t     EndpointId() const;
     __device__ uint32_t     GlobalLightIndex() const;
 };
 
-__device__ inline
+__device__ __forceinline__
 GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
                                const UVSurface& uvSurface,
                                const GPUMaterialI* gMaterial)
@@ -94,7 +90,7 @@ GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
     , isLight(false)
 {}
 
-__device__ inline
+__device__ __forceinline__
 GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
                                const UVSurface& uvSurface,
                                const GPULightI* gLight)
@@ -104,117 +100,113 @@ GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
     , isLight(true)
 {}
 
-__device__ inline
+__device__ __forceinline__
 bool GPUMetaSurface::IsLight() const
 {
     return isLight;
 }
 
-__device__ inline
+__device__ __forceinline__
 bool GPUMetaSurface::IsNullLight() const
 {
     return isLight && (gLight == nullptr);
 }
 
-__device__ inline
+__device__ __forceinline__
 bool GPUMetaSurface::IsPrimitiveBackedLight() const
 {
     return isLight && (gLight->IsPrimitiveBackedLight());
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3f GPUMetaSurface::WorldNormal() const
 {
     return uvSurf.WorldNormal();
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3f GPUMetaSurface::WorldGeoNormal() const
 {
 
     return uvSurf.WorldGeoNormal();
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3f GPUMetaSurface::WorldPosition() const
 {
     return uvSurf.WorldPosition();
 }
 
-__device__ inline
+__device__ __forceinline__
 QuatF GPUMetaSurface::WorldToTangent() const
 {
     return uvSurf.worldToTangent;
 }
 
-__device__ inline
+__device__ __forceinline__
 bool GPUMetaSurface::IsEmissive() const
 {
     return gMaterial->IsEmissive();
 }
 
-__device__ inline
+__device__ __forceinline__
 bool GPUMetaSurface::Specularity() const
 {
     return gMaterial->Specularity(uvSurf);
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3f GPUMetaSurface::Sample(// Sampled Output
                                 RayF& wo,                       // Out direction
                                 float& pdf,                     // PDF for Monte Carlo
                                 const GPUMediumI*& outMedium,
                                 // Input
                                 const Vector3& wi,              // Incoming Radiance
-                                const Vector3& pos,             // Position
                                 const GPUMediumI& m,
                                 // I-O
                                 RNGeneratorGPUI& rng) const
 {
     if(isLight) return Zero3f;
     return gMaterial->Sample(wo, pdf, outMedium,
-                             wi, pos, m, uvSurf,
+                             wi, WorldPosition(), m, uvSurf,
                              rng);
 }
-__device__ inline
+__device__ __forceinline__
 Vector3f GPUMetaSurface::Emit(const Vector3& wo,
-                              const Vector3& pos,
                               const GPUMediumI& m) const
 {
     if(isLight)
-        return gLight->Emit(wo, pos, uvSurf);
+        return gLight->Emit(wo, WorldPosition(), uvSurf);
     else
-        return gMaterial->Emit(wo, pos, m, uvSurf);
+        return gMaterial->Emit(wo, WorldPosition(), m, uvSurf);
 }
 
-__device__ inline
+__device__ __forceinline__
 Vector3f GPUMetaSurface::Evaluate(const Vector3& wo,
                                   const Vector3& wi,
-                                  const Vector3& pos,
                                   const GPUMediumI& m) const
 {
     if(isLight) return Zero3f;
-    return gMaterial->Evaluate(wo, wi, pos, m, uvSurf);
+    return gMaterial->Evaluate(wo, wi, WorldPosition(), m, uvSurf);
 }
 
-__device__ inline
+__device__ __forceinline__
 float GPUMetaSurface::Pdf(const Vector3& wo,
                           const Vector3& wi,
-                          const Vector3& pos,
                           const GPUMediumI& m)
 {
     if(isLight) return 0.0f;
-    return gMaterial->Pdf(wo, wi, pos, m, uvSurf);
+    return gMaterial->Pdf(wo, wi, WorldPosition(), m, uvSurf);
 }
 
-__device__ inline
+__device__ __forceinline__
 uint32_t GPUMetaSurface::EndpointId() const
 {
     if(isLight) return gLight->EndpointId();
     else return UINT32_MAX;
 }
 
-__device__ inline
+__device__ __forceinline__
 uint32_t GPUMetaSurface::GlobalLightIndex() const
 {
     if(isLight) return gLight->GlobalLightIndex();
