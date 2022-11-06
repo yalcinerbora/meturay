@@ -1025,13 +1025,13 @@ struct KCGenSampleShMem
 {
     // PWC Distribution over the shared memory
     using ProductSampler8x8 = ProductSampler<THREAD_PER_BLOCK, X, Y, 8, 8>;
-    //using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
+    using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
     //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
     using ConeTracer = BatchConeTracer<THREAD_PER_BLOCK, X, Y>;
     union
     {
-        //typename BlockDist2D::TempStorage   sDistMem;
+        typename BlockDist2D::TempStorage   sDistMem;
 
         typename ProductSampler8x8::SharedStorage sProductSamplerMem;
         typename BlockFilter2D::TempStorage sFilterMem;
@@ -1071,7 +1071,6 @@ static void KCGenAndSampleDistribution(// Output
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     const int32_t THREAD_ID = threadIdx.x;
     const int32_t isMainThread = (THREAD_ID == 0);
-    static constexpr uint32_t WARP_PER_BLOCK = THREAD_PER_BLOCK / WARP_SIZE;
 
     // Number of threads that contributes to the ray tracing operation
     static constexpr int32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X * Y) ? THREAD_PER_BLOCK : (X * Y);
@@ -1086,13 +1085,11 @@ static void KCGenAndSampleDistribution(// Output
 
     // PWC Distribution over the shared memory
     using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
-    //using Distribution2D = typename SharedMemType::BlockDist2D;
+    using Distribution2D = typename SharedMemType::BlockDist2D;
     using ProductSampler8x8 = typename SharedMemType::ProductSampler8x8;
     using Filter2D = typename SharedMemType::BlockFilter2D;
     using ConeTracer = typename SharedMemType::ConeTracer;
     static_assert(RT_ITER_COUNT == ConeTracer::DATA_PER_THREAD);
-
-
 
     // Functors for batched cone trace
     auto ProjectionFunc = [&](const Vector2i& localPixelId,
@@ -1209,9 +1206,6 @@ static void KCGenAndSampleDistribution(// Output
         }
         #endif
 
-
-
-
         // We finished tracing rays from the scene
         // Now generate distribution from the data
         // and sample for each ray
@@ -1239,27 +1233,40 @@ static void KCGenAndSampleDistribution(// Output
             gRayAux[rayId].guidePDF = pdf;
         }
         #else
-
-
-
+        static constexpr uint32_t WARP_PER_BLOCK = THREAD_PER_BLOCK / WARP_SIZE;
         // Parallelization logic changes now it is one ray per warp
         // Generate the product sampler first
         ProductSampler8x8 productSampler(sharedMem->sProductSamplerMem,
+                                         filteredRadiances,
                                          gRayIds + sharedMem->sOffsetStart,
                                          metaSurfGenerator);
-        uint32_t warpId = THREAD_ID / WARP_SIZE;
+        const uint32_t warpId = THREAD_ID / WARP_SIZE;
+        const bool isWarpLeader = (THREAD_ID % WARP_SIZE) == 0;
         // For each ray
         for(uint32_t rayIndex = warpId; rayIndex < sharedMem->sRayCount;
             rayIndex += WARP_PER_BLOCK)
         {
             float pdf;
-            Vector2f uv = productSampler.SampleProduct(rayIndex, pdf, rng);
+            Vector2f uv = productSampler.SampleProduct(pdf, rng,
+                                                       rayIndex,
+                                                       ProjectionFunc);
+            if(isWarpLeader)
+            {
+                if(isnan(pdf) || uv.HasNaN() ||
+                   pdf == 0.0f || uv[0] == 0.0f || uv[1] == 0.0f)
+                {
+                    printf("(%f, %f), pdf(%f)\n", uv[0], uv[1], pdf);
 
-            pdf *= 0.25f * MathConstants::InvPi;
-            // Store the sampled direction of the ray
-            uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
-            gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
-            gRayAux[rayId].guidePDF = pdf;
+                    uv = Vector2f(0.5f);
+                    pdf = 1.0f;
+                }
+
+                pdf *= 0.25f * MathConstants::InvPi;
+                // Store the sampled direction of the ray
+                uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
+                gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
+                gRayAux[rayId].guidePDF = pdf;
+            }
         }
         #endif
 

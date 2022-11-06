@@ -16,7 +16,7 @@ Utility header for header only cuda vector and cpu vector implementations
 
     // TODO: Warp size may change in future
     // Then divide this statement for different CC's
-    static constexpr uint32_t WARP_SIZE = 32;
+    static constexpr int32_t WARP_SIZE = 32;
 
     inline static constexpr void GPUAssert(cudaError_t code, const char* file, int line)
     {

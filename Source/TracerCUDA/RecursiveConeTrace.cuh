@@ -100,7 +100,7 @@ class BatchConeTracer
 };
 
 template <int32_t TPB, int32_t X, int32_t Y>
-__device__ inline
+__device__ __forceinline__
 BatchConeTracer<TPB, X, Y>::BatchConeTracer(TempStorage& storage,
                                             const AnisoSVOctreeGPU& svo)
     : sMem(storage)
@@ -215,7 +215,7 @@ void BatchConeTracer<TPB, X, Y>::RecursiveConeTraceRay(//Outputs
 
 template <int32_t TPB, int32_t X, int32_t Y>
 template<class RayProjectFunc>
-__device__ inline
+__device__ __forceinline__
 void BatchConeTracer<TPB, X, Y>::BatchedConeTraceRay(//Outputs
                                                      Vector3f(&rayDirOut)[DATA_PER_THREAD],
                                                      float(&tMinOut)[DATA_PER_THREAD],
