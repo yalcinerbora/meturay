@@ -39,38 +39,54 @@ void KCProductSamplerInitTest(// Output
 
 template <int32_t TPB, int32_t X, int32_t Y, int32_t PX, int32_t PY>
 __global__ __launch_bounds__(TPB)
-void KCProductSamplerSampleTest(// I-O
+void KCProductSamplerSampleTest(// Outputs
+                                float* dOutputPDFs,
+                                Vector2f* dOutputUVs,
+                                // I-O
                                 RNGeneratorGPUI** gRNGs,
                                 // Inputs
-                                const GPUMetaSurfaceGeneratorGroup g)
+                                const float* dInputTexture,
+                                const GPUMetaSurfaceGeneratorGroup g,
+                                int32_t samplePerThread)
 {
+    static constexpr int32_t WARP_PER_BLOCK = TPB / WARP_SIZE;
+    static_assert((TPB % WARP_SIZE) == 0, "TPB should evenly be divisible by warpSize(32)");
     using ProductSamplerType = ProductSampler<TPB, X, Y, PX, PY>;
-    __shared__ typename ProductSamplerType::SharedStorage sSharedMem;
-
+    // We will not do product sampling so give an invalid kernel
     auto ProjectionFunc = [&](const Vector2i& localPixelId,
                               const Vector2i& segmentSize)
     {
-        Vector2f st = Vector2f(localPixelId) + 0.5f;
-        st /= Vector2f(segmentSize);
-        Vector3 result = Utility::CocentricOctohedralToDirection(st);
-        Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
-        return dirYUp;
+        return Zero3f;
     };
-
+    // Product samplers shared memory
+    __shared__ typename ProductSamplerType::SharedStorage sSharedMem;
+    // Per-thread RNG
     auto& rng = RNGAccessor::Acquire<RNGIndependentGPU>(gRNGs, LINEAR_GLOBAL_ID);
-
-
-
+    // Load the radiances
     float radiances[ProductSamplerType::RADIANCE_PER_THREAD];
     for(int i = 0; i < ProductSamplerType::RADIANCE_PER_THREAD; i++)
     {
-        radiances[i] = static_cast<float>(i * TPB + threadIdx.x);
+        int32_t globalIndex = i * TPB + threadIdx.x;
+        radiances[i] = dInputTexture[globalIndex];
     }
-
+    // Construct the product sampler
     ProductSamplerType productSampler(sSharedMem, radiances, nullptr, g);
-    float pdf;
-    Vector2f result = productSampler.SampleProduct(pdf, rng, 0,
-                                                   ProjectionFunc);
+    // Warp-stride loop
+    int warpId = threadIdx.x / WARP_SIZE;
+    int laneId = threadIdx.x % WARP_SIZE;
+    bool isWarpLeader = (laneId == 0);
+    for(int i = warpId; i < samplePerThread; i += WARP_PER_BLOCK)
+    {
+        float pdf;
+        Vector2f result = productSampler.SampleProduct(pdf, rng, -1,
+                                                       ProjectionFunc);
+        if(isWarpLeader)
+        {
+            // We can directly use i here kernel is invoked for only one block
+            dOutputPDFs[i] = pdf;
+            dOutputUVs[i] = result;
+        }
+    }
 }
 
 template <int32_t TPB_VAL, int32_t X_VAL, int32_t Y_VAL>
@@ -79,18 +95,20 @@ struct ProductSamplerTestParams
     static constexpr int32_t TPB               = TPB_VAL;
     static constexpr int32_t X                 = X_VAL;
     static constexpr int32_t Y                 = Y_VAL;
+    static constexpr int32_t PX                = 2;
+    static constexpr int32_t PY                = 2;
 };
 
 template <class T>
 class ProductSamplerTest : public testing::Test
 {};
 
-using Implementations = ::testing::Types<ProductSamplerTestParams<256, 64, 64>,
-                                         ProductSamplerTestParams<256, 32, 32>,
-                                         ProductSamplerTestParams<256, 16, 16>,
-                                         ProductSamplerTestParams<128, 8, 8>>;
+//using Implementations = ::testing::Types<ProductSamplerTestParams<256, 64, 64>,
+//                                         ProductSamplerTestParams<256, 32, 32>,
+//                                         ProductSamplerTestParams<256, 16, 16>,
+//                                         ProductSamplerTestParams<128, 8, 8>>;
 
-//using Implementations = ::testing::Types<ProductSamplerTestParams<32, 16, 16>>;
+using Implementations = ::testing::Types<ProductSamplerTestParams<256, 4, 4>>;
 
 TYPED_TEST_SUITE(ProductSamplerTest, Implementations);
 
@@ -102,8 +120,8 @@ TYPED_TEST(ProductSamplerTest, Init)
     constexpr int32_t TPB              = TypeParam::TPB;
     constexpr int32_t X                = TypeParam::X;
     constexpr int32_t Y                = TypeParam::Y;
-    constexpr int32_t PX               = 8;
-    constexpr int32_t PY               = 8;
+    constexpr int32_t PX               = TypeParam::PX;
+    constexpr int32_t PY               = TypeParam::PY;
 
     float* dRadianceField;
     float* dSmallRadianceField;
@@ -159,7 +177,8 @@ TYPED_TEST(ProductSamplerTest, Init)
         for(int k = 0; k < innerCount[1]; k++)
         for(int l = 0; l < innerCount[0]; l++)
         {
-            Vector2i id(i + l, j + k);
+            Vector2i id(i * innerCount[0] + l,
+                        j * innerCount[1] + k);
             int idLinear = id[1] * X + id[0];
             total += hRadianceField[idLinear];
             maxVal = max(maxVal, hRadianceField[idLinear]);
@@ -171,37 +190,120 @@ TYPED_TEST(ProductSamplerTest, Init)
     }
 }
 
-TYPED_TEST(ProductSamplerTest, Sample)
+TYPED_TEST(ProductSamplerTest, SampleZeroVariance)
 {
     CudaSystem system;
     ASSERT_EQ(CudaError::OK, system.Initialize());
     const CudaGPU& bestGPU = system.BestGPU();
 
-    constexpr int32_t TPB = TypeParam::TPB;
-    constexpr int32_t X = TypeParam::X;
-    constexpr int32_t Y = TypeParam::Y;
-    constexpr int32_t PX = 8;
-    constexpr int32_t PY = 8;
-
+    static constexpr int32_t TPB = TypeParam::TPB;
+    static constexpr int32_t X = TypeParam::X;
+    static constexpr int32_t Y = TypeParam::Y;
+    static constexpr int32_t PX = TypeParam::PX;
+    static constexpr int32_t PY = TypeParam::PX;
+    static constexpr int32_t SAMPLE_PER_KERNEL = 8;
+    // Generate your RNG
     constexpr uint32_t SEED = 0;
-    RNGIndependentCPU rngCPU(SEED, system);
+    RNGIndependentCPU rngCPU(SEED, bestGPU);
+    // CPU RNG
+    std::mt19937 rng;
+    rng.seed(0);
+    std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
 
-    GPUMetaSurfaceGeneratorGroup g(nullptr,
-                                   nullptr,
-                                   nullptr,
-                                   nullptr,
-                                   nullptr,
-                                   HitStructPtr());
+    // Create output sample / pdf array
+    // and input
+    DeviceMemory testMem;
+    float*      dInputTexture;
+    float*      dOutputPDFs;
+    Vector2f*   dOutputUVs;
+    GPUMemFuncs::AllocateMultiData(std::tie(dInputTexture, dOutputPDFs, dOutputUVs),
+                                   testMem,
+                                   {X * Y, SAMPLE_PER_KERNEL, SAMPLE_PER_KERNEL});
 
-    auto data = bestGPU.GetKernelAttributes(reinterpret_cast<const void*>(KCProductSamplerSampleTest<TPB, X, Y, PX, PY>));
+    // Return memory
+    std::vector<float> hPDFResults(SAMPLE_PER_KERNEL);
+    std::vector<Vector2f> hUVResults(SAMPLE_PER_KERNEL);
+
+    static constexpr int32_t KERNEL_CALL_COUNT = 2;
+    for(int i = 1; i < KERNEL_CALL_COUNT; i++)
+    {
+        // Populate the region (do uniform test for the first time)
+        std::vector<float> hTexture(X * Y, 10.0f);
+        if(i != 0)
+        {
+            std::for_each(hTexture.begin(), hTexture.end(),
+                          [&uniformDist, &rng](float& f) { f = uniformDist(rng); });
+
+            hTexture = { 1, 1, 2, 2,
+                         1, 1, 2, 2,
+                         3, 3, 4, 4,
+                         3, 3, 4, 4
+                       };
+
+            //std::iota(hTexture.begin(), hTexture.end(), 0.0f);
+            //std::for_each(hTexture.begin(), hTexture.end(),
+            //              [&uniformDist, &rng](float& f) { f += 1.0f;});
+            //for(int y = 0; y < Y; y++)
+            //for(int x = 0; x < X; x++)
+            //{
+            //    int32_t linearIndex = y * X + x;
+            //    //
+            //    hTexture[linearIndex] = (y + 1) * 10.0f;
+            //}
+
+        }
+        // Set NaN to outputs just to be sure
+        CUDA_CHECK(cudaMemset(dOutputPDFs, 0xFF, sizeof(float) * SAMPLE_PER_KERNEL));
+        CUDA_CHECK(cudaMemset(dOutputUVs, 0xFF, sizeof(Vector2f) * SAMPLE_PER_KERNEL));
+
+        // Copy texture to GPU
+        CUDA_CHECK(cudaMemcpy(dInputTexture, hTexture.data(),
+                              sizeof(float) * X * Y,
+                              cudaMemcpyHostToDevice));
+
+        // Call the sample kernel
+        auto data = bestGPU.GetKernelAttributes(reinterpret_cast<const void*>(KCProductSamplerSampleTest<TPB, X, Y, PX, PY>));
+        bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
+                          //
+                          KCProductSamplerSampleTest<TPB, X, Y, PX, PY>,
+                          //
+                          dOutputPDFs,
+                          dOutputUVs,
+                          // I-O
+                          rngCPU.GetGPUGenerators(bestGPU),
+                          // Input
+                          dInputTexture,
+                          GPUMetaSurfaceGeneratorGroup(nullptr, nullptr, nullptr,
+                                                       nullptr, nullptr,
+                                                       HitStructPtr()),
+                          SAMPLE_PER_KERNEL);
 
 
-    bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
-                      //
-                      KCProductSamplerSampleTest<TPB, X, Y, PX, PY>,
-                      //
-                      rngCPU.GetGPUGenerators(bestGPU),
-                      GPUMetaSurfaceGeneratorGroup(nullptr, nullptr, nullptr,
-                                                   nullptr, nullptr,
-                                                   HitStructPtr()));
+        // While it is doing its job (at least on release configuration)
+        // Calculate the integral result of the texture
+        float expectedIntegral = std::reduce(hTexture.cbegin(),
+                                             hTexture.cend(), 0.0f);
+        expectedIntegral /= X;
+        expectedIntegral /= Y;
+        // Copy and check the results
+        CUDA_CHECK(cudaMemcpy(hPDFResults.data(), dOutputPDFs,
+                              sizeof(float) * SAMPLE_PER_KERNEL,
+                              cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(hUVResults.data(), dOutputUVs,
+                              sizeof(Vector2f) * SAMPLE_PER_KERNEL,
+                              cudaMemcpyDeviceToHost));
+
+        for(int i = 0; i < SAMPLE_PER_KERNEL; i++)
+        {
+            Vector2i uvInt(hUVResults[i] * Vector2f(X, Y));
+            int32_t indexLinear = uvInt[1] * X + uvInt[0];
+
+            // Sample does two-layer PWC Distribution,
+            // Kernel does not do product on the outer layer
+            // Thus result should have zero variance
+            // meaning the division should give the exact value of the integral
+            float foundIntegral = hTexture[indexLinear] / hPDFResults[i];
+            EXPECT_NEAR(expectedIntegral, foundIntegral, MathConstants::LargeEpsilon);
+        }
+    }
 }

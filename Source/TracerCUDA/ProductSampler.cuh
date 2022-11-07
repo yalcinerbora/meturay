@@ -15,12 +15,18 @@ template <int32_t TPB, int32_t X, int32_t Y,
 class ProductSampler
 {
     public:
+    static constexpr bool ProductFieldFitCheck()
+    {
+        auto PIX_COUNT = (PX * PY);
+        if(WARP_SIZE > PIX_COUNT) return WARP_SIZE % PIX_COUNT == 0;
+        if(WARP_SIZE <= PIX_COUNT) return PIX_COUNT % WARP_SIZE == 0;
+        return false;
+    }
+
     static constexpr Vector2i PRODUCT_MAP_SIZE = Vector2i(PX, PY);
     static constexpr int32_t WARP_PER_BLOCK = TPB / WARP_SIZE;
-    static constexpr int32_t REFL_PER_THREAD = (PX * PY) / WARP_SIZE;
+    static constexpr int32_t REFL_PER_THREAD = std::max(1, (PX * PY) / WARP_SIZE);
     static constexpr int32_t PROCESSED_ROW_PER_ITER = WARP_SIZE / PX;
-    static_assert(TPB % WARP_SIZE == 0);
-    static_assert(REFL_PER_THREAD / WARP_SIZE == 0, "Reflectance field should be divisible by warp size(32)");
     // Radiance Field related
     static constexpr int32_t RADIANCE_PER_THREAD = std::max(1, (X * Y) / TPB);
     static constexpr int32_t SMALL_RADIANCE_PER_THREAD = std::max(1, (PX * PY) / TPB);
@@ -28,18 +34,21 @@ class ProductSampler
     static constexpr Vector2i DATA_PER_PRODUCT = Vector2i(X / PX, Y / PY);
     static constexpr int32_t DATA_PER_PRODUCT_LINEAR = DATA_PER_PRODUCT[0] * DATA_PER_PRODUCT[1];
     static constexpr int32_t WARP_ITERATION_COUNT = std::max(1, (DATA_PER_PRODUCT_LINEAR) / WARP_SIZE);
-
-    static constexpr int32_t DetermineLogicalWarpForReduce()
-    {
-        // CUB does not like single logical warp for reduce operation
-        // which does not make sense anyway
-        return std::max(2, std::min(DATA_PER_PRODUCT_LINEAR, WARP_SIZE));
-    }
+    // CUB does not like single logical warp for reduce operation,
+    // which does not make sense anyway so we will fake it using two logical warps and
+    // one having the identity element (zero) for reduction operation (add)
+    static constexpr int32_t LOGICAL_WARP_COUNT_FOR_REDUCE = std::max(2, std::min(DATA_PER_PRODUCT_LINEAR,
+                                                                                  WARP_SIZE));
+    static_assert((PX <= WARP_SIZE) && (PY <= WARP_SIZE),
+                  "product field's single row or column should fit inside a warp");
+    static_assert(TPB % WARP_SIZE == 0, "TPB should be a multiple of warp size(32)");
+    static_assert(ProductFieldFitCheck(),
+                  "Reflectance field should be evenly divisible by warp size(32)");
 
     static constexpr float PX_FLOAT = static_cast<float>(PX);
     static constexpr float PY_FLOAT = static_cast<float>(PY);
 
-    using WarpReduce = cub::WarpReduce<float, DetermineLogicalWarpForReduce()>;
+    using WarpReduce = cub::WarpReduce<float, LOGICAL_WARP_COUNT_FOR_REDUCE>;
     using WarpRowScan = cub::WarpScan<float, PX>;
     using WarpColumnScan = cub::WarpScan<float, PY>;
     struct SharedStorage
@@ -90,9 +99,8 @@ class ProductSampler
     __device__
     Vector2f        SampleProduct(float& pdf,
                                   RNGeneratorGPUI& rng,
-                                  uint32_t rayIndex,
+                                  int32_t rayIndex,
                                   ProjFunc&& Project) const;
-
 
     // For Test and Debugging
     __device__
@@ -120,7 +128,7 @@ ProductSampler<TPB, X, Y, PX, PY>::ProductSampler(// Temp
     , warpLocalId(threadIdx.x % WARP_SIZE)
     , warpId(threadIdx.x / WARP_SIZE)
     , isWarpLeader(warpLocalId == 0)
-    , isRowLeader((warpLocalId% PX) == 0)
+    , isRowLeader((warpLocalId % PX) == 0)
 {
     for(int32_t i = 0; i < RADIANCE_PER_THREAD; i++)
     {
@@ -153,12 +161,17 @@ ProductSampler<TPB, X, Y, PX, PY>::ProductSampler(// Temp
             Vector2i innerId2D = Vector2i(linearInnerId % DATA_PER_PRODUCT[0],
                                           linearInnerId / DATA_PER_PRODUCT[0]);
 
-            Vector2i combinedId2D = cellId2D + innerId2D;
+            Vector2i combinedId2D = cellId2D * DATA_PER_PRODUCT + innerId2D;
 
             float value = (linearInnerId < DATA_PER_PRODUCT_LINEAR)
                                 ? shMem.sRadianceField[combinedId2D[1]][combinedId2D[0]]
                                 : 0.0f;
 
+            printf("[%d][%d,%d][%d,%d] reducing %f\n",
+                   warpLocalId,
+                   cellId2D[0], cellId2D[1],
+                   innerId2D[0], innerId2D[1],
+                   value);
 
             totalReduce += WarpReduce(shMem.reduceMem[warpId]).Sum(value);
             float newMax = WarpReduce(shMem.reduceMem[warpId]).Reduce(value, cub::Max());
@@ -181,58 +194,70 @@ template <class ProjFunc>
 __device__ __forceinline__
 Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
                                                           RNGeneratorGPUI& rng,
-                                                          uint32_t rayIndex,
+                                                          int32_t rayIndex,
                                                           ProjFunc&& Project) const
 {
+    static constexpr int32_t INVALID_RAY_INDEX = -1;
     // Convert Raw MetaSurface memory
     // TODO: bad design change this later
-    //GPUMetaSurface* sSurfaces = reinterpret_cast<GPUMetaSurface*>(shMem.sSurfacesRaw);
+    GPUMetaSurface* sSurfaces = reinterpret_cast<GPUMetaSurface*>(shMem.sSurfacesRaw);
 
-    //Vector3f wo = YAxis;
+    Vector3f wo = YAxis;
     // Load material & surface to shared mem
     // Call copy construct here (GPUMetaSurface has reference)
-    //if(isWarpLeader)
-    //{
-    //    // Meta Surface is large to hold in register space use shared memory instead
-    //    new (sSurfaces + warpId) GPUMetaSurface(metaSurfGenerator.AcquireWork(gRayIds[rayIndex]));
-    //    wo = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
-    //}
-    // Broadcast the outgoing direction to peers
-    //wo[0] = __shfl_sync(0xFFFFFFFF, wo[0], 0, WARP_SIZE);
-    //wo[1] = __shfl_sync(0xFFFFFFFF, wo[1], 0, WARP_SIZE);
-    //wo[2] = __shfl_sync(0xFFFFFFFF, wo[2], 0, WARP_SIZE);
-
-    // No need to sync here, threads are in lockstep in warp
-    //const GPUMetaSurface& surface = sSurfaces[warpId];
-    // TODO: Change this to a specific medium, current is does not work
-    //const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
-    GPUMediumVacuum medium(0);
+    if(rayIndex != INVALID_RAY_INDEX)
+    {
+        if(isWarpLeader)
+        {
+            // Meta Surface is large to hold in register space use shared memory instead
+            new (sSurfaces + warpId) GPUMetaSurface(metaSurfGenerator.AcquireWork(gRayIds[rayIndex]));
+            wo = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
+        }
+        // Broadcast the outgoing direction to peers
+        wo[0] = __shfl_sync(0xFFFFFFFF, wo[0], 0, WARP_SIZE);
+        wo[1] = __shfl_sync(0xFFFFFFFF, wo[1], 0, WARP_SIZE);
+        wo[2] = __shfl_sync(0xFFFFFFFF, wo[2], 0, WARP_SIZE);
+    }
 
     // Generate PX by PY product field (store it on register space)
     float productField[REFL_PER_THREAD];
-    //for(int32_t i = warpId; i < (PX * PY); i += WARP_SIZE)
     for(int32_t j = 0; j < REFL_PER_THREAD; j++)
     {
-        int32_t linearId = warpLocalId + (j * PROCESSED_ROW_PER_ITER);
+        int32_t linearId = warpLocalId + (j * WARP_SIZE);
+        // Potential case when product field is small 4x4 for example.
 
-        Vector2i loc2D = Vector2i(linearId % PX,
-                                  linearId / PX);
 
+        Vector2i loc2D = Vector2i(linearId % PX, linearId / PX);
+        float bxdfGray = 1.0f;
         // Only calculate if surface is not specular
-        Vector3f bxdfColored = Vector3f(1.0f);
-        //if(surface.Specularity() < TracerConstants::SPECULAR_THRESHOLD)
+        // or we are skipping the product portion
+        if(rayIndex != INVALID_RAY_INDEX &&
+           sSurfaces[warpId].Specularity() < TracerConstants::SPECULAR_THRESHOLD)
         {
+            // TODO: Change this to a specific medium, current is does not work
+            //const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
+            GPUMediumVacuum medium(0);
             // Project the mapped id
-            //Vector3f wi = Project(loc2D, Vector2i(PX, PY));
-            //bxdfColored = surface.Evaluate(wo,
-            //                               wi,
-            //                               medium);
-            bxdfColored = Vector3f(static_cast<float>(warpId * WARP_SIZE + j));
+            Vector3f wi = Project(loc2D, Vector2i(PX, PY));
+            Vector3f bxdfColored = sSurfaces[warpId].Evaluate(wo,
+                                                              wi,
+                                                              medium);
+            // Convert it to single channel
+            bxdfGray = Utility::RGBToLuminance(bxdfColored);
         }
 
-        productField[j] = (1.0f * //Utility::RGBToLuminance(bxdfColored) *
-                           shMem.sRadianceFieldSmall[loc2D[1]][loc2D[0]]);
+        float radiance = (linearId < (PX* PY)) ? shMem.sRadianceFieldSmall[loc2D[1]][loc2D[0]] : 0.0f;
+        productField[j] = bxdfGray * radiance;
     }
+
+    //for(int32_t j = 0; j < REFL_PER_THREAD; j++)
+    //{
+    //    int32_t linearId = warpLocalId + (j * WARP_SIZE);
+    //    int32_t x = linearId % PX;
+    //    int32_t y = linearId / PX;
+
+    //    printf("PF:(%d, %d) %f \n", x, y, productField[j]);
+    //}
 
     // Our field is generated now sample,
     // For first stage do a CDF parallel search search style
@@ -252,19 +277,28 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
         // Store the total value for marginal pdf
         // rowLeader writes the data
         int32_t rowIndex = (warpLocalId / PX) + (j * PROCESSED_ROW_PER_ITER);
-        if(warpLocalId % PX == 0) shMem.sWarpTempMemory[warpId][rowIndex] = rowTotal;
+        if(warpLocalId % PX == 0)
+            shMem.sWarpTempMemory[warpId][rowIndex] = rowTotal;
     }
+
+    //for(int32_t j = 0; j < REFL_PER_THREAD; j++)
+    //{
+    //    int32_t linearId = warpLocalId + (j * WARP_SIZE);
+    //    int32_t x = linearId % PX;
+    //    int32_t y = linearId / PX;
+
+    //    printf("(%d, %d) %f \n", x, y, pdfX[j]);
+    //}
 
     // Now calculate Marginal
     // Assuming PY fits in to a warp (it should be)
-    float colValue = (warpLocalId < PY) ? shMem.sWarpTempMemory[warpId][warpLocalId] : 0.0f;
-    float columnTotal, columnScan;
-    WarpColumnScan(shMem.colScanMem[warpId]).InclusiveSum(colValue, columnScan,
+    float cdfY;
+    float pdfY = (warpLocalId < PY) ? shMem.sWarpTempMemory[warpId][warpLocalId] : 0.0f;
+    float columnTotal;
+    WarpColumnScan(shMem.colScanMem[warpId]).InclusiveSum(pdfY, cdfY,
                                                           columnTotal);
     float columnTotalRecip = 1.0f / columnTotal;
-
-    float cdfY = columnScan * columnTotalRecip;
-    float pdfY = (warpLocalId < PY) ? shMem.sWarpTempMemory[warpId][warpLocalId] : 0.0f;
+    cdfY *= columnTotalRecip;
     pdfY *= PY_FLOAT * columnTotalRecip;
 
     // Generated Marginal & Conditional Probabilities
@@ -274,6 +308,8 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     // Check the votes
     uint32_t mask = __ballot_sync(0xFFFFFFFF, (xi0 > cdfY));
     int32_t rowId = __ffs(~mask) - 1;
+
+    //if(warpLocalId < PY) printf("%f \n", pdfY);
 
     // save the xi_Y, (cdfY_0, cdfY_1]
     //                           ^  rowId is the index of this one
@@ -301,6 +337,9 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     xi1 = __shfl_sync(0xFFFFFFFF, xi1, 0, PX);
     // Check votes
     mask = __ballot_sync(0xFFFFFFFF, (xi1 > cdfX[accessIndex]));
+    // Align the LSB of the row local result to actual LSB of the data
+    mask >>= reducedRow * PX;
+    // Calculate the column region that has the sample
     int columnId = __ffs(~mask) - 1;
     // save the xi_X, (cdfX_0, cdfX_1]
     //                           ^  column is the index of this one
@@ -318,6 +357,8 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
         if((!columnId) && isRowLeader)
             shMem.sWarpTempMemory[warpId][5] = 0.0f;
     }
+    assert((rowId < PY) && (columnId < PX));
+
     // Product sampling phase is done!
     // now subsample the inner small region (could be same size)
 
@@ -330,19 +371,22 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     float xiTest = rng.Uniform();
 
     static constexpr Vector2f DPP_FLOAT(DATA_PER_PRODUCT[0], DATA_PER_PRODUCT[1]);
+    //static constexpr float DPP_DX_DY = (DPP_FLOAT[1] * DPP_FLOAT[0]);
     Vector2i outerRegion2D = Vector2i(columnId, rowId);
     Vector2i innerRegion2D = Vector2i(uv * DPP_FLOAT);
+    // Sanity check
+    assert((innerRegion2D[1] < DATA_PER_PRODUCT[1]) &&
+           (innerRegion2D[0] < DATA_PER_PRODUCT[0]));
     Vector2i index2D = outerRegion2D + innerRegion2D;
-
     float texVal = shMem.sRadianceField[index2D[1]][index2D[0]];
-    texVal /= shMem.sNormalizationConstants[outerRegion2D[1]][outerRegion2D[0]];
+    float normalizedVal = texVal / shMem.sNormalizationConstants[outerRegion2D[1]][outerRegion2D[0]];
 
-    mask = __ballot_sync(0xFFFFFFFF, (xiTest > texVal));
+    mask = __ballot_sync(0xFFFFFFFF, (xiTest <= normalizedVal));
     int32_t luckyWarp = __ffs(mask) - 1;
 
-    // Broadcast to the leader warp (well to everybody as well due to
-    // instruction)
-    if(luckyWarp >= 0)
+    // Broadcast to the leader warp
+    // (well; to everybody as well due to instruction)
+    if(luckyWarp > 0)
     {
         uv[0] = __shfl_sync(0xFFFFFFFF, uv[0], luckyWarp, WARP_SIZE);
         uv[1] = __shfl_sync(0xFFFFFFFF, uv[1], luckyWarp, WARP_SIZE);
@@ -351,18 +395,30 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     if(isWarpLeader)
     {
         float integral = shMem.sRadianceFieldSmall[outerRegion2D[1]][outerRegion2D[0]];
+        //integral *= DPP_DX_DY;
         // Now calculate actual pdf etc.
         float pdfInner = (luckyWarp >= 0) ? texVal / integral
                                           : 1.0f;
         // Finally actual pdf
         pdf = shMem.sWarpTempMemory[warpId][7] *
               shMem.sWarpTempMemory[warpId][3] * pdfInner;
+
+        //if(isnan(pdf))
+            printf("o(%d, %d), i(%d, %d) =>pdf %f: %f * %f * %f, luckyWarp %d\n",
+                   columnId, rowId, innerRegion2D[0], innerRegion2D[1],
+                   pdf,
+                   shMem.sWarpTempMemory[warpId][7],
+                   shMem.sWarpTempMemory[warpId][3],
+                   pdfInner, luckyWarp);
     }
     // Calculate the UV
-    Vector2f outerUV = Vector2f(outerRegion2D);
-    outerUV += uv;
-    // All done!
-    return outerUV;
+    Vector2f innerRegionFloat = Vector2f(uv * DPP_FLOAT);
+    Vector2f actualUV = Vector2f(outerRegion2D) + innerRegionFloat;
+
+    static constexpr Vector2f TOTAL_REGION_SIZE_RECIP = Vector2f(1.0f / X, 1.0f / Y);
+    actualUV *= TOTAL_REGION_SIZE_RECIP;
+    // All done! (Return is only valid for the warp leader (lane0))
+    return actualUV;
 }
 
 template <int32_t TPB, int32_t X, int32_t Y,
