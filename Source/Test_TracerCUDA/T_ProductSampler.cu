@@ -95,20 +95,20 @@ struct ProductSamplerTestParams
     static constexpr int32_t TPB               = TPB_VAL;
     static constexpr int32_t X                 = X_VAL;
     static constexpr int32_t Y                 = Y_VAL;
-    static constexpr int32_t PX                = 2;
-    static constexpr int32_t PY                = 2;
+    static constexpr int32_t PX                = 8;
+    static constexpr int32_t PY                = 8;
 };
 
 template <class T>
 class ProductSamplerTest : public testing::Test
 {};
 
-//using Implementations = ::testing::Types<ProductSamplerTestParams<256, 64, 64>,
-//                                         ProductSamplerTestParams<256, 32, 32>,
-//                                         ProductSamplerTestParams<256, 16, 16>,
-//                                         ProductSamplerTestParams<128, 8, 8>>;
+using Implementations = ::testing::Types<ProductSamplerTestParams<256, 64, 64>,
+                                         ProductSamplerTestParams<256, 32, 32>,
+                                         ProductSamplerTestParams<256, 16, 16>,
+                                         ProductSamplerTestParams<128, 8, 8>>;
 
-using Implementations = ::testing::Types<ProductSamplerTestParams<256, 4, 4>>;
+//using Implementations = ::testing::Types<ProductSamplerTestParams<256, 8, 8>>;
 
 TYPED_TEST_SUITE(ProductSamplerTest, Implementations);
 
@@ -201,14 +201,14 @@ TYPED_TEST(ProductSamplerTest, SampleZeroVariance)
     static constexpr int32_t Y = TypeParam::Y;
     static constexpr int32_t PX = TypeParam::PX;
     static constexpr int32_t PY = TypeParam::PX;
-    static constexpr int32_t SAMPLE_PER_KERNEL = 8;
+    static constexpr int32_t SAMPLE_PER_KERNEL = 1024;
     // Generate your RNG
     constexpr uint32_t SEED = 0;
     RNGIndependentCPU rngCPU(SEED, bestGPU);
     // CPU RNG
     std::mt19937 rng;
-    rng.seed(0);
-    std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
+    rng.seed(SEED);
+    std::uniform_real_distribution<float> uniformDist(0.0f, 5.0f);
 
     // Create output sample / pdf array
     // and input
@@ -224,8 +224,8 @@ TYPED_TEST(ProductSamplerTest, SampleZeroVariance)
     std::vector<float> hPDFResults(SAMPLE_PER_KERNEL);
     std::vector<Vector2f> hUVResults(SAMPLE_PER_KERNEL);
 
-    static constexpr int32_t KERNEL_CALL_COUNT = 2;
-    for(int i = 1; i < KERNEL_CALL_COUNT; i++)
+    static constexpr int32_t KERNEL_CALL_COUNT = 128;
+    for(int i = 0; i < KERNEL_CALL_COUNT; i++)
     {
         // Populate the region (do uniform test for the first time)
         std::vector<float> hTexture(X * Y, 10.0f);
@@ -233,24 +233,6 @@ TYPED_TEST(ProductSamplerTest, SampleZeroVariance)
         {
             std::for_each(hTexture.begin(), hTexture.end(),
                           [&uniformDist, &rng](float& f) { f = uniformDist(rng); });
-
-            hTexture = { 1, 1, 2, 2,
-                         1, 1, 2, 2,
-                         3, 3, 4, 4,
-                         3, 3, 4, 4
-                       };
-
-            //std::iota(hTexture.begin(), hTexture.end(), 0.0f);
-            //std::for_each(hTexture.begin(), hTexture.end(),
-            //              [&uniformDist, &rng](float& f) { f += 1.0f;});
-            //for(int y = 0; y < Y; y++)
-            //for(int x = 0; x < X; x++)
-            //{
-            //    int32_t linearIndex = y * X + x;
-            //    //
-            //    hTexture[linearIndex] = (y + 1) * 10.0f;
-            //}
-
         }
         // Set NaN to outputs just to be sure
         CUDA_CHECK(cudaMemset(dOutputPDFs, 0xFF, sizeof(float) * SAMPLE_PER_KERNEL));
@@ -281,8 +263,7 @@ TYPED_TEST(ProductSamplerTest, SampleZeroVariance)
 
         // While it is doing its job (at least on release configuration)
         // Calculate the integral result of the texture
-        float expectedIntegral = std::reduce(hTexture.cbegin(),
-                                             hTexture.cend(), 0.0f);
+        float expectedIntegral = std::reduce(hTexture.cbegin(), hTexture.cend(), 0.0f);
         expectedIntegral /= X;
         expectedIntegral /= Y;
         // Copy and check the results
@@ -293,6 +274,8 @@ TYPED_TEST(ProductSamplerTest, SampleZeroVariance)
                               sizeof(Vector2f) * SAMPLE_PER_KERNEL,
                               cudaMemcpyDeviceToHost));
 
+
+        float total = 0.0f;
         for(int i = 0; i < SAMPLE_PER_KERNEL; i++)
         {
             Vector2i uvInt(hUVResults[i] * Vector2f(X, Y));
@@ -304,6 +287,11 @@ TYPED_TEST(ProductSamplerTest, SampleZeroVariance)
             // meaning the division should give the exact value of the integral
             float foundIntegral = hTexture[indexLinear] / hPDFResults[i];
             EXPECT_NEAR(expectedIntegral, foundIntegral, MathConstants::LargeEpsilon);
+
+            // We might as well do Monte Carlo here
+            total += foundIntegral;
         }
+        // Monte Carlo Result should be equal as well.
+        EXPECT_NEAR(expectedIntegral, total / SAMPLE_PER_KERNEL, MathConstants::VeryLargeEpsilon);
     }
 }

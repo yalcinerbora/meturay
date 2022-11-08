@@ -1248,7 +1248,8 @@ static void KCGenAndSampleDistribution(// Output
         {
             float pdf;
             Vector2f uv = productSampler.SampleProduct(pdf, rng,
-                                                       rayIndex,
+                                                       -1,
+                                                       //rayIndex,
                                                        ProjectionFunc);
             if(isWarpLeader)
             {
