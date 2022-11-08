@@ -282,6 +282,12 @@ GPUMetaSurface GPUMetaSurfaceGeneratorGroup::AcquireWork(uint32_t rayId) const
     HitKey workId = gWorkKeys[rayId];
 
     HitKey::Type workBatchId = HitKey::FetchBatchPortion(workId);
+    if(workBatchId == HitKey::NullBatch)
+    {
+        printf("NULLBATCH!\n");
+        __trap();
+    }
+
     const GPUMetaSurfaceGeneratorI* gMetaSurfGen = gGeneratorInterfaces[workBatchId];
     return gMetaSurfGen->AcquireWork(rayId, tId, pId, workId, gHitStructPtr, gRaysIn);
 }

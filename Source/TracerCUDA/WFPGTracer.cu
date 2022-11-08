@@ -343,6 +343,9 @@ void WFPGTracer::GenerateGuidedDirections()
                                           rayCount,
                                           cudaSystem);
 
+    Debug::DumpMemToFile("workKeys", rayCaster->WorkKeys(), rayCount);
+    Debug::DumpMemToFile("primIds", rayCaster->PrimitiveIds(), rayCount);
+
     // Get Meta Surface
     const RayGMem* dRaysIn = rayCaster->RaysIn();
     const HitKey* dWorkKeys = rayCaster->WorkKeys();

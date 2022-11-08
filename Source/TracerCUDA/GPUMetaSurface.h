@@ -146,12 +146,14 @@ QuatF GPUMetaSurface::WorldToTangent() const
 __device__ __forceinline__
 bool GPUMetaSurface::IsEmissive() const
 {
+    if(isLight) return true;
     return gMaterial->IsEmissive();
 }
 
 __device__ __forceinline__
 bool GPUMetaSurface::Specularity() const
 {
+    if(isLight) return 1.0f;
     return gMaterial->Specularity(uvSurf);
 }
 

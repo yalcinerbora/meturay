@@ -225,6 +225,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
         // Only calculate if surface is not specular
         // or we are skipping the product portion
         if(rayIndex != INVALID_RAY_INDEX &&
+           (!sSurfaces[warpId].IsLight()) &&
            sSurfaces[warpId].Specularity() < TracerConstants::SPECULAR_THRESHOLD)
         {
             // TODO: Change this to a specific medium, current is does not work
@@ -235,8 +236,9 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
             Vector3f bxdfColored = sSurfaces[warpId].Evaluate(wo,
                                                               wi,
                                                               medium);
+
             // Convert it to single channel
-            bxdfGray = Utility::RGBToLuminance(bxdfColored);
+            bxdfGray = max(0.0001f, Utility::RGBToLuminance(bxdfColored));
         }
 
         float radiance = (linearId < (PX * PY)) ?
