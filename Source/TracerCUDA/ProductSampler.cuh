@@ -72,7 +72,7 @@ class ProductSampler
         // for the product region
         float sWarpTempMemory[WARP_PER_BLOCK][std::max(2, PY)];
         // Meta Surface for each warp
-        Byte sSurfacesRaw[WARP_PER_BLOCK * sizeof(GPUMetaSurface)];
+        GPUMetaSurface sSurfaces[WARP_PER_BLOCK];
     };
 
     private:
@@ -193,11 +193,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
                                                           ProjFunc&& Project) const
 {
     static constexpr int32_t INVALID_RAY_INDEX = -1;
-    // Convert Raw MetaSurface memory
-    // TODO: bad design change this later
-    GPUMetaSurface* sSurfaces = reinterpret_cast<GPUMetaSurface*>(shMem.sSurfacesRaw);
-
-    Vector3f wo = YAxis;
+    Vector3f wi = YAxis;
     // Load material & surface to shared mem
     // Call copy construct here (GPUMetaSurface has reference)
     if(rayIndex != INVALID_RAY_INDEX)
@@ -205,14 +201,23 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
         if(isWarpLeader)
         {
             // Meta Surface is large to hold in register space use shared memory instead
-            new (sSurfaces + warpId) GPUMetaSurface(metaSurfGenerator.AcquireWork(gRayIds[rayIndex]));
-            wo = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
+            shMem.sSurfaces[warpId] = metaSurfGenerator.AcquireWork(gRayIds[rayIndex]);
+            wi = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
+
+            //if(rayIndex == 0)
+            //    printf("Loaded Surface L(%s): WN:(%f, %f, %f)\n",
+            //           shMem.sSurfaces[warpId].IsLight() ? "true" : "false",
+            //           shMem.sSurfaces[warpId].WorldNormal()[0],
+            //           shMem.sSurfaces[warpId].WorldNormal()[1],
+            //           shMem.sSurfaces[warpId].WorldNormal()[2]);
         }
         // Broadcast the outgoing direction to peers
-        wo[0] = __shfl_sync(0xFFFFFFFF, wo[0], 0, WARP_SIZE);
-        wo[1] = __shfl_sync(0xFFFFFFFF, wo[1], 0, WARP_SIZE);
-        wo[2] = __shfl_sync(0xFFFFFFFF, wo[2], 0, WARP_SIZE);
+        wi[0] = __shfl_sync(0xFFFFFFFF, wi[0], 0, WARP_SIZE);
+        wi[1] = __shfl_sync(0xFFFFFFFF, wi[1], 0, WARP_SIZE);
+        wi[2] = __shfl_sync(0xFFFFFFFF, wi[2], 0, WARP_SIZE);
     }
+
+    const GPUMetaSurface& warpSurf = shMem.sSurfaces[warpId];
 
     // Generate PX by PY product field (store it on register space)
     float productField[REFL_PER_THREAD];
@@ -225,17 +230,27 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
         // Only calculate if surface is not specular
         // or we are skipping the product portion
         if(rayIndex != INVALID_RAY_INDEX &&
-           (!sSurfaces[warpId].IsLight()) &&
-           sSurfaces[warpId].Specularity() < TracerConstants::SPECULAR_THRESHOLD)
+           (!warpSurf.IsLight()) &&
+           warpSurf.Specularity() < TracerConstants::SPECULAR_THRESHOLD)
         {
             // TODO: Change this to a specific medium, current is does not work
             //const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
             GPUMediumVacuum medium(0);
             // Project the mapped id
-            Vector3f wi = Project(loc2D, Vector2i(PX, PY));
-            Vector3f bxdfColored = sSurfaces[warpId].Evaluate(wo,
-                                                              wi,
-                                                              medium);
+            Vector3f wo = Project(loc2D, Vector2i(PX, PY));
+            Vector3f bxdfColored = warpSurf.Evaluate(wo,
+                                                     wi,
+                                                     medium);
+            //if(rayIndex == 0)
+            //{
+            //    printf("WN:(%f, %f, %f), Wo(%f, %f, %f), Wi(%f, %f, %f), bxdf %f\n",
+            //           warpSurf.WorldNormal()[0],
+            //           warpSurf.WorldNormal()[1],
+            //           warpSurf.WorldNormal()[2],
+            //           wo[0], wo[1], wo[2],
+            //           wi[0], wi[1], wi[2],
+            //           Utility::RGBToLuminance(bxdfColored));
+            //}
 
             // Convert it to single channel
             bxdfGray = max(0.0001f, Utility::RGBToLuminance(bxdfColored));

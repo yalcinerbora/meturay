@@ -9,9 +9,16 @@
         "fov": [54.6003, 30.7127],
         // 1:1 FoV
         //"fov": [54.6003, 54.6003],
-        "gaze": [-71.1997, 71.4202, 204.321],
-        "position": [-71.39, 71.49, 205.3],
-        "up": [0.013401, 0.99756, -0.0685194],
+        "gaze"     : [-71.1997, 71.4202, 204.321],
+        "position" : [-71.39, 71.49, 205.3],
+        "up"       : [0.013401, 0.99756, -0.0685194],
+
+
+
+        // "gaze"     : [-63.3083, 81.6846, 87.1024],
+        // "position" : [-63.3128, 81.5995, 88.0987],
+        // "up"       : [0, 1, 0],
+
         "planes": [10, 2800]
     },
     {
@@ -332,13 +339,13 @@
             "material": [11, 3, 3, 3, 3],
             "primitive": [0, 1, 2, 3, 4]
         },
-        // Teapots
-        // Metal
-        {"transform": 0, "accelerator":0, "material": 8, "primitive": 5},
-        // Marble
-        {"transform": 0, "accelerator":0, "material": 9, "primitive": 6},
-        // Glass
-        {"transform": 0, "accelerator":0, "material": 7, "primitive": 7},
+        // // Teapots
+        // // Metal
+        // {"transform": 0, "accelerator":0, "material": 8, "primitive": 5},
+        // // Marble
+        // {"transform": 0, "accelerator":0, "material": 9, "primitive": 6},
+        // // Glass
+        // {"transform": 0, "accelerator":0, "material": 7, "primitive": 7},
         // Entire Door
         {
             // Door & Door Frame

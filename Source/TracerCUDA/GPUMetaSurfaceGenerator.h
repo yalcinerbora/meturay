@@ -197,10 +197,10 @@ GPUMetaSurface GPUMetaSurfaceGenerator<PrimGroup, MatGroup, SGen>::AcquireWork(/
     HitKey::Type workId = HitKey::FetchIdPortion(workKey);
     const GPUMaterialI* gMaterial = gLocalMaterials[workId];
     // Get Transform for surface generation and
-    const GPUTransformI& transform = *gTransforms[tId];
+    const GPUTransformI* transform = gTransforms[tId];
     // Get hit data from the global array
     const HitData hit = gHitStructs.Ref<HitData>(rayId);
-    UVSurface uvSurface = SurfFunc(hit, transform,
+    UVSurface uvSurface = SurfFunc(hit, *transform,
                                    ray.ray.getDirection(),
                                    primId, gPrimData);
     // Return the class
@@ -236,7 +236,7 @@ GPUMetaSurface GPUBoundaryMetaSurfaceGenerator<EndpointGroup>::AcquireWork(// Re
     HitKey::Type workId = HitKey::FetchIdPortion(workKey);
     const GPULightI* gLightI = (gLocalLightInterfaces) ? gLocalLightInterfaces + workId : nullptr;
     // Get Transform for surface generation and
-    const GPUTransformI& transform = *gTransforms[tId];
+    const GPUTransformI* transform = gTransforms[tId];
     // Get hit data from the global array
     const HitData hit = gHitStructs.Ref<HitData>(rayId);
     // Somehow we missed the light,
@@ -250,7 +250,7 @@ GPUMetaSurface GPUBoundaryMetaSurfaceGenerator<EndpointGroup>::AcquireWork(// Re
     }
     else
     {
-        UVSurface uvSurface = SurfFunc(hit, transform,
+        UVSurface uvSurface = SurfFunc(hit, *transform,
                                        ray.ray.getDirection(),
                                        primId, gPrimData);
         return GPUMetaSurface(transform,
@@ -285,7 +285,9 @@ GPUMetaSurface GPUMetaSurfaceGeneratorGroup::AcquireWork(uint32_t rayId) const
     if(workBatchId == HitKey::NullBatch)
     {
         printf("NULLBATCH!\n");
-        __trap();
+        //__trap();
+        return GPUMetaSurface(nullptr, UVSurface{},
+                              static_cast<GPUMaterialI*>(nullptr));
     }
 
     const GPUMetaSurfaceGeneratorI* gMetaSurfGen = gGeneratorInterfaces[workBatchId];

@@ -24,7 +24,7 @@ class GPUMediumI;
 class GPUMetaSurface
 {
     private:
-    const GPUTransformI&        t;              // local to world
+    const GPUTransformI*        t;              // local to world
 
     UVSurface                   uvSurf;
     bool                        isLight;
@@ -36,10 +36,11 @@ class GPUMetaSurface
     };
 
     public:
-    __device__              GPUMetaSurface(const GPUTransformI&,
+                            GPUMetaSurface() = default;
+    __device__              GPUMetaSurface(const GPUTransformI*,
                                            const UVSurface& uvSurface,
                                            const GPUMaterialI* gMaterial);
-    __device__              GPUMetaSurface(const GPUTransformI&,
+    __device__              GPUMetaSurface(const GPUTransformI*,
                                            const UVSurface& uvSurface,
                                            const GPULightI* gLight);
 
@@ -81,7 +82,7 @@ class GPUMetaSurface
 };
 
 __device__ __forceinline__
-GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
+GPUMetaSurface::GPUMetaSurface(const GPUTransformI* t,
                                const UVSurface& uvSurface,
                                const GPUMaterialI* gMaterial)
     : t(t)
@@ -91,7 +92,7 @@ GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
 {}
 
 __device__ __forceinline__
-GPUMetaSurface::GPUMetaSurface(const GPUTransformI& t,
+GPUMetaSurface::GPUMetaSurface(const GPUTransformI* t,
                                const UVSurface& uvSurface,
                                const GPULightI* gLight)
     : t(t)
