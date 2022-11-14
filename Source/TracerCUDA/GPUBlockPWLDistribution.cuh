@@ -66,7 +66,7 @@ class BlockPWLDistribution2D
     __device__
     static float    PDFRegion(float a, float b, float u);
     __device__
-    static float    SampleRegion(float& pdf, float a, float b, float index);
+    static float    SampleRegion(float& newU, float a, float b, float index);
 
     protected:
     public:
@@ -101,7 +101,7 @@ template<uint32_t TPB,
          uint32_t X,
          uint32_t Y>
 __device__
-float BlockPWLDistribution2D<TPB, X, Y>::SampleRegion(float& pdf, float a, float b, float index)
+float BlockPWLDistribution2D<TPB, X, Y>::SampleRegion(float& newOffset, float a, float b, float index)
 {
     // split the index to integral-fraction (we will remap fraction and return it)
     float integralPart = floorf(index);
@@ -113,7 +113,7 @@ float BlockPWLDistribution2D<TPB, X, Y>::SampleRegion(float& pdf, float a, float
         u = (a - sqrtf(HybridFuncs::Lerp(a * a, b * b, u))) / (a - b);
         u = HybridFuncs::Clamp(u, 0.0f, 1.0f);
     }
-    pdf = PDFRegion(a, b, u);
+    newOffset = u;
     return integralPart + u;
 }
 
@@ -265,8 +265,8 @@ Vector2f BlockPWLDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& in
 {
     static constexpr int32_t CDF_SIZE_Y = Y;
     static constexpr int32_t CDF_SIZE_X = X;
-
     Vector2f xi = rng.Uniform2D();
+    Vector2f uvInner = Zero2f;
     // If entire distribution is invalid
     // Just sample uniformly
     if(sMem.sCDFY[Y - 1] == 0.0f)
@@ -290,12 +290,12 @@ Vector2f BlockPWLDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& in
         indexYInt--;
     }
     // Sample the region
-    float pdfY;
-    index[1] = SampleRegion(pdfY, sMem.sPDFY[indexYInt], sMem.sPDFY[indexYInt + 1], index[1]);
+    index[1] = SampleRegion(uvInner[1], sMem.sPDFY[indexYInt], sMem.sPDFY[indexYInt + 1], index[1]);
 
     // Fetch row and do it again
     const float* sRowCDF = sMem.sCDFX[indexYInt];
     const float* sRowPDF = sMem.sPDFX[indexYInt];
+    const float* sRowPDFNext = sMem.sPDFX[indexYInt + 1];
 
     GPUFunctions::BinarySearchInBetween<float>(index[0], xi[0],
                                                sRowCDF, CDF_SIZE_X);
@@ -306,28 +306,32 @@ Vector2f BlockPWLDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& in
                          index[0]);
         indexXInt--;
     }
-    float pdfX;
-    index[0] = SampleRegion(pdfX, sRowPDF[indexXInt], sRowPDF[indexXInt + 1], index[0]);
+    // TODO: Should we do multiple sample regions here?
+    index[0] = SampleRegion(uvInner[0], sRowPDF[indexXInt], sRowPDF[indexXInt + 1], index[0]);
 
-    // Samples are dependent so we need to multiply the pdf results
-    pdf = pdfY * pdfX;
+    // Calculate PDF
+    // Bilerp Interpolation of the multiplied PDFs
+    using namespace HybridFuncs;
+    pdf = Lerp(sMem.sPDFY[indexYInt + 0] * Lerp(sRowPDF[indexXInt], sRowPDF[indexXInt + 1], uvInner[0]),
+               sMem.sPDFY[indexYInt + 1] * Lerp(sRowPDFNext[indexXInt], sRowPDFNext[indexXInt + 1], uvInner[0]),
+               uvInner[1]);
 
-    if(pdfY == 0.0f || pdfX == 0.0f)
-    {
-        printf("[Z] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
-               pdfX, pdfY, xi[0], xi[1], index[0], index[1],
-               indexXInt, indexYInt);
-    }
-    if(isnan(pdfY) || isnan(pdfX))
-    {
-        printf("[NaN] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
-               pdfX, pdfY, xi[0], xi[1], index[0], index[1],
-               indexXInt, indexYInt);
-    }
-    if(index.HasNaN())
-    {
-        printf("[NaN] index(%f, %f)\n", index[0], index[1]);
-    }
+    //if(pdfY == 0.0f || pdfX == 0.0f)
+    //{
+    //    printf("[Z] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
+    //           pdfX, pdfY, xi[0], xi[1], index[0], index[1],
+    //           indexXInt, indexYInt);
+    //}
+    //if(isnan(pdfY) || isnan(pdfX))
+    //{
+    //    printf("[NaN] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
+    //           pdfX, pdfY, xi[0], xi[1], index[0], index[1],
+    //           indexXInt, indexYInt);
+    //}
+    //if(index.HasNaN())
+    //{
+    //    printf("[NaN] index(%f, %f)\n", index[0], index[1]);
+    //}
 
     // Return the index as a normalized coordinate as well
     return index * Vector2f(DELTA_X, DELTA_Y);

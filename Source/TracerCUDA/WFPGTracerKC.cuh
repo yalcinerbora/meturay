@@ -371,12 +371,14 @@ void WFPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        const float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 1.0f;
+        const float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
         float xi = rng.Uniform();
 
+        float misWeight;
         bool selectedPDFZero = false;
         float pdfBxDF, pdfGuide;
-        if(xi >= BxDF_GuideSampleRatio)
+        bool BxDFSelected = (xi >= BxDF_GuideSampleRatio);
+        if(BxDFSelected)
         {
             // Sample using BxDF
             reflectance = MGroup::Sample(// Outputs
@@ -394,7 +396,7 @@ void WFPGTracerPathWork(// Output
                                          matIndex,
                                          0);
             pdfGuide = aux.guidePDF;
-
+            misWeight = TracerFunctions::BalanceHeuristic(1, pdfBxDF, 1, pdfGuide);
             selectedPDFZero = (pdfBxDF == 0.0f);
         }
         else
@@ -431,13 +433,19 @@ void WFPGTracerPathWork(// Output
             rayPath = RayF(direction, position);
             rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
 
+            misWeight = TracerFunctions::BalanceHeuristic(1, pdfGuide, 1, pdfBxDF);
             selectedPDFZero = (pdfGuide == 0.0f);
         }
         // Pdf Average
         //pdfPath = pdfBxDF;
-        pdfPath = BxDF_GuideSampleRatio          * pdfGuide +
-                  (1.0f - BxDF_GuideSampleRatio) * pdfBxDF;
-        pdfPath = selectedPDFZero ? 0.0f : pdfPath;
+        // One-sample MIS Using Balance Heuristic
+        if(!renderState.skipPG)
+        {
+            pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
+            pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
+            pdfPath = selectedPDFZero ? 0.0f : pdfPath;
+        }
+        else pdfPath = pdfBxDF;
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
@@ -906,32 +914,6 @@ Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
     st /= Vector2f(dimensions);
     Vector3f result = Utility::CocentricOctohedralToDirection(st);
     Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
-
-    //assert(dirXY < dimensions);
-    //using namespace MathConstants;
-    //// Spherical coordinate deltas
-    //Vector2f deltaXY = Vector2f((2.0f * Pi) / static_cast<float>(dimensions[0]),
-    //                            Pi / static_cast<float>(dimensions[1]));
-
-    //// Assume image space bottom left is (0,0)
-    //// Center to the pixel as well
-    //// Offset
-    //Vector2f xi = rng.Uniform2D();
-    ////Vector2f xi = Vector2f(0.5f);
-
-    //Vector2f dirXYFloat = Vector2f(dirXY[0], dirXY[1]) + xi;
-    //Vector2f sphrCoords = Vector2f(-Pi + dirXYFloat[0] * deltaXY[0],
-    //                               Pi - dirXYFloat[1] * deltaXY[1]);
-    //Vector3f result = Utility::SphericalToCartesianUnit(sphrCoords);
-    //// Spherical Coords calculates as Z up change it to Y up
-    //Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
-
-    ////printf("Pixel [%u, %u], ThetaPhi [%f, %f], Dir[%f, %f, %f]\n",
-    ////       dirXY[0], dirXY[1],
-    ////       sphrCoords[0] * RadToDegCoef,
-    ////       sphrCoords[1] * RadToDegCoef,
-    ////       dirYUp[0], dirYUp[1], dirYUp[2]);
-
     return dirYUp;
 }
 
@@ -1023,8 +1005,11 @@ static void KCCheckReducedSVOBins(// I-O
 template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 struct KCGenSampleShMem
 {
+    static constexpr int32_t PX = 8;
+    static constexpr int32_t PY = 8;
+
     // PWC Distribution over the shared memory
-    using ProductSampler8x8 = ProductSampler<THREAD_PER_BLOCK, X, Y, 8, 8>;
+    using ProductSampler8x8 = ProductSampler<THREAD_PER_BLOCK, X, Y, PX, PY>;
     using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
     //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
@@ -1096,6 +1081,7 @@ static void KCGenAndSampleDistribution(// Output
                               const Vector2i& segmentSize)
     {
         // Jitter the values
+        //Vector2f xi = Vector2f(0.5f);
         Vector2f xi = rng.Uniform2D();
         Vector2f st = Vector2f(localPixelId) + xi;
         st /= Vector2f(segmentSize);
@@ -1137,6 +1123,7 @@ static void KCGenAndSampleDistribution(// Output
                 sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
                 uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * sharedMem->sRayCount);
+                //uint32_t randomRayIndex = 0;
 
                 // TODO: Change this
                 // Use the first rays hit position
@@ -1182,14 +1169,11 @@ static void KCGenAndSampleDistribution(// Output
             // This case occurs only when there is more threads than pixels
             if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
 
-            if(nodeId[i] != UINT32_MAX)
-            {
-                incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
-                                                   nodeId[i], isLeaf[i]);
-                //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
-            }
-            else incRadiances[i] = 0.0001f;
-            //else incRadiances[i] = 0.0f;
+            incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
+                                               nodeId[i], isLeaf[i]);
+            //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
+
+            if(incRadiances[i] == 0.0f) incRadiances[i] = MathConstants::LargeEpsilon;
         }
         #else
         // Filtered version
@@ -1202,7 +1186,8 @@ static void KCGenAndSampleDistribution(// Output
             incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
                                                        coneAperture,
                                                        svo);
-            if(incRadiances[i] == 0.0f) incRadiances[i] = 0.0001f;
+
+            if(incRadiances[i] == 0.0f) incRadiances[i] = MathConstants::LargeEpsilon;
         }
         #endif
 
@@ -1247,10 +1232,9 @@ static void KCGenAndSampleDistribution(// Output
             rayIndex += WARP_PER_BLOCK)
         {
             float pdf;
-            Vector2f uv = productSampler.SampleProduct(pdf, rng,
-                                                       //-1,
-                                                       rayIndex,
-                                                       ProjectionFunc);
+            Vector2f uv = productSampler.SampleWithProductPWC(pdf, rng,
+                                                              rayIndex,
+                                                              ProjectionFunc);
             if(isWarpLeader)
             {
                 if(isnan(pdf) || uv.HasNaN() ||

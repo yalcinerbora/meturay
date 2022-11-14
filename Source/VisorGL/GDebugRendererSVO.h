@@ -11,6 +11,7 @@
 #include "TextureGL.h"
 
 using IntegerNameList = std::vector<std::pair<uint32_t, std::string>>;
+using Vec2uiNameList = std::vector<std::pair<Vector2ui, std::string>>;
 
 // TODO: Make this "DRY"
 struct SVOctree
@@ -166,15 +167,19 @@ class GDebugRendererSVO : public GDebugRendererI
         // Name of the Guider (shown in GUI)
         std::string             name;
         //
+        bool                    multiplyCosTheta;
         Vector2ui               mapSize;
         uint32_t                minBinLevel;
         //
         TextureGL               currentTexture;
         std::vector<float>      currentValues;
         float                   maxValueDisplay;
-        //
-        IntegerNameList         nameList;
-        uint32_t                currentIndex;
+        // Render Level Related
+        Vec2uiNameList          renderResolutionNameList;
+        uint32_t                renderResolutionSelectIndex;
+        // Bin level related
+        IntegerNameList         maxBinLevelNameList;
+        uint32_t                maxBinLevelSelectIndex;
         //
         Vector2ui               normalTexSize;
         std::vector<Vector3f>   pixelNormals;

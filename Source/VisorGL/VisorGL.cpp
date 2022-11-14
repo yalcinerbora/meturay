@@ -733,17 +733,28 @@ VisorError VisorGL::Initialize(VisorCallbacksI& callbacks,
 
     // CheckGUI and Initialize
     if(vOpts.enableGUI)
-        visorInput = std::make_unique<VisorGUI>(callbacks,
-                                                open, vOpts.wSize,
-                                                viewportSize,
-                                                tmOptions,
-                                                *this,
-                                                imageSize,
-                                                window,
-                                                keyBindings,
-                                                mouseBindings,
-                                                std::move(moveSchemeList));
+    {
+        auto visorGUI = std::make_unique<VisorGUI>(callbacks,
+                                                   open, vOpts.wSize,
+                                                   viewportSize,
+                                                   tmOptions,
+                                                   *this,
+                                                   imageSize,
+                                                   window,
+                                                   keyBindings,
+                                                   mouseBindings,
+                                                   std::move(moveSchemeList));
+
+        // Set Callbacks
+        glfwCallback.AttachWindow(window, visorGUI.get());
+        // After this set callbacks for the GUI (Imgui works this way)
+        visorGUI->InitImGUI(window);
+
+        visorInput = std::move(visorGUI);
+    }
+
     else
+    {
         visorInput = std::make_unique<VisorWindowInput>(callbacks,
                                                         open, vOpts.wSize,
                                                         viewportSize,
@@ -751,10 +762,10 @@ VisorError VisorGL::Initialize(VisorCallbacksI& callbacks,
                                                         keyBindings,
                                                         mouseBindings,
                                                         std::move(moveSchemeList));
+        // Set Callbacks
+        glfwCallback.AttachWindow(window, visorInput.get());
+    }
 
-
-    // Set Callbacks
-    glfwCallback.AttachWindow(window, visorInput.get());
 
     // View-port does not get updated by the callback initially.
     // Set it here

@@ -23,6 +23,22 @@
 #include "TracerDebug.h"
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
+void KCFindBoundaryLight(const GPULightI*& gBoundaryLightOut,
+                         // Inputs
+                         const GPULightI** gSceneLights,
+                         const HitKey boundaryLightKey,
+                         uint32_t totalLightCount)
+{
+    uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+    if(threadId >= totalLightCount) return;
+
+    HitKey key = gSceneLights[threadId]->WorkKey();
+
+    if(boundaryLightKey == key)
+        gBoundaryLightOut = gSceneLights[threadId];
+}
+
+__global__ CUDA_LAUNCH_BOUNDS_1D
 void KCGetLightKeys(HitKey* gKeys,
                     const GPULightI** gLights,
                     uint32_t totalLightCount)
@@ -1108,6 +1124,23 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Finally Filter the initial radiance to the system
     NormalizeAndFilterRadiance(system);
 
+    // Finally Find the boundary light
+    DeviceMemory mem(sizeof(GPULightI*));
+    const GPULightI** dLightPtr = static_cast<const GPULightI**>(mem);
+    // Call a kernel to determine the boundary light using the key
+    gpu.KC_X(0, (cudaStream_t)0, totalLightCount,
+             //
+             KCFindBoundaryLight,
+             //
+             *dLightPtr,
+             //
+             dSceneLights,
+             boundaryLightKey,
+             totalLightCount);
+    // Copy to host
+    CUDA_CHECK(cudaMemcpy(&treeGPU.dBoundaryLight, dLightPtr,
+                          sizeof(GPULightI*), cudaMemcpyDeviceToHost));
+
     // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
@@ -1121,6 +1154,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
 }
 
 TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
+                                        const GPULightI** dSceneLights,
+                                        uint32_t totalLightCount,
+                                        HitKey boundaryLightKey,
                                         const CudaSystem& system)
 {
     Utility::CPUTimer timer;
@@ -1309,7 +1345,25 @@ TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
     // All Done!
     assert(offset == data.size());
 
-        // Log some stuff
+    // Finally Find the boundary light
+    DeviceMemory mem(sizeof(GPULightI*));
+    const GPULightI** dLightPtr = static_cast<const GPULightI**>(mem);
+    // Call a kernel to determine the boundary light using the key
+    const CudaGPU& gpu = system.BestGPU();
+    gpu.KC_X(0, (cudaStream_t)0, totalLightCount,
+             //
+             KCFindBoundaryLight,
+             //
+             *dLightPtr,
+             //
+             dSceneLights,
+             boundaryLightKey,
+             totalLightCount);
+    // Copy to host
+    CUDA_CHECK(cudaMemcpy(&treeGPU.dBoundaryLight, dLightPtr,
+                          sizeof(GPULightI*), cudaMemcpyDeviceToHost));
+
+    // Log some stuff
     timer.Stop();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
     std::locale::global(std::locale("en_US.UTF-8"));

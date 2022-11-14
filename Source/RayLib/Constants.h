@@ -114,7 +114,7 @@ namespace MathConstants
     static constexpr double SmallEpsilon_d = 1.0e-7;
     static constexpr double Epsilon_d = 1.0e-5;
     static constexpr double LargeEpsilon_d = 1.0e-4;
-    static constexpr double VeryLargeEpsilon_d = 1.0e-2;
+    static constexpr double VeryLargeEpsilon_d = 1.0e-3;
 
     static constexpr float Pi = static_cast<float>(Pi_d);
     static constexpr float PiSqr = static_cast<float>(PiSqr_d);

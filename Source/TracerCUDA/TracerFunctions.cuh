@@ -184,6 +184,14 @@ namespace TracerFunctions
         return (w0 * w0) / (w0 * w0 + w1 * w1);
     }
 
+    __device__ inline
+    float BalanceHeuristic(int n0, float pdf0, int n1, float pdf1)
+    {
+        float w0 = static_cast<float>(n0) * pdf0;
+        float w1 = static_cast<float>(n1) * pdf1;
+        return w0 / (w0 + w1);
+    }
+
     // Basic Russian Roulette
     __device__ inline
     bool RussianRoulette(Vector3& irradianceFactor,

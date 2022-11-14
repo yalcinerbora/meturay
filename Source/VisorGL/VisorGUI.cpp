@@ -81,10 +81,6 @@ VisorGUI::VisorGUI(VisorCallbacksI& cb,
     auto& style = ImGui::GetStyle();
     style.ScaleAllSizes(x);
     style.Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0.1f);
-
-    // Init renderer & platform
-    ImGui_ImplGlfw_InitForOpenGL(const_cast<GLFWwindow*>(window), true);
-    ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
 }
 
 VisorGUI::~VisorGUI()
@@ -142,6 +138,13 @@ void VisorGUI::RenderGUI()
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void VisorGUI::InitImGUI(const GLFWwindow* window)
+{
+    // Init renderer & platform
+    ImGui_ImplGlfw_InitForOpenGL(const_cast<GLFWwindow*>(window), true);
+    ImGui_ImplOpenGL3_Init(IMGUI_GLSL_STRING);
 }
 
 void VisorGUI::SetSceneAnalyticData(const SceneAnalyticData& sad)

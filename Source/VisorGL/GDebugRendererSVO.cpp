@@ -575,6 +575,7 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     : linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
     , gradientTexture(gradientTexture)
+    , multiplyCosTheta(false)
     , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
     , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
     , maxValueDisplay(0.0f)
@@ -608,13 +609,32 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
                       normal = (normal * Vector3f(2.0f)) - Vector3f(1.0f);
                   });
 
+
+
     // Preload some integer names for bin level selection
     // 2^16 x 2^16 x 2^16  SVO should be impossible
     // TODO: maybe change later
     for(int i = 0; i < 16; i++)
     {
-        nameList.push_back(std::make_pair(i, std::to_string(i)));
+        maxBinLevelNameList.push_back(std::make_pair(i, std::to_string(i)));
     }
+    maxBinLevelSelectIndex = minBinLevel;
+
+    // Pre-load render resolution names and strings
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(8, 8), "8x8"));
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(16, 16), "16x16"));
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(32, 32), "32x32"));
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(64, 64), "64x64"));
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(128, 128), "128x128"));
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(256, 256), "256x256"));
+    std::ptrdiff_t rrIndexLarge = std::distance(renderResolutionNameList.cbegin(),
+                                                std::find_if(renderResolutionNameList.cbegin(),
+                                                             renderResolutionNameList.cend(),
+                                                             [=](const auto& pair)
+                                                             {
+                                                                 return (pair.first == mapSize);
+                                                             }));
+    renderResolutionSelectIndex = static_cast<uint32_t>(rrIndexLarge);
 
     // Load SDTrees to memory
     octrees.resize(depthCount);
@@ -622,7 +642,7 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     {
         LoadOctree(octrees[i], config, configPath, i);
     }
-    currentIndex = minBinLevel;
+
     // All done!
 }
 
@@ -869,7 +889,8 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                                                         leafIndex, isLeaf);
 
                       // Fake the cos theta
-                      radiance *= std::max(0.0f, direction.Dot(normal));
+                      if(multiplyCosTheta)
+                        radiance *= std::max(0.0f, direction.Dot(normal));
 
                       uint32_t writeIndex = pixelId[1] * mapSize[0] + pixelId[0];
                       currentValues[writeIndex] = radiance;
@@ -1007,6 +1028,30 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
                                   bool& overlayValue,
                                   const ImVec2& windowSize)
 {
+    auto ComboBox = [](uint32_t& selectIndex,
+                       const auto& nameList,
+                       size_t nameListCap,
+                       const std::string_view& boxName) -> bool
+    {
+        uint32_t oldSelectIndex = selectIndex;
+        if(ImGui::BeginCombo(boxName.data(),
+                             nameList[selectIndex].second.c_str()))
+        {
+            for(uint32_t i = 0; i < std::min(nameListCap, nameList.size()); i++)
+            {
+                bool isSelected = (selectIndex == i);
+                if(ImGui::Selectable(nameList[i].second.c_str(), isSelected))
+                    selectIndex = i;
+                if(isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        return oldSelectIndex != selectIndex;
+    };
+
     bool changed = false;
     using namespace GuideDebugGUIFuncs;
 
@@ -1021,40 +1066,50 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
     ImGui::SameLine(0.0f, (windowSize.x - remainingSize.x) * 0.5f - ImGui::GetStyle().WindowPadding.x);
     RenderImageWithZoomTooltip(currentTexture, currentValues, remainingSize);
 
+    bool binLevelChanged = false;
+    bool renderResChanged = false;
+    bool cosMultiplyChanged = false;
     if(ImGui::BeginPopupContextItem(("texPopup" + name).c_str()))
     {
 
-        ImGui::Text("Resolution: [%u, %u]", mapSize[1], mapSize[0]);
-        ImGui::Text("Max Value: %f", maxValueDisplay);
-        ImGui::Text("BinLevel"); ImGui::SameLine();
-        if(ImGui::BeginCombo("##BinLevelCombo", nameList[currentIndex].second.c_str()))
-        {
-            // TODO: assuming all trees are the same here change if necessary
-            for(uint32_t i = 1; i <= octrees[0].leafDepth; i++)
-            {
-                bool isSelected = (currentIndex == i);
-                if(ImGui::Selectable(nameList[i].second.c_str(), isSelected))
-                    currentIndex = i;
-                if(isSelected)
-                {
+        //ImGui::Text("Resolution: [%u, %u]", mapSize[1], mapSize[0]);
+        ImGui::Text("Mult cos(theta) :"); ImGui::SameLine();
+        cosMultiplyChanged = ImGui::Checkbox("##FakeProduct", &multiplyCosTheta);
 
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
-        }
+        ImGui::Text("Max Value : %f", maxValueDisplay);
+        ImGui::Text("BinLevel  :"); ImGui::SameLine();
+        // TODO: assuming all trees are the same here change if necessary
+        binLevelChanged = ComboBox(maxBinLevelSelectIndex,
+                                   maxBinLevelNameList,
+                                   octrees[0].leafDepth,
+                                   "##BinLevelCombo");
+        // Render Level Select
+        ImGui::Text("Resolution:"); ImGui::SameLine();
+        renderResChanged = ComboBox(renderResolutionSelectIndex,
+                                    renderResolutionNameList,
+                                    std::numeric_limits<uint32_t>::max(),
+                                    "##RenderResolutionCombo");
 
         ImGui::EndPopup();
 
     }
     ImGui::EndChild();
 
-    if(minBinLevel != currentIndex)
+    //if(minBinLevel != maxBinLevelSelectIndex)
+    if(binLevelChanged)
     {
-        minBinLevel = currentIndex;
+        minBinLevel = maxBinLevelNameList[maxBinLevelSelectIndex].first;
         overlayCheckboxChanged = true;
         changed = true;
     }
+    if(renderResChanged)
+    {
+        mapSize = renderResolutionNameList[renderResolutionSelectIndex].first;
+        changed = true;
+        currentTexture = TextureGL(mapSize, PixelFormat::RGBA8_UNORM);
+        currentValues.resize(mapSize.Multiply());
+    }
+    changed |= cosMultiplyChanged;
 
     return changed;
 }

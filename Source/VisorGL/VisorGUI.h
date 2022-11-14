@@ -49,6 +49,7 @@ class VisorGUI : public VisorWindowInput
         virtual         ~VisorGUI();
 
         // Members
+        void            InitImGUI(const GLFWwindow* window);
         void            RenderGUI() override;
 
         void            SetSceneAnalyticData(const SceneAnalyticData&) override;

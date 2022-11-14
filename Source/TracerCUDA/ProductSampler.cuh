@@ -44,6 +44,8 @@ class ProductSampler
     static_assert(TPB % WARP_SIZE == 0, "TPB should be a multiple of warp size(32)");
     static_assert(ProductFieldFitCheck(),
                   "Reflectance field should be evenly divisible by warp size(32)");
+    static_assert(X >= PX && Y >= PY, "Product field cannot be larger than the actual field.");
+
 
     static constexpr float PX_FLOAT = static_cast<float>(PX);
     static constexpr float PY_FLOAT = static_cast<float>(PY);
@@ -53,12 +55,15 @@ class ProductSampler
     using WarpColumnScan = cub::WarpScan<float, PY>;
     struct SharedStorage
     {
-//        union
-//        {
-            typename WarpReduce::TempStorage reduceMem[WARP_PER_BLOCK];
-            typename WarpRowScan::TempStorage rowScanMem[WARP_PER_BLOCK];
-            typename WarpColumnScan::TempStorage colScanMem[WARP_PER_BLOCK];
-//        };
+        // Divide the warp local memory as AoS pattern
+        // since each warp may use different fundamental operation
+        // at the same time
+        union
+        {
+            typename WarpReduce::TempStorage        reduceMem;
+            typename WarpRowScan::TempStorage       rowScanMem;
+            typename WarpColumnScan::TempStorage    colScanMem;
+        } cubMem[WARP_PER_BLOCK];
 
         // Main radiance field
         float sRadianceField[X][Y];
@@ -89,6 +94,11 @@ class ProductSampler
     bool                                    isWarpLeader;
     bool                                    isRowLeader;
 
+
+    template <class ProjFunc>
+    __device__ void                         MultiplyWithBXDF(float(&productField)[REFL_PER_THREAD],
+                                                             int32_t rayIndex, ProjFunc&&) const;
+
     public:
     __device__      ProductSampler(SharedStorage& sharedMem,
                                    const float(&radiances)[RADIANCE_PER_THREAD],
@@ -97,10 +107,18 @@ class ProductSampler
 
     template <class ProjFunc>
     __device__
-    Vector2f        SampleProduct(float& pdf,
-                                  RNGeneratorGPUI& rng,
-                                  int32_t rayIndex,
-                                  ProjFunc&& Project) const;
+    Vector2f        SampleWithProductPWC(float& pdf,
+                                         RNGeneratorGPUI& rng,
+                                         int32_t rayIndex,
+                                         ProjFunc&& Project) const;
+
+    template <class ProjFunc, class WrapFunc>
+    __device__
+    Vector2f        SampleWithProductPWL(float& pdf,
+                                         RNGeneratorGPUI& rng,
+                                         int32_t rayIndex,
+                                         ProjFunc&&,
+                                         WrapFunc&&) const;
 
     // For Test and Debugging
     __device__
@@ -168,8 +186,8 @@ ProductSampler<TPB, X, Y, PX, PY>::ProductSampler(// Temp
                                 ? shMem.sRadianceField[combinedId2D[1]][combinedId2D[0]]
                                 : 0.0f;
 
-            totalReduce += WarpReduce(shMem.reduceMem[warpId]).Sum(value);
-            float newMax = WarpReduce(shMem.reduceMem[warpId]).Reduce(value, cub::Max());
+            totalReduce += WarpReduce(shMem.cubMem[warpId].reduceMem).Sum(value);
+            float newMax = WarpReduce(shMem.cubMem[warpId].reduceMem).Reduce(value, cub::Max());
             maxValue = max(maxValue, newMax);
         }
         // Store the reduced value (averaged)
@@ -178,6 +196,8 @@ ProductSampler<TPB, X, Y, PX, PY>::ProductSampler(// Temp
             float dataPerProduct = static_cast<float>(DATA_PER_PRODUCT_LINEAR);
             shMem.sRadianceFieldSmall[cellId2D[1]][cellId2D[0]] = totalReduce / dataPerProduct;
             shMem.sNormalizationConstants[cellId2D[1]][cellId2D[0]] = maxValue;
+
+            if(totalReduce / dataPerProduct == 0.0f) printf("ProductRegion is zero!\n");
         }
     }
     __syncthreads();
@@ -187,10 +207,8 @@ template <int32_t TPB, int32_t X, int32_t Y,
           int32_t PX, int32_t PY>
 template <class ProjFunc>
 __device__ __forceinline__
-Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
-                                                          RNGeneratorGPUI& rng,
-                                                          int32_t rayIndex,
-                                                          ProjFunc&& Project) const
+void ProductSampler<TPB, X, Y, PX, PY>::MultiplyWithBXDF(float(&productField)[REFL_PER_THREAD],
+                                                         int32_t rayIndex, ProjFunc&& Project) const
 {
     static constexpr int32_t INVALID_RAY_INDEX = -1;
     Vector3f wi = YAxis;
@@ -220,7 +238,6 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     const GPUMetaSurface& warpSurf = shMem.sSurfaces[warpId];
 
     // Generate PX by PY product field (store it on register space)
-    float productField[REFL_PER_THREAD];
     for(int32_t j = 0; j < REFL_PER_THREAD; j++)
     {
         int32_t linearId = warpLocalId + (j * WARP_SIZE);
@@ -253,14 +270,29 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
             //}
 
             // Convert it to single channel
-            bxdfGray = max(0.0001f, Utility::RGBToLuminance(bxdfColored));
+            bxdfGray = Utility::RGBToLuminance(bxdfColored);
         }
 
         float radiance = (linearId < (PX * PY)) ?
                             shMem.sRadianceFieldSmall[loc2D[1]][loc2D[0]]
                             : 0.0f;
-        productField[j] = bxdfGray * radiance;
+        productField[j] = max(MathConstants::LargeEpsilon, bxdfGray * radiance);
     }
+}
+
+template <int32_t TPB, int32_t X, int32_t Y,
+          int32_t PX, int32_t PY>
+template <class ProjFunc>
+__device__ __forceinline__
+Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWC(float& pdf,
+                                                                 RNGeneratorGPUI& rng,
+                                                                 int32_t rayIndex,
+                                                                 ProjFunc&& Project) const
+{
+    // Multiply the outer field with the BXDF
+    float productField[REFL_PER_THREAD];
+    MultiplyWithBXDF(productField, rayIndex, Project);
+
     // Our field is generated now sample,
     // For first stage do a CDF parallel search search style
     // approach
@@ -269,8 +301,8 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     for(int32_t j = 0; j < REFL_PER_THREAD; j++)
     {
         float rowTotal;
-        WarpRowScan(shMem.rowScanMem[warpId]).InclusiveSum(productField[j],
-                                                           cdfX[j], rowTotal);
+        WarpRowScan(shMem.cubMem[warpId].rowScanMem).InclusiveSum(productField[j],
+                                                                  cdfX[j], rowTotal);
 
         float rowTotalRecip = 1.0f / rowTotal;
         cdfX[j] *= rowTotalRecip;
@@ -288,7 +320,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     float cdfY;
     float pdfY = (warpLocalId < PY) ? shMem.sWarpTempMemory[warpId][warpLocalId] : 0.0f;
     float columnTotal;
-    WarpColumnScan(shMem.colScanMem[warpId]).InclusiveSum(pdfY, cdfY,
+    WarpColumnScan(shMem.cubMem[warpId].colScanMem).InclusiveSum(pdfY, cdfY,
                                                           columnTotal);
     float columnTotalRecip = 1.0f / columnTotal;
     cdfY *= columnTotalRecip;
@@ -382,6 +414,10 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
         //           "pdf(%f) = %f * %f * %f\n",
         //           pdf, shMem.sWarpTempMemory[warpId][0],
         //           shMem.sWarpTempMemory[warpId][1], pdfInner);
+        if(isnan(pdf))
+            printf("NaN pdf(%f) = %f * %f * %f\n",
+                   pdf, shMem.sWarpTempMemory[warpId][0],
+                   shMem.sWarpTempMemory[warpId][1], pdfInner);
 
         // Calculate the UV
         Vector2f innerRegionFloat = Vector2f(uv * DPP_FLOAT);
@@ -394,6 +430,20 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleProduct(float& pdf,
     }
     // (Return is only valid for the warp leader(lane0))
     return Vector2f(NAN, NAN);
+}
+
+template <int32_t TPB, int32_t X, int32_t Y,
+          int32_t PX, int32_t PY>
+template <class ProjFunc, class WrapFunc>
+__device__ inline
+Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWL(float& pdf,
+                                                                 RNGeneratorGPUI& rng,
+                                                                 int32_t rayIndex,
+                                                                 ProjFunc&& Project,
+                                                                 WrapFunc&& Wrap) const
+{
+    // TODO:
+    return Zero2f;
 }
 
 template <int32_t TPB, int32_t X, int32_t Y,

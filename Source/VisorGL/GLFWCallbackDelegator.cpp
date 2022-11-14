@@ -365,12 +365,12 @@ GLFWCallbackDelegator::~GLFWCallbackDelegator()
     glfwTerminate();
 }
 
-void GLFWCallbackDelegator::AttachWindow(GLFWwindow* glfwWindow, WindowInputI* window)
+void GLFWCallbackDelegator::AttachWindow(GLFWwindow* glfwWindow, WindowInputI* input)
 {
-    auto ret = windowMappings.emplace(glfwWindow, window);
+    auto ret = windowMappings.emplace(glfwWindow, input);
     // Override old callbacks
     if(!ret.second)
-        ret.first->second = window;
+        ret.first->second = input;
 
     // Set Callbacks
     glfwSetWindowPosCallback(glfwWindow, GLFWCallbackDelegator::WindowPosGLFW);

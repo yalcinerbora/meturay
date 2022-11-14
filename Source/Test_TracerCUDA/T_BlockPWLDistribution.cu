@@ -48,12 +48,12 @@ void KCPiecewiseLinearDistInitCheck(float* gPDFXOut,
 template <uint32_t TPB, uint32_t X, uint32_t Y>
 __global__ __launch_bounds__(TPB)
 void KCPiecewiseLinearGenSamples(float* gSamplePdfOut,
-                                    Vector2f* gSampleLocationsOut,
-                                    // I-O
-                                    RNGeneratorGPUI** gRNGs,
-                                    // Inputs
-                                    const float* gData,
-                                    uint32_t sampleCount)
+                                 Vector2f* gSampleLocationsOut,
+                                 // I-O
+                                 RNGeneratorGPUI** gRNGs,
+                                 // Inputs
+                                 const float* gData,
+                                 uint32_t sampleCount)
 {
     using BlockPWL2D = BlockPWLDistribution2D<TPB, X, Y>;
     static constexpr auto DATA_PER_THREAD = BlockPWL2D::DATA_PER_THREAD;
@@ -65,8 +65,6 @@ void KCPiecewiseLinearGenSamples(float* gSamplePdfOut,
 
     // Allocate shared memory for Block Operations
     __shared__ typename BlockPWL2D::TempStorage sPWLMem;
-
-
 
     float data[DATA_PER_THREAD];
     for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
@@ -108,7 +106,10 @@ using Implementations = ::testing::Types<BlockPWL2DTestParams<512, 64, 64>,
                                          BlockPWL2DTestParams<512, 32, 32>,
                                          BlockPWL2DTestParams<256, 32, 16>,
                                          BlockPWL2DTestParams<256, 16, 16>,
-                                         BlockPWL2DTestParams<128, 16, 8>>;
+                                         BlockPWL2DTestParams<128, 16,  8>,
+                                         BlockPWL2DTestParams<128,  8,  8>>;
+
+//using Implementations = ::testing::Types<BlockPWL2DTestParams<512, 8, 8>>;
 
 TYPED_TEST_SUITE(BlockPWL2DTest, Implementations);
 
@@ -226,7 +227,7 @@ TYPED_TEST(BlockPWL2DTest, BasicInit)
 
 TYPED_TEST(BlockPWL2DTest, Stress)
 {
-    static constexpr uint32_t ITERATION_COUNT = 100;
+    static constexpr uint32_t ITERATION_COUNT = 128;
     constexpr uint32_t TPB = TypeParam::TPB;
     constexpr uint32_t X = TypeParam::X;
     constexpr uint32_t Y = TypeParam::Y;
@@ -410,83 +411,122 @@ TYPED_TEST(BlockPWL2DTest, Stress)
 
 TYPED_TEST(BlockPWL2DTest, Sample)
 {
-    //static constexpr uint32_t ITERATION_COUNT = 100;
-    //static constexpr uint32_t TPB = TypeParam::TPB;
-    //static constexpr uint32_t X = TypeParam::X;
-    //static constexpr uint32_t Y = TypeParam::Y;
-    //static constexpr uint32_t PIX_COUNT = TypeParam::PIX_COUNT;
-    //static constexpr uint32_t SAMPLE_COUNT = TPB;
+    static constexpr uint32_t ITERATION_COUNT = 128;
+    static constexpr uint32_t TPB = TypeParam::TPB;
+    static constexpr uint32_t X = TypeParam::X;
+    static constexpr uint32_t Y = TypeParam::Y;
+    static constexpr uint32_t PIX_COUNT = TypeParam::PIX_COUNT;
+    static constexpr uint32_t SAMPLE_COUNT = TPB;
 
-    //CudaSystem system;
-    //ASSERT_EQ(CudaError::OK, system.Initialize());
+    CudaSystem system;
+    ASSERT_EQ(CudaError::OK, system.Initialize());
 
-    //std::vector<float> hData(PIX_COUNT);
+    std::vector<float> hData(PIX_COUNT);
+    std::vector<float> hRowAreas(Y, 0.0f);
+    std::vector<Vector2f> hSamples(SAMPLE_COUNT, Zero2f);
+    std::vector<float> hPDFs(SAMPLE_COUNT, 0.0f);
 
-    //// GPU Allocations
-    //float* dData;
-    //float* dSamplePDFs;
-    //Vector2f* dSampleLocations;
-    //DeviceMemory mem;
-    //GPUMemFuncs::AllocateMultiData(std::tie(dData, dSamplePDFs, dSampleLocations),
-    //                               mem,
-    //                               {PIX_COUNT, SAMPLE_COUNT, SAMPLE_COUNT});
+    // GPU Allocations
+    float* dData;
+    float* dSamplePDFs;
+    Vector2f* dSampleLocations;
+    DeviceMemory mem;
+    GPUMemFuncs::AllocateMultiData(std::tie(dData, dSamplePDFs, dSampleLocations),
+                                   mem,
+                                   {PIX_COUNT, SAMPLE_COUNT, SAMPLE_COUNT});
 
-    //constexpr uint32_t SEED = 0;
-    //RNGIndependentCPU rngCPU(SEED, system.BestGPU(), TPB);
+    constexpr uint32_t SEED = 0;
+    RNGIndependentCPU rngCPU(SEED, system.BestGPU());
 
-    //std::mt19937 rng;
-    //rng.seed(0);
-    //std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
-    //for(uint32_t i = 0; i < ITERATION_COUNT; i++)
-    //{
-    //    // Generate new batch of random numbers
-    //    for(float& d : hData)
-    //    {
-    //        d = uniformDist(rng);
-    //    }
+    std::mt19937 rng;
+    rng.seed(0);
+    std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
+    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    {
+        // Generate new batch of random numbers
+        for(float& d : hData)
+        {
+            d = uniformDist(rng);
+        }
+        // Copy to GPU
+        CUDA_CHECK(cudaMemcpy(dData, hData.data(), sizeof(float) * PIX_COUNT,
+                              cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemset(dSamplePDFs, 0xFF, sizeof(float) * SAMPLE_COUNT));
+        CUDA_CHECK(cudaMemset(dSampleLocations, 0xFF, sizeof(Vector2f) * SAMPLE_COUNT));
 
-    //    // Copy to GPU
-    //    CUDA_CHECK(cudaMemcpy(dData, hData.data(), sizeof(float) * PIX_COUNT,
-    //                          cudaMemcpyHostToDevice));
-    //    CUDA_CHECK(cudaMemset(dSamplePDFs, 0xFF, sizeof(float) * SAMPLE_COUNT));
-    //    CUDA_CHECK(cudaMemset(dSampleLocations, 0xFF, sizeof(Vector2f) * SAMPLE_COUNT));
+        // PWC Initialization and Dump to Global Memory Call
+        const CudaGPU& bestGPU = system.BestGPU();
+        bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
+            //
+            KCPiecewiseLinearGenSamples<TPB, X, Y>,
+            //
+            dSamplePDFs,
+            dSampleLocations,
+            // I-O
+            rngCPU.GetGPUGenerators(bestGPU),
+            // Input
+            dData,
+            SAMPLE_COUNT);
 
+        // Calculate expected integral
+        auto TrapezoidArea = [](float a, float b, float h)
+        {
+            return (a + b) * 0.5f * h;
+        };
+        auto LinearizeXY = [](Vector2i i, int32_t width)
+        {
+            return i[1] * width + i[0];
+        };
+        std::fill(hRowAreas.begin(), hRowAreas.end(), 0.0f);
+        for(int j = 0; j < Y; j++)
+        for(int i = 0; i < X - 1; i++)
+        {
+            Vector2i cur = Vector2i(i, j);
+            Vector2i next = Vector2i(i + 1, j);
 
+            int32_t iLinear = LinearizeXY(cur, X);
+            int32_t iNextLinear = LinearizeXY(next, X);
 
-    //    // PWC Initialization and Dump to Global Memory Call
-    //    const CudaGPU& bestGPU = system.BestGPU();
-    //    bestGPU.ExactKC_X(0, (cudaStream_t)0, TPB, 1,
-    //        //
-    //        KCPiecewiseLinearGenSamples<TPB, X, Y>,
-    //        //
-    //        dSamplePDFs,
-    //        dSampleLocations,
-    //        // I-O
-    //        rngCPU.GetGPUGenerators(bestGPU),
-    //        // Input
-    //        dData,
-    //        SAMPLE_COUNT);
+            hRowAreas[j] += TrapezoidArea(hData[iLinear], hData[iNextLinear], 1.0f / (X - 1));
+        }
+        float totalArea = 0.0f;
+        for(int j = 0; j < Y - 1; j++)
+        {
+            totalArea += TrapezoidArea(hRowAreas[j], hRowAreas[j + 1], 1.0f / (Y - 1));
+        }
+        float expectedIntegral = totalArea;
 
+        // Since this is perfect sampling we should get the exact results
+        // of the integral when we divide pdf
+        CUDA_CHECK(cudaMemcpy(hSamples.data(), dSampleLocations,
+                              sizeof(Vector2f) * SAMPLE_COUNT,
+                              cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(hPDFs.data(), dSamplePDFs,
+                              sizeof(float) * SAMPLE_COUNT,
+                              cudaMemcpyDeviceToHost));
 
-    //    // Now do monte carlo here using the same thing
-    //    std::vector<float> hPDFs;
-    //    std::vector<Vector2f> hSamples;
+        for(int i = 0; i < SAMPLE_COUNT; i++)
+        {
+            // Calculate interp values
+            Vector2f index = hSamples[i].Floor();
+            Vector2f interp = hSamples[i] - index;
+            Vector2i intexInt = Vector2i(index);
 
-    //    auto TrapezoidArea = [](float a, float b, float h)
-    //    {
-    //        return (a + b) * h * 0.5f;
-    //    };
+            Vector2i x00 = intexInt + Vector2i(0, 0);
+            Vector2i x10 = intexInt + Vector2i(1, 0);
+            Vector2i x01 = intexInt + Vector2i(0, 1);
+            Vector2i x11 = intexInt + Vector2i(1, 1);
 
-    //    std::mdspan(hData.data(), X, Y);
-    //    float totalSum = 0;
-    //    // Calculate the integral
-    //    for(int j = 0; j < Y-1; j++)
-    //    for(int i = 0; i < X-1; i++)
-    //    {
-    //        // Calculate the trapezoid
-    //        hData[i, j], h
-    //    }
+            // Function Value
+            float funcValX0 = HybridFuncs::Lerp(hData[LinearizeXY(x00, X)],
+                                                hData[LinearizeXY(x10, X)], interp[0]);
+            float funcValX1 = HybridFuncs::Lerp(hData[LinearizeXY(x01, X)],
+                                                hData[LinearizeXY(x11, X)], interp[0]);
+            float funcVal = HybridFuncs::Lerp(funcValX0, funcValX1, interp[1]);
 
+            float foundIntegral = funcVal / hPDFs[i];
 
-    //}
+            EXPECT_NEAR(expectedIntegral, foundIntegral, MathConstants::VeryLargeEpsilon);
+        }
+    }
 }

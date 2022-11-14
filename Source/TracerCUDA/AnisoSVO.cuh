@@ -8,6 +8,7 @@
 #include "RayLib/CoordinateConversion.h"
 #include "RayLib/HybridFunctions.h"
 #include "RayLib/MortonCode.h"
+#include "RayLib/ColorConversion.h"
 
 
 #include "GPULightI.h"
@@ -233,7 +234,7 @@ class AnisoSVOctreeGPU
     // Result will be the bi-linear spherical interpolation of
     // nearest samples
     __device__
-    half                ReadRadiance(const Vector3f& coneDirection, float coneAperture,
+    float                ReadRadiance(const Vector3f& coneDirection, float coneAperture,
                                      uint32_t nodeId, bool isLeaf) const;
     __device__
     Vector3f            DebugReadNormal(float& stdDev, uint32_t nodeId, bool isLeaf) const;
@@ -317,8 +318,10 @@ class AnisoSVOctreeCPU
                                           const CudaSystem&);
     // Construct (Actually Load) the tree directly from binary
     TracerError                 Constrcut(const std::vector<Byte>& data,
+                                          const GPULightI** dSceneLights,
+                                          uint32_t totalLightCount,
+                                          HitKey boundaryLightKey,
                                           const CudaSystem&);
-
     // Normalize and filter radiances for sampling
     void                    NormalizeAndFilterRadiance(const CudaSystem&);
     // Collapse the ray counts to find optimal binning
@@ -964,19 +967,21 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
 }
 
 __device__ inline
-half AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneAperture,
-                                    uint32_t nodeId, bool isLeaf) const
+float AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneAperture,
+                                     uint32_t nodeId, bool isLeaf) const
 {
-    if(nodeId == UINT32_MAX)
+    float result;
+    if(nodeId == UINT32_MAX && dBoundaryLight)
     {
-        // TODO: sample the boundary light in this case
-        return 0.0f;
+        // TODO: Change this (we assume pos and surface does not required
+        // for the light
+        Vector3f resultRGB = dBoundaryLight->Emit(-coneDirection, Vector3f(0.0f), UVSurface{});
+        result = Utility::RGBToLuminance(resultRGB);
     }
+    else result = payload.ReadRadiance(coneDirection, coneAperture,
+                                       nodeId, isLeaf);
 
-    half radiance = payload.ReadRadiance(coneDirection, coneAperture,
-                                         nodeId, isLeaf);
-
-    return radiance;
+    return result;
 }
 
 __device__ inline
