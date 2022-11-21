@@ -63,7 +63,7 @@ class WFPGTracer final : public RayTracer
             WFPGRenderMode      renderMode          = WFPGRenderMode::RENDER;
             uint32_t            svoRadRenderIter    = 2;
             uint32_t            svoRenderLevel      = 0;
-            std::string         svoInitPath         =  "";
+            std::string         svoInitPath         = "";
             float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
             bool                skipPG              = false;
             bool                productPG           = true;

@@ -422,7 +422,7 @@ float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
     bool towardsNormal = (normal.Dot(-coneDirection) >= 0.0f);
     uint32_t index = towardsNormal ? 0 : 1;
     float result = gIrradArray[nodeIndex][index];
-    return result * abs(normal.Dot(-coneDirection));
+    return result;// *abs(normal.Dot(-coneDirection));
 }
 
 __device__ inline
@@ -971,11 +971,12 @@ float AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneAp
                                      uint32_t nodeId, bool isLeaf) const
 {
     float result;
-    if(nodeId == UINT32_MAX && dBoundaryLight)
+    if(nodeId == UINT32_MAX)
     {
         // TODO: Change this (we assume pos and surface does not required
         // for the light
-        Vector3f resultRGB = dBoundaryLight->Emit(-coneDirection, Vector3f(0.0f), UVSurface{});
+        Vector3f resultRGB = (dBoundaryLight) ? dBoundaryLight->Emit(-coneDirection, Vector3f(0.0f), UVSurface{})
+                                              : Zero3f;
         result = Utility::RGBToLuminance(resultRGB);
     }
     else result = payload.ReadRadiance(coneDirection, coneAperture,

@@ -38,7 +38,7 @@ struct PPGTracerGlobalState
     uint32_t                        maximumPathNodePerRay;
     // Options
     // Path Guiding
-    bool                            rawPathGuiding;
+    bool                            skipPG;
     // Options for NEE
     bool                            directLightMIS;
     bool                            nee;
@@ -367,14 +367,16 @@ void PPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        constexpr float BxDF_DTreeSampleRatio = 0.5f;
+        const float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
         // Sample a chance
         float xi = rng.Uniform();
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
 
+        float misWeight;
         bool selectedPDFZero = false;
-        float pdfBxDF, pdfTree;
-        if(xi >= BxDF_DTreeSampleRatio)
+        float pdfBxDF, pdfGuide;
+        bool BxDFSelected = (xi >= BxDF_GuideSampleRatio);
+        if(BxDFSelected)
         {
             // Sample using BxDF
             reflectance = MGroup::Sample(// Outputs
@@ -391,14 +393,14 @@ void PPGTracerPathWork(// Output
                                          gMatData,
                                          matIndex,
                                          0);
-            pdfTree = dReadTree.Pdf(rayPath.getDirection());
-
-            if(pdfBxDF == 0.0f) selectedPDFZero = true;
+            pdfGuide = dReadTree.Pdf(rayPath.getDirection());
+            misWeight = TracerFunctions::BalanceHeuristic(1, pdfBxDF, 1, pdfGuide);
+            selectedPDFZero = (pdfBxDF == 0.0f);
         }
         else
         {
             // Sample a path using SDTree
-            Vector3f direction = dReadTree.Sample(pdfTree, rng);
+            Vector3f direction = dReadTree.Sample(pdfGuide, rng);
             direction.NormalizeSelf();
             // Calculate BxDF
             reflectance = MGroup::Evaluate(// Input
@@ -425,33 +427,39 @@ void PPGTracerPathWork(// Output
             rayPath = RayF(direction, position);
             rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
 
-            if(pdfTree == 0.0f) selectedPDFZero = true;
+            misWeight = TracerFunctions::BalanceHeuristic(1, pdfGuide, 1, pdfBxDF);
+            selectedPDFZero = (pdfGuide == 0.0f);
         }
         // Pdf Average
         //pdfPath = pdfBxDF;
-        pdfPath = BxDF_DTreeSampleRatio          * pdfTree +
-                  (1.0f - BxDF_DTreeSampleRatio) * pdfBxDF;
-        pdfPath = selectedPDFZero ? 0.0f : pdfPath;
+        // One-sample MIS Using Balance Heuristic
+        if(!renderState.skipPG)
+        {
+            pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
+            pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
+            pdfPath = selectedPDFZero ? 0.0f : pdfPath;
+        }
+        else pdfPath = pdfBxDF;
 
         // DEBUG
-        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree))
+        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
             printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
-                   (xi >= BxDF_DTreeSampleRatio) ? "BxDF": "Tree",
-                   pdfPath, pdfBxDF, pdfTree, BxDF_DTreeSampleRatio);
+                   (BxDFSelected) ? "BxDF": "Tree",
+                   pdfPath, pdfBxDF, pdfGuide, BxDF_GuideSampleRatio);
         if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
             printf("[%s] NAN DIR %f, %f, %f\n",
-                    (xi >= BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
+                    (BxDFSelected) ? "BxDF" : "Tree",
                     rayPath.getDirection()[0],
                     rayPath.getDirection()[1],
                     rayPath.getDirection()[2]);
         if(reflectance.HasNaN())
             printf("[%s] NAN REFL %f %f %f\n",
-                   (xi >= BxDF_DTreeSampleRatio) ? "BxDF" : "Tree",
+                   (BxDFSelected) ? "BxDF" : "Tree",
                    reflectance[0],
                    reflectance[1],
                    reflectance[2]);
 
-        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfTree) ||
+        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide) ||
         //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
         //    return;
     }

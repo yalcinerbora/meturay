@@ -22,40 +22,48 @@ class PPGTracer final : public RayTracer
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
 
-        static constexpr const char* RAW_PG_NAME                = "RawPathGuiding";
-        static constexpr const char* ALWAYS_SEND_NAME           = "AlwaysSendSamples";
+
         static constexpr const char* D_TREE_MAX_DEPTH_NAME      = "DTreeMaximumDepth";
         static constexpr const char* D_TREE_FLUX_RATIO_NAME     = "DTreeFluxRatio";
         static constexpr const char* S_TREE_SAMPLE_SPLIT_NAME   = "STreeMaxSamples";
-        static constexpr const char* SD_TREE_PATH_NAME          = "SDTreePath";
-        static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
+        static constexpr const char* SD_TREE_MAX_SIZE_NAME      = "SDTreeMaxSizeMB";
+        static constexpr const char* SD_TREE_PATH_NAME          = "InitialSDTree";
+
+        static constexpr const char* ALWAYS_SEND_NAME           = "AlwaysSendSamples";
+        static constexpr const char* SKIP_PG_NAME               = "SkipPG";
+
+        static constexpr const char* PG_DUMP_DEBUG_NAME        = "PGDumpDataStruct";
+        static constexpr const char* PG_DUMP_INTERVAL_NAME     = "PGDataStructDumpIntervalExp";
+        static constexpr const char* PG_DUMP_PATH_NAME          = "PGDataStructDumpName";
 
         struct Options
         {
+            // PathTracing Related
             int32_t             sampleCount         = 1;
             uint32_t            maximumDepth        = 10;
-
             uint32_t            rrStart             = 3;
-
-            LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
-
-            // Paper Related
-            uint32_t            maxDTreeDepth       = 32;
-            uint32_t            maxSDTreeSizeMB     = 512;
-            uint32_t            sTreeSplitThreshold = 12000;
-            float               dTreeSplitThreshold = 0.01f;
-
-            // Initial Tree
-            std::string         sdTreePath          = "";
-
-            // Misc
-            bool                alwaysSendSamples   = false;
-            bool                rawPathGuiding      = true;
 
             bool                nextEventEstimation = true;
             bool                directLightMIS      = false;
 
-            bool                dumpDebugData       = false;
+            LightSamplerType    lightSamplerType = LightSamplerType::UNIFORM;
+
+            // Paper Related
+            uint32_t            dTreeMaxDepth       = 32;
+            float               dTreeSplitThreshold = 0.01f;
+            uint32_t            sTreeSplitThreshold = 12000;
+            uint32_t            maxSDTreeSizeMB     = 512;
+
+            // Initial Tree
+            std::string         sdTreeInitPath       = "";
+
+            // Misc
+            bool                alwaysSendSamples   = false;
+            bool                skipPG              = false;
+
+            bool                pgDumpDebugData     = false;
+            uint32_t            pgDumpInterval      = 2;
+            std::string         pgDumpDebugName     = "ppg_sdTree";
 
         };
 
@@ -77,6 +85,8 @@ class PPGTracer final : public RayTracer
         // Internal State
         uint32_t                        currentTreeIteration;
         uint32_t                        nextTreeSwap;
+        uint32_t                        treeDumpCount;
+        uint32_t                        iterationCount;
         // Misc
         void                            ResizeAndInitPathMemory();
         uint32_t                        TotalPathNodeCount() const;

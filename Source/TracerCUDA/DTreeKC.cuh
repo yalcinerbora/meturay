@@ -308,7 +308,7 @@ void DTreeGPU::AddRadianceToLeaf(const Vector3f& worldDir, float radiance,
     Vector2f discreteCoords = GPUDataStructCommon::DirToDiscreteCoords(worldDir);
     //assert(discreteCoords >= Vector2f(0.0f) && discreteCoords <= Vector2f(1.0f));
 
-    if(discreteCoords <= Vector2f(0.0f) ||
+    if(discreteCoords < Vector2f(0.0f) ||
        discreteCoords >= Vector2f(1.0f))
     {
         printf("Failed WorlDir = DC ((%f %f %f) = (%f %f))\n",

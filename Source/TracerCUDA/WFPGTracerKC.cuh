@@ -450,17 +450,17 @@ void WFPGTracerPathWork(// Output
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
             printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
-                   (xi >= BxDF_GuideSampleRatio) ? "BxDF": "SVO",
+                   (BxDFSelected) ? "BxDF": "SVO",
                    pdfPath, pdfBxDF, pdfGuide, BxDF_GuideSampleRatio);
         if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
             printf("[%s] NAN DIR %f, %f, %f\n",
-                    (xi >= BxDF_GuideSampleRatio) ? "BxDF" : "SVO",
+                    (BxDFSelected) ? "BxDF" : "SVO",
                     rayPath.getDirection()[0],
                     rayPath.getDirection()[1],
                     rayPath.getDirection()[2]);
         if(reflectance.HasNaN())
             printf("[%s] NAN REFL %f %f %f\n",
-                   (xi >= BxDF_GuideSampleRatio) ? "BxDF" : "SVO",
+                   (BxDFSelected) ? "BxDF" : "SVO",
                    reflectance[0],
                    reflectance[1],
                    reflectance[2]);
@@ -1145,6 +1145,10 @@ static void KCGenAndSampleDistribution(// Output
                       MathConstants::LargeEpsilon);
         float incRadiances[RT_ITER_COUNT];
 
+        //// Uniform Test
+        //for(int i = 0; i < RT_ITER_COUNT; i++)
+        //    incRadiances[i] = 1.0f;
+
         // Batched Cone Trace
         Vector3f    rayDirOut[RT_ITER_COUNT];
         float       tMinOut[RT_ITER_COUNT];
@@ -1200,7 +1204,7 @@ static void KCGenAndSampleDistribution(// Output
         __syncthreads();
 
         // Non product sample version
-        #if 0
+        #if 1
         // Generate PWC Distribution over the radiances
         Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
         // Block threads will loop over the every ray in this bin
@@ -1235,6 +1239,8 @@ static void KCGenAndSampleDistribution(// Output
             Vector2f uv = productSampler.SampleWithProductPWC(pdf, rng,
                                                               rayIndex,
                                                               ProjectionFunc);
+            pdf *= 0.25f * MathConstants::InvPi;
+
             if(isWarpLeader)
             {
                 if(isnan(pdf) || uv.HasNaN() ||
@@ -1245,8 +1251,6 @@ static void KCGenAndSampleDistribution(// Output
                     uv = Vector2f(0.5f);
                     pdf = 1.0f;
                 }
-
-                pdf *= 0.25f * MathConstants::InvPi;
                 // Store the sampled direction of the ray
                 uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
                 gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);

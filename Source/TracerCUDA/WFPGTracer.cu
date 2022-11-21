@@ -1005,7 +1005,8 @@ void WFPGTracer::Finalize()
         }
     }
 
-    //METU_LOG("----------------");
+    METU_LOG("----------------");
+
     cudaSystem.SyncAllGPUs();
     frameTimer.Stop();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

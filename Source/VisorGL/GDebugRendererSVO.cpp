@@ -579,6 +579,7 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
     , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
     , maxValueDisplay(0.0f)
+    , currentWorldPos(Zero3f)
 {
     // Load the Name
     name = config[GuideDebug::NAME];
@@ -849,6 +850,7 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
 
     //
     Vector3f pos = worldPos;
+    currentWorldPos = pos;
     // Convert location to the
     uint32_t nodeIndex;
     bool found = svo.NodeIndex(nodeIndex, pos,
@@ -1089,6 +1091,23 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
                                     renderResolutionNameList,
                                     std::numeric_limits<uint32_t>::max(),
                                     "##RenderResolutionCombo");
+
+        if(ImGui::Button("Save Image"))
+        {
+            std::string wpAsString = fmt::format("[{}_{}_{}]",
+                                                 currentWorldPos[0],
+                                                 currentWorldPos[1],
+                                                 currentWorldPos[2]);
+            std::string fileName = wpAsString + "_wfpg_radiance.exr";
+
+            ImageIOInstance()->WriteImage(currentValues,
+                                          mapSize,
+                                          PixelFormat::R_FLOAT,
+                                          ImageType::EXR,
+                                          fileName);
+
+            METU_LOG("Saved Image {}", fileName);
+        }
 
         ImGui::EndPopup();
 

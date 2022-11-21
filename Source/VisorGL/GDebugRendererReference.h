@@ -47,6 +47,7 @@ class GDebugRendererRef
 
         TextureGL           currentTexture;
         std::vector<float>  currentValues;
+        std::string         pixelAsString;
 
 
         void                LoadPaths(const Vector2i& resolution,

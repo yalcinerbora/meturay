@@ -4,6 +4,9 @@
 #include "RayLib/Constants.h"
 #include "RayLib/CoordinateConversion.h"
 
+
+// Conversions from 2D radiance field to 3D direction
+// and vice versa
 namespace GPUDataStructCommon
 {
     __device__
@@ -29,6 +32,7 @@ Vector2f GPUDataStructCommon::DirToDiscreteCoords(const Vector3f& worldDir)
 __device__ __forceinline__
 Vector2f GPUDataStructCommon::DirToDiscreteCoords(float& pdf, const Vector3f& worldDir)
 {
+#if 0
     Vector3 wZup = Vector3(worldDir[2], worldDir[0], worldDir[1]);
     // Convert to Spherical Coordinates
     Vector2f thetaPhi = Utility::CartesianToSphericalUnit(wZup);
@@ -50,6 +54,16 @@ Vector2f GPUDataStructCommon::DirToDiscreteCoords(float& pdf, const Vector3f& wo
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
     return Vector2f(u,v);
+#else
+
+    Vector3 dirZUp = Vector3(worldDir[2], worldDir[0], worldDir[1]);
+    Vector2f st = Utility::DirectionToCocentricOctohedral(dirZUp);
+    // Co-centric octahedral is area preserving just multiply with entire
+    // spherical solid angle
+    pdf *= 0.25f * MathConstants::InvPi;
+    return st;
+
+#endif
 }
 
 __device__ __forceinline__
@@ -62,6 +76,7 @@ Vector3f GPUDataStructCommon::DiscreteCoordsToDir(const Vector2f& discreteCoords
 __device__ __forceinline__
 Vector3f GPUDataStructCommon::DiscreteCoordsToDir(float& pdf, const Vector2f& discreteCoords)
 {
+#if 0
     // Convert the Local 2D cartesian coords to spherical coords
     const Vector2f& uv = discreteCoords;
     Vector2f thetaPhi = Vector2f(// [-pi, pi]
@@ -77,4 +92,15 @@ Vector3f GPUDataStructCommon::DiscreteCoordsToDir(float& pdf, const Vector2f& di
     if(sinPhi == 0.0f) pdf = 0.0f;
     else pdf = pdf / (2.0f * MathConstants::Pi * MathConstants::Pi * sinPhi);
     return dirYUp;
+#else
+
+    Vector3 result = Utility::CocentricOctohedralToDirection(discreteCoords);
+    Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
+    // Co-centric octahedral is area preserving just multiply with entire
+    // spherical solid angle
+    pdf *= 0.25f * MathConstants::InvPi;
+    return dirYUp;
+
+#endif
 }

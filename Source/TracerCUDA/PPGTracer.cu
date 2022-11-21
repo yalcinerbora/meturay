@@ -95,6 +95,9 @@ PPGTracer::PPGTracer(const CudaSystem& s,
 
 TracerError PPGTracer::Initialize()
 {
+    iterationCount = 0;
+    treeDumpCount = 0;
+
     TracerError err = TracerError::OK;
     if((err = RayTracer::Initialize()) != TracerError::OK)
         return err;
@@ -150,7 +153,7 @@ TracerError PPGTracer::Initialize()
 
     }
 
-    if(options.sdTreePath.empty())
+    if(options.sdTreeInitPath.empty())
     {
         // Init sTree
         AABB3f worldAABB = scene.BaseAccelerator()->SceneExtents();
@@ -158,7 +161,7 @@ TracerError PPGTracer::Initialize()
     }
     else
     {
-        sTree = std::make_unique<STree>(options.sdTreePath, cudaSystem);
+        sTree = std::make_unique<STree>(options.sdTreeInitPath, cudaSystem);
     }
     return TracerError::OK;
 }
@@ -172,32 +175,37 @@ TracerError PPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.rrStart, RR_START_NAME)) != TracerError::OK)
         return err;
-
     std::string lightSamplerTypeString;
     if((err = opts.GetString(lightSamplerTypeString, LIGHT_SAMPLER_TYPE_NAME)) != TracerError::OK)
         return err;
     if((err = LightSamplerCommon::StringToLightSamplerType(options.lightSamplerType, lightSamplerTypeString)) != TracerError::OK)
         return err;
-
     if((err = opts.GetBool(options.nextEventEstimation, NEE_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetBool(options.directLightMIS, DIRECT_LIGHT_MIS_NAME)) != TracerError::OK)
         return err;
 
-    if((err = opts.GetBool(options.rawPathGuiding, RAW_PG_NAME)) != TracerError::OK)
-        return err;
-    if((err = opts.GetBool(options.alwaysSendSamples, ALWAYS_SEND_NAME)) != TracerError::OK)
-        return err;
-
-    if((err = opts.GetUInt(options.maxDTreeDepth, D_TREE_MAX_DEPTH_NAME)) != TracerError::OK)
+    if((err = opts.GetUInt(options.dTreeMaxDepth, D_TREE_MAX_DEPTH_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetFloat(options.dTreeSplitThreshold, D_TREE_FLUX_RATIO_NAME)) != TracerError::OK)
         return err;
     if((err = opts.GetUInt(options.sTreeSplitThreshold, S_TREE_SAMPLE_SPLIT_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetString(options.sdTreePath, SD_TREE_PATH_NAME)) != TracerError::OK)
+    if((err = opts.GetUInt(options.maxSDTreeSizeMB, SD_TREE_MAX_SIZE_NAME)) != TracerError::OK)
         return err;
-    if((err = opts.GetBool(options.dumpDebugData, DUMP_DEBUG_NAME)) != TracerError::OK)
+    if((err = opts.GetString(options.sdTreeInitPath, SD_TREE_PATH_NAME)) != TracerError::OK)
+        return err;
+
+    if((err = opts.GetBool(options.skipPG, SKIP_PG_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetBool(options.alwaysSendSamples, ALWAYS_SEND_NAME)) != TracerError::OK)
+        return err;
+
+    if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetUInt(options.pgDumpInterval, PG_DUMP_INTERVAL_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetString(options.pgDumpDebugName, PG_DUMP_PATH_NAME)) != TracerError::OK)
         return err;
 
     return TracerError::OK;
@@ -249,7 +257,7 @@ bool PPGTracer::Render()
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
 
-    globalData.rawPathGuiding = options.rawPathGuiding;
+    globalData.skipPG = options.skipPG;
     globalData.nee = options.nextEventEstimation;
     globalData.directLightMIS = options.directLightMIS;
     globalData.rrStart = options.rrStart;
@@ -323,7 +331,9 @@ void PPGTracer::Finalize()
 {
     cudaSystem.SyncAllGPUs();
 
-    //METU_LOG("Finalize");
+    // Iteration count is used to when dump the entire svo
+    // to the disk etc.
+    iterationCount++;
 
     uint32_t totalPathNodeCount = TotalPathNodeCount();
 
@@ -331,23 +341,11 @@ void PPGTracer::Finalize()
     //                            dPathNodes,
     //                            MaximumPathNodePerPath(), totalPathNodeCount);
 
-    //if(currentTreeIteration == 0)
-    //{
-    //    std::filesystem::remove(std::filesystem::path("0_sTree"));
-    //    std::filesystem::remove(std::filesystem::path("0_sTree_N"));
-    //    std::filesystem::remove(std::filesystem::path("0__dTree_N"));
-    //    std::filesystem::remove(std::filesystem::path("0__dTrees"));
-    //}
-
     // Accumulate the finished radiances to the STree
     sTree->AccumulateRaidances(dPathNodes, totalPathNodeCount,
                                MaximumPathNodePerPath(), cudaSystem);
     // We iterated once
-    currentTreeIteration += 1;// options.sampleCount* options.sampleCount;
-    // Swap the trees if we achieved threshold
-    //if(currentTreeIteration <= 1)
-    //if(false)
-    //if(currentTreeIteration == nextTreeSwap * 10)
+    currentTreeIteration += 1;
     if(currentTreeIteration == nextTreeSwap)
     {
         // Double the amount of iterations required for this
@@ -363,7 +361,7 @@ void PPGTracer::Finalize()
         // Split and Swap the trees
         sTree->SplitAndSwapTrees(currentSTreeSplitThreshold,
                                  options.dTreeSplitThreshold,
-                                 options.maxDTreeDepth,
+                                 options.dTreeMaxDepth,
                                  cudaSystem);
 
         size_t mbSize = sTree->UsedGPUMemory() / 1024 / 1024;
@@ -373,62 +371,23 @@ void PPGTracer::Finalize()
                  currentSTreeSplitThreshold,
                  mbSize,
                  sTree->TotalTreeCount());
-
-
-
-        // Debug Dump
-        if(options.dumpDebugData)
-        {
-            // Write SD Tree File
-            std::vector<Byte> sdTree;
-            sTree->DumpSDTreeAsBinary(sdTree, true);
-            std::string iterAsString = std::to_string(nextTreeSwap >> 1);
-            std::string name = iterAsString + "_ppg_sdTree";
-            Utility::DumpStdVectorToFile(sdTree, name);
-            METU_LOG("Dumping {:s}", name);
-
-            //// Write reference image
-            //Vector2i pixelCount = imgMemory.SegmentSize();
-            //std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
-            //Debug::DumpImage("PPG_Reference.png",
-            //         reinterpret_cast<Vector4*>(imageData.data()),
-            //         Vector2ui(pixelCount[0], pixelCount[1]));
-
-            //// Write position buffer
-            //// Do a simple ray trace.
-            //size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
-            //std::vector<Vector3f> pixelPositionsCPU(pixelCount1D);
-
-            //..
-
-            //Utility::DumpStdVectorToFile(pixelPositionsCPU, "PPG_PosBuffer");
-        }
-
-
-
-        //// DEBUG
-        //CUDA_CHECK(cudaDeviceSynchronize());
-        //// STree
-        //STreeGPU sTreeGPU;
-        //std::vector<STreeNode> sNodes;
-        //sTree->GetTreeToCPU(sTreeGPU, sNodes);
-        //Debug::DumpMemToFile(iterAsString + "_sTree", &sTreeGPU, 1, true);
-        //Debug::DumpMemToFile(iterAsString + "_sTree_N", sNodes.data(), sNodes.size(), true);
-        //// PrintEveryDTree
-        //std::vector<DTreeGPU> dTreeGPUs;
-        //std::vector<std::vector<DTreeNode>> dTreeNodes;
-        //sTree->GetAllDTreesToCPU(dTreeGPUs, dTreeNodes, true);
-        //Debug::DumpMemToFile(iterAsString + "__dTrees",
-        //                     dTreeGPUs.data(), dTreeGPUs.size(), true);
-        //for(size_t i = 0; i < dTreeNodes.size(); i++)
-        //{
-        //    Debug::DumpMemToFile(iterAsString + "__dTree_N",
-        //                         dTreeNodes[i].data(), dTreeNodes[i].size(), true);
-        //}
-
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
         ResetImage();
+    }
+
+    // Debug Dump
+    uint32_t dumpInterval = static_cast<uint32_t>(std::pow(options.pgDumpInterval, treeDumpCount));
+    if(options.pgDumpDebugData && iterationCount == dumpInterval)
+    {
+        // Write SD Tree File
+        std::vector<Byte> sdTree;
+        sTree->DumpSDTreeAsBinary(sdTree, true);
+        std::string iterAsString = std::to_string(nextTreeSwap >> 1);
+        std::string name = iterAsString + "_ppg_sdTree";
+        Utility::DumpStdVectorToFile(sdTree, name);
+        METU_LOG("Dumping {:s}", name);
+        treeDumpCount++;
     }
 
     cudaSystem.SyncAllGPUs();
@@ -503,9 +462,24 @@ void PPGTracer::AskOptions()
 {
     // Generate Tracer Object
     VariableList list;
-    list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.sampleCount)));
     list.emplace(MAX_DEPTH_NAME, OptionVariable(static_cast<int64_t>(options.maximumDepth)));
+    list.emplace(SAMPLE_NAME, OptionVariable(static_cast<int64_t>(options.sampleCount)));
+    list.emplace(RR_START_NAME, OptionVariable(static_cast<int64_t>(options.rrStart)));
+    list.emplace(LIGHT_SAMPLER_TYPE_NAME, OptionVariable(LightSamplerCommon::LightSamplerTypeToString(options.lightSamplerType)));
     list.emplace(NEE_NAME, OptionVariable(options.nextEventEstimation));
+    list.emplace(DIRECT_LIGHT_MIS_NAME, OptionVariable(options.directLightMIS));
+
+    list.emplace(D_TREE_MAX_DEPTH_NAME, OptionVariable(static_cast<int64_t>(options.dTreeMaxDepth)));
+    list.emplace(D_TREE_FLUX_RATIO_NAME, OptionVariable(options.dTreeSplitThreshold));
+    list.emplace(S_TREE_SAMPLE_SPLIT_NAME, OptionVariable(static_cast<int64_t>(options.sTreeSplitThreshold)));
+    list.emplace(SD_TREE_MAX_SIZE_NAME, OptionVariable(static_cast<int64_t>(options.maxSDTreeSizeMB)));
+
+    list.emplace(ALWAYS_SEND_NAME, OptionVariable(options.alwaysSendSamples));
+    list.emplace(SKIP_PG_NAME, OptionVariable(options.skipPG));
+
+    list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));
+    list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));
+    list.emplace(PG_DUMP_PATH_NAME, OptionVariable(options.pgDumpDebugName));
 
     if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }

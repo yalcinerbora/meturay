@@ -90,6 +90,7 @@ GDebugRendererRef::GDebugRendererRef(const nlohmann::json& config,
     , linearSampler(SamplerGLEdgeResolveType::CLAMP,
                     SamplerGLInterpType::LINEAR)
     , gradientTex(gradTex)
+    , pixelAsString("[0,0]")
 {
     resolution = SceneIO::LoadVector<2, int32_t>(config[RESOLUTION_NAME]);
     std::string pathRegex = config[IMAGES_NAME];
@@ -115,6 +116,8 @@ void GDebugRendererRef::UpdateDirectional(bool doLogScale,
     uint32_t pixelLinear = resolution[0] * pixelInt[1] + pixelInt[0];
 
     const std::string& file = referencePaths[pixelLinear];
+
+    pixelAsString = fmt::format("[{}, {}]", pixelInt[1], pixelInt[0]);
 
     // Temp Load Lum Texture
     Vector2ui dim;
@@ -214,9 +217,16 @@ void GDebugRendererRef::UpdateDirectional(bool doLogScale,
 
 void GDebugRendererRef::RenderGUI(const ImVec2& windowSize)
 {
+    using namespace std::string_literals;
+
+    // Get inner pixel name on the screen
+    std::string fullName = std::string(REFERENCE_TEXT) + " "s + pixelAsString;
+
+
     ImGui::BeginChild("refPGTexture", windowSize, false);
-    ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(REFERENCE_TEXT, windowSize.x));
-    ImGui::Text(REFERENCE_TEXT);
+    ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(fullName.c_str(),
+                                                                   windowSize.x));
+    ImGui::Text(fullName.c_str());
     ImVec2 remainingSize = GuideDebugGUIFuncs::FindRemainingSize(windowSize);
     remainingSize.x = remainingSize.y;
     ImGui::NewLine();

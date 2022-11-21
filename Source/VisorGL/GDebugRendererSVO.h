@@ -174,6 +174,7 @@ class GDebugRendererSVO : public GDebugRendererI
         TextureGL               currentTexture;
         std::vector<float>      currentValues;
         float                   maxValueDisplay;
+        Vector3f                currentWorldPos;
         // Render Level Related
         Vec2uiNameList          renderResolutionNameList;
         uint32_t                renderResolutionSelectIndex;
