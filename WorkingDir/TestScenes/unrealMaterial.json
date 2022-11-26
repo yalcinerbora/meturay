@@ -8,10 +8,16 @@
 		"fov": [94.45, 53.13],
 		// 1:1 FoV
 		//"fov": [53.13, 53.13],
-		"gaze": [0.0, 0.0, 0.0],
 		"planes": [0.1, 20.0],
-		"position": [0.0, 0.0, 4.3],
-		"up": [0.0, 1.0, 0.0]
+
+		//	TEST PARAMS
+		"gaze"     : [0, 0, -0.324998],
+		"position" : [0, 0, 0.675002],
+		"up"       : [0, 1, 0]
+
+		// "gaze": [0.0, 0.0, 0.0],
+		// "position": [0.0, 0.0, 4.3],
+		// "up": [0.0, 1.0, 0.0]
 	}],
 
 	"Textures":[
@@ -105,42 +111,56 @@
     "BaseMedium" : 0,
 
 	"Surfaces": [
-    // Roughness Group 0
-    {
-		"transform": 0, "accelerator": 1,
-		"material": [1, 2, 3, 4, 5],
-		"primitive": [0, 1, 2, 3, 4]
-	},
-	// Roughness Group 1
-    {
-		"transform": 0, "accelerator": 0,
-		"material": [6, 7, 8, 9],
-		"primitive": [5, 6, 7, 8]
-	},
-	// Metallic Group 0
-    {
-		"transform": 0, "accelerator": 1,
-		"material": [10, 11, 12, 13, 14],
-		"primitive": [9, 10, 11, 12, 13]
-	},
-	// Metallic Group 1
-    {
-		"transform": 0, "accelerator": 0,
-		"material": [15, 16, 17, 18],
-		"primitive": [14, 15, 16, 17]
-	},
-    // Specular Group 0
-    {
-		"transform": 0, "accelerator": 1,
-		"material": [19, 20, 21, 22, 23],
-		"primitive": [18, 19, 20, 21, 22]
-	},
-	// Specular Group 1
-    {
-		"transform": 0, "accelerator": 0,
-		"material": [24, 25, 26, 27],
-		"primitive": [23, 24, 25, 26]
-	}],
+
+		// {	"transform": 0,
+		// 	"accelerator": 1,
+		// 	"material": 1,
+		// 	"primitive": 0
+		// },
+
+		{	"transform": 0,
+			"accelerator": 1,
+			"material": 4,
+			"primitive": 13
+		}
+
+    // // Roughness Group 0
+    // {
+	// 	"transform": 0, "accelerator": 1,
+	// 	"material": [1, 2, 3, 4, 5],
+	// 	"primitive": [0, 1, 2, 3, 4]
+	// },
+	// // Roughness Group 1
+    // {
+	// 	"transform": 0, "accelerator": 0,
+	// 	"material": [6, 7, 8, 9],
+	// 	"primitive": [5, 6, 7, 8]
+	// },
+	// // Metallic Group 0
+    // {
+	// 	"transform": 0, "accelerator": 1,
+	// 	"material": [10, 11, 12, 13, 14],
+	// 	"primitive": [9, 10, 11, 12, 13]
+	// },
+	// // Metallic Group 1
+    // {
+	// 	"transform": 0, "accelerator": 0,
+	// 	"material": [15, 16, 17, 18],
+	// 	"primitive": [14, 15, 16, 17]
+	// },
+    // // Specular Group 0
+    // {
+	// 	"transform": 0, "accelerator": 1,
+	// 	"material": [19, 20, 21, 22, 23],
+	// 	"primitive": [18, 19, 20, 21, 22]
+	// },
+	// // Specular Group 1
+    // {
+	// 	"transform": 0, "accelerator": 0,
+	// 	"material": [24, 25, 26, 27],
+	// 	"primitive": [23, 24, 25, 26]
+	// }
+	],
 
 	"LightSurfaces": [],
 

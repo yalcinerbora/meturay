@@ -568,6 +568,59 @@ float SVOctree::ReadRadiance(const Vector3f& coneDirection,
     return gIrradArray[nodeIndex][index];
 }
 
+
+inline float ReadInterpolatedRadiance(const Vector3f& hitPos,
+                                      const Vector3f& direction, float coneApterture,
+                                      const SVOctree& svo)
+{
+    float queryVoxelSize = svo.leafVoxelSize;
+    Vector3f offsetPos = hitPos + direction.Normalize() * queryVoxelSize * 0.5f;
+
+
+    // Interp values for currentLevel
+    Vector3f lIndex = (offsetPos - svo.svoAABB.Min()) / queryVoxelSize;
+    Vector3f lIndexInt;
+    Vector3f lIndexFrac = Vector3f(modff(lIndex[0], &(lIndexInt[0])),
+                                   modff(lIndex[1], &(lIndexInt[1])),
+                                   modff(lIndex[2], &(lIndexInt[2])));
+    Vector3ui denseIndex = Vector3ui(lIndexInt);
+
+    Vector3ui inc = Vector3ui((lIndexFrac[0] < 0.5f) ? -1 : 0,
+                              (lIndexFrac[1] < 0.5f) ? -1 : 0,
+                              (lIndexFrac[2] < 0.5f) ? -1 : 0);
+
+    // Calculate Interp start index and values
+    denseIndex += inc;
+    Vector3f interpValues = (lIndexFrac + Vector3f(0.5f));
+    interpValues -= interpValues.Floor();
+
+    // Get 8x value
+    float irradiance[8];
+    for(int i = 0; i < 8; i++)
+    {
+        Vector3ui curIndex = Vector3ui(((i >> 0) & 0b1) ? 1 : 0,
+                                       ((i >> 1) & 0b1) ? 1 : 0,
+                                       ((i >> 2) & 0b1) ? 1 : 0);
+        Vector3ui voxIndex = denseIndex + curIndex;
+        uint64_t voxelMorton = MortonCode::Compose3D<uint64_t>(voxIndex);
+
+        uint32_t nodeId;
+        bool found = svo.Descend(nodeId, voxelMorton, svo.leafDepth);
+
+        irradiance[i] = (found) ? static_cast<float>(svo.ReadRadiance(direction, coneApterture,
+                                                                      nodeId, true))
+            : 0.0f;
+    }
+
+    float x0 = HybridFuncs::Lerp(irradiance[0], irradiance[1], interpValues[0]);
+    float x1 = HybridFuncs::Lerp(irradiance[2], irradiance[3], interpValues[0]);
+    float x2 = HybridFuncs::Lerp(irradiance[4], irradiance[5], interpValues[0]);
+    float x3 = HybridFuncs::Lerp(irradiance[6], irradiance[7], interpValues[0]);
+    float y0 = HybridFuncs::Lerp(x0, x1, interpValues[1]);
+    float y1 = HybridFuncs::Lerp(x2, x3, interpValues[1]);
+    return HybridFuncs::Lerp(y0, y1, interpValues[2]);
+}
+
 GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
                                      const TextureGL& gradientTexture,
                                      const std::string& configPath,
@@ -580,6 +633,9 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
     , maxValueDisplay(0.0f)
     , currentWorldPos(Zero3f)
+    , readInterpolatedRadiance(false)
+    , doGaussFilter(true)
+    , showAsIfPiecewiseLinear(false)
 {
     // Load the Name
     name = config[GuideDebug::NAME];
@@ -883,12 +939,20 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
 
                       bool isLeaf;
                       uint32_t leafIndex;
-                      svo.ConeTraceRay(isLeaf, leafIndex, ray, tMin,
-                                       std::numeric_limits<float>::max(),
-                                       coneAperture);
+                      float hitT = svo.ConeTraceRay(isLeaf, leafIndex, ray, tMin,
+                                                    std::numeric_limits<float>::max(),
+                                                    coneAperture);
 
-                      float radiance = svo.ReadRadiance(ray.getDirection(), coneAperture,
-                                                        leafIndex, isLeaf);
+                      float radiance = 0.0f;
+                      if(readInterpolatedRadiance)
+                      {
+                          Vector3f hitPos = ray.AdvancedPos(hitT);
+                          radiance = ReadInterpolatedRadiance(hitPos, ray.getDirection(),
+                                                              coneAperture, svo);
+                      }
+                      else
+                          radiance = svo.ReadRadiance(ray.getDirection(), coneAperture,
+                                                      leafIndex, isLeaf);
 
                       // Fake the cos theta
                       if(multiplyCosTheta)
@@ -898,52 +962,52 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                       currentValues[writeIndex] = radiance;
                   });
 
-
-    std::vector<float> valuesBuffer(currentValues.size(), 0.0f);
-    using FilterType = StaticGaussianFilter1D<7>;
-    FilterType gaussFilter(1.5f);
-    auto KERNEL_RANGE = FilterType::KERNEL_RANGE;
-    // Do Gauss Pass over Values
-    std::for_each(std::execution::par_unseq,
-                  indices.cbegin(), indices.cend(),
-                  [&](uint32_t index)
-                  {
-                      // Calculate Direction
-                      Vector2i mapSz = Vector2i(mapSize);
-                      Vector2i pixelId(index % mapSz[0],
-                                       index / mapSz[0]);
-
-                      for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
+    if(doGaussFilter)
+    {
+        std::vector<float> valuesBuffer(currentValues.size(), 0.0f);
+        using FilterType = StaticGaussianFilter1D<5>;
+        FilterType gaussFilter(0.7f);
+        auto KERNEL_RANGE = FilterType::KERNEL_RANGE;
+        // Do Gauss Pass over Values
+        std::for_each(std::execution::par_unseq,
+                      indices.cbegin(), indices.cend(),
+                      [&](uint32_t index)
                       {
-                          int32_t newX = pixelId[0] + j;
-                          Vector2i neigPixel(newX, pixelId[1]);
-                          if(newX >= mapSz[0] || newX < 0)
-                              neigPixel = Utility::CocentricOctohedralWrapInt(neigPixel, mapSz);
-                          int32_t linear = neigPixel[1] * mapSz[0] + neigPixel[0];
-                          valuesBuffer[index] += currentValues[linear] * gaussFilter(j);
-                      }
-                  });
-    currentValues.resize(currentValues.size(), 0.0f);
-    std::for_each(std::execution::par_unseq,
-                  indices.cbegin(), indices.cend(),
-                  [&](uint32_t index)
-                  {
-                      // Calculate Direction
-                      Vector2i mapSz = Vector2i(mapSize);
-                      Vector2i pixelId(index % mapSize[0],
-                                       index / mapSize[0]);
-
-                      for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
+                            // Calculate Direction
+                            Vector2i mapSz = Vector2i(mapSize);
+                            Vector2i pixelId(index % mapSz[0],
+                                             index / mapSz[0]);
+                            for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
+                            {
+                                int32_t newX = pixelId[0] + j;
+                                Vector2i neigPixel(newX, pixelId[1]);
+                                if(newX >= mapSz[0] || newX < 0)
+                                    neigPixel = Utility::CocentricOctohedralWrapInt(neigPixel, mapSz);
+                                int32_t linear = neigPixel[1] * mapSz[0] + neigPixel[0];
+                                valuesBuffer[index] += currentValues[linear] * gaussFilter(j);
+                            }
+                      });
+        std::fill(currentValues.begin(), currentValues.end(), 0.0f);
+        std::for_each(std::execution::par_unseq,
+                      indices.cbegin(), indices.cend(),
+                      [&](uint32_t index)
                       {
-                          int32_t newY = pixelId[1] + j;
-                          Vector2i neigPixel(pixelId[0], newY);
-                          if(newY >= mapSz[1] || newY < 0)
-                              neigPixel = Utility::CocentricOctohedralWrapInt(neigPixel, mapSz);
-                          int32_t linear = neigPixel[1] * mapSz[0] + neigPixel[0];
-                          currentValues[index] += valuesBuffer[linear] * gaussFilter(j);
-                      }
-                  });
+                            // Calculate Direction
+                            Vector2i mapSz = Vector2i(mapSize);
+                            Vector2i pixelId(index % mapSz[0],
+                                             index / mapSz[0]);
 
+                            for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
+                            {
+                                int32_t newY = pixelId[1] + j;
+                                Vector2i neigPixel(pixelId[0], newY);
+                                if(newY >= mapSz[1] || newY < 0)
+                                    neigPixel = Utility::CocentricOctohedralWrapInt(neigPixel, mapSz);
+                                int32_t linear = neigPixel[1] * mapSz[0] + neigPixel[0];
+                                currentValues[index] += valuesBuffer[linear] * gaussFilter(j);
+                            }
+                      });
+    };
     // Normalize the indices
     maxValueDisplay = std::reduce(std::execution::par_unseq,
                                   currentValues.cbegin(), currentValues.cend(),
@@ -1036,6 +1100,7 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
                        const std::string_view& boxName) -> bool
     {
         uint32_t oldSelectIndex = selectIndex;
+        ImGui::SetNextItemWidth(ImGui::GetWindowSize().y * 0.65f);
         if(ImGui::BeginCombo(boxName.data(),
                              nameList[selectIndex].second.c_str()))
         {
@@ -1066,31 +1131,44 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
     remainingSize.x = remainingSize.y;
     ImGui::NewLine();
     ImGui::SameLine(0.0f, (windowSize.x - remainingSize.x) * 0.5f - ImGui::GetStyle().WindowPadding.x);
-    RenderImageWithZoomTooltip(currentTexture, currentValues, remainingSize);
+    RenderImageWithZoomTooltip(currentTexture, currentValues, remainingSize,
+                               showAsIfPiecewiseLinear);
 
     bool binLevelChanged = false;
     bool renderResChanged = false;
     bool cosMultiplyChanged = false;
+    bool interpoateChanged = false;
+    bool gaussChanged = false;
+    bool pwlChanged = false;
     if(ImGui::BeginPopupContextItem(("texPopup" + name).c_str()))
     {
 
         //ImGui::Text("Resolution: [%u, %u]", mapSize[1], mapSize[0]);
-        ImGui::Text("Mult cos(theta) :"); ImGui::SameLine();
-        cosMultiplyChanged = ImGui::Checkbox("##FakeProduct", &multiplyCosTheta);
+        ImGui::Text("Mult cos(theta)      :"); ImGui::SameLine();
+        cosMultiplyChanged = ImGui::Checkbox("##FakeProduct",
+                                             &multiplyCosTheta);
 
-        ImGui::Text("Max Value : %f", maxValueDisplay);
-        ImGui::Text("BinLevel  :"); ImGui::SameLine();
+        ImGui::Text("Max Value            : %f", maxValueDisplay);
+        ImGui::Text("BinLevel             :"); ImGui::SameLine();
         // TODO: assuming all trees are the same here change if necessary
         binLevelChanged = ComboBox(maxBinLevelSelectIndex,
                                    maxBinLevelNameList,
                                    octrees[0].leafDepth,
                                    "##BinLevelCombo");
         // Render Level Select
-        ImGui::Text("Resolution:"); ImGui::SameLine();
+        ImGui::Text("Resolution           :"); ImGui::SameLine();
         renderResChanged = ComboBox(renderResolutionSelectIndex,
                                     renderResolutionNameList,
                                     std::numeric_limits<uint32_t>::max(),
                                     "##RenderResolutionCombo");
+
+        // Interpolate radiance query checkbox
+        ImGui::Text("Interpolate Radiance :"); ImGui::SameLine();
+        interpoateChanged = ImGui::Checkbox("##InterpRadiance", &readInterpolatedRadiance);
+        ImGui::Text("Gauss Filter Field   :"); ImGui::SameLine();
+        gaussChanged = ImGui::Checkbox("##GaussFilterRadiance", &doGaussFilter);
+        ImGui::Text("Show as PWL          :"); ImGui::SameLine();
+        pwlChanged = ImGui::Checkbox("##ShowPWL", &showAsIfPiecewiseLinear);
 
         if(ImGui::Button("Save Image"))
         {
@@ -1114,7 +1192,6 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
     }
     ImGui::EndChild();
 
-    //if(minBinLevel != maxBinLevelSelectIndex)
     if(binLevelChanged)
     {
         minBinLevel = maxBinLevelNameList[maxBinLevelSelectIndex].first;
@@ -1129,6 +1206,9 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
         currentValues.resize(mapSize.Multiply());
     }
     changed |= cosMultiplyChanged;
+    changed |= interpoateChanged;
+    changed |= gaussChanged;
+    changed |= pwlChanged;
 
     return changed;
 }

@@ -175,6 +175,9 @@ class GDebugRendererSVO : public GDebugRendererI
         std::vector<float>      currentValues;
         float                   maxValueDisplay;
         Vector3f                currentWorldPos;
+        bool                    readInterpolatedRadiance;
+        bool                    doGaussFilter;
+        bool                    showAsIfPiecewiseLinear;
         // Render Level Related
         Vec2uiNameList          renderResolutionNameList;
         uint32_t                renderResolutionSelectIndex;

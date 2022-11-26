@@ -63,9 +63,8 @@ namespace TracerFunctions
     }
 
     __device__ inline
-    float DGGX(float NdH, float roughness)
+    float DGGX(float NdH, float alpha)
     {
-        float alpha = roughness * roughness;
         float alphaSqr = alpha * alpha;
         float denom = NdH * NdH * (alphaSqr - 1.0f) + 1.0f;
         denom = denom * denom;
@@ -78,20 +77,73 @@ namespace TracerFunctions
     }
 
     __device__ inline
+    Vector3f VNDFGGXSmithSample(float& pdf,
+                                const Vector3f& V,
+                                float alpha,
+                                RNGeneratorGPUI& rng)
+    {
+        // VNDF Routine straight from the paper
+        // https://jcgt.org/published/0007/04/01/
+        // G1 is Smith here be careful,
+        // Everything is tangent space,
+        // So no surface normal is feed to the system,
+        // some Dot products (with normal) are thusly represented as
+        // X[2] where x is the vector is being dot product with the normal
+        //
+        // Unlike most of the routines this sampling function
+        // consists of multiple functions (namely NDF and Shadowing)
+        // because of that, it does not return the value of the function
+        // it returns the generated micro-facet normal
+        //
+        // And finally this routine represents isotropic material
+        // a_y ==  a_x == a
+        Vector2f xi = rng.Uniform2D();
+        // Rename alpha for easier reading
+        float a = alpha;
+        // Section 3.2 Ellipsoid to Spherical
+        Vector3f VHemi = Vector3f(a * V[0], a * V[1], V[2]).Normalize();
+        // Section 4.1 Find orthonormal basis in the sphere
+        float lensq = Vector2f(VHemi).LengthSqr();
+        Vector3f T1 = (lensq > 0) ? Vector3f(-VHemi[1], VHemi[0], 0.0f) / sqrt(lensq) : Vector3f(1, 0, 0);
+        Vector3f T2 = Cross(VHemi, T1);
+        // Section 4.2 Sampling using projected area
+        float r = sqrt(xi[0]);
+        float phi = 2.0f * MathConstants::Pi * xi[1];
+        float t1 = r * cos(phi);
+        float t2 = r * sin(phi);
+        float s = 0.5f * (1.0f + VHemi[2]);
+        t2 = (1.0f - s) * sqrt(1.0f - t1 * t1) + s * t2;
+        // Section 4.3: Projection onto hemisphere
+        float val = 1.0f - t1 * t1 - t2 * t2;
+        Vector3f NHemi = t1 * T1 + t2 * T2 + sqrt(max(0.0, val)) * VHemi;
+        // Section 3.4: Finally back to Ellipsoid
+        Vector3f NMicrofacet = Vector3f(a * NHemi[0], a * NHemi[1], max(0.0f, NHemi[2]));
+
+
+        // To make it consistent between other functions,
+        // we will return PDF of the value that is being returned (micro-facet normal)
+        // instead of the L. Convert it to reflected light after this function
+        bool pdfZero = (NMicrofacet.Dot(V) < 0.0f) || (V[2] == 0.0f);
+        float pdf = (pdfZero) ? 0.0f
+                              : (DGGX(NMicrofacet[2], alpha) * GSmithSingle(V, alpha) / V[2]);
+
+        return NMicrofacet.Normalize();
+    }
+
+    __device__ inline
     float DGGXSample(Vector3& H,
                      float& pdf,
-                     float roughness,
+                     float alpha,
                      RNGeneratorGPUI& rng)
     {
         // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
         // Page 4 it does not include pdf it is included from
         // https://agraphicsguynotes.com/posts/sample_microfacet_brdf/
         // https://www.tobias-franke.eu/log/2014/03/30/notes_on_importance_sampling.html
-
         float xi0 = rng.Uniform();
         float xi1 = rng.Uniform();
 
-        float a = roughness * roughness;
+        float a = alpha;
         float aSqr = a * a;
 
         float phi = 2.0f * MathConstants::Pi * xi0;
@@ -104,20 +156,51 @@ namespace TracerFunctions
                                               Vector2f(sinTheta, cosTheta));
 
         // Pdf
-        float ggxResult = DGGX(cosTheta, roughness);
+        float ggxResult = DGGX(cosTheta, a);
         pdf = cosTheta * ggxResult;
         return ggxResult;
     }
 
     __device__ inline
-    float GSchlick(float dot, float roughness)
+    float LambdaSmith(const Vector3f& vec, float alpha)
+    {
+        Vector3f vSqr = vec * vec;
+        float alphaSqr = alpha * alpha;
+        float inner = alphaSqr * (vSqr[0] + vSqr[1]) / vSqr[2];
+        float lambda = sqrt(1 + inner) - 1.0f;
+        lambda *= 0.5f;
+        return lambda;
+    }
+
+    __device__ inline
+    float GSmithSingle(const Vector3f& vec, float alpha)
+    {
+        return 1.0f / (1.0f + LambdaSmith(vec, alpha));
+    }
+
+    __device__ inline
+    float GSmithCorralated(const Vector3f& wO,
+                           const Vector3f& wI,
+                           float alpha)
+    {
+        // Height correlated mask/shadowing
+        return 1.0f / (LambdaSmith(wO, alpha) + LambdaSmith(wI, alpha) * 1.0f);
+    }
+
+    __device__ inline
+    float GSmithSeperable(const Vector3f& wO,
+                          const Vector3f& wI,
+                          float alpha)
+    {
+        return GSmithSingle(wO, alpha) * GSmithSingle(wI, alpha);
+    }
+
+    __device__ inline
+    float GSchlick(float dot, float alpha)
     {
         //// "Hotness" removal
         //roughness = (roughness + 1) * 0.5f;
-
         if(dot == 0.0f) return 0;
-        float alpha = roughness * roughness;
-
         // Unreal Version
         // This is much more verbose than 0.125f
         // and it should have same perf
@@ -133,13 +216,12 @@ namespace TracerFunctions
     }
 
     __device__ inline
-    float GeomGGX(float dot, float roughness)
+    float GeomGGX(float dot, float alpha)
     {
         // Straight from paper
         // https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
         if(dot == 0.0f) return 0;
 
-        float alpha = roughness * roughness;
         float alphaSqr = alpha * alpha;
 
         float dotSqr = dot;

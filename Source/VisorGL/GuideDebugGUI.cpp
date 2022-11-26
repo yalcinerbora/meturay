@@ -262,6 +262,7 @@ void GuideDebugGUI::Render()
         auto [pixChanged, newTexel] = RenderImageWithZoomTooltip(*currentRefTex,
                                                                  worldPositions,
                                                                  remainingSize,
+                                                                 true,
                                                                  pixelSelected,
                                                                  selectedPixel);
 

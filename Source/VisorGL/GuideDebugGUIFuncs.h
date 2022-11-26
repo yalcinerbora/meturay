@@ -42,6 +42,7 @@ namespace GuideDebugGUIFuncs
                 RenderImageWithZoomTooltip(TextureGL&,
                                            const std::vector<T>& values,
                                            const ImVec2& size,
+                                           bool doLinearFilter = false,
                                            bool renderCircle = false,
                                            const Vector2f& circleTexel = Zero2f);
 }
@@ -141,6 +142,7 @@ std::enable_if_t<std::is_same_v<T, Vector3f> ||
 GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
                                                const std::vector<T>& values,
                                                const ImVec2& size,
+                                               bool doLinearFilter,
                                                bool renderCircle,
                                                const Vector2f& circleTexel)
 {
@@ -148,6 +150,7 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
 
     // Debug Reference Image
     ImTextureID texId = (void*)(intptr_t)tex.TexId();
+    // Static Flags
     ImGuiTexInspect::InspectorFlags flags = 0;
     flags |= ImGuiTexInspect::InspectorFlags_FlipY;
     flags |= ImGuiTexInspect::InspectorFlags_NoZoomOut;
@@ -155,16 +158,18 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
     flags |= ImGuiTexInspect::InspectorFlags_NoAutoReadTexture;
     flags |= ImGuiTexInspect::InspectorFlags_NoBorder;
     flags |= ImGuiTexInspect::InspectorFlags_NoTooltip;
-
     //flags |= ImGuiTexInspect::InspectorFlags_NoGrid;
 
-    //ImVec2 imgStart = ImGui::GetCursorScreenPos();
     if(ImGuiTexInspect::BeginInspectorPanel("##RefImage", texId,
                                             ImVec2(static_cast<float>(tex.Size()[0]),
                                                    static_cast<float>(tex.Size()[1])),
                                             flags,
                                             ImGuiTexInspect::SizeIncludingBorder(size)))
     {
+        // Dynamic flags
+        ImGuiTexInspect::CurrentInspector_SetFlags((doLinearFilter) ? ImGuiTexInspect::InspectorFlags_NoForceFilterNearest : 0,
+                                                   (doLinearFilter) ? 0 : ImGuiTexInspect::InspectorFlags_NoForceFilterNearest);
+
         // Draw some text showing color value of each texel (you must be zoomed in to see this)
         ImGuiTexInspect::DrawAnnotations(ValueRenderer(values, tex.Size()));
         ImGuiTexInspect::Transform2D transform = ImGuiTexInspect::CurrentInspector_GetTransform();
