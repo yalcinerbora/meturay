@@ -69,96 +69,8 @@ namespace TracerFunctions
         float denom = NdH * NdH * (alphaSqr - 1.0f) + 1.0f;
         denom = denom * denom;
         denom *= MathConstants::Pi;
-
-        if(abs(denom) < MathConstants::SmallEpsilon)
-            return 0.0f;
         float result = (alphaSqr / denom);
-        return isnan(result) ? 0.0f : result;
-    }
-
-    __device__ inline
-    Vector3f VNDFGGXSmithSample(float& pdf,
-                                const Vector3f& V,
-                                float alpha,
-                                RNGeneratorGPUI& rng)
-    {
-        // VNDF Routine straight from the paper
-        // https://jcgt.org/published/0007/04/01/
-        // G1 is Smith here be careful,
-        // Everything is tangent space,
-        // So no surface normal is feed to the system,
-        // some Dot products (with normal) are thusly represented as
-        // X[2] where x is the vector is being dot product with the normal
-        //
-        // Unlike most of the routines this sampling function
-        // consists of multiple functions (namely NDF and Shadowing)
-        // because of that, it does not return the value of the function
-        // it returns the generated micro-facet normal
-        //
-        // And finally this routine represents isotropic material
-        // a_y ==  a_x == a
-        Vector2f xi = rng.Uniform2D();
-        // Rename alpha for easier reading
-        float a = alpha;
-        // Section 3.2 Ellipsoid to Spherical
-        Vector3f VHemi = Vector3f(a * V[0], a * V[1], V[2]).Normalize();
-        // Section 4.1 Find orthonormal basis in the sphere
-        float lensq = Vector2f(VHemi).LengthSqr();
-        Vector3f T1 = (lensq > 0) ? Vector3f(-VHemi[1], VHemi[0], 0.0f) / sqrt(lensq) : Vector3f(1, 0, 0);
-        Vector3f T2 = Cross(VHemi, T1);
-        // Section 4.2 Sampling using projected area
-        float r = sqrt(xi[0]);
-        float phi = 2.0f * MathConstants::Pi * xi[1];
-        float t1 = r * cos(phi);
-        float t2 = r * sin(phi);
-        float s = 0.5f * (1.0f + VHemi[2]);
-        t2 = (1.0f - s) * sqrt(1.0f - t1 * t1) + s * t2;
-        // Section 4.3: Projection onto hemisphere
-        float val = 1.0f - t1 * t1 - t2 * t2;
-        Vector3f NHemi = t1 * T1 + t2 * T2 + sqrt(max(0.0, val)) * VHemi;
-        // Section 3.4: Finally back to Ellipsoid
-        Vector3f NMicrofacet = Vector3f(a * NHemi[0], a * NHemi[1], max(0.0f, NHemi[2]));
-
-
-        // To make it consistent between other functions,
-        // we will return PDF of the value that is being returned (micro-facet normal)
-        // instead of the L. Convert it to reflected light after this function
-        bool pdfZero = (NMicrofacet.Dot(V) < 0.0f) || (V[2] == 0.0f);
-        float pdf = (pdfZero) ? 0.0f
-                              : (DGGX(NMicrofacet[2], alpha) * GSmithSingle(V, alpha) / V[2]);
-
-        return NMicrofacet.Normalize();
-    }
-
-    __device__ inline
-    float DGGXSample(Vector3& H,
-                     float& pdf,
-                     float alpha,
-                     RNGeneratorGPUI& rng)
-    {
-        // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
-        // Page 4 it does not include pdf it is included from
-        // https://agraphicsguynotes.com/posts/sample_microfacet_brdf/
-        // https://www.tobias-franke.eu/log/2014/03/30/notes_on_importance_sampling.html
-        float xi0 = rng.Uniform();
-        float xi1 = rng.Uniform();
-
-        float a = alpha;
-        float aSqr = a * a;
-
-        float phi = 2.0f * MathConstants::Pi * xi0;
-        float cosTheta = sqrt(max(0.0f, (1.0f - xi1) / ((aSqr - 1.0f) * xi1 + 1.0f)));
-        float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
-
-        // Spherical Coord conversion functions has azimuth as phi so
-        // this may look wrong but it is not
-        H = Utility::SphericalToCartesianUnit(Vector2f(sin(phi), cos(phi)),
-                                              Vector2f(sinTheta, cosTheta));
-
-        // Pdf
-        float ggxResult = DGGX(cosTheta, a);
-        pdf = cosTheta * ggxResult;
-        return ggxResult;
+        return result;
     }
 
     __device__ inline
@@ -167,7 +79,7 @@ namespace TracerFunctions
         Vector3f vSqr = vec * vec;
         float alphaSqr = alpha * alpha;
         float inner = alphaSqr * (vSqr[0] + vSqr[1]) / vSqr[2];
-        float lambda = sqrt(1 + inner) - 1.0f;
+        float lambda = sqrt(1.0f + inner) - 1.0f;
         lambda *= 0.5f;
         return lambda;
     }
@@ -184,7 +96,7 @@ namespace TracerFunctions
                            float alpha)
     {
         // Height correlated mask/shadowing
-        return 1.0f / (LambdaSmith(wO, alpha) + LambdaSmith(wI, alpha) * 1.0f);
+        return 1.0f / (LambdaSmith(wO, alpha) + LambdaSmith(wI, alpha) + 1.0f);
     }
 
     __device__ inline
@@ -254,6 +166,92 @@ namespace TracerFunctions
         result += f0;
         return result;
 
+    }
+
+    __device__ inline
+    Vector3f VNDFGGXSmithSample(float& pdf,
+                                const Vector3f& V,
+                                float alpha,
+                                RNGeneratorGPUI& rng)
+    {
+        // VNDF Routine straight from the paper
+        // https://jcgt.org/published/0007/04/01/
+        // G1 is Smith here be careful,
+        // Everything is tangent space,
+        // So no surface normal is feed to the system,
+        // some Dot products (with normal) are thusly represented as
+        // X[2] where x is the vector is being dot product with the normal
+        //
+        // Unlike most of the routines this sampling function
+        // consists of multiple functions (namely NDF and Shadowing)
+        // because of that, it does not return the value of the function
+        // it returns the generated micro-facet normal
+        //
+        // And finally this routine represents isotropic material
+        // a_y ==  a_x == a
+        Vector2f xi = rng.Uniform2D();
+        // Rename alpha for easier reading
+        float a = alpha;
+        // Section 3.2 Ellipsoid to Spherical
+        Vector3f VHemi = Vector3f(a * V[0], a * V[1], V[2]).Normalize();
+        // Section 4.1 Find orthonormal basis in the sphere
+        float lensq = Vector2f(VHemi).LengthSqr();
+        Vector3f T1 = (lensq > 0) ? Vector3f(-VHemi[1], VHemi[0], 0.0f) / sqrt(lensq) : Vector3f(1, 0, 0);
+        Vector3f T2 = Cross(VHemi, T1);
+        // Section 4.2 Sampling using projected area
+        float r = sqrt(xi[0]);
+        float phi = 2.0f * MathConstants::Pi * xi[1];
+        float t1 = r * cos(phi);
+        float t2 = r * sin(phi);
+        float s = 0.5f * (1.0f + VHemi[2]);
+        t2 = (1.0f - s) * sqrt(1.0f - t1 * t1) + s * t2;
+        // Section 4.3: Projection onto hemisphere
+        float val = 1.0f - t1 * t1 - t2 * t2;
+        Vector3f NHemi = t1 * T1 + t2 * T2 + sqrt(max(0.0f, val)) * VHemi;
+        // Section 3.4: Finally back to Ellipsoid
+        Vector3f NMicrofacet = Vector3f(a * NHemi[0], a * NHemi[1], max(0.0f, NHemi[2]));
+        NMicrofacet.NormalizeSelf();
+
+        // To make it consistent between other functions,
+        // we will return PDF of the value that is being returned (micro-facet normal)
+        // instead of the L. Convert it to reflected light after this function
+        float VdH = max(0.0f, NMicrofacet.Dot(V));
+        float D = DGGX(NMicrofacet[2], alpha);
+        float GSingle = GSmithSingle(V, alpha);
+        pdf = (V[2] == 0.0f) ? 0.0f
+                             : (VdH * D * GSingle / V[2]);
+        return NMicrofacet;
+    }
+
+    __device__ inline
+    float DGGXSample(Vector3& H,
+                     float& pdf,
+                     float alpha,
+                     RNGeneratorGPUI& rng)
+    {
+        // https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
+        // Page 4 it does not include pdf it is included from
+        // https://agraphicsguynotes.com/posts/sample_microfacet_brdf/
+        // https://www.tobias-franke.eu/log/2014/03/30/notes_on_importance_sampling.html
+        float xi0 = rng.Uniform();
+        float xi1 = rng.Uniform();
+
+        float a = alpha;
+        float aSqr = a * a;
+
+        float phi = 2.0f * MathConstants::Pi * xi0;
+        float cosTheta = sqrt(max(0.0f, (1.0f - xi1) / ((aSqr - 1.0f) * xi1 + 1.0f)));
+        float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+
+        // Spherical Coord conversion functions has azimuth as phi so
+        // this may look wrong but it is not
+        H = Utility::SphericalToCartesianUnit(Vector2f(sin(phi), cos(phi)),
+                                              Vector2f(sinTheta, cosTheta));
+
+        // Pdf
+        float ggxResult = DGGX(cosTheta, a);
+        pdf = cosTheta * ggxResult;
+        return ggxResult;
     }
 
     __device__ inline
