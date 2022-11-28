@@ -39,6 +39,15 @@ struct UnrealDeviceFuncs
     }
 
     __device__ inline static
+    bool IsSpecular(const UVSurface& surface,
+                    const UnrealMatData& matData,
+                    const HitKey::Type& matId)
+    {
+        using namespace TracerConstants;
+        return (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
+    }
+
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -78,12 +87,12 @@ struct UnrealDeviceFuncs
         // Sample a H (Half Vector)
         Vector3f H = TracerFunctions::VNDFGGXSmithSample(pdf, V, alpha, rng);
         // Reflect the light using microfacet normal
-        float VdH = V.Dot(H);
+        float VdH = max(0.0f, V.Dot(H));
         Vector3f L = 2.0f * VdH * H - V;
         // Pre-check the shadowing term switches
-        float LdH = L.Dot(H);
-        if(LdH <= 0.0f || // wi is masked
-           VdH <= 0.0f || // wo is shadowed
+        float LdH = max(0.0f, L.Dot(H));
+        if(LdH == 0.0f || // wi is masked
+           VdH == 0.0f || // wo is shadowed
            pdf == 0.0f)
         {
             pdf = 0.0f;
@@ -92,28 +101,34 @@ struct UnrealDeviceFuncs
 
         // VNDFGGXSmithSample returns sampling of H Vector
         // convert it to sampling probability of L Vector
-        //printf("pdf
         pdf /= (4.0f * VdH);
 
         //=======================//
         //   Calculate Specular  //
         //=======================//
         using namespace GPUSurface;
+        float NdH = max(0.0f, DotN(H));
+        float NdV = max(0.0f, DotN(V));
         // Normal Distribution Function (GGX)
-        float D = TracerFunctions::DGGX(DotN(H), alpha);
+        float D = TracerFunctions::DGGX(NdH, alpha);
         // Shadowing Term (Smith Model)
         float G = TracerFunctions::GSmithCorralated(V, L, alpha);
         // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
         // Notice that NdL terms are canceled out
-        float NdV = DotN(V);
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
         specularTerm = (NdV <= 0.0f) ? Zero3 : specularTerm;
 
-        // Cancel maybe?
-        //specularTerm = G * F / TracerFunctions::GSmithSingle(V, alpha);
-        //pdf = 1.0f;
+        // Edge case D is unstable since alpha is too small
+        // fall back to cancelled version
+        /*if(IsSpecular(surface, matData, matId) || isinf(D))*/
+        if(isinf(D) ||  // alpha is small
+           isnan(D))    // alpha is zero
+        {
+            specularTerm = G * F / TracerFunctions::GSmithSingle(V, alpha);
+            pdf = 1.0f;
+        }
 
         //Vector3f r = specularTerm / pdf;
         //printf("[S]D: %f, G: %f, F: (%f, %f, %f), "
@@ -129,7 +144,7 @@ struct UnrealDeviceFuncs
         //   Calculate Diffuse   //
         //=======================//
         // Blend between albedo<->black for metallic material
-        float NdL = max(DotN(L), 0.0f);
+        float NdL = max(0.0f, DotN(L));
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
 
@@ -160,14 +175,12 @@ struct UnrealDeviceFuncs
               const UnrealMatData& matData,
               const HitKey::Type& matId)
     {
-        //// It is impossible to find exact wo <=> wi
-        //// with a chance
-        //using namespace TracerConstants;
-        //bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
-        //if(isSpecular)
-        //{
-        //    return 0.0f;
-        //}
+        // It is impossible to find exact wo <=> wi
+        // correlation with a chance
+        if(IsSpecular(surface, matData, matId))
+        {
+            return 0.0f;
+        }
 
         float roughness = (*matData.dRoughness[matId])(surface.uv);
         float alpha = roughness * roughness;
@@ -177,21 +190,20 @@ struct UnrealDeviceFuncs
         if(matData.dNormal[matId] != nullptr)
         {
             Vector3f N = (*matData.dNormal[matId])(surface.uv).Normalize();
-            toTangentRot = Quat::RotationBetweenZAxis(N) * toTangentRot;
+            toTangentRot = toTangentRot * Quat::RotationBetweenZAxis(N);
         }
         Vector3f L = GPUSurface::ToTangent(wo, toTangentRot);
         Vector3f V = GPUSurface::ToTangent(wi, toTangentRot);
         Vector3f H = (L + V).Normalize();
 
-        float HdV = max(0.0f, H.Dot(V));
         // Use optimized dot product between N here (which just does V[2])
         // but it is more verbose
         using namespace GPUSurface;
-        float pdf = (HdV *
-                     TracerFunctions::DGGX(DotN(H), alpha) *
-                     TracerFunctions::GSmithSingle(V, alpha) / DotN(V));
-
-        return (DotN(V) == 0.0f) ? 0.0f : pdf;
+        float HdV = max(0.0f, H.Dot(V));
+        float NdV = max(0.0f, DotN(V));
+        float D = TracerFunctions::DGGX(DotN(H), alpha);
+        float pdf = (HdV * D * TracerFunctions::GSmithSingle(V, alpha) / NdV);
+        return (NdV == 0.0f || isnan(D) || isinf(D)) ? 0.0f : pdf;
     }
 
     __device__ inline static
@@ -206,13 +218,7 @@ struct UnrealDeviceFuncs
                      const UnrealMatData& matData,
                      const HitKey::Type& matId)
     {
-        //// It is impossible to evaluate if object is highly specular
-        //using namespace TracerConstants;
-        //bool isSpecular = (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
-        //if(isSpecular)
-        //{
-        //    return Zero3f;
-        //}
+        const bool isSpecular = IsSpecular(surface, matData, matId);
 
         // Acquire Parameters
         // Check if normal mapping is present
@@ -227,7 +233,7 @@ struct UnrealDeviceFuncs
         if(matData.dNormal[matId] != nullptr)
         {
             Vector3f N = (*matData.dNormal[matId])(surface.uv).Normalize();
-            toTangentRot = Quat::RotationBetweenZAxis(N) * toTangentRot;
+            toTangentRot = toTangentRot * Quat::RotationBetweenZAxis(N);
         }
         Vector3f L = GPUSurface::ToTangent(wo, toTangentRot);
         Vector3f V = GPUSurface::ToTangent(wi, toTangentRot);
@@ -237,21 +243,27 @@ struct UnrealDeviceFuncs
         //   Calculate Specular  //
         //=======================//
         using namespace GPUSurface;
-        float LdH = L.Dot(H);
-        float VdH = V.Dot(H);
+        float LdH = max(0.0f, L.Dot(H));
+        float VdH = max(0.0f, V.Dot(H));
+        float NdH = max(0.0f, DotN(H));
+        float NdV = max(0.0f, DotN(V));
         // Normal Distribution Function (GGX)
-        float D = TracerFunctions::DGGX(DotN(H), alpha);
+        float D = TracerFunctions::DGGX(NdH, alpha);
+        // NDF could exceed the precision (alpha is small) or returns nan
+        // (alpha is zero).
+        // Assume geometry term was going to zero out the contribution
+        // and zero here as well.
+        D = (isnan(D) || isinf(D)) ? 0.0f : D;
         // Shadowing Term (Smith Model)
         float G = TracerFunctions::GSmithCorralated(V, L, alpha);
-        G = (LdH <= 0.0f) ? 0.0f : G;
-        G = (VdH <= 0.0f) ? 0.0f : G;
+        G = (LdH == 0.0f) ? 0.0f : G;
+        G = (VdH == 0.0f) ? 0.0f : G;
         // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
         // Notice that NdL terms are canceled out
-        float NdV = DotN(V);
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
-        specularTerm = (NdV <= 0.0f) ? Zero3 : specularTerm;
+        specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
 
         //printf("[E]D: %f, G: %f, F: (%f, %f, %f), totalSpec (%f, %f, %f)\n",
         //       D, G, F[0], F[1], F[2],
@@ -262,7 +274,7 @@ struct UnrealDeviceFuncs
         //   Calculate Diffuse   //
         //=======================//
         // Blend between albedo<->black for metallic material
-        float NdL = max(DotN(L), 0.0f);
+        float NdL = max(0.0f, DotN(L));
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
 

@@ -57,8 +57,6 @@ namespace TracerFunctions
         float parallel = cosInSqr * a2b2 - (2.0f * a * cosIn * sinInSqr) + sinInSqr4;
         parallel /= (cosInSqr * a2b2 + (2.0f * a * cosIn * sinInSqr) + sinInSqr4);
         parallel *= perpendicular;
-
-
         return (parallel + perpendicular) * 0.5f;
     }
 
@@ -216,10 +214,11 @@ namespace TracerFunctions
         // we will return PDF of the value that is being returned (micro-facet normal)
         // instead of the L. Convert it to reflected light after this function
         float VdH = max(0.0f, NMicrofacet.Dot(V));
-        float D = DGGX(NMicrofacet[2], alpha);
+        float NdH = max(0.0f, NMicrofacet[2]);
+        float NdV = max(0.0f, V[2]);
+        float D = DGGX(NdH, alpha);
         float GSingle = GSmithSingle(V, alpha);
-        pdf = (V[2] == 0.0f) ? 0.0f
-                             : (VdH * D * GSingle / V[2]);
+        pdf = (NdV == 0.0f) ? 0.0f : (VdH * D * GSingle / NdV);
         return NMicrofacet;
     }
 
