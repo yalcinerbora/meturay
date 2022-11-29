@@ -121,6 +121,7 @@ TextureI<D>::TextureI(TextureI&& other)
     , channelCount(other.channelCount)
     , texture(other.texture)
     , dimensions(other.dimensions)
+    , mipCount(mipCount)
 {
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
@@ -134,6 +135,7 @@ TextureI<D>& TextureI<D>::operator=(TextureI&& other)
     texture = other.texture;
     dimensions = other.dimensions;
     channelCount = other.channelCount;
+    mipCount = other.mipCount;
 
     other.channelCount = 0;
     other.texture = 0;
@@ -178,7 +180,7 @@ Texture<D, T>::Texture(const CudaGPU* device,
                        bool convertSRGB,
                        const TexDimType_t<D>& dim,
                        int mipCount)
-    : TextureI<D>(dim, TextureChannelCount<T>::value, device)
+    : TextureI<D>(dim, TextureChannelCount<T>::value, device, mipCount)
     , interpType(interp)
     , edgeResolveType(eResolve)
 {
@@ -308,6 +310,42 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
 
     CUDA_CHECK(cudaMemcpy3DAsync(&p, stream));
     return GPUFence(stream);
+}
+
+template<int D, class T>
+void Texture<D, T>::GenerateMipmaps(int startMip, int upToMip,
+                                    cudaStream_t stream)
+{
+    std::vector<CudaSurfaceRAII> surfaces;
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
+
+    // Sample stratified MULTISAMPLE_COUNT * MULTISAMPLE_COUNT
+    // amount of samples over the region of the texel.
+    // Filter these according to the filter
+    static constexpr int MULTISAMPLE_COUNT = 4;
+
+    upToMip = std::max(this->mipCount, upToMip);
+    for(int mipLevel = startMip + 1; mipLevel <= upToMip; mipLevel++)
+    {
+        cudaArray_t levelArray;
+        CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
+        // Construct surface object over it
+        cudaResourceDesc rDesc;
+        rDesc.resType = cudaResourceTypeArray;
+        rDesc.res.array.array = levelArray;
+
+        cudaSurfaceObject_t surface;
+        CUDA_CHECK(cudaCreateSurfaceObject(&surface, &rDesc));
+        surfaces.emplace_back(surface);
+
+        // Do the calculations
+        //TextureRef<D, T> texRef = TextureRef<D, T>(this->texture);
+
+
+    }
+
+    // Wait all events to finish before deleting surfaces (implicit)
+    CUDA_CHECK(cudaStreamSynchronize(stream));
 }
 
 template<int D, class T>

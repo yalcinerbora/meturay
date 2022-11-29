@@ -16,6 +16,7 @@ Object oriented design and openGL like access
 #include "GPUEvent.h"
 #include "DeviceMemory.h"
 #include "CudaSystem.h"
+#include "TextureReference.cuh"
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
@@ -116,6 +117,26 @@ constexpr bool is_TextureType_v = is_TextureType<T>::value;
 static constexpr cudaTextureAddressMode DetermineAddressMode(EdgeResolveType);
 static constexpr cudaTextureFilterMode DetermineFilterMode(InterpolationType);
 
+// RAII Wrapper for surface type
+// used while constructing mipmaps
+class CudaSurfaceRAII
+{
+    private:
+    cudaSurfaceObject_t surface;// = 0;
+
+    public:
+    // Constructors & Destructor
+    //CudaSurfaceRAII() = default;
+    CudaSurfaceRAII(cudaSurfaceObject_t);
+    CudaSurfaceRAII(const CudaSurfaceRAII&) = delete;
+    CudaSurfaceRAII(CudaSurfaceRAII&&);
+    CudaSurfaceRAII& operator=(const CudaSurfaceRAII&) = delete;
+    CudaSurfaceRAII& operator=(CudaSurfaceRAII&&);
+    ~CudaSurfaceRAII();
+
+    operator cudaSurfaceObject_t() { return surface; }
+};
+
 // Generic Texture Type
 // used to group different of textures
 template<int D>
@@ -128,12 +149,14 @@ class TextureI : public DeviceLocalMemoryI
         uint32_t                    channelCount    = 0;
         cudaTextureObject_t         texture         = 0;
         TexDimType_t<D>             dimensions      = TexDimType<D>::ZERO;
+        int                         mipCount        = 0;
 
     public:
         // Constructors & Destructor
                                     TextureI(const TexDimType_t<D>& dim,
                                              uint32_t channelCount,
-                                             const CudaGPU* device);
+                                             const CudaGPU* device,
+                                             int mipCount);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
         TextureI&                   operator=(const TextureI&) = delete;
@@ -247,6 +270,10 @@ class Texture final : public TextureI<D>
                                       const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
+        // TODO: Generate Async version as well
+        void                GenerateMipmaps(int startMip = 0,
+                                            int upToMip = std::numeric_limits<int>::max(),
+                                            cudaStream_t stream = nullptr);
 
         // Accessors
         InterpolationType       InterpType() const;
@@ -380,13 +407,37 @@ template<class T> using Texture3D = Texture<3, T>;
 template<class T> using Texture1DArray = TextureArray<1, T>;
 template<class T> using Texture2DArray = TextureArray<2, T>;
 
+inline CudaSurfaceRAII::CudaSurfaceRAII(cudaSurfaceObject_t s)
+ : surface(s)
+{}
+
+inline CudaSurfaceRAII::CudaSurfaceRAII(CudaSurfaceRAII&& other)
+    : surface(other.surface)
+{
+    other.surface = 0;
+}
+
+inline CudaSurfaceRAII& CudaSurfaceRAII::operator=(CudaSurfaceRAII&& other)
+{
+    if(surface) CUDA_CHECK(cudaDestroySurfaceObject(surface));
+    surface = other.surface;
+    other.surface = 0;
+}
+
+inline CudaSurfaceRAII::~CudaSurfaceRAII()
+{
+    if(surface) CUDA_CHECK(cudaDestroySurfaceObject(surface));
+}
+
 template<int D>
 inline TextureI<D>::TextureI(const TexDimType_t<D>& dim,
                              uint32_t channelCount,
-                             const CudaGPU* currentDevice)
+                             const CudaGPU* currentDevice,
+                             int mipCount)
     : DeviceLocalMemoryI(currentDevice)
     , channelCount(channelCount)
     , dimensions(dim)
+    , mipCount(mipCount)
 {}
 
 template<int D>
@@ -459,7 +510,6 @@ inline const Vector2ui& TextureCubeI::Dimensions() const
 {
     return dimensions;
 }
-
 
 inline uint32_t TextureCubeI::ChannelCount() const
 {
