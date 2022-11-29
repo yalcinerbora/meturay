@@ -38,13 +38,31 @@ struct UnrealDeviceFuncs
         return 1.0f - roughness;
     }
 
+    //__device__ inline static
+    //bool IsSpecular(const UVSurface& surface,
+    //                const UnrealMatData& matData,
+    //                const HitKey::Type& matId)
+    //{
+    //    using namespace TracerConstants;
+    //    return (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
+    //}
+
     __device__ inline static
-    bool IsSpecular(const UVSurface& surface,
-                    const UnrealMatData& matData,
-                    const HitKey::Type& matId)
+    float MisRatio(float metallic, float roughness)
     {
-        using namespace TracerConstants;
-        return (Specularity(surface, matData, matId) >= SPECULAR_THRESHOLD);
+        // Return Diffuse Ratio
+        //return 0.5f;
+        // Hand made MIS ratio
+        float alpha = roughness * roughness;
+        float sqrtAlpha = roughness;
+        float alphaSqr = alpha * alpha;
+        float ratio = (1.0f - metallic * metallic) * (metallic * alphaSqr +
+                                                      (1 - metallic) * sqrtAlpha);
+
+        // Don't force full ratio to one of the sampling method
+        static constexpr float minRatio = 0.05f;
+        static constexpr float maxRatio = 0.95f;
+        return HybridFuncs::Lerp(minRatio, maxRatio, ratio);
     }
 
     __device__ inline static
@@ -84,62 +102,80 @@ struct UnrealDeviceFuncs
         }
         // Since we using capital terms alias wi as V
         Vector3f V = GPUSurface::ToTangent(wi, toTangent);
-        // Sample a H (Half Vector)
-        Vector3f H = TracerFunctions::VNDFGGXSmithSample(pdf, V, alpha, rng);
-        // Reflect the light using microfacet normal
-        float VdH = max(0.0f, V.Dot(H));
-        Vector3f L = 2.0f * VdH * H - V;
-        // Pre-check the shadowing term switches
-        float LdH = max(0.0f, L.Dot(H));
-        if(LdH == 0.0f || // wi is masked
-           VdH == 0.0f || // wo is shadowed
-           pdf == 0.0f)
-        {
-            pdf = 0.0f;
-            return Zero3f;
-        }
 
-        // VNDFGGXSmithSample returns sampling of H Vector
-        // convert it to sampling probability of L Vector
-        pdf /= (4.0f * VdH);
+        // Calculate the ratio between diffuse/specular
+        float misRatio = MisRatio(metallic, roughness);
+        float xi = rng.Uniform();
+        bool isSampleDiffuse = (xi < misRatio);
+
+        // MIS
+        float VdH;
+        Vector3f H, L;
+        float pdfSelected, pdfOther;
+        if(isSampleDiffuse)
+        {
+            // Sample Diffuse
+            L = HemiDistribution::HemiCosineCDF(rng.Uniform2D(),
+                                                pdfSelected);
+            H = (V + L).Normalize();
+            VdH = max(0.0f, V.Dot(H));
+
+            pdfOther = TracerFunctions::VNDFGGXSmithPDF(V, H, alpha);
+            // VNDFGGXSmithSample returns sampling of H Vector
+            // convert it to sampling probability of L Vector
+            pdfOther /= (4.0f * VdH);
+        }
+        else
+        {
+            // Sample Specular
+            // Sample a H (Half Vector)
+            H = TracerFunctions::VNDFGGXSmithSample(pdfSelected, V, alpha, rng);
+            // Reflect the light using microfacet normal
+            VdH = max(0.0f, V.Dot(H));
+            L = 2.0f * VdH * H - V;
+
+            pdfOther = max(0.0f, GPUSurface::DotN(L)) * MathConstants::InvPi;
+            // VNDFGGXSmithSample returns sampling of H Vector
+            // convert it to sampling probability of L Vector
+            pdfSelected /= (4.0f * VdH);
+
+            misRatio = 1.0f - misRatio;
+        }
+        float& pdfSpecular = (isSampleDiffuse) ? pdfOther : pdfSelected;
+        pdfSpecular = (VdH == 0.0f) ? 0.0f : pdfSpecular;
 
         //=======================//
         //   Calculate Specular  //
         //=======================//
         using namespace GPUSurface;
+        float LdH = max(0.0f, L.Dot(H));
         float NdH = max(0.0f, DotN(H));
         float NdV = max(0.0f, DotN(V));
         // Normal Distribution Function (GGX)
         float D = TracerFunctions::DGGX(NdH, alpha);
         // Shadowing Term (Smith Model)
         float G = TracerFunctions::GSmithCorralated(V, L, alpha);
+        G = (LdH == 0.0f) ? 0.0f : G;
+        G = (VdH == 0.0f) ? 0.0f : G;
         // Fresnel Term (Schlick's Approx)
         Vector3f f0 = CalculateF0(albedo, metallic, specular);
         Vector3f F = TracerFunctions::FSchlick(VdH, f0);
         // Notice that NdL terms are canceled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
-        specularTerm = (NdV <= 0.0f) ? Zero3 : specularTerm;
+        specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
 
         // Edge case D is unstable since alpha is too small
         // fall back to cancelled version
-        /*if(IsSpecular(surface, matData, matId) || isinf(D))*/
         if(isinf(D) ||  // alpha is small
            isnan(D))    // alpha is zero
         {
             specularTerm = G * F / TracerFunctions::GSmithSingle(V, alpha);
-            pdf = 1.0f;
+            // Don't forget that we are using MIS
+            // If we sampled using Specular, pdf is one
+            // since we are the sampler
+            // on the other hand, diffuse can not sample this value
+            pdfSpecular = (isSampleDiffuse) ? 0.0f : 1.0f;
         }
-
-        //Vector3f r = specularTerm / pdf;
-        //printf("[S]D: %f, G: %f, F: (%f, %f, %f), "
-        //       "G[V] %f, VdH %f,"
-        //       "totalSpec (%f, %f, %f), pdf %f = (%f, %f, %f)\n",
-        //       D, G,
-        //       F[0], F[1], F[2],
-        //       TracerFunctions::GSmithSingle(V, alpha), VdH,
-        //       specularTerm[0], specularTerm[1], specularTerm[2],
-        //       pdf, r[0], r[1], r[2]);
-
         //=======================//
         //   Calculate Diffuse   //
         //=======================//
@@ -147,6 +183,36 @@ struct UnrealDeviceFuncs
         float NdL = max(0.0f, DotN(L));
         Vector3f diffuseAlbedo = (1.0f - metallic) * albedo;
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
+
+        //==============================//
+        // Multiple Importance Sampling //
+        //==============================//
+        // Doing "one-sample" MIS here
+        //float misWeight = TracerFunctions::BalanceHeuristic(1, pdfSelected, 1, pdfOther);
+        float misWeight = TracerFunctions::BalanceHeuristic(misRatio, pdfSelected,
+                                                            1 - misRatio, pdfOther);
+        pdf = (pdfSelected == 0.0f) ? 0.0f : (misRatio * pdfSelected / misWeight);
+        if(isnan(pdf))
+        {
+            Vector3f r = specularTerm / pdf;
+            printf("[S]D: %f, G: %f, F: (%f, %f, %f), "
+                   "G[V] %f, VdH %f,"
+                   "totalSpec (%f, %f, %f), "
+                   "[%s] pdf %f, pdfSelected %f, pdfOther %f\n",
+                   D, G,
+                   F[0], F[1], F[2],
+                   TracerFunctions::GSmithSingle(V, alpha), VdH,
+                   specularTerm[0], specularTerm[1], specularTerm[2],
+                   (isSampleDiffuse) ? "Diffuse "
+                                     : "Specular",
+                   pdf, pdfSelected, pdfOther);
+        }
+        if(pdf < 0.0f)
+        {
+            printf("[%s] pdf %f, pdfSelected %f, pdfOther %f\n",
+                   (isSampleDiffuse) ? "Diffuse " : "Specular",
+                   pdf, pdfSelected, pdfOther);
+        }
 
         //=======================//
         //  Calculate Direction  //
@@ -160,7 +226,7 @@ struct UnrealDeviceFuncs
         // PDF is already written
         // Finally return Radiance
         // All Done!
-        return /*diffuseTerm +*/ specularTerm;
+        return diffuseTerm + specularTerm;
     }
 
     __device__ inline static
@@ -175,13 +241,7 @@ struct UnrealDeviceFuncs
               const UnrealMatData& matData,
               const HitKey::Type& matId)
     {
-        // It is impossible to find exact wo <=> wi
-        // correlation with a chance
-        if(IsSpecular(surface, matData, matId))
-        {
-            return 0.0f;
-        }
-
+        float metallic = (*matData.dMetallic[matId])(surface.uv);
         float roughness = (*matData.dRoughness[matId])(surface.uv);
         float alpha = roughness * roughness;
 
@@ -198,12 +258,19 @@ struct UnrealDeviceFuncs
 
         // Use optimized dot product between N here (which just does V[2])
         // but it is more verbose
-        using namespace GPUSurface;
-        float HdV = max(0.0f, H.Dot(V));
-        float NdV = max(0.0f, DotN(V));
-        float D = TracerFunctions::DGGX(DotN(H), alpha);
-        float pdf = (HdV * D * TracerFunctions::GSmithSingle(V, alpha) / NdV);
-        return (NdV == 0.0f || isnan(D) || isinf(D)) ? 0.0f : pdf;
+        float NdH = max(0.0f, GPUSurface::DotN(H));
+        float pdfSpecular = TracerFunctions::VNDFGGXSmithPDF(V, H, alpha);
+        float D = TracerFunctions::DGGX(NdH, alpha);
+        pdfSpecular = (isnan(D) || isinf(D)) ? 0.0f : pdfSpecular;
+
+        float pdfDiffuse = max(0.0f, GPUSurface::DotN(L)) * MathConstants::InvPi;
+
+        float misRatio = MisRatio(metallic, roughness);
+        float pdf = (misRatio * pdfDiffuse +
+                     (1.0f - misRatio) * pdfSpecular);
+
+        return pdf;
+        //return pdfSpecular;
     }
 
     __device__ inline static
@@ -218,8 +285,6 @@ struct UnrealDeviceFuncs
                      const UnrealMatData& matData,
                      const HitKey::Type& matId)
     {
-        const bool isSpecular = IsSpecular(surface, matData, matId);
-
         // Acquire Parameters
         // Check if normal mapping is present
         float roughness = (*matData.dRoughness[matId])(surface.uv);
@@ -279,7 +344,7 @@ struct UnrealDeviceFuncs
         Vector3f diffuseTerm = NdL * diffuseAlbedo * MathConstants::InvPi;
 
         // All Done!
-        return /*diffuseTerm +*/ specularTerm;
+        return diffuseTerm + specularTerm;
     }
 
     // Does not have emission

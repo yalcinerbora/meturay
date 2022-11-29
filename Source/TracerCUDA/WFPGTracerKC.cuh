@@ -371,7 +371,7 @@ void WFPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        const float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
+        float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
         float xi = rng.Uniform();
 
         float misWeight;
@@ -396,7 +396,9 @@ void WFPGTracerPathWork(// Output
                                          matIndex,
                                          0);
             pdfGuide = aux.guidePDF;
-            misWeight = TracerFunctions::BalanceHeuristic(1, pdfBxDF, 1, pdfGuide);
+            misWeight = TracerFunctions::BalanceHeuristic(1 - BxDF_GuideSampleRatio, pdfBxDF,
+                                                          BxDF_GuideSampleRatio, pdfGuide);
+            BxDF_GuideSampleRatio = 1.0f - BxDF_GuideSampleRatio;
             selectedPDFZero = (pdfBxDF == 0.0f);
         }
         else
@@ -433,7 +435,8 @@ void WFPGTracerPathWork(// Output
             rayPath = RayF(direction, position);
             rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
 
-            misWeight = TracerFunctions::BalanceHeuristic(1, pdfGuide, 1, pdfBxDF);
+            misWeight = TracerFunctions::BalanceHeuristic(BxDF_GuideSampleRatio, pdfGuide,
+                                                          1 - BxDF_GuideSampleRatio, pdfBxDF);
             selectedPDFZero = (pdfGuide == 0.0f);
         }
         // Pdf Average

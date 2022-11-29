@@ -167,6 +167,18 @@ namespace TracerFunctions
     }
 
     __device__ inline
+    float VNDFGGXSmithPDF(const Vector3f V, const Vector3f H, float alpha)
+    {
+        float VdH = max(0.0f, H.Dot(V));
+        float NdH = max(0.0f, H[2]);
+        float NdV = max(0.0f, V[2]);
+        float D = DGGX(NdH, alpha);
+        float GSingle = GSmithSingle(V, alpha);
+        float pdf = (NdV == 0.0f) ? 0.0f : (VdH * D * GSingle / NdV);
+        return pdf;
+    }
+
+    __device__ inline
     Vector3f VNDFGGXSmithSample(float& pdf,
                                 const Vector3f& V,
                                 float alpha,
@@ -213,12 +225,13 @@ namespace TracerFunctions
         // To make it consistent between other functions,
         // we will return PDF of the value that is being returned (micro-facet normal)
         // instead of the L. Convert it to reflected light after this function
-        float VdH = max(0.0f, NMicrofacet.Dot(V));
-        float NdH = max(0.0f, NMicrofacet[2]);
-        float NdV = max(0.0f, V[2]);
-        float D = DGGX(NdH, alpha);
-        float GSingle = GSmithSingle(V, alpha);
-        pdf = (NdV == 0.0f) ? 0.0f : (VdH * D * GSingle / NdV);
+        //float VdH = max(0.0f, NMicrofacet.Dot(V));
+        //float NdH = max(0.0f, NMicrofacet[2]);
+        //float NdV = max(0.0f, V[2]);
+        //float D = DGGX(NdH, alpha);
+        //float GSingle = GSmithSingle(V, alpha);
+        //pdf = (NdV == 0.0f) ? 0.0f : (VdH * D * GSingle / NdV);
+        pdf = VNDFGGXSmithPDF(V, NMicrofacet, alpha);
         return NMicrofacet;
     }
 
@@ -254,20 +267,20 @@ namespace TracerFunctions
     }
 
     __device__ inline
-    float PowerHeuristic(int n0, float pdf0, int n1, float pdf1)
+    float PowerHeuristic(float n0, float pdf0, float n1, float pdf1)
     {
         // This is power-2 heuristic
-        float w0 = static_cast<float>(n0) * pdf0;
-        float w1 = static_cast<float>(n1) * pdf1;
+        float w0 = n0 * pdf0;
+        float w1 = n1 * pdf1;
 
         return (w0 * w0) / (w0 * w0 + w1 * w1);
     }
 
     __device__ inline
-    float BalanceHeuristic(int n0, float pdf0, int n1, float pdf1)
+    float BalanceHeuristic(float n0, float pdf0, float n1, float pdf1)
     {
-        float w0 = static_cast<float>(n0) * pdf0;
-        float w1 = static_cast<float>(n1) * pdf1;
+        float w0 = n0 * pdf0;
+        float w1 = n1 * pdf1;
         return w0 / (w0 + w1);
     }
 

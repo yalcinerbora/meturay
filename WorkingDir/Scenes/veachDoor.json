@@ -190,8 +190,12 @@
     {
         // Floor
         "id": 10,
-        "type": "Lambert",
-        "albedo": {"texture": 1, "channels": "rgb"}
+        //"type": "Lambert",
+        "type": "Unreal",
+        "albedo": {"texture": 1, "channels": "rgb"},
+        "metallic" : 0.1,
+        "specular" : 0.8,
+        "roughness": 0.3
     },
     {
         // Wood Table

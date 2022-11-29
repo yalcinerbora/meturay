@@ -433,7 +433,8 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
 {
     // Calculate segment sizes etc
     static constexpr Vector2i REGION_SIZE = Vector2i(32, 32);
-    static constexpr int32_t THREAD_COUNT = 512;
+    // On debug, register count is too high we reduce the thread per block instead
+    static constexpr int32_t THREAD_COUNT = METU_DEBUG_BOOL ? 256 : 512;
     Vector2i totalPixelCount = imgMemory.SegmentSize();
     Vector2i totalSegments = (totalPixelCount + (REGION_SIZE - Vector2i(1))) / REGION_SIZE;
     Vector2i extras = totalPixelCount % REGION_SIZE;
