@@ -12,11 +12,12 @@ Object oriented design and openGL like access
 #include "RayLib/Vector.h"
 #include "RayLib/Types.h"
 #include "RayLib/TypeTraits.h"
+#include "RayLib/BitManipulation.h"
 
 #include "GPUEvent.h"
 #include "DeviceMemory.h"
-#include "CudaSystem.h"
 #include "TextureReference.cuh"
+#include "CudaSystem.h"
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
@@ -149,14 +150,14 @@ class TextureI : public DeviceLocalMemoryI
         uint32_t                    channelCount    = 0;
         cudaTextureObject_t         texture         = 0;
         TexDimType_t<D>             dimensions      = TexDimType<D>::ZERO;
-        int                         mipCount        = 0;
+        uint32_t                    mipCount        = 0;
 
     public:
         // Constructors & Destructor
                                     TextureI(const TexDimType_t<D>& dim,
                                              uint32_t channelCount,
                                              const CudaGPU* device,
-                                             int mipCount);
+                                             uint32_t mipCount);
                                     TextureI(const TextureI&) = delete;
                                     TextureI(TextureI&&);
         TextureI&                   operator=(const TextureI&) = delete;
@@ -165,6 +166,7 @@ class TextureI : public DeviceLocalMemoryI
 
         const TexDimType_t<D>&      Dimensions() const;
         uint32_t                    ChannelCount() const;
+        uint32_t                    MipmapCount() const;
 
         constexpr explicit          operator cudaTextureObject_t() const;
 };
@@ -235,12 +237,19 @@ class Texture final : public TextureI<D>
     static_assert(D >= 1 && D <= 3, "At most 3D textures are supported");
     static_assert(is_TextureType_v<T>, "Invalid texture type");
 
+    public:
+        using ChannelType = T;
+
+
     private:
         cudaMipmappedArray_t        data = nullptr;
 
 
         InterpolationType           interpType;
         EdgeResolveType             edgeResolveType;
+        bool                        normalizeIntegers;
+        bool                        normalizeCoordinates;
+        bool                        convertSRGB;
 
     protected:
     public:
@@ -253,7 +262,7 @@ class Texture final : public TextureI<D>
                                     bool normalizeCoordinates,
                                     bool convertSRGB,
                                     const TexDimType_t<D>& dim,
-                                    int mipCount);
+                                    uint32_t mipCount);
                             Texture(const Texture&) = delete;
                             Texture(Texture&&);
         Texture&            operator=(const Texture&) = delete;
@@ -270,10 +279,12 @@ class Texture final : public TextureI<D>
                                       const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
                                       int mipLevel = 0,
                                       cudaStream_t stream = nullptr);
-        // TODO: Generate Async version as well
-        void                GenerateMipmaps(int startMip = 0,
-                                            int upToMip = std::numeric_limits<int>::max(),
-                                            cudaStream_t stream = nullptr);
+
+        // Generates empty mipmapped texture
+        // does not generate any mipmaps,
+        // copies the level zero to the created texture though
+        Texture<D, T>           EmptyMipmappedTexture(uint32_t upToLevel = std::numeric_limits<uint32_t>::max()) const;
+        CudaSurfaceRAII         GetMipLevelSurface(uint32_t level);
 
         // Accessors
         InterpolationType       InterpType() const;
@@ -433,7 +444,7 @@ template<int D>
 inline TextureI<D>::TextureI(const TexDimType_t<D>& dim,
                              uint32_t channelCount,
                              const CudaGPU* currentDevice,
-                             int mipCount)
+                             uint32_t mipCount)
     : DeviceLocalMemoryI(currentDevice)
     , channelCount(channelCount)
     , dimensions(dim)
@@ -456,6 +467,12 @@ template<int D>
 uint32_t TextureI<D>::ChannelCount() const
 {
     return channelCount;
+}
+
+template<int D>
+uint32_t TextureI<D>::MipmapCount() const
+{
+    return mipCount;
 }
 
 template<int D>

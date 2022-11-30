@@ -33,6 +33,7 @@ std::vector<TextureStruct> SceneIO::LoadTexture(const nlohmann::json& jsn)
     {
         // Pre-check singed data is avail
         bool hasSignedNode = (jsn.find(TEXTURE_SIGNED) != jsn.cend());
+        bool hasMipmapNode = (jsn.find(TEXTURE_MIPMAP) != jsn.cend());
 
         size_t texCount = id.size();
         for(size_t i = 0; i < texCount; i++)
@@ -45,6 +46,10 @@ std::vector<TextureStruct> SceneIO::LoadTexture(const nlohmann::json& jsn)
                 tex.isSigned = jsn[TEXTURE_SIGNED][i];
             else
                 tex.isSigned = false;
+            if(hasMipmapNode)
+                tex.generateMipmaps = jsn[TEXTURE_MIPMAP][i];
+            else
+                tex.generateMipmaps = false;
 
             result.push_back(tex);
         }
@@ -59,6 +64,11 @@ std::vector<TextureStruct> SceneIO::LoadTexture(const nlohmann::json& jsn)
         if((loc = jsn.find(TEXTURE_SIGNED)) != jsn.cend())
             singleTex.isSigned = *loc;
         else singleTex.isSigned = false;
+
+        loc = jsn.cend();
+        if((loc = jsn.find(TEXTURE_MIPMAP)) != jsn.cend())
+            singleTex.generateMipmaps = *loc;
+        else singleTex.generateMipmaps = false;
 
         result.push_back(singleTex);
     }

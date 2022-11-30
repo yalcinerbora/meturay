@@ -166,7 +166,11 @@
 ],
 
 	"Textures":[
-		{ "id": 0, "file": "../Textures/ModernPool/kloppenheim_05_4k.exr"},
+		{
+			"id": 0,
+			"file": "../Textures/ModernPool/kloppenheim_05_4k.exr",
+			"generateMipmaps" : true
+		},
 		{
 			// Vase Plant
 			"id": [1, 2],
@@ -1124,6 +1128,14 @@
 		"name": ".nodeSphere",
 		"position": [0, 0, 0],
 		"radius": 1
+	},
+	{
+		"id": 93,
+		"type": "Triangle",
+		"name": "../Surfaces/Sponza/sponza_level2_inner_wall.obj",
+		"tag": "assimp_",
+		"innerIndex": 0,
+		"cullFace" : false
 	}
 	],
 
@@ -1169,6 +1181,7 @@
 		// Ceiling
 		{"transform": 0, "accelerator": 0, "material": 6, "primitive": 18},
 		{"transform": 0, "accelerator": 0, "material": 6, "primitive": 19},
+		{"transform": 0, "accelerator": 0, "material": 6, "primitive": 93},
 		// Arch
 		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 20},
 		{"transform": 0, "accelerator": 0, "material": 7, "primitive": 21},

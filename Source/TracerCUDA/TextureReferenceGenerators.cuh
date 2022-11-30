@@ -99,37 +99,3 @@ void GenerateOptionalTexReference(TextureRefI<D, T>** gTexRefInterfaces,
         gTexRefInterfaces[globalId] = refAddress;
     }
 }
-
-//template <int D, class T>
-//__global__
-//void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
-//                                          ConstantRef<D, T>* gCRefLocations,
-//                                          TexArrayRef<D, T>* gTRefLocations,
-//                                          // Atomic Counters
-//                                          uint32_t& gTRefCounter,
-//                                          uint32_t& gCRefCounter,
-//                                          //
-//                                          const TextureOrConstReferenceData<T>* gRefData,
-//                                          uint32_t totalRefCount)
-//{
-//    for(uint32_t globalId = blockIdx.x * blockDim.x + threadIdx.x;
-//        globalId < totalRefCount;
-//        globalId += blockDim.x * gridDim.x)
-//    {
-//        const ReferenceDataList<T> data = gRefData[globalId];
-//
-//        TextureRefI<D, T>* refAddress = nullptr;
-//        if(data.isConstData)
-//        {
-//            uint32_t location = atomicAdd(&gCRefCounter, 1);
-//            refAddress = new (gCRefLocations + location) ConstantRef<D, T>(data.data);
-//        }
-//        else
-//        {
-//            uint32_t location = atomicAdd(&gTRefCounter, 1);
-//            refAddress = new (gTRefLocations + location) TexArrayRef<D, T>(data.tex,
-//                                                                           data.textureArrayIndex);
-//        }
-//        gTexRefInterfaces[globalId] = refAddress;
-//    }
-//}

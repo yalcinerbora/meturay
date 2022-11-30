@@ -179,10 +179,13 @@ Texture<D, T>::Texture(const CudaGPU* device,
                        bool normalizeCoordinates,
                        bool convertSRGB,
                        const TexDimType_t<D>& dim,
-                       int mipCount)
+                       uint32_t mipCount)
     : TextureI<D>(dim, TextureChannelCount<T>::value, device, mipCount)
     , interpType(interp)
     , edgeResolveType(eResolve)
+    , normalizeIntegers(normalizeIntegers)
+    , normalizeCoordinates(normalizeCoordinates)
+    , convertSRGB(convertSRGB)
 {
     cudaExtent extent = MakeCudaExtent<D>(this->dimensions);
     cudaChannelFormatDesc d = cudaCreateChannelDesc<ChannelDescType_t<T>>();
@@ -226,6 +229,9 @@ Texture<D, T>::Texture(Texture&& other)
     , data(other.data)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
+    , normalizeIntegers(normalizeIntegers)
+    , normalizeCoordinates(normalizeCoordinates)
+    , convertSRGB(convertSRGB)
 {
     other.data = nullptr;
 }
@@ -244,6 +250,9 @@ Texture<D, T>& Texture<D, T>::operator=(Texture&& other)
     data = other.data;
     interpType = other.interpType;
     edgeResolveType = other.edgeResolveType;
+    normalizeIntegers = other.normalizeIntegers;
+    normalizeCoordinates = other.normalizeCoordinates;
+    convertSRGB = other.convertSRGB;
 
     other.data = nullptr;
 
@@ -313,39 +322,62 @@ GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
 }
 
 template<int D, class T>
-void Texture<D, T>::GenerateMipmaps(int startMip, int upToMip,
-                                    cudaStream_t stream)
+Texture<D, T> Texture<D, T>::EmptyMipmappedTexture(uint32_t upToLevel) const
 {
-    std::vector<CudaSurfaceRAII> surfaces;
-    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
-
-    // Sample stratified MULTISAMPLE_COUNT * MULTISAMPLE_COUNT
-    // amount of samples over the region of the texel.
-    // Filter these according to the filter
-    static constexpr int MULTISAMPLE_COUNT = 4;
-
-    upToMip = std::max(this->mipCount, upToMip);
-    for(int mipLevel = startMip + 1; mipLevel <= upToMip; mipLevel++)
+    uint32_t mipMax = std::numeric_limits<uint32_t>::min();
+    for(int i = 0; i < D; i++)
     {
-        cudaArray_t levelArray;
-        CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
-        // Construct surface object over it
-        cudaResourceDesc rDesc;
-        rDesc.resType = cudaResourceTypeArray;
-        rDesc.res.array.array = levelArray;
+        uint32_t dimensionValue;
+        if constexpr(D == 1) dimensionValue = this->dimensions;
+        else dimensionValue = this->dimensions[i];
 
-        cudaSurfaceObject_t surface;
-        CUDA_CHECK(cudaCreateSurfaceObject(&surface, &rDesc));
-        surfaces.emplace_back(surface);
-
-        // Do the calculations
-        //TextureRef<D, T> texRef = TextureRef<D, T>(this->texture);
-
-
+        dimensionValue = Utility::Log2Floor(dimensionValue);
+        mipMax = std::max(dimensionValue, mipMax);
     }
 
-    // Wait all events to finish before deleting surfaces (implicit)
-    CUDA_CHECK(cudaStreamSynchronize(stream));
+    uint32_t mipCount = std::min(mipMax, upToLevel) + 1;
+    Texture<D, T> t = Texture<D, T>(this->currentDevice,
+                                    interpType,
+                                    edgeResolveType,
+                                    normalizeIntegers,
+                                    normalizeCoordinates,
+                                    convertSRGB,
+                                    this->dimensions,
+                                    mipCount);
+
+    cudaArray_t dstLevelArray;
+    cudaArray_t srcLevelArray;
+    CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
+    CUDA_CHECK(cudaGetMipmappedArrayLevel(&srcLevelArray, data, 0));
+    CUDA_CHECK(cudaGetMipmappedArrayLevel(&dstLevelArray, t.data, 0));
+
+    cudaMemcpy3DParms p = {};
+    p.kind = cudaMemcpyDeviceToDevice;
+    p.extent = MakeCudaCopySize<D>(this->dimensions);
+
+    p.srcArray = srcLevelArray;
+    p.dstArray = dstLevelArray;
+    p.srcPos = make_cudaPos(0, 0, 0);
+    p.dstPos = make_cudaPos(0, 0, 0);
+
+    CUDA_CHECK(cudaMemcpy3D(&p));
+    return t;
+}
+
+template<int D, class T>
+CudaSurfaceRAII Texture<D, T>::GetMipLevelSurface(uint32_t level)
+{
+    cudaArray_t levelArray;
+    CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, level));
+    // Construct surface object over it
+    cudaResourceDesc rDesc;
+    rDesc.resType = cudaResourceTypeArray;
+    rDesc.res.array.array = levelArray;
+
+    cudaSurfaceObject_t surface;
+    CUDA_CHECK(cudaCreateSurfaceObject(&surface, &rDesc));
+
+    return CudaSurfaceRAII(surface);
 }
 
 template<int D, class T>

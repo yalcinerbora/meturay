@@ -14,9 +14,15 @@ namespace Utility
     template<class T>
     T       NextPowOfTwo(T);
 
+    template <class T>
+    T       Log2Floor(T);
+
     template<class T>
     int     BitCount(T);
 }
+
+extern template uint32_t Utility::Log2Floor<uint32_t>(uint32_t);
+extern template uint64_t Utility::Log2Floor<uint64_t>(uint64_t);
 
 extern template int Utility::BitCount<uint32_t>(uint32_t);
 extern template int Utility::BitCount<uint64_t>(uint64_t);

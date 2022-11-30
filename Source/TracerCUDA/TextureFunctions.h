@@ -33,6 +33,7 @@ class TextureLoader
                                                   bool normalizeIntegers,
                                                   bool normalizeCoordinates,
                                                   bool asSigned,
+                                                  bool generateMipmaps,
                                                   const CudaGPU& gpu,
                                                   const std::string& filePath);
 
@@ -45,6 +46,7 @@ class TextureLoader
                                                 bool normalizeIntegers,
                                                 bool normalizeCoordinates,
                                                 bool asSigned,
+                                                bool generateMipmaps,
                                                 const CudaGPU& gpu,
                                                 const std::string& filePath);
         //template <int D, int C>
@@ -149,6 +151,7 @@ SceneError TextureFunctions::AllocateTexture(// Returned Texture Ptr
                                        normalizeIntegers,
                                        normalizeCoordinates,
                                        s.isSigned,
+                                       s.generateMipmaps,
                                        gpu,
                                        combinedPath)) != SceneError::OK)
         return e;
@@ -167,6 +170,7 @@ SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D>>& t,
                                       bool normalizeIntegers,
                                       bool normalizeCoordinates,
                                       bool asSigned,
+                                      bool generateMipmaps,
                                       const CudaGPU& gpu,
                                       const std::string& filePath)
 {
@@ -175,7 +179,9 @@ SceneError TextureLoader::LoadTexture(std::unique_ptr<TextureI<D>>& t,
         return LoadTexture2D(t, edgeR, interp,
                              normalizeIntegers,
                              normalizeCoordinates,
-                             asSigned, gpu, filePath);
+                             asSigned,
+                             generateMipmaps,
+                             gpu, filePath);
     // TODO: add more texture loading functions
     else return SceneError::UNABLE_TO_LOAD_TEXTURE;
 }

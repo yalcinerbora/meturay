@@ -1,6 +1,7 @@
 #include "TextureFunctions.h"
 
 #include "ImageIO/EntryPoint.h"
+#include "TextureMipmapGen.cuh"
 
 #include <cuda_fp16.h>
 
@@ -29,9 +30,11 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
                                         bool normalizeIntegers,
                                         bool normalizeCoordinates,
                                         bool asSigned,
+                                        bool generateMipmaps,
                                         const CudaGPU& gpu,
                                         const std::string& filePath)
 {
+    SceneError err = SceneError::OK;
     // Always try 3 Channel -> 4 Channel conversion
     // since CUDA does not support 3 Channel textures
     ImageIOFlags flags = ImageIOI::TRY_3C_4C_CONVERSION;
@@ -65,6 +68,20 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
                                                      dim,
                                                      1);
         ptr->Copy(textureData.data(), dim);
+
+        if(generateMipmaps)
+        {
+            // TODO: Overhaul the texture stuff
+            // it is getting ridiculous
+            if constexpr(std::is_same_v<typename T::ChannelType, Vector4f>)
+                ptr = std::make_unique<T>(GenerateMipmaps(*ptr));
+            else
+            {
+                err = SceneError(SceneError::UNABLE_TO_LOAD_TEXTURE,
+                                 "Mipmap generation only supported on 2D 3 channel float textures currently!");
+                return std::unique_ptr<T>(nullptr);
+            }
+        }
         return ptr;
     };
 
@@ -123,7 +140,7 @@ SceneError TextureLoader::LoadTexture2D(std::unique_ptr<TextureI<2>>& tex,
             return SceneError::UNKNOWN_TEXTURE_TYPE;
     }
 
-    return SceneError::OK;
+    return err;
 }
 
 std::vector<TextureChannelType> TextureFunctions::TextureAccessLayoutToTextureChannels(TextureAccessLayout layout)

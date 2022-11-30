@@ -179,6 +179,7 @@ struct TextureStruct
     uint32_t    texId;
     bool        isSigned;
     std::string filePath;
+    bool        generateMipmaps;
 };
 
 using TextureNodeMap = std::map<uint32_t, TextureStruct>;

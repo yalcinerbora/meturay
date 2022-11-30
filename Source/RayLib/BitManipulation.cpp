@@ -15,10 +15,20 @@ T Utility::NextPowOfTwo(T val)
 }
 
 template<class T>
+T Utility::Log2Floor(T val)
+{
+    if(val == 0) return 0;
+    return sizeof(T) * BYTE_BITS - std::countl_zero(val) - 1;
+}
+
+template<class T>
 T Utility::FindLastSet(T val)
 {
     return (sizeof(T) * BYTE_BITS) - std::countl_zero(val) - 1;
 }
+
+template uint32_t Utility::Log2Floor<uint32_t>(uint32_t);
+template uint64_t Utility::Log2Floor<uint64_t>(uint64_t);
 
 template int Utility::BitCount<uint32_t>(uint32_t);
 template int Utility::BitCount<uint64_t>(uint64_t);
