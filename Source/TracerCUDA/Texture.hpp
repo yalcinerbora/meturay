@@ -121,7 +121,7 @@ TextureI<D>::TextureI(TextureI&& other)
     , channelCount(other.channelCount)
     , texture(other.texture)
     , dimensions(other.dimensions)
-    , mipCount(mipCount)
+    , mipCount(other.mipCount)
 {
     other.texture = 0;
     other.dimensions = TexDimType<D>::ZERO;
@@ -274,7 +274,7 @@ template<int D, class T>
 void Texture<D, T>::Copy(const Byte* sourceData,
                          const TexDimType_t<D>& size,
                          const TexDimType_t<D>& offset,
-                         int mipLevel)
+                         uint32_t mipLevel)
 {
     cudaArray_t levelArray;
     CUDA_CHECK(cudaSetDevice(this->currentDevice->DeviceId()));
@@ -298,7 +298,7 @@ template<int D, class T>
 GPUFence Texture<D, T>::CopyAsync(const Byte* sourceData,
                                   const TexDimType_t<D>& size,
                                   const TexDimType_t<D>& offset,
-                                  int mipLevel,
+                                  uint32_t mipLevel,
                                   cudaStream_t stream)
 {
     cudaArray_t levelArray;
@@ -376,8 +376,34 @@ CudaSurfaceRAII Texture<D, T>::GetMipLevelSurface(uint32_t level)
 
     cudaSurfaceObject_t surface;
     CUDA_CHECK(cudaCreateSurfaceObject(&surface, &rDesc));
-
     return CudaSurfaceRAII(surface);
+}
+
+template<int D, class T>
+void Texture<D, T>::GetRawPixelData(std::vector<Byte>& hPixels,
+                                    uint32_t mipLevel) const
+{
+    cudaArray_t levelArray;
+    CUDA_CHECK(cudaGetMipmappedArrayLevel(&levelArray, data, mipLevel));
+
+    cudaMemcpy3DParms p = {};
+    p.kind = cudaMemcpyDeviceToHost;
+    p.extent = MakeCudaCopySize<D>(this->dimensions);
+    p.extent.width = std::max((size_t)1, p.extent.width >> mipLevel);
+    p.extent.height = std::max((size_t)1, p.extent.height >> mipLevel);
+    p.extent.depth = std::max((size_t)1, p.extent.depth >> mipLevel);
+
+    // Alloc CPU
+    hPixels.resize(p.extent.width * p.extent.height * p.extent.depth * sizeof(T));
+
+    p.srcArray = levelArray;
+    p.srcPos = make_cudaPos(0, 0, 0);
+
+    p.dstPos = make_cudaPos(0, 0, 0);
+    p.dstPtr = make_cudaPitchedPtr(hPixels.data(),
+                                   p.extent.width * sizeof(T),
+                                   p.extent.width, p.extent.height);
+    CUDA_CHECK(cudaMemcpy3D(&p));
 }
 
 template<int D, class T>

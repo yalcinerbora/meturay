@@ -42,22 +42,27 @@ template <int D, class T>
 class TextureRefI
 {
     public:
-        virtual     ~TextureRefI() = default;
+        using DimType = std::conditional_t<D == 1, uint32_t, Vector<D, uint32_t>>;
 
+        virtual             ~TextureRefI() = default;
         __device__
-        virtual T   operator()(const TexFloatType_t<D>&) const = 0;
+        virtual T           operator()(const TexFloatType_t<D>&) const = 0;
         // Mip Level
         __device__
-        virtual T   operator()(const TexFloatType_t<D>&, float mip) const = 0;
+        virtual T           operator()(const TexFloatType_t<D>&, float mip) const = 0;
         // Gradient
         __device__
-        virtual T   operator()(const TexFloatType_t<D>&,
-                               const TexFloatType_t<D>& dx,
-                               const TexFloatType_t<D>& dy) const = 0;
+        virtual T           operator()(const TexFloatType_t<D>&,
+                                       const TexFloatType_t<D>& dx,
+                                       const TexFloatType_t<D>& dy) const = 0;
+        __device__
+        virtual DimType     Dim() const = 0;
+        __device__
+        virtual uint32_t    MipCount() const = 0;
 };
 
 template <int D, class T>
-class ConstantRef : public TextureRefI<D, T>
+class ConstantRef final : public TextureRefI<D, T>
 {
     private:
         T               data;
@@ -75,19 +80,28 @@ class ConstantRef : public TextureRefI<D, T>
         T               operator()(const TexFloatType_t<D>&,
                                    const TexFloatType_t<D>& dx,
                                    const TexFloatType_t<D>& dy) const override;
+
+        __device__
+        TextureRefI<D, T>::DimType  Dim() const override;
+        __device__
+        uint32_t                    MipCount() const override;
 };
 
 template <int D, class T>
-class TextureRef : public TextureRefI<D, T>
+class TextureRef final : public TextureRefI<D, T>
 {
     using CudaType = CudaReturn_t<T>;
 
     private:
-        cudaTextureObject_t t;
+        cudaTextureObject_t                 t;
+        typename TextureRefI<D, T>::DimType dim;
+        uint32_t                            mipCount;
 
     public:
         // Constructors & Destructor
-        __device__      TextureRef(cudaTextureObject_t);
+        __device__      TextureRef(cudaTextureObject_t,
+                                   const typename TextureRefI<D,T>::DimType&,
+                                   uint32_t mipCount);
                         ~TextureRef() = default;
 
         __device__
@@ -100,6 +114,11 @@ class TextureRef : public TextureRefI<D, T>
         T               operator()(const TexFloatType_t<D>&,
                                    const TexFloatType_t<D>& dx,
                                    const TexFloatType_t<D>& dy) const override;
+
+        __device__
+        TextureRefI<D, T>::DimType  Dim() const override;
+        __device__
+        uint32_t                    MipCount() const override;
 };
 
 template <int D, class T>

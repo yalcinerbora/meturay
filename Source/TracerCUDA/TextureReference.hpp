@@ -43,8 +43,26 @@ T ConstantRef<D, T>::operator()(const TexFloatType_t<D>&,
 }
 
 template <int D, class T>
-__device__ TextureRef<D, T>::TextureRef(cudaTextureObject_t tId)
- : t(tId)
+__device__
+typename TextureRefI<D, T>::DimType ConstantRef<D, T>::Dim() const
+{
+    return typename TextureRefI<D, T>::DimType{0};
+}
+
+template <int D, class T>
+__device__
+uint32_t ConstantRef<D, T>::MipCount() const
+{
+    return 1;
+}
+
+template <int D, class T>
+__device__ TextureRef<D, T>::TextureRef(cudaTextureObject_t tId,
+                                        const typename TextureRefI<D, T>::DimType& dim,
+                                        uint32_t mipCount)
+    : t(tId)
+    , dim(dim)
+    , mipCount(mipCount)
 {}
 
 template <int D, class T>
@@ -108,4 +126,18 @@ T TextureRef<D, T>::operator()(const TexFloatType_t<D>& index,
                                                                   float4{dy[0], dy[1], dy[2], 0}));
     }
     return T();
+}
+
+template <int D, class T>
+__device__
+typename TextureRefI<D, T>::DimType TextureRef<D, T>::Dim() const
+{
+    return dim;
+}
+
+template <int D, class T>
+__device__
+uint32_t TextureRef<D, T>::MipCount() const
+{
+    return mipCount;
 }

@@ -225,6 +225,8 @@ SceneError CPULightGroupP<GPULight, PGroup, SGen>::InitializeCommon(const Endpoi
                                       gpu, scenePath)) != SceneError::OK)
                 return err;
             constructionInfo.tex = static_cast<cudaTextureObject_t>(*tex);
+            constructionInfo.dim = tex->Dimensions();
+            constructionInfo.mipCount = tex->MipmapCount();
             texDataCount++;
         }
         else

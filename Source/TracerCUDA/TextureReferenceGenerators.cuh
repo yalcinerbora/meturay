@@ -9,6 +9,8 @@ struct TextureOrConstReferenceData
 {
     bool isConstData;
     cudaTextureObject_t tex;
+    Vector2ui dim;
+    uint32_t mipCount;
     T data;
 };
 
@@ -68,7 +70,9 @@ void GenerateEitherTexOrConstantReference(TextureRefI<D, T>** gTexRefInterfaces,
         else
         {
             uint32_t location = atomicAdd(&gTRefCounter, 1);
-            refAddress = new (gTRefLocations + location) TextureRef<D, T>(data.tex);
+            refAddress = new (gTRefLocations + location) TextureRef<D, T>(data.tex,
+                                                                          data.dim,
+                                                                          data.mipCount);
         }
 
         gTexRefInterfaces[globalId] = refAddress;
@@ -94,7 +98,9 @@ void GenerateOptionalTexReference(TextureRefI<D, T>** gTexRefInterfaces,
         if(tObj != 0)
         {
             uint32_t location = atomicAdd(&gTRefCounter, 1);
-            refAddress = new (gTRefLocations + location) TextureRef<D, T>(tObj);
+            refAddress = new (gTRefLocations + location) TextureRef<D, T>(tObj,
+                                                                          typename TextureRefI<D, T>::DimType{0},
+                                                                          0);
         }
         gTexRefInterfaces[globalId] = refAddress;
     }

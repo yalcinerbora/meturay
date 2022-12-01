@@ -292,6 +292,26 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
                                         //
                                         const UVSurface& surface) const
 {
+    // TODO: change this later
+    float mipLevel = 0;
+    if(surface.uv != Vector2f(0.0f))
+    {
+        // Do LOD lookup
+        float mipCount = static_cast<float>(gRadianceRef.MipCount());
+        Vector2ui dim = gRadianceRef.Dim();
+
+        // Assume HDR map is spherical
+        // spherical coordinates are not area preserving assume angle
+        static constexpr float SIN_45_DEGREES = 0.707f;
+        float pixelSolidAngle = (Vector2f(2.0f * MathConstants::Pi,
+                                          MathConstants::Pi) / Vector2f(dim)).Multiply();
+        pixelSolidAngle *= SIN_45_DEGREES;
+
+        float coneSolidAngle = surface.uv[0];
+        float ratio = coneSolidAngle / pixelSolidAngle;
+        mipLevel = min(mipCount, log2(ratio) * 0.5f);
+    }
+
     // Convert Y up from Z up
     Vector3 woTrans = GPUSurface::ToTangent(wo, gTransform.ToLocalRotation());
     Vector3 woZup = -Vector3(woTrans[2], woTrans[0], woTrans[1]);
@@ -307,7 +327,7 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
 
     // Gen Directional vector
     Vector2 uv = Vector2(u, v);
-    return gRadianceRef(uv);
+    return gRadianceRef(uv, mipLevel);
 }
 
 __device__

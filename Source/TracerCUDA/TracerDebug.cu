@@ -57,6 +57,31 @@ void Debug::DumpImage(const std::string& fName,
         METU_ERROR_LOG(static_cast<std::string>(e));
 }
 
+void Debug::DumpTextureMip(const std::string& fName,
+                           const Texture<2, Vector4f>& texture,
+                           uint32_t mipLevel)
+{
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+    const ImageIOI& io = *ImageIOInstance();
+
+    std::vector<Byte> hPixels;
+    texture.GetRawPixelData(hPixels, mipLevel);
+
+    Vector2ui mipDim = texture.Dimensions();
+    mipDim[0] = std::max(1u, mipDim[0] >> mipLevel);
+    mipDim[1] = std::max(1u, mipDim[1] >> mipLevel);
+
+    std::string fNameWithExt = fName + ".exr";
+
+    ImageIOError e = ImageIOError::OK;
+    if((e = io.WriteImage(hPixels.data(),
+                          mipDim,
+                          PixelFormat::RGBA_FLOAT, ImageType::EXR,
+                          fNameWithExt)) != ImageIOError::OK)
+        METU_ERROR_LOG(static_cast<std::string>(e));
+}
+
 void Debug::DumpBitmap(const std::string& fName,
                        const Byte* bits,
                        const Vector2ui& resolution)

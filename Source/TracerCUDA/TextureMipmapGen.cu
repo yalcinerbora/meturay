@@ -2,18 +2,22 @@
 
 #include "CudaSystem.h"
 #include "CudaSystem.hpp"
-#include "GPUReconFilterMitchell.h"
 #include "TextureMipmapGen.cuh"
 #include "TextureReference.cuh"
+#include "GPUReconFilterMitchell.h"
+#include "GPUReconFilterGaussian.h"
+
 
 #include <cub/cub.cuh>
+
+//#include "TracerDebug.h"
 
 template <uint32_t TPB, class WriteType, class FilterFunc>
 __global__
 static void KCGenMipmap(// Outputs
                         cudaSurfaceObject_t sObj,
                         // Inputs
-                        TextureRef<2, TexFloatType_t<2>> texture,
+                        cudaTextureObject_t texObj,
                         // Constants
                         Vector2ui mipTexSize,
                         Vector2ui texSize,
@@ -22,6 +26,22 @@ static void KCGenMipmap(// Outputs
                         float filterRadius,
                         FilterFunc filter)
 {
+    static constexpr uint32_t WARP_PER_BLOCK = TPB / WARP_SIZE;
+    using ReadType = TexFloatType_t<3>;
+    using WarpValueReduce = cub::WarpReduce<ReadType>;
+    using WarpFloatReduce = cub::WarpReduce<float>;
+
+    struct SharedMemory
+    {
+        union
+        {
+            typename WarpValueReduce::TempStorage valReduceMem;
+            typename WarpFloatReduce::TempStorage floatReduceMem;
+        } warp[WARP_PER_BLOCK];
+    };
+
+    __shared__ SharedMemory shMem;
+
     // TODO: Put this on a library
     // https://link.springer.com/content/pdf/10.1007/978-1-4842-4427-2_16.pdf
     auto CocentricDiskSample = [=](const Vector2f& uv) -> Vector2f
@@ -29,8 +49,6 @@ static void KCGenMipmap(// Outputs
         const float R = filterRadius;
         float a = 2 * uv[0] - 1;
         float b = 2 * uv[1] - 1;
-        if(b == 0) b = 1;
-
         float r;
         float phi;
         if(a * a > b * b)
@@ -44,23 +62,21 @@ static void KCGenMipmap(// Outputs
             phi = ((MathConstants::Pi * 0.5) -
                    (MathConstants::Pi * 0.25f) * (a / b));
         }
+        // Prevent nan here a/b == 0.0 or b/a depending on the branch.
+        // Also prevent inf since cos(inf) is undefined as well
+        // Both happens when sampler samples very close to the origin
+        // so you can safely assume phi is zero
+        phi = (isnan(phi) || isinf(phi)) ? 0.0f : phi;
+
         // Convert to relative pixel index
         return Vector2f(r * cos(phi),
                         r * sin(phi));
     };
 
-    using ReadType = TexFloatType_t<2>;
-    static constexpr uint32_t WARP_PER_BLOCK = TPB / WARP_SIZE;
-    using WarpValueReduce = cub::WarpReduce<ReadType>;
-    using WarpFloatReduce = cub::WarpReduce<float>;
-
-    union SharedMemory
-    {
-        typename WarpValueReduce::TempStorage valReduceMem[WARP_PER_BLOCK];
-        typename WarpValueReduce::TempStorage weightReduceMem[WARP_PER_BLOCK];
-    };
-
-    __shared__ SharedMemory shMem;
+    // Wrap the texture to device class for better readability
+    // TODO: we dont use the mip count and dim here zeroed it out. Change to proper
+    // texture system here.
+    const TextureRef<2, ReadType> texture(texObj, Vector2ui(0), 0);
 
     // Each warp is responsible for single pixel on the leaf
     const uint32_t kernelWarpCount = (blockDim.x * gridDim.x) / WARP_SIZE;
@@ -104,8 +120,8 @@ static void KCGenMipmap(// Outputs
 
             // Current filter functions requires filter center coordinates
             // and the filtering location image space coordinate
-            float weight = filter(pixCenterFloat + sampleOffset,
-                                  pixCenterFloat);
+            float weight = filter(pixCenterFloat,
+                                  pixCenterFloat + sampleOffset);
 
             // UV of the miplevel0 is required scale offset accordingly
             sampleOffset *= static_cast<float>(1 << mipLevel);
@@ -113,20 +129,23 @@ static void KCGenMipmap(// Outputs
             ReadType texVal = texture(texReadUV, static_cast<float>(mipLevel - 1));
             ReadType weightedVal = texVal * weight;
 
-            texVal = (isValid) ? texVal : ReadType{0};
+            weightedVal = (isValid) ? weightedVal : ReadType{0};
             weight = (isValid) ? weight : 0.0f;
 
-            leaderTotal += WarpValueReduce(shMem.valReduceMem[localWarpId]).Sum(texVal);
-            leaderWeightTotal += WarpWeightReduce(shMem.weightReduceMem).Sum(weight);
+            leaderTotal += WarpValueReduce(shMem.warp[localWarpId].valReduceMem).Sum(weightedVal);
+            leaderWeightTotal += WarpFloatReduce(shMem.warp[localWarpId].floatReduceMem).Sum(weight);
         }
 
         // Finally leader writes to the surface object
         if(laneId == 0)
         {
+            // Sanity check
+            static_assert(sizeof(Vector4f) == sizeof(float4));
             ReadType total = leaderTotal / leaderWeightTotal;
-
-            // TODO: do conversion here
-            //surf2DWrite(total, sObj, pixIndex2D[0] * sizeof(WriteType), pixIndex2D[1]);
+            float4 writeVal = {total[0], total[1], total[2], 1.0f};
+            surf2Dwrite(writeVal, sObj,
+                        static_cast<int>(pixIndex2D[0] * sizeof(Vector4f)),
+                        static_cast<int>(pixIndex2D[1]));
         }
     }
 
@@ -148,7 +167,12 @@ Texture<2, Vector4f> GenerateMipmaps(const Texture<2, Vector4f>& texture, uint32
     static constexpr float FILTER_RADIUS = 2.0f;
     static constexpr uint32_t MULTISAMPLE_COUNT = 5;
     // Mitchell-Netravali Filter
-    const GPUMitchellFilterFunctor filterFunctor(FILTER_RADIUS, 0.3333f, 0.3333f);
+    // TODO: Mitchell-Netravali filter causes hard ringing artifacts near the sun
+    // (we currently only use mipmaps for environment boundary lights)
+    // fix it later. Now use gaussian instead
+    //const GPUMitchellFilterFunctor filterFunctor(FILTER_RADIUS, 0.3333f, 0.3333f);
+    // Gaussian Filter
+    const GPUGaussianFilterFunctor filterFunctor(FILTER_RADIUS, 0.5f);
 
     // Construct mips level by level
     upToMip = std::min(upToMip, newTexture.MipmapCount() - 1);
@@ -158,24 +182,23 @@ Texture<2, Vector4f> GenerateMipmaps(const Texture<2, Vector4f>& texture, uint32
         // Find out the return type
         Vector2ui mipDim = Vector2ui::Max(texture.Dimensions() / (1 << mipLevel), Vector2ui(1));
 
-        METU_LOG("{}, {}", mipDim[0], mipDim[1]);
-
         static constexpr uint32_t TPB = StaticThreadPerBlock1D;
         static constexpr uint32_t WARP_PER_BLOCK = TPB / WARP_SIZE;
         uint32_t totalThreadCount = mipDim.Multiply() * MULTISAMPLE_COUNT * MULTISAMPLE_COUNT;
         uint32_t totalWarpCount = (totalThreadCount + WARP_SIZE - 1) / WARP_SIZE;
         // TODO: make this utilize less blocks for multi kernel execution
         // Currently, it generates full amount of blocks
-        uint32_t totalBlockCount = totalWarpCount / WARP_PER_BLOCK;
+        uint32_t totalBlockCount = (totalWarpCount + WARP_PER_BLOCK - 1) / WARP_PER_BLOCK;
 
         textureGPU.ExactKC_X(0, (cudaStream_t)0,
                              TPB, totalBlockCount,
                              //
+                             //KCGenMipmap<StaticThreadPerBlock1D, Vector4f, GPUMitchellFilterFunctor>,
                              KCGenMipmap<StaticThreadPerBlock1D, Vector4f, GPUGaussianFilterFunctor>,
                              // Output
-                             surface,
+                             surfaceObject,
                              // Inputs
-                             TextureRef<2, Vector3f>(newTexture),
+                             static_cast<cudaTextureObject_t>(newTexture),
                              // Constants
                              mipDim,
                              texture.Dimensions(),
@@ -184,6 +207,8 @@ Texture<2, Vector4f> GenerateMipmaps(const Texture<2, Vector4f>& texture, uint32
                              FILTER_RADIUS,
                              filterFunctor);
 
+        //Debug::DumpTextureMip(std::string("tex_") + std::to_string(mipLevel),
+        //                      newTexture, mipLevel);
 
         // Defer destruction of the surface object until all kernels are finished
         surfaces.emplace_back(std::move(surfaceObject));

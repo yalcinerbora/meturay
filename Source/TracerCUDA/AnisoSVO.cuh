@@ -974,8 +974,13 @@ float AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneAp
     if(nodeId == UINT32_MAX)
     {
         // TODO: Change this (we assume pos and surface does not required
-        // for the light
-        Vector3f resultRGB = (dBoundaryLight) ? dBoundaryLight->Emit(-coneDirection, Vector3f(0.0f), UVSurface{})
+        // for the light. We are giving cone apterure as UV coordinates,
+        // to sample from different mipmaps here assuming  boundary light is environment map
+        // (This may not be true but design of the system should change and no time currently).
+        UVSurface s{};
+        s.uv = Vector2f(coneAperture);
+        Vector3f resultRGB = (dBoundaryLight) ? dBoundaryLight->Emit(-coneDirection, Vector3f(0.0f),
+                                                                     s)
                                               : Zero3f;
         result = Utility::RGBToLuminance(resultRGB);
     }

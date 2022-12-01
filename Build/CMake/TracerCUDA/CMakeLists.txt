@@ -142,6 +142,7 @@ set(SRC_GPU_TEMPLATE_FUNCTIONS
 
 set(SRC_LIGHTS
     ${CURRENT_SOURCE_DIR}/GPULightNull.cuh
+    ${CURRENT_SOURCE_DIR}/GPULightConstant.cu
     ${CURRENT_SOURCE_DIR}/GPULightConstant.cuh
     ${CURRENT_SOURCE_DIR}/GPULightDirectional.cu
     ${CURRENT_SOURCE_DIR}/GPULightDirectional.cuh

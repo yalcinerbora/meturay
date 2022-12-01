@@ -273,11 +273,11 @@ class Texture final : public TextureI<D>
         void                Copy(const Byte* sourceData,
                                  const TexDimType_t<D>& size,
                                  const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
-                                 int mipLevel = 0);
+                                 uint32_t mipLevel = 0);
         GPUFence            CopyAsync(const Byte* sourceData,
                                       const TexDimType_t<D>& size,
                                       const TexDimType_t<D>& offset = TexDimType<D>::ZERO,
-                                      int mipLevel = 0,
+                                      uint32_t mipLevel = 0,
                                       cudaStream_t stream = nullptr);
 
         // Generates empty mipmapped texture
@@ -285,6 +285,8 @@ class Texture final : public TextureI<D>
         // copies the level zero to the created texture though
         Texture<D, T>           EmptyMipmappedTexture(uint32_t upToLevel = std::numeric_limits<uint32_t>::max()) const;
         CudaSurfaceRAII         GetMipLevelSurface(uint32_t level);
+        void                    GetRawPixelData(std::vector<Byte>& hPixels,
+                                                uint32_t mipLevel) const;
 
         // Accessors
         InterpolationType       InterpType() const;

@@ -12,6 +12,7 @@
 
 #include "RayStructs.h"
 #include "CudaSystem.h"
+#include "Texture.cuh"
 
 class ImageMemory;
 struct DefaultLeaf;
@@ -35,6 +36,9 @@ namespace Debug
     void                DumpBitmap(const std::string& fName,
                                   const Byte* bits,
                                   const Vector2ui& resolution);
+    void                DumpTextureMip(const std::string& fName,
+                                       const Texture<2, Vector4f>& texture,
+                                       uint32_t mipLevel);
 
     // Memory Debugging
     template<class T>
