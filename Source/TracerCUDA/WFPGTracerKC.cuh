@@ -53,6 +53,7 @@ struct WFPGTracerGlobalState
     // Options
     // Path Guiding
     bool                            skipPG;
+    bool                            purePG = true;
     // Options for NEE
     bool                            directLightMIS;
     bool                            nee;
@@ -372,6 +373,7 @@ void WFPGTracerPathWork(// Output
     if(!isSpecularMat)
     {
         float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
+        BxDF_GuideSampleRatio = (renderState.purePG) ? 1.0f : BxDF_GuideSampleRatio;
         float xi = rng.Uniform();
 
         float misWeight;
@@ -400,6 +402,7 @@ void WFPGTracerPathWork(// Output
                                                           BxDF_GuideSampleRatio, pdfGuide);
             BxDF_GuideSampleRatio = 1.0f - BxDF_GuideSampleRatio;
             selectedPDFZero = (pdfBxDF == 0.0f);
+            printf("noooo");
         }
         else
         {
@@ -439,16 +442,18 @@ void WFPGTracerPathWork(// Output
                                                           1 - BxDF_GuideSampleRatio, pdfBxDF);
             selectedPDFZero = (pdfGuide == 0.0f);
         }
-        // Pdf Average
-        //pdfPath = pdfBxDF;
         // One-sample MIS Using Balance Heuristic
-        if(!renderState.skipPG)
+        if(!renderState.skipPG &&
+           !renderState.purePG)
         {
             pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
             pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
             pdfPath = selectedPDFZero ? 0.0f : pdfPath;
         }
-        else pdfPath = pdfBxDF;
+        else if(renderState.purePG)
+            pdfPath = pdfGuide;
+        else
+            pdfPath = pdfBxDF;
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
@@ -845,8 +850,8 @@ inline void TraceSVO(// Output
                 normal = (normal.Dot(rayDir[i]) >= 0.0f) ? normal : -normal;
 
                 // Convert normal to 0-1 range
-                //normal += Vector3f(1.0f);
-                //normal *= Vector3f(0.5f);
+                normal += Vector3f(1.0f);
+                normal *= Vector3f(0.5f);
                 locColor = Vector4f(normal, stdDev);
             }
 
@@ -1207,7 +1212,7 @@ static void KCGenAndSampleDistribution(// Output
         __syncthreads();
 
         // Non product sample version
-        #if 1
+        #if 0
         // Generate PWC Distribution over the radiances
         Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
         // Block threads will loop over the every ray in this bin

@@ -299,6 +299,9 @@ void PathTracer::Finalize()
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
 
     RayTracer::Finalize();
+
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(10s);
 }
 
 void PathTracer::GenerateWork(uint32_t cameraIndex)
