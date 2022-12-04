@@ -45,8 +45,6 @@ std::ostream& operator<<(std::ostream& stream, const RayAuxWFPG& v)
     return stream;
 }
 
-
-
 template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 __global__ __launch_bounds__(THREAD_PER_BLOCK)
 void KCTraceSVOFromObjectCam(// Output
@@ -126,7 +124,9 @@ using PathGuideKernelFunction = void (*)(// Output
                                          const GaussFilter,
                                          float coneAperture,
                                          const AnisoSVOctreeGPU,
-                                         uint32_t);
+                                         uint32_t,
+                                         bool,
+                                         float);
 
 // 1st param is "Thread per block", 2nd and third params are X,Y resolution of the generated texture
 using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
@@ -369,20 +369,24 @@ void WFPGTracer::GenerateGuidedDirections()
     // Call the Trace and Sample Kernel
     // Select the kernel depending on the depth
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
-    kernelIndex = 0;
+    //kernelIndex = 0;
 
-    auto KCSampleKernel = PG_KERNELS[kernelIndex];
+    auto KCSampleKernel= PG_KERNELS[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
     uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
-    uint32_t kernelTBP = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
+    uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
     RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
 
-    auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
-
+    //auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
     CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
                                     cudaFuncAttributeMaxDynamicSharedMemorySize,
                                     kernelShmemSize));
     //cudaFuncSetAttribute(KCSampleKernel, cudaFuncAttributePreferredSharedMemoryCarveout, 100*1024);
+
+    uint32_t activeBlockSize = gpu.DetermineGridStrideBlock(kernelShmemSize,
+                                                            kernelTPB,
+                                                            hPartitionCount * kernelTPB,
+                                                            reinterpret_cast<const void*>(KCSampleKernel));
 
     cudaEvent_t start, stop;
     CUDA_CHECK(cudaEventCreate(&start));
@@ -390,7 +394,7 @@ void WFPGTracer::GenerateGuidedDirections()
 
     CUDA_CHECK(cudaEventRecord(start));
     gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
-                  kernelTBP, pgKernelBlockCount,
+                  kernelTPB, pgKernelBlockCount,
                   //
                   KCSampleKernel,
                   // Output
@@ -408,7 +412,9 @@ void WFPGTracer::GenerateGuidedDirections()
                   rFieldGaussFilter,
                   coneAperture,
                   svo.TreeGPU(),
-                  hPartitionCount);
+                  hPartitionCount,
+                  options.purePG,
+                  options.misRatio);
     CUDA_CHECK(cudaEventRecord(stop));
 
     // Only Consider useful rays for bins
@@ -707,6 +713,10 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.skipPG, SKIP_PG_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.purePG, PURE_PG_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetFloat(options.misRatio, MIS_RATIO_NAME)) != TracerError::OK)
+        return err;
     if((err = opts.GetBool(options.productPG, PRODUCT_PG_NAME)) != TracerError::OK)
         return err;
 
@@ -740,6 +750,8 @@ void WFPGTracer::AskOptions()
     list.emplace(SVO_INIT_PATH_NAME, OptionVariable(options.svoInitPath));
     list.emplace(R_FIELD_GAUSS_ALPHA_NAME, OptionVariable(options.rFieldGaussAlpha));
     list.emplace(SKIP_PG_NAME, OptionVariable(options.skipPG));
+    list.emplace(PURE_PG_NAME, OptionVariable(options.purePG));
+    list.emplace(MIS_RATIO_NAME, OptionVariable(options.misRatio));
     list.emplace(PRODUCT_PG_NAME, OptionVariable(options.productPG));
 
     list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));

@@ -656,8 +656,8 @@
     {
 		// Vase Leafs & Vase
 		"id": [1, 2],
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo" :
 		[
 			// 1 Vase Leafs
@@ -677,8 +677,8 @@
 	{
 		// Walls
 		"id": 3,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 5, "channels": "rgb"},
 		"normal": {"texture": 6, "channels": "rgb"},
 		"roughness": {"texture": 7, "channels": "r"},
@@ -694,8 +694,8 @@
 	{
 		// Floor
 		"id": 5,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 9, "channels": "rgb"},
 		"normal": {"texture": 10, "channels": "rgb"},
 		"roughness": {"texture": 11, "channels": "r"},
@@ -705,8 +705,8 @@
 	{
 		// Ceiling
 		"id": 6,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 12, "channels": "rgb"},
 		"roughness": {"texture": 13, "channels": "r"},
 		"specular": 0.8,
@@ -715,8 +715,8 @@
 	{
 		// Arch
 		"id": 7,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 14, "channels": "rgb"},
 		"normal": {"texture": 15, "channels": "rgb"},
 		"roughness": {"texture": 16, "channels": "r"},
@@ -726,8 +726,8 @@
 	{
 		// Column C
 		"id": 8,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 17, "channels": "rgb"},
 		"normal": {"texture": 18, "channels": "rgb"},
 		"roughness": {"texture": 19, "channels": "r"},
@@ -737,8 +737,8 @@
 	{
 		// Column A
 		"id": 9,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 20, "channels": "rgb"},
 		"normal": {"texture": 21, "channels": "rgb"},
 		"roughness": {"texture": 22, "channels": "r"},
@@ -748,8 +748,8 @@
 	{
 		// Details
 		"id": 10,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 23, "channels": "rgb"},
 		"roughness": {"texture": 24, "channels": "r"},
 		"specular": 0.8,
@@ -765,8 +765,8 @@
 	{
 		// Column B
 		"id": 12,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 27, "channels": "rgb"},
 		"normal": {"texture": 28, "channels": "rgb"},
 		"roughness": {"texture": 29, "channels": "r"},
@@ -776,8 +776,8 @@
 	{
 		// Thorns
 		"id": 13,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 30, "channels": "rgb"},
 		"normal": {"texture": 31, "channels": "rgb"},
 		"roughness": 0.5,
@@ -787,8 +787,8 @@
 	{
 		// Flag Pole
 		"id": 14,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 33, "channels": "rgb"},
 		"normal": {"texture": 34, "channels": "rgb"},
 		"roughness": {"texture": 35, "channels": "r"},
@@ -798,8 +798,8 @@
 	{
 		// Chain
 		"id": 15,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 36, "channels": "rgb"},
 		"normal": {"texture": 37, "channels": "rgb"},
 		"roughness": 0.145,
@@ -809,8 +809,8 @@
 	{
 		// Hanging Vase
 		"id": 16,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 38, "channels": "rgb"},
 		"normal": {"texture": 39, "channels": "rgb"},
 		"roughness": 0.145,
@@ -820,8 +820,8 @@
 	{
 		// Lion Back
 		"id": 17,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 40, "channels": "rgb"},
 		"normal": {"texture": 41, "channels": "rgb"},
 		"roughness": 0.35,
@@ -831,8 +831,8 @@
 	{
 		// Lion Head
 		"id": 18,
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": {"texture": 42, "channels": "rgb"},
 		"normal": {"texture": 43, "channels": "rgb"},
 		"roughness": 0.35,
@@ -842,8 +842,8 @@
 	{
 		// Curtain Red, Green Blue
 		"id": [19, 20, 21],
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": [{"texture": 44, "channels": "rgb"},
 				   {"texture": 45, "channels": "rgb"},
 				   {"texture": 46, "channels": "rgb"}],
@@ -861,8 +861,8 @@
 	{
 		// Fabric Red, Green Blue
 		"id": [22, 23, 24],
-		"type": "Unreal",
-		//"type": "Lambert",
+		//"type": "Unreal",
+		"type": "Lambert",
 		"albedo": [{"texture": 50, "channels": "rgb"},
 				   {"texture": 51, "channels": "rgb"},
 				   {"texture": 52, "channels": "rgb"}],

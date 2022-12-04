@@ -26,8 +26,8 @@ class Ray<T>
         // Constructors & Destructor
         constexpr                                   Ray() = default;
         constexpr __device__ __host__               Ray(const Vector<3,T>& direction,
-                                                        const Vector<3, T>& position);
-        constexpr __device__ __host__               Ray(const Vector<3, T>[2]);
+                                                        const Vector<3,T>& position);
+        constexpr __device__ __host__               Ray(const Vector<3,T>[2]);
                                                     Ray(const Ray&) = default;
                                                     ~Ray() = default;
         Ray&                                        operator=(const Ray&) = default;

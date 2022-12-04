@@ -29,7 +29,8 @@ class GPULightP : public GPULightI
         __device__ Vector3f     Emit(const Vector3& wo,
                                      const Vector3& pos,
                                      //
-                                     const UVSurface&) const override;
+                                     const UVSurface&,
+                                     float solidAngle = 0.0f) const override;
 
         __device__ uint32_t     GlobalLightIndex() const override;
         __device__ void         SetGlobalLightIndex(uint32_t) override;
@@ -132,7 +133,8 @@ __device__
 inline Vector3f GPULightP::Emit(const Vector3& wo,
                                 const Vector3& pos,
                                 //
-                                const UVSurface& surface) const
+                                const UVSurface& surface,
+                                float solidAngle) const
 {
     return gRadianceRef(surface.uv);
 }

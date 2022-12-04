@@ -70,7 +70,8 @@ class GPULightSkySphere final : public GPULightP
         __device__ Vector3f     Emit(const Vector3& wo,
                                      const Vector3& pos,
                                      //
-                                     const UVSurface&) const override;
+                                     const UVSurface&,
+                                     float solidAngle = 0.0f) const override;
 
         //
         __device__ void         SetBoundingSphere(const AABB3f& sceneAABB);
@@ -290,11 +291,12 @@ __device__
 inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
                                         const Vector3& pos,
                                         //
-                                        const UVSurface& surface) const
+                                        const UVSurface& surface,
+                                        float solidAngle) const
 {
     // TODO: change this later
     float mipLevel = 0;
-    if(surface.uv != Vector2f(0.0f))
+    if(solidAngle != 0.0f)
     {
         // Do LOD lookup
         float mipCount = static_cast<float>(gRadianceRef.MipCount());
@@ -307,8 +309,7 @@ inline Vector3f GPULightSkySphere::Emit(const Vector3& wo,
                                           MathConstants::Pi) / Vector2f(dim)).Multiply();
         pixelSolidAngle *= SIN_45_DEGREES;
 
-        float coneSolidAngle = surface.uv[0];
-        float ratio = coneSolidAngle / pixelSolidAngle;
+        float ratio = solidAngle / pixelSolidAngle;
         mipLevel = min(mipCount, log2(ratio) * 0.5f);
     }
 

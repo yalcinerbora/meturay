@@ -178,7 +178,7 @@ struct UVSurface
 
     Vector3f    worldPosition;      // World surface location
     QuatF       worldToTangent;     // World to tangent space transformation
-    Vector2     uv = Vector2f(0.0f);// Texture coordinates
+    Vector2     uv;                 // Texture coordinates
     Vector3f    worldGeoNormal;     // Geometric normal (useful when nudge the ray)
     bool        backSide;           // Returning the side of the surface (used on transmissive materials)
     // If a mesh does try to approximate a curved surface

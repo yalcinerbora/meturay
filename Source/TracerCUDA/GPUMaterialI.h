@@ -41,26 +41,26 @@ class GPUMaterialI
     public:
     virtual                         ~GPUMaterialI() = default;
     // Interface
-    __device__ virtual bool        IsEmissive() const = 0;
-    __device__ virtual bool        Specularity(const UVSurface& surface) const = 0;
-    __device__ virtual Vector3f    Sample(// Sampled Output
-                                          RayF& wo,                       // Out direction
-                                          float& pdf,                     // PDF for Monte Carlo
-                                          const GPUMediumI*& outMedium,
-                                          // Input
-                                          const Vector3& wi,              // Incoming Radiance
-                                          const Vector3& pos,             // Position
-                                          const GPUMediumI& m,
-                                          //
-                                          const UVSurface& surface,  // Surface info (normals uvs etc.)
-                                          // I-O
-                                          RNGeneratorGPUI& rng) const = 0;
-    __device__ virtual Vector3f    Emit(// Input
-                                        const Vector3& wo,      // Outgoing Radiance
-                                        const Vector3& pos,     // Position
-                                        const GPUMediumI& m,
-                                        //
-                                        const UVSurface& surface) const = 0;
+    __device__ virtual bool         IsEmissive() const = 0;
+    __device__ virtual float        Specularity(const UVSurface& surface) const = 0;
+    __device__ virtual Vector3f     Sample(// Sampled Output
+                                           RayF& wo,                       // Out direction
+                                           float& pdf,                     // PDF for Monte Carlo
+                                           const GPUMediumI*& outMedium,
+                                           // Input
+                                           const Vector3& wi,              // Incoming Radiance
+                                           const Vector3& pos,             // Position
+                                           const GPUMediumI& m,
+                                           //
+                                           const UVSurface& surface,  // Surface info (normals uvs etc.)
+                                           // I-O
+                                           RNGeneratorGPUI& rng) const = 0;
+    __device__ virtual Vector3f     Emit(// Input
+                                         const Vector3& wo,      // Outgoing Radiance
+                                         const Vector3& pos,     // Position
+                                         const GPUMediumI& m,
+                                         //
+                                         const UVSurface& surface) const = 0;
     __device__ virtual Vector3f     Evaluate(// Input
                                              const Vector3& wo,              // Outgoing Radiance
                                              const Vector3& wi,              // Incoming Radiance

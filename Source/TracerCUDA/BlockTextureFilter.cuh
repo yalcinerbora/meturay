@@ -13,9 +13,12 @@ class StaticGaussianFilter1D
 {
     static_assert(N % 2 == 1, "Filter kernel size must be odd");
     public:
-    static constexpr Vector2i   KERNEL_RANGE = Vector2i(-N / 2, N / 2);
+    static constexpr Vector2i   KERNEL_RANGE  = Vector2i(-N / 2, N / 2);
+
     private:
-    float                       kernel[N];
+    //float                       kernel[N];
+    float                       alpha;
+    float                       total;
 
     public:
     __host__                    StaticGaussianFilter1D(float alpha);
@@ -30,9 +33,8 @@ class StaticGaussianFilter1D
 // data per thread is strided meaning;
 // data[0] is the "nth" element
 // data[1] is the "TPB + nth" element etc.
-template <class Filter,
-          uint32_t TPB,
-          uint32_t X, uint32_t Y>
+template<uint32_t TPB,
+         uint32_t X, uint32_t Y, class FilterF>
 class BlockTextureFilter2D
 {
     private:
@@ -47,13 +49,10 @@ class BlockTextureFilter2D
     // No SFINAE, just static assert
     static_assert(TPBCheck(TPB, X, Y),
                   "TBP and (X * Y) must be divisible, (X*Y) / TBP or TBP / (X*Y)");
-    static constexpr Vector2i   KERNEL_RANGE = Filter::KERNEL_RANGE;
-
     public:
     static constexpr uint32_t DATA_PER_THREAD = std::max(1u, (X * Y) / TPB);
     static constexpr uint32_t PIX_COUNT = (X * Y);
-
-    using WrappingFunction = Vector2i(*)(const Vector2i& pixel, const Vector2i& size);
+    static constexpr Vector2i KERNEL_RANGE = FilterF::KERNEL_RANGE;
 
     struct TempStorage
     {
@@ -61,28 +60,29 @@ class BlockTextureFilter2D
     };
 
     private:
-    const WrappingFunction   wrapFunc;
-    TempStorage&             sMem;
-    const Filter&            filterFunctor;
-    const uint32_t           threadId;
+    TempStorage&    sMem;
+    const uint32_t  threadId;
 
     protected:
     public:
     // Constructors & Destructor
     __device__
-                    BlockTextureFilter2D(TempStorage& storage,
-                                         const Filter& filterFunctor,
-                                         const WrappingFunction&);
+                    BlockTextureFilter2D(TempStorage& storage);
 
+    template<class WrapF>
     __device__
-    void            operator()(float(&dataOut)[DATA_PER_THREAD],
-                               const float(&data)[DATA_PER_THREAD]);
+    void            Filter(float(&dataOut)[DATA_PER_THREAD],
+                           const float(&data)[DATA_PER_THREAD],
+                           const FilterF& FilterFunc,
+                           const WrapF& WrapFunc);
 
 };
 
 template <int32_t N>
 __host__ inline
 StaticGaussianFilter1D<N>::StaticGaussianFilter1D(float alpha)
+    : alpha (alpha)
+    , total(0.0f)
 {
     auto Gauss = [&](float t)
     {
@@ -90,45 +90,52 @@ StaticGaussianFilter1D<N>::StaticGaussianFilter1D(float alpha)
         return W / std::sqrt(alpha) * std::exp(-(t * t) * 0.5f / alpha);
     };
     // Generate weights
+    float kernel[N];
     for(int i = KERNEL_RANGE[0]; i <= KERNEL_RANGE[1]; i++)
     {
         kernel[i + N / 2] = Gauss(static_cast<float>(i));
     };
 
     // Normalize the Kernel
-    float total = 0.0f;
+    /*float*/ total = 0.0f;
     for(int i = 0; i < N; i++) { total += kernel[i]; }
-    for(int i = 0; i < N; i++) { kernel[i] /= total; }
+    //for(int i = 0; i < N; i++) { kernel[i] /= total; }
 }
 
 template <int32_t N>
 __device__ inline
 float StaticGaussianFilter1D<N>::operator()(int32_t i) const
 {
-    return kernel[i + (N / 2)];
+    //return kernel[i + (N / 2)];
+
+    auto Gauss = [&](float t)
+    {
+        constexpr float W = 1.0f / MathConstants::SqrtPi / MathConstants::Sqrt2;
+        return W / std::sqrt(alpha) * std::exp(-(t * t) * 0.5f / alpha);
+    };
+    return Gauss(static_cast<float>(i)) / total;
+
 }
 
-template <class F,
-          uint32_t TPB,
-          uint32_t X, uint32_t Y>
+template <uint32_t TPB,
+          uint32_t X, uint32_t Y, class FilterF>
 __device__ inline
-BlockTextureFilter2D<F, TPB, X, Y>::BlockTextureFilter2D(TempStorage& storage,
-                                                         const F& filterFunctor,
-                                                         const WrappingFunction& wf)
+BlockTextureFilter2D<TPB, X, Y, FilterF>::BlockTextureFilter2D(TempStorage& storage)
     : sMem(storage)
-    , filterFunctor(filterFunctor)
     , threadId(threadIdx.x)
-    , wrapFunc(wf)
 {}
 
-template <class F,
-          uint32_t TPB,
-          uint32_t X, uint32_t Y>
+template <uint32_t TPB, uint32_t X, uint32_t Y, class FilterF>
+template <class WrapF>
 __device__ inline
-void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THREAD],
-                                                    const float(&data)[DATA_PER_THREAD])
+void BlockTextureFilter2D<TPB, X, Y, FilterF>::Filter(float(&dataOut)[DATA_PER_THREAD],
+                                                      const float(&data)[DATA_PER_THREAD],
+                                                      const FilterF& FilterFunc,
+                                                      const WrapF& WrapFunc)
 {
     static constexpr Vector2i TexSize = Vector2i(X, Y);
+
+    static constexpr Vector2i K_XY = KERNEL_RANGE;
 
     auto LoadToSMem = [&](const float(&threadData)[DATA_PER_THREAD])
     {
@@ -157,12 +164,12 @@ void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THR
 
         // Utilize dataOut as intermediate buffer
         dataOut[i] = 0.0f;
-        for(int32_t j = KERNEL_RANGE[0]; j <= KERNEL_RANGE[1]; ++j)
+        for(int32_t j = K_XY[0]; j <= K_XY[1]; ++j)
         {
             Vector2i neigPixel(columnId + j, rowId);
             if(neigPixel[0] >= TexSize[0] || neigPixel[0] < 0)
-                neigPixel = wrapFunc(neigPixel, TexSize);
-            dataOut[i] += sMem.sTexture[neigPixel[1]][neigPixel[0]] * filterFunctor(j);
+                neigPixel = WrapFunc(neigPixel, TexSize);
+            dataOut[i] += sMem.sTexture[neigPixel[1]][neigPixel[0]] * FilterFunc(j);
         }
     }
     __syncthreads();
@@ -184,8 +191,8 @@ void BlockTextureFilter2D<F, TPB, X, Y>::operator()(float(&dataOut)[DATA_PER_THR
         {
             Vector2i neigPixel(columnId, rowId + j);
             if(neigPixel[1] >= TexSize[1] || neigPixel[1] < 0)
-                neigPixel = wrapFunc(neigPixel, TexSize);
-            dataOut[i] += sMem.sTexture[neigPixel[1]][neigPixel[0]] * filterFunctor(j);
+                neigPixel = WrapFunc(neigPixel, TexSize);
+            dataOut[i] += sMem.sTexture[neigPixel[1]][neigPixel[0]] * FilterFunc(j);
         }
     }
     // All Done!

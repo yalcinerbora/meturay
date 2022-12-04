@@ -81,7 +81,7 @@ inline CudaError::operator std::string() const
     return ErrorStrings[static_cast<int>(type)];
 }
 
-class CudaGPU
+class CudaGPU final
 {
     public:
         enum GPUTier
@@ -124,11 +124,6 @@ class CudaGPU
         WorkGroup               workList;
 
         static GPUTier          DetermineGPUTier(cudaDeviceProp);
-    public:
-        uint32_t                DetermineGridStrideBlock(uint32_t sharedMemSize,
-                                                         uint32_t threadCount,
-                                                         size_t workCount,
-                                                         const void* func) const;
 
     protected:
     public:
@@ -164,6 +159,13 @@ class CudaGPU
         // Kernel Attribute Related Functions
         cudaFuncAttributes      GetKernelAttributes(const void* kernelPtr) const;
         bool                    SetKernelShMemSize(const void* kernelPtr, int sharedMemConfigSize) const;
+
+        // Determine How many blocks should we allocate for this function for this gpu
+        // to exactly saturate the GPU
+        uint32_t                DetermineGridStrideBlock(uint32_t sharedMemSize,
+                                                         uint32_t threadCount,
+                                                         size_t workCount,
+                                                         const void* func) const;
 
         // Classic GPU Calls
         // Create just enough blocks according to work size

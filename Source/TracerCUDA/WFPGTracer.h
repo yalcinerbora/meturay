@@ -36,6 +36,8 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    RENDER_LEVEL_NAME           = "SVORenderLevel";
     static constexpr const char*    SVO_INIT_PATH_NAME          = "InitialSVO";
     static constexpr const char*    SKIP_PG_NAME                = "SkipPG";
+    static constexpr const char*    PURE_PG_NAME                = "PurePG";
+    static constexpr const char*    MIS_RATIO_NAME              = "BXDF-GuideMISRatio";
     static constexpr const char*    PRODUCT_PG_NAME             = "DoProductPathGuiding";
 
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
@@ -44,34 +46,36 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    PG_DUMP_INTERVAL_NAME       = "PGDataStructDumpIntervalExp";
     static constexpr const char*    PG_DUMP_PATH_NAME           = "PGDataStructDumpName";
 
-        struct Options
-        {
-            int32_t             sampleCount         = 1;
-            uint32_t            maximumDepth        = 10;
-            bool                nextEventEstimation = true;
-            uint32_t            rrStart             = 3;
-            bool                directLightMIS      = false;
-            LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
+    struct Options
+    {
+        int32_t             sampleCount         = 1;
+        uint32_t            maximumDepth        = 10;
+        bool                nextEventEstimation = true;
+        uint32_t            rrStart             = 3;
+        bool                directLightMIS      = false;
+        LightSamplerType    lightSamplerType    = LightSamplerType::UNIFORM;
 
-            // Method Related
-            uint32_t            octreeLevel         = 10;   // Octree Level (10 = 1024x1024x1024)
-            uint32_t            minRayBinLevel      = 5;    // When rays are binned they cannot group
-                                                            // even if they did not satisfy the ray bin count
-            uint32_t            binRayCount         = 512;  // Amount of rays on each bin
+        // Method Related
+        uint32_t            octreeLevel         = 10;   // Octree Level (10 = 1024x1024x1024)
+        uint32_t            minRayBinLevel      = 5;    // When rays are binned they cannot group
+                                                        // even if they did not satisfy the ray bin count
+        uint32_t            binRayCount         = 512;  // Amount of rays on each bin
 
-            // Misc
-            WFPGRenderMode      renderMode          = WFPGRenderMode::RENDER;
-            uint32_t            svoRadRenderIter    = 2;
-            uint32_t            svoRenderLevel      = 0;
-            std::string         svoInitPath         = "";
-            float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
-            bool                skipPG              = false;
-            bool                productPG           = true;
-            //
-            bool                pgDumpDebugData     = false;
-            uint32_t            pgDumpInterval      = 2;
-            std::string         pgDumpDebugName     = "wfpg_svo";
-        };
+        // Misc
+        WFPGRenderMode      renderMode          = WFPGRenderMode::RENDER;
+        uint32_t            svoRadRenderIter    = 2;
+        uint32_t            svoRenderLevel      = 0;
+        std::string         svoInitPath         = "";
+        float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
+        bool                skipPG              = false;
+        bool                purePG              = false;
+        bool                productPG           = true;
+        float               misRatio            = 0.5f;
+        //
+        bool                pgDumpDebugData     = false;
+        uint32_t            pgDumpInterval      = 2;
+        std::string         pgDumpDebugName     = "wfpg_svo";
+    };
 
     private:
         Options                         options;

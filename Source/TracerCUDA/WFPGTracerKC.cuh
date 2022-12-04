@@ -53,7 +53,6 @@ struct WFPGTracerGlobalState
     // Options
     // Path Guiding
     bool                            skipPG;
-    bool                            purePG = true;
     // Options for NEE
     bool                            directLightMIS;
     bool                            nee;
@@ -372,19 +371,13 @@ void WFPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
-        BxDF_GuideSampleRatio = (renderState.purePG) ? 1.0f : BxDF_GuideSampleRatio;
-        float xi = rng.Uniform();
-
-        float misWeight;
-        bool selectedPDFZero = false;
-        float pdfBxDF, pdfGuide;
-        bool BxDFSelected = (xi >= BxDF_GuideSampleRatio);
-        if(BxDFSelected)
+        // Other kernel already combined with MIS
+        // just evaluate
+        if(renderState.skipPG)
         {
             // Sample using BxDF
             reflectance = MGroup::Sample(// Outputs
-                                         rayPath, pdfBxDF, outM,
+                                         rayPath, pdfPath, outM,
                                          // Inputs
                                          wi,
                                          position,
@@ -397,21 +390,13 @@ void WFPGTracerPathWork(// Output
                                          gMatData,
                                          matIndex,
                                          0);
-            pdfGuide = aux.guidePDF;
-            misWeight = TracerFunctions::BalanceHeuristic(1 - BxDF_GuideSampleRatio, pdfBxDF,
-                                                          BxDF_GuideSampleRatio, pdfGuide);
-            BxDF_GuideSampleRatio = 1.0f - BxDF_GuideSampleRatio;
-            selectedPDFZero = (pdfBxDF == 0.0f);
-            printf("noooo");
         }
         else
         {
-            // Sample a path from the pre-sampled UV
-            // uv coordinates to spherical coordinates
             Vector2f uv = Vector2f(aux.guideDir[0], aux.guideDir[1]);
             Vector3f dirZUp = Utility::CocentricOctohedralToDirection(uv);
             Vector3f direction = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);
-            pdfGuide = aux.guidePDF;
+            pdfPath = aux.guidePDF;
 
             // Calculate BxDF
             reflectance = MGroup::Evaluate(// Input
@@ -425,53 +410,112 @@ void WFPGTracerPathWork(// Output
                                            gMatData,
                                            matIndex);
 
-            pdfBxDF = MGroup::Pdf(direction,
-                                  wi,
-                                  position,
-                                  m,
-                                  //
-                                  surface,
-                                  gMatData,
-                                  matIndex);
-
-            // Generate a ray using the values
             rayPath = RayF(direction, position);
             rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
+        }
 
-            misWeight = TracerFunctions::BalanceHeuristic(BxDF_GuideSampleRatio, pdfGuide,
-                                                          1 - BxDF_GuideSampleRatio, pdfBxDF);
-            selectedPDFZero = (pdfGuide == 0.0f);
-        }
-        // One-sample MIS Using Balance Heuristic
-        if(!renderState.skipPG &&
-           !renderState.purePG)
-        {
-            pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
-            pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
-            pdfPath = selectedPDFZero ? 0.0f : pdfPath;
-        }
-        else if(renderState.purePG)
-            pdfPath = pdfGuide;
-        else
-            pdfPath = pdfBxDF;
+
+        //float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
+        //BxDF_GuideSampleRatio = (renderState.purePG) ? 1.0f : BxDF_GuideSampleRatio;
+        //float xi = rng.Uniform();
+
+        //float misWeight;
+        //bool selectedPDFZero = false;
+        //float pdfBxDF, pdfGuide;
+        //bool BxDFSelected = (xi >= BxDF_GuideSampleRatio);
+        //if(BxDFSelected)
+        //{
+        //    // Sample using BxDF
+        //    reflectance = MGroup::Sample(// Outputs
+        //                                 rayPath, pdfBxDF, outM,
+        //                                 // Inputs
+        //                                 wi,
+        //                                 position,
+        //                                 m,
+        //                                 //
+        //                                 surface,
+        //                                 // I-O
+        //                                 rng,
+        //                                 // Constants
+        //                                 gMatData,
+        //                                 matIndex,
+        //                                 0);
+        //    pdfGuide = aux.guidePDF;
+        //    misWeight = TracerFunctions::BalanceHeuristic(1 - BxDF_GuideSampleRatio, pdfBxDF,
+        //                                                  BxDF_GuideSampleRatio, pdfGuide);
+        //    BxDF_GuideSampleRatio = 1.0f - BxDF_GuideSampleRatio;
+        //    selectedPDFZero = (pdfBxDF == 0.0f);
+        //    printf("noooo");
+        //}
+        //else
+        //{
+        //    // Sample a path from the pre-sampled UV
+        //    // uv coordinates to spherical coordinates
+        //    Vector2f uv = Vector2f(aux.guideDir[0], aux.guideDir[1]);
+        //    Vector3f dirZUp = Utility::CocentricOctohedralToDirection(uv);
+        //    Vector3f direction = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);
+        //    pdfGuide = aux.guidePDF;
+
+        //    // Calculate BxDF
+        //    reflectance = MGroup::Evaluate(// Input
+        //                                   direction,
+        //                                   wi,
+        //                                   position,
+        //                                   m,
+        //                                   //
+        //                                   surface,
+        //                                   // Constants
+        //                                   gMatData,
+        //                                   matIndex);
+
+        //    pdfBxDF = MGroup::Pdf(direction,
+        //                          wi,
+        //                          position,
+        //                          m,
+        //                          //
+        //                          surface,
+        //                          gMatData,
+        //                          matIndex);
+
+        //    // Generate a ray using the values
+        //    rayPath = RayF(direction, position);
+        //    rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
+
+        //    misWeight = TracerFunctions::BalanceHeuristic(BxDF_GuideSampleRatio, pdfGuide,
+        //                                                  1 - BxDF_GuideSampleRatio, pdfBxDF);
+        //    selectedPDFZero = (pdfGuide == 0.0f);
+        //}
+        //// One-sample MIS Using Balance Heuristic
+        //if(!renderState.skipPG &&
+        //   !renderState.purePG)
+        //{
+        //    pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
+        //    pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
+        //    pdfPath = selectedPDFZero ? 0.0f : pdfPath;
+        //}
+        //else if(renderState.purePG)
+        //    pdfPath = pdfGuide;
+        //else
+        //    pdfPath = pdfBxDF;
 
         // DEBUG
-        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
-            printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
-                   (BxDFSelected) ? "BxDF": "SVO",
-                   pdfPath, pdfBxDF, pdfGuide, BxDF_GuideSampleRatio);
-        if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
-            printf("[%s] NAN DIR %f, %f, %f\n",
-                    (BxDFSelected) ? "BxDF" : "SVO",
-                    rayPath.getDirection()[0],
-                    rayPath.getDirection()[1],
-                    rayPath.getDirection()[2]);
-        if(reflectance.HasNaN())
-            printf("[%s] NAN REFL %f %f %f\n",
-                   (BxDFSelected) ? "BxDF" : "SVO",
-                   reflectance[0],
-                   reflectance[1],
-                   reflectance[2]);
+        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
+        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
+        //    printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
+        //           (BxDFSelected) ? "BxDF": "SVO",
+        //           pdfPath, pdfBxDF, pdfGuide, BxDF_GuideSampleRatio);
+        //if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
+        //    printf("[%s] NAN DIR %f, %f, %f\n",
+        //            (BxDFSelected) ? "BxDF" : "SVO",
+        //            rayPath.getDirection()[0],
+        //            rayPath.getDirection()[1],
+        //            rayPath.getDirection()[2]);
+        //if(reflectance.HasNaN())
+        //    printf("[%s] NAN REFL %f %f %f\n",
+        //           (BxDFSelected) ? "BxDF" : "SVO",
+        //           reflectance[0],
+        //           reflectance[1],
+        //           reflectance[2]);
 
         //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide) ||
         //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
@@ -1020,7 +1064,7 @@ struct KCGenSampleShMem
     using ProductSampler8x8 = ProductSampler<THREAD_PER_BLOCK, X, Y, PX, PY>;
     using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
     //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
-    using BlockFilter2D = BlockTextureFilter2D<GaussFilter, THREAD_PER_BLOCK, X, Y>;
+    using BlockFilter2D = BlockTextureFilter2D<THREAD_PER_BLOCK, X, Y, GaussFilter>;
     using ConeTracer = BatchConeTracer<THREAD_PER_BLOCK, X, Y>;
     union
     {
@@ -1056,10 +1100,12 @@ static void KCGenAndSampleDistribution(// Output
                                        const uint32_t* gBinOffsets,
                                        const uint32_t* gNodeIds,
                                        // Constants
-                                       const GaussFilter rFieldGaussFilter,
+                                       const GaussFilter RFieldGaussFilter,
                                        float coneAperture,
                                        const AnisoSVOctreeGPU svo,
-                                       uint32_t binCount)
+                                       uint32_t binCount,
+                                       bool purePG,
+                                       float misRatio)
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     const int32_t THREAD_ID = threadIdx.x;
@@ -1097,6 +1143,17 @@ static void KCGenAndSampleDistribution(// Output
         Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
         return dirYUp;
     };
+    auto InvProjectionFunc = [](const Vector3f& direction)
+    {
+        Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
+        return Utility::DirectionToCocentricOctohedral(dirZUp);
+    };
+    auto NormProjectionFunc = [](const Vector2f& st)
+    {
+        Vector3f dir = Utility::CocentricOctohedralToDirection(st);
+        return Vector3(dir[1], dir[2], dir[0]);
+    };
+
     // Gen wrap functor
     auto WrapFunc = [](const Vector2i& pixelId,
                        const Vector2i& segmentSize)
@@ -1108,7 +1165,7 @@ static void KCGenAndSampleDistribution(// Output
     extern __shared__ Byte sharedMemRAW[];
     SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
 
-    Filter2D filter(sharedMem->sFilterMem, rFieldGaussFilter, WrapFunc);
+
     ConeTracer coneTracer(sharedMem->sTraceMem, svo);
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
@@ -1136,7 +1193,15 @@ static void KCGenAndSampleDistribution(// Output
                 // TODO: Change this
                 // Use the first rays hit position
                 uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
+                #if 1
+                // Simple but less accurate version
+                RayReg rayReg = metaSurfGenerator.Ray(rayId);
+                Vector3f position = rayReg.ray.Advance(rayReg.tMax - rayReg.tMin).getPosition();
+                #else
+                // Accurate but very high register using version
                 Vector3 position = metaSurfGenerator.AcquireWork(rayId).WorldPosition();
+                #endif
+
                 sharedMem->sRadianceFieldOrigin = position;
             };
 
@@ -1153,7 +1218,7 @@ static void KCGenAndSampleDistribution(// Output
                       MathConstants::LargeEpsilon);
         float incRadiances[RT_ITER_COUNT];
 
-        //// Uniform Test
+        // Uniform Test
         //for(int i = 0; i < RT_ITER_COUNT; i++)
         //    incRadiances[i] = 1.0f;
 
@@ -1208,35 +1273,82 @@ static void KCGenAndSampleDistribution(// Output
         // and sample for each ray
         // Before that filter the radiance field
         float filteredRadiances[RT_ITER_COUNT];
-        filter(filteredRadiances, incRadiances);
+        Filter2D(sharedMem->sFilterMem).Filter(filteredRadiances,
+                                               incRadiances,
+                                               RFieldGaussFilter,
+                                               WrapFunc);
         __syncthreads();
 
+
         // Non product sample version
-        #if 0
+        #if 1
         // Generate PWC Distribution over the radiances
         Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
         // Block threads will loop over the every ray in this bin
         for(uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
             rayIndex += THREAD_PER_BLOCK)
         {
-            float pdf;
-            Vector2f index;
-            Vector2f uv = dist2D.Sample(pdf, index, rng);
-            pdf *= 0.25f * MathConstants::InvPi;
-
-            // Store the sampled direction of the ray
+            // Let the ray acquire the surface
             uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
-            gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
+            GPUMetaSurface surf = metaSurfGenerator.AcquireWork(rayId);
+
+            float sampleRatio = misRatio;
+            float xi = rng.Uniform();
+            Vector3f wi = -(metaSurfGenerator.Ray(rayId).ray.getDirection());
+
+            Vector2f sampledUV;
+            float pdfSampled, pdfOther;
+            if(xi >= sampleRatio)
+            {
+                // Sample Using BxDF
+                RayF wo;
+                GPUMediumI* outMedium;
+                surf.Sample(wo, pdfSampled,
+                            outMedium,
+                            //
+                            wi,
+                            GPUMediumVacuum(0),
+                            rng);
+                sampledUV = InvProjectionFunc(wo.getDirection());
+
+                pdfOther = dist2D.Pdf(sampledUV * Vector2f(X, Y));
+                pdfOther *= 0.25f * MathConstants::InvPi;
+                //pdfOther *= 2;
+                sampleRatio = 1.0f - sampleRatio;
+            }
+            else
+            {
+                // Sample Using Radiance Field
+                Vector2f index;
+                sampledUV = dist2D.Sample(pdfSampled, index, rng);
+                pdfSampled *= 0.25f * MathConstants::InvPi;
+                //pdfSampled *= 2;
+
+                Vector3f wo = NormProjectionFunc(sampledUV);
+                pdfOther = surf.Pdf(wo, wi, GPUMediumVacuum(0));
+            }
+            // MIS
+            using namespace TracerFunctions;
+            float pdf = (pdfSampled * sampleRatio /
+                         BalanceHeuristic(sampleRatio, pdfSampled,
+                                          1.0f - sampleRatio, pdfOther));
+            pdf = (pdfSampled == 0.0f) ? 0.0f : pdf;
+
+            gRayAux[rayId].guideDir = Vector2h(sampledUV[0], sampledUV[1]);
             gRayAux[rayId].guidePDF = pdf;
         }
         #else
         static constexpr uint32_t WARP_PER_BLOCK = THREAD_PER_BLOCK / WARP_SIZE;
         // Parallelization logic changes now it is one ray per warp
         // Generate the product sampler first
+        // Parallelization logic internally is different, block threads
+        // collaboratively compiles a outer 8x8 radiance field and each
+        // of these have inner (N/8)x(M/8) radiance field
         ProductSampler8x8 productSampler(sharedMem->sProductSamplerMem,
                                          filteredRadiances,
                                          gRayIds + sharedMem->sOffsetStart,
                                          metaSurfGenerator);
+        // Block warp-stride loop
         const uint32_t warpId = THREAD_ID / WARP_SIZE;
         const bool isWarpLeader = (THREAD_ID % WARP_SIZE) == 0;
         // For each ray
@@ -1244,18 +1356,42 @@ static void KCGenAndSampleDistribution(// Output
             rayIndex += WARP_PER_BLOCK)
         {
             float pdf;
-            Vector2f uv = productSampler.SampleWithProductPWC(pdf, rng,
-                                                              rayIndex,
-                                                              ProjectionFunc);
-            pdf *= 0.25f * MathConstants::InvPi;
+            Vector2f uv;
+            if(purePG)
+            {
+                // Sample using the surface/material,
+                // fetch the rays surface from metaSurfaceGenerator,
+                // multiply the 8x8 outer field with the evaluated material,
+                // create 8x8 PWC CDF for rows and the column. Find the region
+                // then on the inner region do couple of 2-3 round of rejection sampling
+                // (since a warp is responsible for a ray, each round calculates 32 samples)
+                // Then multiply the PDFs for inner and outer etc. and return the sample
+                uv = productSampler.SampleWithProduct(pdf, rng,
+                                                      rayIndex,
+                                                      ProjectionFunc);
+                // Our projection function is co-centric octahedral so it is area preserving
+                // directly divide with Omega (4 * PI)
+                pdf *= 0.25f * MathConstants::InvPi;
+            }
+            else
+            {
+                // Same as above but also combine with MIS (BxDF <=> Guide)
+                uv = productSampler.SampleMIS(pdf,
+                                              rng,
+                                              rayIndex,
+                                              ProjectionFunc,
+                                              InvProjectionFunc,
+                                              NormProjectionFunc,
+                                              misRatio,
+                                              0.25f * MathConstants::InvPi);
+            }
 
+            // Only warp leader has valid values
             if(isWarpLeader)
             {
-                if(isnan(pdf) || uv.HasNaN() ||
-                   pdf == 0.0f || uv[0] == 0.0f || uv[1] == 0.0f)
+                if(isnan(pdf) || uv.HasNaN())
                 {
-                    printf("(%f, %f), pdf(%f)\n", uv[0], uv[1], pdf);
-
+                    printf("NaN uv(%f, %f), pdf(%f)\n", uv[0], uv[1], pdf);
                     uv = Vector2f(0.5f);
                     pdf = 1.0f;
                 }

@@ -55,7 +55,7 @@ class GPUMetaSurface
     __device__ QuatF        WorldToTangent() const;
     //
     __device__ bool         IsEmissive() const;
-    __device__ bool         Specularity() const;
+    __device__ float        Specularity() const;
     __device__ Vector3f     Sample(// Sampled Output
                                    RayF& wo,                       // Out direction
                                    float& pdf,                     // PDF for Monte Carlo
@@ -75,7 +75,7 @@ class GPUMetaSurface
     __device__ float        Pdf(// Input
                                 const Vector3& wo,      // Outgoing Radiance
                                 const Vector3& wi,
-                                const GPUMediumI& m);
+                                const GPUMediumI& m) const;
     // Boundary Type Related (Light, Camera)
     __device__ uint32_t     EndpointId() const;
     __device__ uint32_t     GlobalLightIndex() const;
@@ -152,7 +152,7 @@ bool GPUMetaSurface::IsEmissive() const
 }
 
 __device__ __forceinline__
-bool GPUMetaSurface::Specularity() const
+float GPUMetaSurface::Specularity() const
 {
     if(isLight) return 1.0f;
     return gMaterial->Specularity(uvSurf);
@@ -196,7 +196,7 @@ Vector3f GPUMetaSurface::Evaluate(const Vector3& wo,
 __device__ __forceinline__
 float GPUMetaSurface::Pdf(const Vector3& wo,
                           const Vector3& wi,
-                          const GPUMediumI& m)
+                          const GPUMediumI& m) const
 {
     if(isLight) return 0.0f;
     return gMaterial->Pdf(wo, wi, WorldPosition(), m, uvSurf);

@@ -23,7 +23,8 @@ class GPULightI : public GPUEndpointI
         virtual __device__ Vector3f     Emit(const Vector3& wo,
                                              const Vector3& pos,
                                              //
-                                             const UVSurface&) const = 0;
+                                             const UVSurface&,
+                                             float solidAngle = 0.0f) const = 0;
         virtual __device__ uint32_t     GlobalLightIndex() const = 0;
         virtual __device__ void         SetGlobalLightIndex(uint32_t) = 0;
         virtual __device__ bool         IsPrimitiveBackedLight() const = 0;

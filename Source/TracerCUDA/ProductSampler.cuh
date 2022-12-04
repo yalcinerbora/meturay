@@ -7,6 +7,7 @@
 #include "GPUMetaSurface.h"
 #include "GPUMediumVacuum.cuh"
 #include "TracerConstants.h"
+#include "TracerFunctions.cuh"
 
 #include <cub/cub.cuh>
 
@@ -37,6 +38,7 @@ class ProductSampler
     // CUB does not like single logical warp for reduce operation,
     // which does not make sense anyway so we will fake it using two logical warps and
     // one having the identity element (zero) for reduction operation (add)
+    // TODO: this is changed in latest cub, change this later
     static constexpr int32_t LOGICAL_WARP_COUNT_FOR_REDUCE = std::max(2, std::min(DATA_PER_PRODUCT_LINEAR,
                                                                                   WARP_SIZE));
     static_assert((PX <= WARP_SIZE) && (PY <= WARP_SIZE),
@@ -45,7 +47,6 @@ class ProductSampler
     static_assert(ProductFieldFitCheck(),
                   "Reflectance field should be evenly divisible by warp size(32)");
     static_assert(X >= PX && Y >= PY, "Product field cannot be larger than the actual field.");
-
 
     static constexpr float PX_FLOAT = static_cast<float>(PX);
     static constexpr float PY_FLOAT = static_cast<float>(PY);
@@ -68,7 +69,7 @@ class ProductSampler
         // Main radiance field
         float sRadianceField[X][Y];
         // Normalization constant (for the inner field region)
-        // Rejection sampling will be use this (this is the maximum value in the region)
+        // Rejection sampling will use this (this is the maximum value in the region)
         float sNormalizationConstants[PRODUCT_MAP_SIZE[0]][PRODUCT_MAP_SIZE[1]];
         // Reduced radiance field (will be multiplied by the BxDF field)
         float sRadianceFieldSmall[PRODUCT_MAP_SIZE[0]][PRODUCT_MAP_SIZE[1]];
@@ -99,26 +100,51 @@ class ProductSampler
     __device__ void                         MultiplyWithBXDF(float(&productField)[REFL_PER_THREAD],
                                                              int32_t rayIndex, ProjFunc&&) const;
 
+    template <class ProjFunc>
+    __device__ void                         GeneratePDFAndCDF(float(&pdfX)[REFL_PER_THREAD],
+                                                              float(&cdfX)[REFL_PER_THREAD],
+                                                              float& pdfY,
+                                                              float& cdfY,
+                                                              int32_t rayIndex,
+                                                              ProjFunc&& Project) const;
+
+    __device__ float                        Pdf(const Vector2f& uv,
+                                                const float(&pdfX)[REFL_PER_THREAD],
+                                                const float pdfY,
+                                                bool innerWasUniform) const;
+
+    __device__ Vector2f                     Sample(bool& innerIsUniform, float& pdfOut,
+                                                   RNGeneratorGPUI& rng,
+                                                   const float(&pdfX)[REFL_PER_THREAD],
+                                                   const float(&cdfX)[REFL_PER_THREAD],
+                                                   const float& pdfY,
+                                                   const float& cdfY) const;
+
     public:
+    // Constructors & Destructor
     __device__      ProductSampler(SharedStorage& sharedMem,
                                    const float(&radiances)[RADIANCE_PER_THREAD],
                                    const RayId* gRayIds,
                                    const GPUMetaSurfaceGeneratorGroup& generator);
 
+    // Sample Function
     template <class ProjFunc>
     __device__
-    Vector2f        SampleWithProductPWC(float& pdf,
-                                         RNGeneratorGPUI& rng,
-                                         int32_t rayIndex,
-                                         ProjFunc&& Project) const;
-
-    template <class ProjFunc, class WrapFunc>
+    Vector2f        SampleWithProduct(float& pdf,
+                                      RNGeneratorGPUI& rng,
+                                      int32_t rayIndex,
+                                      ProjFunc&& Project) const;
+    template <class ProjFunc, class InvProjFunc, class NormProjFunc>
     __device__
-    Vector2f        SampleWithProductPWL(float& pdf,
-                                         RNGeneratorGPUI& rng,
-                                         int32_t rayIndex,
-                                         ProjFunc&&,
-                                         WrapFunc&&) const;
+    Vector2f        SampleMIS(float& pdf,
+                              RNGeneratorGPUI& rng,
+                              int32_t rayIndex,
+                              ProjFunc&& Project,
+                              InvProjFunc&& InvProject,
+                              NormProjFunc&& NormProject,
+                              float sampleRatio,
+                              float projectionPdfMultiplier) const;
+
 
     // For Test and Debugging
     __device__
@@ -218,7 +244,7 @@ void ProductSampler<TPB, X, Y, PX, PY>::MultiplyWithBXDF(float(&productField)[RE
     {
         if(isWarpLeader)
         {
-            // Meta Surface is large to hold in register space use shared memory instead
+            // Meta Surface is too large to hold in register space use shared memory instead
             shMem.sSurfaces[warpId] = metaSurfGenerator.AcquireWork(gRayIds[rayIndex]);
             wi = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
 
@@ -250,14 +276,21 @@ void ProductSampler<TPB, X, Y, PX, PY>::MultiplyWithBXDF(float(&productField)[RE
            (!warpSurf.IsLight()) &&
            warpSurf.Specularity() < TracerConstants::SPECULAR_THRESHOLD)
         {
-            // TODO: Change this to a specific medium, current is does not work
+            // TODO: Change this to a specific medium, currently this does not work
+            // if there are medium changes.
             //const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
             GPUMediumVacuum medium(0);
-            // Project the mapped id
+            // Project the mapped id to world space
             Vector3f wo = Project(loc2D, Vector2i(PX, PY));
-            Vector3f bxdfColored = warpSurf.Evaluate(wo,
-                                                     wi,
-                                                     medium);
+
+            // TODO: for large solid angles (in our case 8x8 is probably large)
+            // we need to better approximate the BxDF single point sample of the material
+            // should not cut it.
+            // Further research on this can be approximating using Gaussian, cosine lobes etc.
+            //
+            // Fortunately it is used for path guiding and any error will convey towards the
+            // variance instead of the result.
+            Vector3f bxdfColored = warpSurf.Evaluate(wo, wi, medium);
             //if(rayIndex == 0)
             //{
             //    printf("WN:(%f, %f, %f), Wo(%f, %f, %f), Wi(%f, %f, %f), bxdf %f\n",
@@ -284,20 +317,19 @@ template <int32_t TPB, int32_t X, int32_t Y,
           int32_t PX, int32_t PY>
 template <class ProjFunc>
 __device__ __forceinline__
-Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWC(float& pdf,
-                                                                 RNGeneratorGPUI& rng,
-                                                                 int32_t rayIndex,
-                                                                 ProjFunc&& Project) const
+void ProductSampler<TPB, X, Y, PX, PY>::GeneratePDFAndCDF(float(&pdfX)[REFL_PER_THREAD],
+                                                          float(&cdfX)[REFL_PER_THREAD],
+                                                          float& pdfY,
+                                                          float& cdfY,
+                                                          int32_t rayIndex,
+                                                          ProjFunc&& Project) const
 {
     // Multiply the outer field with the BXDF
     float productField[REFL_PER_THREAD];
     MultiplyWithBXDF(productField, rayIndex, Project);
-
     // Our field is generated now sample,
     // For first stage do a CDF parallel search search style
     // approach
-    float cdfX[REFL_PER_THREAD];
-    float pdfX[REFL_PER_THREAD];
     for(int32_t j = 0; j < REFL_PER_THREAD; j++)
     {
         float rowTotal;
@@ -317,15 +349,28 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWC(float& pdf,
     }
     // Now calculate Marginal
     // Assuming PY fits in to a warp (it should be)
-    float cdfY;
-    float pdfY = (warpLocalId < PY) ? shMem.sWarpTempMemory[warpId][warpLocalId] : 0.0f;
+    pdfY = (warpLocalId < PY) ? shMem.sWarpTempMemory[warpId][warpLocalId] : 0.0f;
     float columnTotal;
     WarpColumnScan(shMem.cubMem[warpId].colScanMem).InclusiveSum(pdfY, cdfY,
-                                                          columnTotal);
+                                                                 columnTotal);
     float columnTotalRecip = 1.0f / columnTotal;
     cdfY *= columnTotalRecip;
     pdfY *= PY_FLOAT * columnTotalRecip;
 
+    if(isWarpLeader && columnTotal == 0.0f)
+        printf("Entire product field is zero !\n");
+}
+
+template <int32_t TPB, int32_t X, int32_t Y,
+          int32_t PX, int32_t PY>
+__device__ __forceinline__
+Vector2f ProductSampler<TPB, X, Y, PX, PY>::Sample(bool& innerIsUniform, float& pdfOut,
+                                                   RNGeneratorGPUI& rng,
+                                                   const float(&pdfX)[REFL_PER_THREAD],
+                                                   const float(&cdfX)[REFL_PER_THREAD],
+                                                   const float& pdfY,
+                                                   const float& cdfY) const
+{
     // Generated Marginal & Conditional Probabilities
     // Parallel search the CDFY
     float xi0 = (isWarpLeader) ? rng.Uniform() : 0.0f;
@@ -362,17 +407,17 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWC(float& pdf,
     // now subsample the inner small region (could be same size)
     //
     // Here we will use rejection sampling, it is highly parallel,
-    // each warp will do one round of roll check if we could not find
-    // anything warp leader will sample uniformly
+    // each warp will do n round of roll check. If we could not find
+    // anything, warp leader will sample uniformly
     // Rejection sampling
     // https://www.realtimerendering.com/raytracinggems/rtg/index.html Chapter 16
     static constexpr Vector2f DPP_FLOAT(DATA_PER_PRODUCT[0], DATA_PER_PRODUCT[1]);
     static constexpr Vector2i DPP = DATA_PER_PRODUCT;
     Vector2i outerRegion2D = Vector2i(columnId, rowId);
-    // Values that is found out by the rejection sampling
+    // Values that are found out by the rejection sampling
     Vector2f uv; float texVal;
     int32_t luckyWarp;
-    static constexpr int REJECTION_SAMPLE_ITERATIONS = 1;
+    static constexpr int REJECTION_SAMPLE_ITERATIONS = 16;
     for(int i = 0; i < REJECTION_SAMPLE_ITERATIONS; i++)
     {
         // Find a region
@@ -389,8 +434,8 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWC(float& pdf,
         mask = __ballot_sync(0xFFFFFFFF, (rng.Uniform() <= normalizedVal));
         luckyWarp = __ffs(mask) - 1;
 
-        // Broadcast to the leader warp if a warp sampled the value
-        // (well; to everybody as well due to instruction)
+        // Broadcast to the leader warp if a warp sampled the value.
+        // (well; to everybody as well because of the to instruction nature)
         if(luckyWarp > 0)
         {
             uv[0] = __shfl_sync(0xFFFFFFFF, uv[0], luckyWarp, WARP_SIZE);
@@ -406,27 +451,28 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWC(float& pdf,
         // Now calculate actual pdf etc.
         float pdfInner = (luckyWarp >= 0) ? texVal / integral : 1.0f;
         // Finally actual pdf
-        pdf = shMem.sWarpTempMemory[warpId][0] *
-              shMem.sWarpTempMemory[warpId][1] * pdfInner;
+        pdfOut = shMem.sWarpTempMemory[warpId][0] *
+                 shMem.sWarpTempMemory[warpId][1] * pdfInner;
 
-        //if(luckyWarp < 0)
-        //    printf("Unable to reject! Uniform Sampling "
-        //           "pdf(%f) = %f * %f * %f\n",
-        //           pdf, shMem.sWarpTempMemory[warpId][0],
-        //           shMem.sWarpTempMemory[warpId][1], pdfInner);
-        if(isnan(pdf))
+        innerIsUniform = (luckyWarp < 0);
+        if(luckyWarp < 0)
+            printf("Unable to reject! Uniform Sampling "
+                   "pdf(%f) = %f * %f * %f\n",
+                   pdfOut, shMem.sWarpTempMemory[warpId][0],
+                   shMem.sWarpTempMemory[warpId][1], pdfInner);
+        if(isnan(pdfOut))
             printf("NaN pdf(%f) = %f * %f * %f\n",
-                   pdf, shMem.sWarpTempMemory[warpId][0],
+                   pdfOut, shMem.sWarpTempMemory[warpId][0],
                    shMem.sWarpTempMemory[warpId][1], pdfInner);
 
         // Calculate the UV
         Vector2f innerRegionFloat = Vector2f(uv * DPP_FLOAT);
-        Vector2f actualUV = Vector2f(outerRegion2D) * DPP_FLOAT + innerRegionFloat;
+        Vector2f uvGuide = Vector2f(outerRegion2D) * DPP_FLOAT + innerRegionFloat;
 
         static constexpr Vector2f TOTAL_REGION_SIZE_RECIP = Vector2f(1.0f / X, 1.0f / Y);
-        actualUV *= TOTAL_REGION_SIZE_RECIP;
+        uvGuide *= TOTAL_REGION_SIZE_RECIP;
         // All done!
-        return actualUV;
+        return uvGuide;
     }
     // (Return is only valid for the warp leader(lane0))
     return Vector2f(NAN, NAN);
@@ -434,16 +480,173 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWC(float& pdf,
 
 template <int32_t TPB, int32_t X, int32_t Y,
           int32_t PX, int32_t PY>
-template <class ProjFunc, class WrapFunc>
-__device__ inline
-Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProductPWL(float& pdf,
-                                                                 RNGeneratorGPUI& rng,
-                                                                 int32_t rayIndex,
-                                                                 ProjFunc&& Project,
-                                                                 WrapFunc&& Wrap) const
+__device__ __forceinline__
+float   ProductSampler<TPB, X, Y, PX, PY>::Pdf(const Vector2f& uv,
+                                               const float(&pdfX)[REFL_PER_THREAD],
+                                               const float pdfY,
+                                               bool innerWasUniform) const
 {
-    // TODO:
-    return Zero2f;
+    static constexpr Vector2i DPP = DATA_PER_PRODUCT;
+    // Calculate indices
+    Vector2f outerExpanded = uv * Vector2f(PX_FLOAT, PY_FLOAT);
+    Vector2f outerIndex = outerExpanded.Floor();
+    Vector2f innerIndex = outerExpanded - outerIndex;
+    Vector2i outerRegion2D = Vector2i(outerIndex);
+    Vector2i innerRegion2D = Vector2i(innerIndex.Floor());
+    Vector2i global2D = outerRegion2D * DPP + innerRegion2D;
+
+    float innerIntegral = shMem.sRadianceFieldSmall[outerRegion2D[1]][outerRegion2D[0]];
+    float innerValue = shMem.sRadianceField[global2D[1]][global2D[0]];
+    // Now calculate actual pdf etc.
+    float pdfInner = (innerWasUniform) ? 1.0f : innerValue / innerIntegral;
+
+    // Shuffle the values for outer pdfY
+    // Only valid between lanes [0, PY)
+    // warpLeader will return so its fine
+    float pdfMarginal = __shfl_sync(0xFFFFFFFF, pdfY, outerRegion2D[1], PY);
+
+    // Each warp
+    // Which index of the pdfX[] array are we need?
+    int32_t innerLaneIndex = outerRegion2D[1] / PROCESSED_ROW_PER_ITER;
+    // Which lane of that pdfX[] should we use
+    int32_t outerIndexLinear = (outerRegion2D[1] * PX + outerRegion2D[1]);
+    int32_t laneId = outerIndexLinear % WARP_SIZE;
+    float pdfConditional = __shfl_sync(0xFFFFFFFF, pdfX[innerLaneIndex], laneId, WARP_SIZE);
+    // Finally actual pdf
+    return pdfConditional * pdfMarginal * pdfInner;
+}
+
+template <int32_t TPB, int32_t X, int32_t Y,
+          int32_t PX, int32_t PY>
+template <class ProjFunc>
+__device__ __forceinline__
+Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleWithProduct(float& pdf,
+                                                              RNGeneratorGPUI& rng,
+                                                              int32_t rayIndex,
+                                                              ProjFunc&& Project) const
+{
+    // Generate Fields (Functions)
+    float pdfX[REFL_PER_THREAD];
+    float cdfX[REFL_PER_THREAD];
+    float pdfY;
+    float cdfY;
+    GeneratePDFAndCDF(pdfX, cdfX, pdfY, cdfY, rayIndex, Project);
+
+    // Just Sample
+    bool innerIsUniformSampled;
+    Vector2f uv = Sample(innerIsUniformSampled, pdf,
+                         rng,
+                         pdfX, cdfX, pdfY, cdfY);
+    return uv;
+}
+
+
+template <int32_t TPB, int32_t X, int32_t Y,
+          int32_t PX, int32_t PY>
+template <class ProjFunc, class InvProjFunc, class NormProjFunc>
+__device__ __forceinline__
+Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
+                                                      RNGeneratorGPUI& rng,
+                                                      int32_t rayIndex,
+                                                      ProjFunc&& Project,
+                                                      InvProjFunc&& InvProject,
+                                                      NormProjFunc&& NormProject,
+                                                      float sampleRatio,
+                                                      float projectionPdfMultiplier) const
+{
+    const GPUMetaSurface& warpSurf = shMem.sSurfaces[warpId];
+
+    // Generate Fields (Functions)
+    float pdfX[REFL_PER_THREAD];
+    float cdfX[REFL_PER_THREAD];
+    float pdfY;
+    float cdfY;
+    GeneratePDFAndCDF(pdfX, cdfX, pdfY, cdfY, rayIndex, Project);
+
+
+    // Generate a sample and broadcast
+    float xi = (isWarpLeader) ? rng.Uniform() : 0.0f;
+    xi = __shfl_sync(0xFFFFFFFF, xi, 0, WARP_SIZE);
+
+    // Before sampling check if it is needed
+    static constexpr int32_t INVALID_RAY_INDEX = -1;
+    bool invalidRay = (rayIndex == INVALID_RAY_INDEX);
+    bool isLight = warpSurf.IsLight();
+    bool isSpecular = (warpSurf.Specularity() >= TracerConstants::SPECULAR_THRESHOLD);
+
+    if(isLight || isSpecular || invalidRay)
+    {
+        pdf = 1.0f;
+        return Vector2f(0.0f);
+    }
+
+    if(isSpecular && isWarpLeader)
+    {
+        printf("spec %f\n", warpSurf.Specularity());
+    }
+
+    Vector2f sampledUV;
+    float pdfSampled, pdfOther;
+    if(xi >= sampleRatio)
+    {
+        // Sample BxDF (solo)
+        //if(isWarpLeader)
+        {
+            GPUMediumI* outMedium;
+            RayF wo;
+            Vector3f wi = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
+            warpSurf.Sample(wo, pdfSampled,
+                            outMedium,
+                            //
+                            wi,
+                            GPUMediumVacuum(0),
+                            rng);
+
+            sampledUV = InvProject(wo.getDirection());
+        }
+        // Broadcast uv for pdf
+        sampledUV[0] = __shfl_sync(0xFFFFFFFF,  sampledUV[0], 0, WARP_SIZE);
+        sampledUV[1] = __shfl_sync(0xFFFFFFFF,  sampledUV[1], 0, WARP_SIZE);
+
+        // PDF Guide (warp)
+        pdfOther = Pdf(sampledUV, pdfX, pdfY, false);
+        pdfOther *= projectionPdfMultiplier;
+        pdfOther *= 2;
+        sampleRatio = 1.0f - sampleRatio;
+
+        //printf("[BxDF] pdfBxDF %f, pdfGuide %f\n", pdfSampled, pdfOther);
+    }
+    else
+    {
+        // Sample Guide (warp)
+        bool innerIsUniformSampled;
+        sampledUV = Sample(innerIsUniformSampled, pdfSampled,
+                             rng, pdfX, cdfX, pdfY, cdfY);
+        // Pdf BxDF (solo)
+        //if(isWarpLeader)
+        {
+            pdfSampled *= projectionPdfMultiplier;
+            pdfSampled *= 2;
+
+            Vector3f wi = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
+            Vector3f wo = NormProject(sampledUV);
+            pdfOther = warpSurf.Pdf(wo, wi, GPUMediumVacuum(0));
+
+            //printf("[Guide] pdfBxDF %f, pdfGuide %f\n", pdfSampled, pdfOther);
+        }
+    }
+
+    if(isWarpLeader)
+    {
+        using namespace TracerFunctions;
+        pdf = pdfSampled * sampleRatio / BalanceHeuristic(sampleRatio, pdfSampled,
+                                                          1.0f - sampleRatio, pdfOther);
+        pdf = (pdfSampled == 0.0f) ? 0.0f : pdf;
+
+        //printf("pdf %f uv (%f, %f)\n", pdf, sampledUV[0], sampledUV[1]);
+        return sampledUV;
+    }
+    return Vector2f(NAN, NAN);
 }
 
 template <int32_t TPB, int32_t X, int32_t Y,

@@ -93,8 +93,8 @@ class GPUMaterialGroupT
             __device__              GPUMaterial(const Data& gData, HitKey::Type index);
 
             // Interface
-            __device__  bool        IsEmissive() const override;
-            __device__  bool        Specularity(const UVSurface& surface) const override;
+            __device__ bool         IsEmissive() const override;
+            __device__ float        Specularity(const UVSurface& surface) const override;
             __device__ Vector3f     Sample(// Sampled Output
                                            RayF& wo,                       // Out direction
                                            float& pdf,                     // PDF for Monte Carlo
@@ -294,7 +294,7 @@ bool GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::IsEmissive() const
 
 template <class D, class S, class DF, class P>
 __device__
-bool GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Specularity(const UVSurface& surface) const
+float GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Specularity(const UVSurface& surface) const
 {
     static constexpr bool CAN_CONVERT_FROM_UV_SURFACE = (std::is_same_v<S, UVSurface> ||
                                                          std::is_same_v<S, BasicSurface> ||

@@ -11,7 +11,8 @@ class GPULightNull : public GPULightI
     __device__ Vector3f     Emit(const Vector3& wo,
                                  const Vector3& pos,
                                  //
-                                 const UVSurface&) const  override { return Zero3f;}
+                                 const UVSurface&,
+                                 float solidAngle = 0.0f) const  override { return Zero3f;}
     __device__ uint32_t     GlobalLightIndex() const  override { return UINT32_MAX; }
     __device__ void         SetGlobalLightIndex(uint32_t) override {}
     __device__ bool         IsPrimitiveBackedLight() const  override { return false; }
