@@ -875,13 +875,13 @@ inline void TraceSVO(// Output
             else if(mode == WFPGRenderMode::SVO_RADIANCE)
             {
                 Vector3f hitPos = shMem->sPosition + rayDir[i].Normalize() * tMin[i];
-                float radianceF = ReadInterpolatedRadiance(hitPos, rayDir[i],
-                                                           shMem->sConeAperture,
-                                                           svo);
+                //float radianceF = ReadInterpolatedRadiance(hitPos, rayDir[i],
+                //                                           shMem->sConeAperture,
+                //                                           svo);
 
-                //half radiance = svo.ReadRadiance(rayDir[i], shMem->sConeAperture,
-                //                                 nodeIndex[i], isLeaf[i]);
-                //float radianceF = radiance;
+                half radiance = svo.ReadRadiance(rayDir[i], shMem->sConeAperture,
+                                                 nodeIndex[i], isLeaf[i]);
+                float radianceF = radiance;
                 //if(radiance != static_cast<half>(MRAY_HALF_MAX))
                     locColor = Vector4f(Vector3f(radianceF), 1.0f);
             }
@@ -1188,10 +1188,10 @@ static void KCGenAndSampleDistribution(// Output
                 sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
                 uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * sharedMem->sRayCount);
+                // Use the first rays hit position
                 //uint32_t randomRayIndex = 0;
 
-                // TODO: Change this
-                // Use the first rays hit position
+
                 uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
                 #if 1
                 // Simple but less accurate version
