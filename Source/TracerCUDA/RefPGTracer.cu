@@ -122,6 +122,7 @@ void RefPGTracer::SendPixel() const
     if(callbacks) callbacks->SendImage(std::move(convertedData),
                                        iPixelFormat,
                                        pixelSize,
+                                       (options.samplePerIteration * options.samplePerIteration),
                                        // Only send one pixel
                                        currentPixel2D,
                                        currentPixel2D + Vector2i(1));
@@ -461,7 +462,7 @@ void RefPGTracer::Finalize()
     if(crashed) return;
 
     cudaSystem.SyncAllGPUs();
-    frameTimer.Stop();
+    frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.samplePerIteration * options.samplePerIteration);
     // Increment Sample count
     uint32_t finalizedSampleCount = options.samplePerIteration * options.samplePerIteration;

@@ -348,7 +348,7 @@ TracerError GPUBaseAcceleratorBVH::Construct(const CudaSystem&,
                           sizeof(BVHNode<BaseLeaf>) * bvhNodes.size(),
                           cudaMemcpyHostToDevice));
 
-    t.Stop();
+    t.Split();
     METU_LOG("Base BVH(d={:d}) generated in {:f} seconds.",
              maxDepth, t.Elapsed<CPUTimeSeconds>());
 

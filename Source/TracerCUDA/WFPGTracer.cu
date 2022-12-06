@@ -1040,7 +1040,7 @@ void WFPGTracer::Finalize()
     METU_LOG("----------------");
 
     cudaSystem.SyncAllGPUs();
-    frameTimer.Stop();
+    frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
     RayTracer::Finalize();
 }

@@ -1268,7 +1268,7 @@ SceneError GPUSceneJson::LoadAll(double time)
     maxAccelIds += Vector2i(1);
     maxMatIds += Vector2i(1);
 
-    timer.Stop();
+    timer.Split();
     METU_LOG("Scene {:s} loaded in {:f} seconds.",
              Utility::CopyU8ToString(fileName),
              timer.Elapsed<CPUTimeSeconds>());
@@ -1317,7 +1317,7 @@ SceneError GPUSceneJson::LoadScene(double time)
         METU_ERROR_LOG("{:s}", e.what());
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
-    t.Stop();
+    t.Split();
     loadTime = t.Elapsed<CPUTimeSeconds>();
     return e;
 }
@@ -1342,7 +1342,7 @@ SceneError GPUSceneJson::ChangeTime(double time)
     {
         return SceneError::JSON_FILE_PARSE_ERROR;
     }
-    t.Stop();
+    t.Split();
     lastUpdateTime = t.Elapsed<CPUTimeSeconds>();
     return e;
 }

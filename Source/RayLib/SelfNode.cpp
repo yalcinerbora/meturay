@@ -121,9 +121,11 @@ void SelfNode::SendImageSectionReset(Vector2i start, Vector2i end)
 
 void SelfNode::SendImage(const std::vector<Byte> data,
                          PixelFormat f, size_t offset,
+                         uint32_t averageSPP,
                          Vector2i start, Vector2i end)
 {
-    visor.AccumulatePortion(data, f, offset, start, end);
+    visor.AccumulatePortion(data, f, offset, averageSPP,
+                            start, end);
 }
 
 void SelfNode::SendCurrentOptions(Options tOpts)

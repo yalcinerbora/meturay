@@ -29,6 +29,7 @@ class TracerCallbacksI
                                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         virtual void    SendImage(const std::vector<Byte> data,
                                   PixelFormat, size_t offset,
+                                  uint32_t averageSPP,
                                   Vector2i start = Zero2i,
                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         virtual void    SendCurrentOptions(Options) = 0;

@@ -202,6 +202,7 @@ GPUTracer::GPUTracer(const CudaSystem& system,
     , params(p)
     , callbacks(nullptr)
     , crashed(false)
+    , sppPerIteration(0)
     , frameAnalytics {}
 {
     #ifdef MRAY_OPTIX
@@ -491,6 +492,7 @@ void GPUTracer::Finalize()
     if(callbacks) callbacks->SendImage(std::move(imageData),
                                        imgMemory.Format(),
                                        offset,
+                                       sppPerIteration,
                                        start, end);
     SendLog("Image sent!");
 

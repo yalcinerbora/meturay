@@ -135,7 +135,7 @@ TracerError SceneSurfaceTree::Construct(const AcceleratorBatchMap& sceneAccelera
 
     // Print the generation timer
     cudaSystem.SyncAllGPUs();
-    timer.Stop();
+    timer.Split();
     METU_LOG("SurfaceTree generated in {} seconds", timer.Elapsed<CPUTimeSeconds>());
 
     // All Done!

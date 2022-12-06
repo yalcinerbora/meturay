@@ -200,7 +200,7 @@ bool AOTracer::Render()
 void AOTracer::Finalize()
 {
     cudaSystem.SyncAllGPUs();
-    frameTimer.Stop();
+    frameTimer.Split();
     UpdateFrameAnalytics("rays / sec", options.sampleCount * options.sampleCount);
 
     RayTracer::Finalize();

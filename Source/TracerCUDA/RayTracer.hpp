@@ -14,6 +14,7 @@ void RayTracer::GenerateRays(uint32_t cameraIndex,
     frameTimer.Start();
 
     int32_t sampleCountSqr = sampleCount * sampleCount;
+    sppPerIteration = sampleCountSqr;
 
     const Vector2i resolution = imgMemory.Resolution();
     const Vector2i pixelStart = imgMemory.SegmentOffset();
@@ -121,6 +122,7 @@ void RayTracer::GenerateRays(const GPUCameraI& dCamera,
     // it requires unnecessary work to not dereference GPU pointer and put it on a kernel
 
     int32_t sampleCountSqr = sampleCount * sampleCount;
+    sppPerIteration = sampleCountSqr;
 
     const Vector2i resolution = imgMemory.Resolution();
     const Vector2i pixelStart = imgMemory.SegmentOffset();

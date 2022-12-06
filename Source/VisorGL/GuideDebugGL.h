@@ -51,6 +51,7 @@ class GuideDebugGL : public VisorI
                                              Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void                    AccumulatePortion(const std::vector<Byte> data,
                                                   PixelFormat, size_t offset,
+                                                  uint32_t averageSPP,
                                                   Vector2i start = Zero2i,
                                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         //
@@ -99,7 +100,7 @@ inline void GuideDebugGL::SetImageFormat(PixelFormat) {}
 inline void GuideDebugGL::SetImageRes(Vector2i){}
 inline void GuideDebugGL::ResetSamples(Vector2i, Vector2i) {}
 inline void GuideDebugGL::AccumulatePortion(const std::vector<Byte>,
-                                          PixelFormat, size_t, Vector2i, Vector2i) {}
+                                          PixelFormat, size_t, uint32_t, Vector2i, Vector2i) {}
 inline void GuideDebugGL::SaveImage(bool) {}
 
 inline void GuideDebugGL::Update(const VisorTransform&) {}

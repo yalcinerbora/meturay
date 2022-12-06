@@ -107,6 +107,7 @@ class GPUTracer : public GPUTracerI
         TracerCallbacksI*                   callbacks;
         bool                                crashed;
         // Analytic Data
+        uint32_t                            sppPerIteration;
         TracerAnalyticData                  frameAnalytics;
         Utility::CPUTimer                   frameTimer;
 

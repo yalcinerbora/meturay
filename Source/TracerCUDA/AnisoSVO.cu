@@ -1146,7 +1146,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                           sizeof(GPULightI*), cudaMemcpyDeviceToHost));
 
     // Log some stuff
-    timer.Stop();
+    timer.Split();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
     std::locale::global(std::locale("en_US.UTF-8"));
     METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Generated in {:f} seconds. (Total {:.2f} MiB)",
@@ -1369,7 +1369,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
                           sizeof(GPULightI*), cudaMemcpyDeviceToHost));
 
     // Log some stuff
-    timer.Stop();
+    timer.Split();
     double svoMemSize = static_cast<double>(octreeMem.Size()) / 1024.0 / 1024.0;
     std::locale::global(std::locale("en_US.UTF-8"));
     METU_LOG("Scene Aniso-SVO [N: {:L}, L: {:L}] Loaded from disk in {:f} seconds. (Total {:.2f} MiB)",

@@ -96,6 +96,7 @@ class VisorI : public ImageSaverI
         // Append incoming data from
         virtual void                    AccumulatePortion(const std::vector<Byte> data,
                                                           PixelFormat, size_t offset,
+                                                          uint32_t averageSPP,
                                                           Vector2i start = Zero2i,
                                                           Vector2i end = BaseConstants::IMAGE_MAX_SIZE) = 0;
         // Options

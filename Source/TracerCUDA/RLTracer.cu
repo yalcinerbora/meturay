@@ -269,7 +269,7 @@ void RLTracer::Finalize()
         qFunction.RecalculateDistributions(cudaSystem);
 
     cudaSystem.SyncAllGPUs();
-    frameTimer.Stop();
+    frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
 
     // If requested write out the LBH as a file

@@ -624,7 +624,7 @@ TracerError GPUAccBVHGroup<PGroup>::ConstructAccelerator(uint32_t surface,
                           cudaMemcpyHostToDevice));
 
 
-    t.Stop();
+    t.Split();
     METU_LOG("Surface{:d} BVH(d={:d}) generated in {:f} seconds.",
              surface,
              maxDepth,

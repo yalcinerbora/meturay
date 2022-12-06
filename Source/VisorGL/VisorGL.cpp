@@ -87,7 +87,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
                                inSize[0], inSize[1], 1,
                                GL_RED, GL_FLOAT, &clearDataInt);
             // Reset the sample count
-            receivedSampleCount = 0;
+            ResetOutputSystem();
             break;
         }
         case VisorGLCommand::SET_PORTION:
@@ -152,55 +152,14 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         }
         case VisorGLCommand::SAVE_IMAGE:
         {
-            // Load as 8-bit color
-            // We cant use Vector3uc  here it is aligned to 4byte boundaries
-            // use C array (std::array also does not guarantee the alignment)
-            // ImageIO does not care about the underlying type it assumes data
-            // properly holds the format (PixelFormat type) contiguously
-            struct alignas(1) RGBData { unsigned char c[3]; };
-            std::vector<RGBData> pixels(imageSize[0] * imageSize[1]);
-            GLuint readTexture = sdrTexture;
-            // Tightly pack pixels for reading
-            glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            glBindTexture(GL_TEXTURE_2D, readTexture);
-            // [n] version does not work on mesa OGL
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
-                          static_cast<void*>(pixels.data()));
-            // GLsizei pixelBufferSize = static_cast<GLsizei>(pixels.size() * sizeof(RGBData));
-            // glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
-            //                pixelBufferSize,
-            //                pixels.data());
-
-            ImageIOError e = ImageIOError::OK;
-            const ImageIOI& io = *ImageIOInstance();
-            if((e = io.WriteImage(pixels,
-                                  Vector2ui(imageSize[0], imageSize[1]),
-                                  PixelFormat::RGB8_UNORM, ImageType::PNG,
-                                  "imgOut.png")) != ImageIOError::OK)
-            {
-                METU_ERROR_LOG(static_cast<std::string>(e));
-            }
+            using namespace std::string_literals;
+            SaveImageInternal(false, "imgOut"s);
             break;
         }
         case VisorGLCommand::SAVE_IMAGE_HDR:
         {
-            std::vector<Vector3f> pixels(imageSize[0] * imageSize[1]);
-            GLuint readTexture = outputTextures[currentIndex];
-            glBindTexture(GL_TEXTURE_2D, readTexture);
-            // Tightly pack pixels for reading
-            glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT,
-                          pixels.data());
-
-            ImageIOError e = ImageIOError::OK;
-            const ImageIOI& io = *ImageIOInstance();
-            if((e = io.WriteImage(pixels,
-                                  Vector2ui(imageSize[0], imageSize[1]),
-                                  PixelFormat::RGB_FLOAT, ImageType::EXR,
-                                  "imgOut.exr")) != ImageIOError::OK)
-            {
-                METU_ERROR_LOG(static_cast<std::string>(e));
-            }
+            using namespace std::string_literals;
+            SaveImageInternal(true, "imgOut"s);
             break;
         }
     };
@@ -230,6 +189,70 @@ void VisorGL::RenderImage()
 
     // Draw
     glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void VisorGL::SaveImageInternal(bool isHDR,
+                                const std::string& name) const
+{
+    if(isHDR)
+    {
+        std::vector<Vector3f> pixels(imageSize[0] * imageSize[1]);
+        GLuint readTexture = outputTextures[currentIndex];
+        glBindTexture(GL_TEXTURE_2D, readTexture);
+        // Tightly pack pixels for reading
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT,
+                      pixels.data());
+
+        ImageIOError e = ImageIOError::OK;
+        const ImageIOI& io = *ImageIOInstance();
+        if((e = io.WriteImage(pixels,
+                              Vector2ui(imageSize[0], imageSize[1]),
+                              PixelFormat::RGB_FLOAT, ImageType::EXR,
+                              name + ".exr")) != ImageIOError::OK)
+        {
+            METU_ERROR_LOG(static_cast<std::string>(e));
+        }
+    }
+    else
+    {
+        // Load as 8-bit color
+        // We cant use Vector3uc  here it is aligned to 4byte boundaries
+        // use C array (std::array also does not guarantee the alignment)
+        // ImageIO does not care about the underlying type it assumes data
+        // properly holds the format (PixelFormat type) contiguously
+        struct alignas(1) RGBData { unsigned char c[3]; };
+        std::vector<RGBData> pixels(imageSize[0] * imageSize[1]);
+        GLuint readTexture = sdrTexture;
+        // Tightly pack pixels for reading
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glBindTexture(GL_TEXTURE_2D, readTexture);
+        // [n] version does not work on mesa OGL
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
+                      static_cast<void*>(pixels.data()));
+        // GLsizei pixelBufferSize = static_cast<GLsizei>(pixels.size() * sizeof(RGBData));
+        // glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
+        //                pixelBufferSize,
+        //                pixels.data());
+
+        ImageIOError e = ImageIOError::OK;
+        const ImageIOI& io = *ImageIOInstance();
+        if((e = io.WriteImage(pixels,
+                              Vector2ui(imageSize[0], imageSize[1]),
+                              PixelFormat::RGB8_UNORM, ImageType::PNG,
+                              name + ".png")) != ImageIOError::OK)
+        {
+            METU_ERROR_LOG(static_cast<std::string>(e));
+        }
+    }
+}
+
+void VisorGL::ResetOutputSystem()
+{
+    receivedSampleCount = 0;
+    outputWRTTimeCount = 0;
+    outputWRTSampleCount = 0;
+    outputTimer.Start();
 }
 
 void VisorGL::GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
@@ -287,6 +310,9 @@ VisorGL::VisorGL(const VisorOptions& opts,
     , vao(0)
     , vBuffer(0)
     , visorInput(nullptr)
+    , receivedSampleCount(0)
+    , outputWRTSampleCount(0)
+    , outputWRTTimeCount(0)
 {}
 
 VisorGL::~VisorGL()
@@ -380,9 +406,54 @@ void VisorGL::Render()
     // Check the output system
     if(vOpts.enableOutput)
     {
+        // TODO: This is not a good design,
+        // we can not be sure that sample count divisible
+        // by the per sample output
+        // on top of that it is only single tracer at the moment
 
+        if(vOpts.outputMetric == OutputMetric::TIME ||
+           vOpts.outputMetric == OutputMetric::BOTH)
+        {
+            outputTimer.Split();
+            double elapsedS = outputTimer.Elapsed<CPUTimeSeconds>();
+            if(elapsedS >= vOpts.timeInterval)
+            {
+                using namespace std::string_literals;
+
+                outputWRTTimeCount++;
+                // Generate the name
+                float seconds = vOpts.timeInterval * static_cast<float>(outputWRTTimeCount);
+
+                std::string fileName = fmt::format("{:s}_time_{:4.2f}s",
+                                                   vOpts.outputName,
+                                                   seconds);
+                SaveImageInternal(vOpts.outputAsHDR, fileName);
+
+                // Restart the timer
+                outputTimer.Start();
+            }
+        }
+        if(vOpts.outputMetric == OutputMetric::SAMPLE ||
+           vOpts.outputMetric == OutputMetric::BOTH)
+        {
+            if(receivedSampleCount >= vOpts.sampleInterval)
+            {
+                using namespace std::string_literals;
+
+                outputWRTSampleCount++;
+                // Generate the name
+                uint32_t samples = vOpts.sampleInterval * outputWRTSampleCount;
+                std::string fileName = fmt::format("{}_sample_{:04d}spp",
+                                                   vOpts.outputName,
+                                                   samples);
+
+                SaveImageInternal(vOpts.outputAsHDR, fileName);
+
+                // Reset the sample count
+                receivedSampleCount = 0;
+            }
+        }
     }
-
 
     // Finally Swap Buffers
     glfwSwapBuffers(window);
@@ -391,7 +462,7 @@ void VisorGL::Render()
     // since it does not exactly makes it to a certain FPS value
     if(vOpts.fpsLimit > 0.0f)
     {
-        t.Stop();
+        t.Split();
         double sleepMS = (1000.0 / vOpts.fpsLimit);
         sleepMS -= t.Elapsed<std::milli>();
         sleepMS = std::max(0.0, sleepMS);
@@ -440,6 +511,7 @@ void VisorGL::ResetSamples(Vector2i start, Vector2i end)
 
 void VisorGL::AccumulatePortion(const std::vector<Byte> data,
                                 PixelFormat f, size_t offset,
+                                uint32_t averageSPP,
                                 Vector2i start,
                                 Vector2i end)
 {
@@ -452,6 +524,7 @@ void VisorGL::AccumulatePortion(const std::vector<Byte> data,
     command.format = f;
     command.offset = offset;
     command.data = std::move(data);
+    command.spp = averageSPP;
 
     commandList.Enqueue(std::move(command));
 }

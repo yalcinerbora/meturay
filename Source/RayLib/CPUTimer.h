@@ -35,7 +35,7 @@ class CPUTimer
 
         // Utility
         void            Start();
-        void			Stop();
+        void			Split();
         void			Lap();
 
         template <class Time>
@@ -47,7 +47,7 @@ inline void CPUTimer::Start()
     start = CPUClock::now();
 }
 
-inline void CPUTimer::Stop()
+inline void CPUTimer::Split()
 {
     CPUTimePoint end = CPUClock::now();
     elapsed = end - start;

@@ -87,6 +87,7 @@ class MockNode
         void        SendImageSectionReset(Vector2i start, Vector2i end) override;
         void        SendImage(const std::vector<Byte> data,
                               PixelFormat, size_t offset,
+                              uint32_t averageSPP,
                               Vector2i start = Zero2i,
                               Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         void        SendCurrentOptions(Options) override {};
@@ -117,9 +118,10 @@ inline void MockNode::SendError(TracerError err)
 
 inline void MockNode::SendImage(const std::vector<Byte> data,
                                 PixelFormat f, size_t offset,
+                                uint32_t averageSPP,
                                 Vector2i start, Vector2i end)
 {
-    visor.AccumulatePortion(std::move(data), f, offset, start, end);
+    visor.AccumulatePortion(std::move(data), f, offset, averageSPP, start, end);
 }
 
 inline void MockNode::SendImageSectionReset(Vector2i start, Vector2i end)

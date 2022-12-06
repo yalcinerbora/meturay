@@ -128,6 +128,8 @@ class VisorGL : public VisorI
         // Output
         Utility::CPUTimer               outputTimer;
         uint32_t                        receivedSampleCount;
+        uint32_t                        outputWRTTimeCount;
+        uint32_t                        outputWRTSampleCount;
 
         // OGL Debug Context Callback
         static void             OGLCallbackRender(GLenum source,
@@ -144,6 +146,10 @@ class VisorGL : public VisorI
         // Internal Command Handling
         void                    ProcessCommand(const VisorGLCommand&);
         void                    RenderImage();
+
+        void                    SaveImageInternal(bool isHDR,
+                                                  const std::string& name) const;
+        void                    ResetOutputSystem();
 
         // Helpers
         void                    GenAspectCorrectVP(Vector2i& vpOffset, Vector2i& vpSize,
@@ -177,6 +183,7 @@ class VisorGL : public VisorI
         // Append incoming data from
         void                    AccumulatePortion(const std::vector<Byte> data,
                                                   PixelFormat, size_t offset,
+                                                  uint32_t averageSPP,
                                                   Vector2i start = Zero2i,
                                                   Vector2i end = BaseConstants::IMAGE_MAX_SIZE) override;
         // Options
