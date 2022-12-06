@@ -1063,13 +1063,11 @@ struct KCGenSampleShMem
     // PWC Distribution over the shared memory
     using ProductSampler8x8 = ProductSampler<THREAD_PER_BLOCK, X, Y, PX, PY>;
     using BlockDist2D = BlockPWCDistribution2D<THREAD_PER_BLOCK, X, Y>;
-    //using BlockDist2D = BlockPWLDistribution2D<THREAD_PER_BLOCK, X, Y>;
     using BlockFilter2D = BlockTextureFilter2D<THREAD_PER_BLOCK, X, Y, GaussFilter>;
     using ConeTracer = BatchConeTracer<THREAD_PER_BLOCK, X, Y>;
     union
     {
         typename BlockDist2D::TempStorage   sDistMem;
-
         typename ProductSampler8x8::SharedStorage sProductSamplerMem;
         typename BlockFilter2D::TempStorage sFilterMem;
         typename ConeTracer::TempStorage sTraceMem;
@@ -1081,6 +1079,150 @@ struct KCGenSampleShMem
     uint32_t sNodeId;
     float sBinVoxelSize;
 };
+
+template <class RNG, int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__device__
+inline void LoadBinInfo(//Output
+                        KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>* sharedMem,
+                        // I-O
+                        RNG& rng,
+                        // Input
+                        // Per ray
+                        const RayId* gRayIds,
+                        const GPUMetaSurfaceGeneratorGroup& metaSurfGenerator,
+                        // Per bin
+                        const uint32_t* gBinOffsets,
+                        const uint32_t* gNodeIds,
+                        // Constants
+                        const AnisoSVOctreeGPU& svo,
+                        uint32_t binIndex)
+{
+    const int32_t THREAD_ID = threadIdx.x;
+    const int32_t isMainThread = (THREAD_ID == 0);
+    // Load Bin information
+    if(isMainThread)
+    {
+        Vector2ui rayRange = Vector2ui(gBinOffsets[binIndex], gBinOffsets[binIndex + 1]);
+        sharedMem->sRayCount = rayRange[1] - rayRange[0];
+        sharedMem->sOffsetStart = rayRange[0];
+        sharedMem->sNodeId = gNodeIds[binIndex];
+
+        if(sharedMem->sNodeId != INVALID_BIN_ID)
+        {
+            // Calculate the voxel size of the bin
+            uint32_t nodeId;
+            bool isLeaf = ReadSVONodeId(nodeId, sharedMem->sNodeId);
+            sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
+
+            uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * sharedMem->sRayCount);
+            // Use the first rays hit position
+            //uint32_t randomRayIndex = 0;
+
+            uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
+            // Simple but less accurate version
+            RayReg rayReg = metaSurfGenerator.Ray(rayId);
+            Vector3f position = rayReg.ray.Advance(rayReg.tMax - rayReg.tMin).getPosition();
+            sharedMem->sRadianceFieldOrigin = position;
+        };
+
+        //// Roll a dice stochastically cull bin (TEST)
+        //if(rng.Uniform() < 0.5f)
+        //    sNodeId = INVALID_BIN_ID;
+    }
+    __syncthreads();
+}
+
+template <class RNG, class WrapF, class ProjF, int32_t DATA_PER_THREAD,
+          int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__device__
+inline void GenerateRadianceField(// Output
+                                  float(&filteredRadiances)[DATA_PER_THREAD],
+                                  // I-O
+                                  RNG& rng,
+                                  KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>* sharedMem,
+                                  // Constants
+                                  const WrapF& WrapFunc,
+                                  const ProjF& ProjectionFunc,
+                                  const GaussFilter& RFieldGaussFilter,
+                                  const AnisoSVOctreeGPU& svo,
+                                  float coneAperture)
+{
+    static constexpr int32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X* Y) ? THREAD_PER_BLOCK : (X * Y);
+
+    const int32_t THREAD_ID = threadIdx.x;
+
+    using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
+    using Filter2D = typename SharedMemType::BlockFilter2D;
+    using ConeTracer = typename SharedMemType::ConeTracer;
+    static_assert(DATA_PER_THREAD == ConeTracer::DATA_PER_THREAD);
+
+    ConeTracer coneTracer(sharedMem->sTraceMem, svo);
+
+    float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
+                  MathConstants::LargeEpsilon);
+
+    // Uniform Test
+    //for(int i = 0; i < RT_ITER_COUNT; i++)
+    //    incRadiances[i] = 1.0f;
+
+    // Batched Cone Trace
+    Vector3f    rayDirOut[DATA_PER_THREAD];
+    float       tMinOut[DATA_PER_THREAD];
+    bool        isLeaf[DATA_PER_THREAD];
+    uint32_t    nodeId[DATA_PER_THREAD];
+    coneTracer.BatchedConeTraceRay(rayDirOut,
+                                   tMinOut,
+                                   isLeaf,
+                                   nodeId,
+                                   // Inputs
+                                   sharedMem->sRadianceFieldOrigin,
+                                   Vector2f(tMin, FLT_MAX),
+                                   coneAperture, 0,
+                                   // Functors
+                                   ProjectionFunc);
+
+    // Query the radiance from the hit location
+    float incRadiances[DATA_PER_THREAD];
+    #if 1
+    // Non-filtered version
+    // Incoming radiance query (result of the trace)
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
+    {
+        // This case occurs only when there is more threads than pixels
+        if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
+
+        incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
+                                           nodeId[i], isLeaf[i]);
+        if(incRadiances[i] == 0.0f)
+            incRadiances[i] = MathConstants::LargeEpsilon;
+    }
+    #else
+    // Filtered version
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
+    {
+        if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
+
+        Vector3f hitPos = (sharedMem->sRadianceFieldOrigin +
+                           rayDirOut[i].Normalize() * tMinOut[i]);
+        incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
+                                                   coneAperture,
+                                                   svo);
+
+        if(incRadiances[i] == 0.0f)
+            incRadiances[i] = MathConstants::LargeEpsilon;
+    }
+    #endif
+
+    // We finished tracing rays from the scene
+    // Now generate distribution from the data
+    // and sample for each ray
+    // Before that filter the radiance field
+    Filter2D(sharedMem->sFilterMem).Filter(filteredRadiances,
+                                           incRadiances,
+                                           RFieldGaussFilter,
+                                           WrapFunc);
+    __syncthreads();
+}
 
 // Main directional distribution generation kernel
 // Each block is responsible of a single bin
@@ -1109,7 +1251,6 @@ static void KCGenAndSampleDistribution(// Output
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     const int32_t THREAD_ID = threadIdx.x;
-    const int32_t isMainThread = (THREAD_ID == 0);
 
     // Number of threads that contributes to the ray tracing operation
     static constexpr int32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X * Y) ? THREAD_PER_BLOCK : (X * Y);
@@ -1172,116 +1313,35 @@ static void KCGenAndSampleDistribution(// Output
     for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
         binIndex += gridDim.x)
     {
-        // Load Bin information
-        if(isMainThread)
-        {
-            Vector2ui rayRange = Vector2ui(gBinOffsets[binIndex], gBinOffsets[binIndex + 1]);
-            sharedMem->sRayCount = rayRange[1] - rayRange[0];
-            sharedMem->sOffsetStart = rayRange[0];
-            sharedMem->sNodeId = gNodeIds[binIndex];
-
-            if(sharedMem->sNodeId != INVALID_BIN_ID)
-            {
-                // Calculate the voxel size of the bin
-                uint32_t nodeId;
-                bool isLeaf = ReadSVONodeId(nodeId, sharedMem->sNodeId);
-                sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
-
-                uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * sharedMem->sRayCount);
-                // Use the first rays hit position
-                //uint32_t randomRayIndex = 0;
-
-
-                uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
-                #if 1
-                // Simple but less accurate version
-                RayReg rayReg = metaSurfGenerator.Ray(rayId);
-                Vector3f position = rayReg.ray.Advance(rayReg.tMax - rayReg.tMin).getPosition();
-                #else
-                // Accurate but very high register using version
-                Vector3 position = metaSurfGenerator.AcquireWork(rayId).WorldPosition();
-                #endif
-
-                sharedMem->sRadianceFieldOrigin = position;
-            };
-
-            //// Roll a dice stochastically cull bin (TEST)
-            //if(rng.Uniform() < 0.5f)
-            //    sNodeId = INVALID_BIN_ID;
-        }
-        __syncthreads();
+        static constexpr auto LoadBinInfoFunc = LoadBinInfo<RNG, THREAD_PER_BLOCK, X, Y>;
+        // Load the bin Info
+        LoadBinInfoFunc(sharedMem, rng, gRayIds, metaSurfGenerator,
+                        gBinOffsets, gNodeIds, svo, binIndex);
 
         //// Kill the entire block if Node Id is invalid
-        if(sharedMem->sNodeId == INVALID_BIN_ID) continue;
-
-        float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
-                      MathConstants::LargeEpsilon);
-        float incRadiances[RT_ITER_COUNT];
-
-        // Uniform Test
-        //for(int i = 0; i < RT_ITER_COUNT; i++)
-        //    incRadiances[i] = 1.0f;
-
-        // Batched Cone Trace
-        Vector3f    rayDirOut[RT_ITER_COUNT];
-        float       tMinOut[RT_ITER_COUNT];
-        bool        isLeaf[RT_ITER_COUNT];
-        uint32_t    nodeId[RT_ITER_COUNT];
-        coneTracer.BatchedConeTraceRay(rayDirOut,
-                                       tMinOut,
-                                       isLeaf,
-                                       nodeId,
-                                       // Inputs
-                                       sharedMem->sRadianceFieldOrigin,
-                                       Vector2f(tMin, FLT_MAX),
-                                       coneAperture, 0,
-                                       // Functors
-                                       ProjectionFunc);
-
-        #if 1
-        // Non-filetered version
-        // Incoming radiance query (result of the trace)
-        for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
+        if(sharedMem->sNodeId == INVALID_BIN_ID)
         {
-            // This case occurs only when there is more threads than pixels
-            if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
-
-            incRadiances[i] = svo.ReadRadiance(rayDirOut[i], coneAperture,
-                                               nodeId[i], isLeaf[i]);
-            //printf("HitT: %f, tMin %f n:%u r:%f\n", tMinOut[i], tMin, nodeId[i], incRadiances[i]);
-
-            if(incRadiances[i] == 0.0f) incRadiances[i] = MathConstants::LargeEpsilon;
+            __syncthreads();
+            continue;
         }
-        #else
-        // Filtered version
-        for(uint32_t i = 0; i < RT_ITER_COUNT; i++)
-        {
-            if(THREAD_ID >= RT_CONTRIBUTING_THREAD_COUNT) continue;
 
-            Vector3f hitPos = (sharedMem->sRadianceFieldOrigin +
-                               rayDirOut[i].Normalize() * tMinOut[i]);
-            incRadiances[i] = ReadInterpolatedRadiance(hitPos, rayDirOut[i],
-                                                       coneAperture,
-                                                       svo);
-
-            if(incRadiances[i] == 0.0f) incRadiances[i] = MathConstants::LargeEpsilon;
-        }
-        #endif
-
-        // We finished tracing rays from the scene
-        // Now generate distribution from the data
-        // and sample for each ray
-        // Before that filter the radiance field
+        // Generate Radiance Field
         float filteredRadiances[RT_ITER_COUNT];
-        Filter2D(sharedMem->sFilterMem).Filter(filteredRadiances,
-                                               incRadiances,
-                                               RFieldGaussFilter,
-                                               WrapFunc);
-        __syncthreads();
-
+        static constexpr auto GenRadFieldFunc = GenerateRadianceField<RNG,
+                                                                      decltype(WrapFunc),
+                                                                      decltype(ProjectionFunc),
+                                                                      RT_ITER_COUNT,
+                                                                      THREAD_PER_BLOCK, X, Y>;
+        GenRadFieldFunc(filteredRadiances,
+                        rng,
+                        sharedMem,
+                        WrapFunc,
+                        ProjectionFunc,
+                        RFieldGaussFilter,
+                        svo,
+                        coneAperture);
 
         // Non product sample version
-        #if 1
         // Generate PWC Distribution over the radiances
         Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
         // Block threads will loop over the every ray in this bin
@@ -1292,7 +1352,7 @@ static void KCGenAndSampleDistribution(// Output
             uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
             GPUMetaSurface surf = metaSurfGenerator.AcquireWork(rayId);
 
-            float sampleRatio = misRatio;
+            float sampleRatio = (purePG) ? 1.0f : misRatio;
             float xi = rng.Uniform();
             Vector3f wi = -(metaSurfGenerator.Ray(rayId).ray.getDirection());
 
@@ -1337,7 +1397,119 @@ static void KCGenAndSampleDistribution(// Output
             gRayAux[rayId].guideDir = Vector2h(sampledUV[0], sampledUV[1]);
             gRayAux[rayId].guidePDF = pdf;
         }
-        #else
+
+        // Wait all to finish
+        __syncthreads();
+    }
+}
+
+template <class RNG, int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__global__ __launch_bounds__(THREAD_PER_BLOCK)
+static void KCGenAndSampleDistributionProduct(// Output
+                                              RayAuxWFPG* gRayAux,
+                                              // I-O
+                                              RNGeneratorGPUI** gRNGs,
+                                              // Input
+                                              // Per-ray
+                                              const RayId* gRayIds,
+                                              const GPUMetaSurfaceGeneratorGroup metaSurfGenerator,
+                                              // Per bin
+                                              const uint32_t* gBinOffsets,
+                                              const uint32_t* gNodeIds,
+                                              // Constants
+                                              const GaussFilter RFieldGaussFilter,
+                                              float coneAperture,
+                                              const AnisoSVOctreeGPU svo,
+                                              uint32_t binCount,
+                                              bool purePG,
+                                              float misRatio)
+{
+    auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
+    const int32_t THREAD_ID = threadIdx.x;
+
+    // Number of threads that contributes to the ray tracing operation
+    static constexpr int32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X * Y) ? THREAD_PER_BLOCK : (X * Y);
+    // How many rows can we process in parallel
+    static constexpr int32_t ROW_PER_ITERATION = RT_CONTRIBUTING_THREAD_COUNT / X;
+    // How many iterations the entire image would take
+    static constexpr int32_t ROW_ITER_COUNT = Y / ROW_PER_ITERATION;
+    static_assert(RT_CONTRIBUTING_THREAD_COUNT % X == 0, "RT_THREADS must be multiple of X or vice versa.");
+    static_assert(Y % ROW_PER_ITERATION == 0, "RT_THREADS must exactly iterate over X * Y");
+    // Ray tracing related
+    static constexpr int32_t RT_ITER_COUNT = ROW_ITER_COUNT;
+
+    // PWC Distribution over the shared memory
+    using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
+    using ProductSampler8x8 = typename SharedMemType::ProductSampler8x8;
+
+    // Functors for batched cone trace
+    auto ProjectionFunc = [&](const Vector2i& localPixelId,
+                              const Vector2i& segmentSize)
+    {
+        // Jitter the values
+        //Vector2f xi = Vector2f(0.5f);
+        Vector2f xi = rng.Uniform2D();
+        Vector2f st = Vector2f(localPixelId) + xi;
+        st /= Vector2f(segmentSize);
+        Vector3 result = Utility::CocentricOctohedralToDirection(st);
+        Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+        return dirYUp;
+    };
+    auto InvProjectionFunc = [](const Vector3f& direction)
+    {
+        Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
+        return Utility::DirectionToCocentricOctohedral(dirZUp);
+    };
+    auto NormProjectionFunc = [](const Vector2f& st)
+    {
+        Vector3f dir = Utility::CocentricOctohedralToDirection(st);
+        return Vector3(dir[1], dir[2], dir[0]);
+    };
+    auto WrapFunc = [](const Vector2i& pixelId,
+                       const Vector2i& segmentSize)
+    {
+        return Utility::CocentricOctohedralWrapInt(pixelId, segmentSize);
+    };
+
+    static constexpr auto GenRadFieldFunc = GenerateRadianceField<RNG,
+                                                                  decltype(WrapFunc),
+                                                                  decltype(ProjectionFunc),
+                                                                  RT_ITER_COUNT,
+                                                                  THREAD_PER_BLOCK, X, Y>;
+    static constexpr auto LoadBinInfoFunc = LoadBinInfo<RNG, THREAD_PER_BLOCK, X, Y>;
+
+    // Change the type of the shared memory
+    extern __shared__ Byte sharedMemRAW[];
+    SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
+
+    // For each block (we allocate enough blocks for the GPU)
+    // Each block will process multiple bins
+    for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
+        binIndex += gridDim.x)
+    {
+        // Load the bin Info
+        LoadBinInfoFunc(sharedMem, rng,
+                        gRayIds, metaSurfGenerator,
+                        gBinOffsets, gNodeIds,
+                        svo, binIndex);
+        // Kill the entire block if Node Id is invalid
+        if(sharedMem->sNodeId == INVALID_BIN_ID)
+        {
+            __syncthreads();
+            continue;
+        }
+
+        // Generate Radiance Field
+        float filteredRadiances[RT_ITER_COUNT];
+        GenRadFieldFunc(filteredRadiances,
+                        rng,
+                        sharedMem,
+                        WrapFunc,
+                        ProjectionFunc,
+                        RFieldGaussFilter,
+                        svo,
+                        coneAperture);
+
         static constexpr uint32_t WARP_PER_BLOCK = THREAD_PER_BLOCK / WARP_SIZE;
         // Parallelization logic changes now it is one ray per warp
         // Generate the product sampler first
@@ -1401,9 +1573,8 @@ static void KCGenAndSampleDistribution(// Output
                 gRayAux[rayId].guidePDF = pdf;
             }
         }
-        #endif
 
-        // Sync every thread before processing another bin
+        // Wait all to finish
         __syncthreads();
     }
 }

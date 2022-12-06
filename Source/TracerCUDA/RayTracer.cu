@@ -30,6 +30,11 @@ TracerError RayTracer::Initialize()
     return GPUTracer::Initialize();
 }
 
+void RayTracer::ResetSPP()
+{
+    totalSamplePerPixel = 0;
+}
+
 void RayTracer::UpdateFrameAnalytics(const std::string& throughputSuffix,
                                      uint32_t spp)
 {
@@ -66,6 +71,12 @@ size_t RayTracer::TotalGPUMemoryUsed() const
 void RayTracer::AttachReconFilter(GPUReconFilterI* f)
 {
     reconFilter = f;
+}
+
+void RayTracer::ResetImage()
+{
+    ResetSPP();
+    GPUTracer::ResetImage();
 }
 
 void RayTracer::Finalize()

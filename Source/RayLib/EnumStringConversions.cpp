@@ -1,17 +1,18 @@
 #include "EnumStringConversions.h"
 
 #include "TracerSystemI.h"
+#include "VisorI.h"
 
 template<class T>
 using EnumNameList = std::array<const char* const, static_cast<size_t>(T::END)>;
 
-static const EnumNameList<ScenePartitionerType> ScenePartitionerTypeNames =
+static constexpr EnumNameList<ScenePartitionerType> ScenePartitionerTypeNames =
 {
     "SINGLE_GPU",
     "MULTI_GPU"
 };
 
-static const EnumNameList<OptionsI::OptionType> TracerOptionTypeNames =
+static constexpr EnumNameList<OptionsI::OptionType> TracerOptionTypeNames =
 {
     "bool",
     "int",
@@ -23,20 +24,27 @@ static const EnumNameList<OptionsI::OptionType> TracerOptionTypeNames =
     "string"
 };
 
-static const EnumNameList<TracerCameraMode> CameraModeTypeNames =
+static constexpr EnumNameList<OutputMetric> OutputMetricNames =
+{
+    "Time",
+    "Sample",
+    "Both"
+};
+
+static constexpr EnumNameList<TracerCameraMode> CameraModeTypeNames =
 {
     "SCENE_CAM",
     "CUSTOM_CAM"
 };
 
-static const EnumNameList<KeyAction> KeyActionTypeNames =
+static constexpr EnumNameList<KeyAction> KeyActionTypeNames =
 {
     "PRESSED"
     "RELEASED"
     "REPEATED"
 };
 
-static const EnumNameList<MouseButtonType> MouseButtonTypeNames =
+static constexpr EnumNameList<MouseButtonType> MouseButtonTypeNames =
 {
     "LEFT",
     "RIGHT",
@@ -48,7 +56,7 @@ static const EnumNameList<MouseButtonType> MouseButtonTypeNames =
     "BUTTON_8"
 };
 
-static const EnumNameList<KeyboardKeyType> KeyboardKeyTypeNames =
+static constexpr EnumNameList<KeyboardKeyType> KeyboardKeyTypeNames =
 {
     "SPACE",
     "APOSTROPHE",
@@ -172,7 +180,7 @@ static const EnumNameList<KeyboardKeyType> KeyboardKeyTypeNames =
     "MENU"
 };
 
-static const EnumNameList<VisorActionType> VisorActionTypeNames =
+static constexpr EnumNameList<VisorActionType> VisorActionTypeNames =
 {
     // Movement Related
     "MOVE_FORWARD",
@@ -203,7 +211,7 @@ static const EnumNameList<VisorActionType> VisorActionTypeNames =
     "CLOSE"
 };
 
-static const EnumNameList<PixelFormat> PixelFormatTypeNames =
+static constexpr EnumNameList<PixelFormat> PixelFormatTypeNames =
 {
     "R8_UNORM",
     "RG8_UNORM",
@@ -263,6 +271,11 @@ std::string EnumStringConverter::CameraModeToString(TracerCameraMode t)
     return CameraModeTypeNames[static_cast<uint32_t>(t)];
 }
 
+std::string EnumStringConverter::OutputMetricToString(OutputMetric t)
+{
+    return OutputMetricNames[static_cast<uint32_t>(t)];
+}
+
 std::string EnumStringConverter::PixelFormatTypeToString(PixelFormat t)
 {
     return PixelFormatTypeNames[static_cast<uint32_t>(t)];
@@ -301,6 +314,11 @@ VisorActionType EnumStringConverter::StringToVisorActionType(const std::string& 
 TracerCameraMode EnumStringConverter::StringToCameraMode(const std::string& s)
 {
     return StrToEnum<TracerCameraMode>(s, CameraModeTypeNames);
+}
+
+OutputMetric EnumStringConverter::StringToOutputMetric(const std::string& s)
+{
+    return StrToEnum<OutputMetric>(s, OutputMetricNames);
 }
 
 ScenePartitionerType EnumStringConverter::StringToScenePartitionerType(const std::string& s)

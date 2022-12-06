@@ -37,7 +37,6 @@
     },
     {
         "id": 2,
-        //"type" : "Pinhole",
         "type" : "Spherical",
 
         // 16:9 FoV
@@ -52,6 +51,19 @@
 
         "pixelRatio": 1.0,
         "direction": [1, 0, 0]
+    },
+    {
+        "id": 3,
+        "type" : "Pinhole",
+        // 16:9 FoV
+        //"fov": [97.0672, 54.6003],
+        "fov": [54.6003, 30.7127],
+        // 1:1 FoV
+        //"fov": [54.6003, 54.6003],
+        "gaze"     : [-530.93, 79.6815, 99.3057],
+        "position" : [-531.926, 79.7013, 99.3897],
+        "up"       : [0, 1, 0],
+        "planes": [10, 2800]
     }
 
 ],
@@ -375,5 +387,5 @@
     "LightSurfaces": [{"light" : 1}],
     // "LightSurfaces": [],
     // Cameras
-    "CameraSurfaces": [{"camera": 0}, {"camera": 1}, {"camera": 2}]
+    "CameraSurfaces": [{"camera": 0}, {"camera": 1}, {"camera": 2}, {"camera": 3}]
 }

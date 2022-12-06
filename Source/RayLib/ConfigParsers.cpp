@@ -51,6 +51,15 @@ namespace ConfigParser
         static constexpr const char* ENABLE_GUI_NAME = "enableGUI";
         static constexpr const char* ENABLE_TMO_NAME = "enableTMO";
 
+        // Output Related
+        static constexpr const char* ENABLE_OUT_NAME = "enableOutput";
+        static constexpr const char* OUT_METRIC_NAME = "outputMetric";
+        static constexpr const char* OUT_TIME_INTERVAL_NAME = "outputTimeInterval";
+        static constexpr const char* OUT_SAMPLE_INTERVAL_NAME = "outputSampleInterval";
+        static constexpr const char* OUT_AS_HDR_NAME = "outputHDR";
+        static constexpr const char* OUT_NAME_NAME = "outputName";
+
+
         // Load VisorOptions
         opts.eventBufferSize = SceneIO::LoadNumber<uint32_t>(optsJson[EVENT_BUFFER_SIZE_NAME]);
         opts.stereoOn = SceneIO::LoadBool(optsJson[STEREO_ON_NAME]);
@@ -59,6 +68,13 @@ namespace ConfigParser
         opts.fpsLimit = SceneIO::LoadNumber<float>(optsJson[FPS_LIMIT_NAME]);
         opts.enableGUI = SceneIO::LoadBool(optsJson[ENABLE_GUI_NAME]);
         opts.enableTMO = SceneIO::LoadBool(optsJson[ENABLE_TMO_NAME]);
+
+        opts.enableOutput = SceneIO::LoadBool(optsJson[ENABLE_OUT_NAME]);
+        opts.outputMetric = EnumStringConverter::StringToOutputMetric(optsJson[OUT_METRIC_NAME]);
+        opts.timeInterval = SceneIO::LoadNumber<float>(optsJson[OUT_TIME_INTERVAL_NAME]);
+        opts.sampleInterval = SceneIO::LoadNumber<uint32_t>(optsJson[OUT_SAMPLE_INTERVAL_NAME]);
+        opts.outputAsHDR = SceneIO::LoadBool(optsJson[OUT_AS_HDR_NAME]);
+        opts.outputName = SceneIO::LoadString(optsJson[OUT_NAME_NAME]);
     }
 }
 

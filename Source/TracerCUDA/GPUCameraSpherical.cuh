@@ -3,7 +3,7 @@
 #include "GPUCameraP.cuh"
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
-#include "GPUCameraPixel.cuh"
+#include "GPUCameraPinhole.cuh"
 #include "MangledNames.h"
 
 #include "RayLib/VisorTransform.h"
@@ -18,6 +18,8 @@ class GPUCameraSpherical final : public GPUCameraI
         Vector3                 right;
         Vector3                 up;
         Vector2                 nearFar;
+        Vector2f                regionId;
+        Vector2f                totalRegions;
 
     protected:
     public:
@@ -27,6 +29,16 @@ class GPUCameraSpherical final : public GPUCameraI
                                                const Vector3& direction,
                                                const Vector3& up,
                                                const Vector2& nearFar,
+                                               // Base Class Related
+                                               uint16_t mediumId, HitKey hk,
+                                               const GPUTransformI& gTrans);
+        __device__          GPUCameraSpherical(float pixelRatio,
+                                               const Vector3& position,
+                                               const Vector3& direction,
+                                               const Vector3& up,
+                                               const Vector2& nearFar,
+                                               const Vector2& regionId,
+                                               const Vector2& totalRegions,
                                                // Base Class Related
                                                uint16_t mediumId, HitKey hk,
                                                const GPUTransformI& gTrans);
@@ -159,6 +171,34 @@ inline GPUCameraSpherical::GPUCameraSpherical(float pixelRatio,
     , direction(gTrans.LocalToWorld(dir))
     , up(gTrans.LocalToWorld(upp))
     , nearFar(nearFar)
+    , regionId(Vector2(0.0f))
+    , totalRegions(Vector2(1.0f))
+{
+    // Camera Vector Correction
+    right = Cross(direction, up).Normalize();
+    up = Cross(right, direction).Normalize();
+    direction = Cross(up, right).Normalize();
+}
+
+__device__
+inline GPUCameraSpherical::GPUCameraSpherical(float pixelRatio,
+                                              const Vector3& pos,
+                                              const Vector3& dir,
+                                              const Vector3& upp,
+                                              const Vector2& nearFar,
+                                              const Vector2& regionId,
+                                              const Vector2& totalRegions,
+                                              // Base Class Related
+                                              uint16_t mediumId, HitKey hk,
+                                              const GPUTransformI& gTrans)
+    : GPUCameraI(mediumId, hk, gTrans)
+    , pixelRatio(pixelRatio)
+    , position(gTrans.LocalToWorld(pos))
+    , direction(gTrans.LocalToWorld(dir))
+    , up(gTrans.LocalToWorld(upp))
+    , nearFar(nearFar)
+    , regionId(regionId)
+    , totalRegions(totalRegions)
 {
     // Camera Vector Correction
     right = Cross(direction, up).Normalize();
@@ -223,6 +263,10 @@ inline void GPUCameraSpherical::GenerateRay(// Output
     normCoords += randomOffset;
     normCoords /= Vector2(static_cast<float>(sampleMax[0]),
                           static_cast<float>(sampleMax[1]));
+
+    // Norm coordinates are in inner region
+    // change to global region
+    normCoords = (regionId + normCoords) / totalRegions;
 
     // Calculate Spherical Coordinates
     Vector2f sphericalCoords = Vector2f(// [-pi, pi]
@@ -331,11 +375,27 @@ inline void GPUCameraSpherical::SwapTransform(const VisorTransform& t)
 
 __device__
 inline GPUCameraI* GPUCameraSpherical::GenerateSubCamera(Byte* memoryRegion, size_t memSize,
-                                                       const Vector2i& regionId,
-                                                       const Vector2i& regionCount) const
+                                                         const Vector2i& regionId,
+                                                         const Vector2i& regionCount) const
 {
-    // TODO: Implement
-    return nullptr;
+    if(sizeof(GPUCameraSpherical) > memSize) return nullptr;
+
+    //Vector3f gaze = position + dirYUp;
+    Vector2f subRegionCount = Vector2f(regionCount) * totalRegions;
+    Vector2f subRegionId = this->regionId * Vector2f(regionCount) + Vector2f(regionId);
+
+    GPUCameraSpherical* p = new (memoryRegion) GPUCameraSpherical(pixelRatio,
+                                                                  gTransform.WorldToLocal(position),
+                                                                  gTransform.WorldToLocal(direction),
+                                                                  gTransform.WorldToLocal(up),
+                                                                  nearFar,
+                                                                  subRegionId,
+                                                                  subRegionCount,
+                                                                  mediumIndex,
+                                                                  workKey,
+                                                                  gTransform);
+
+    return p;
 }
 
 inline CPUCameraGroupSpherical::CPUCameraGroupSpherical(const GPUPrimitiveGroupI* pg)

@@ -32,6 +32,15 @@ struct SceneAnalyticData;
 class MovementSchemeI;
 using MovementSchemeList = std::vector<std::unique_ptr<MovementSchemeI>>;
 
+enum class OutputMetric
+{
+    TIME,
+    SAMPLE,
+    BOTH,
+
+    END
+};
+
 struct VisorOptions
 {
     // Technical
@@ -46,6 +55,14 @@ struct VisorOptions
     // Misc
     bool                enableGUI;
     bool                enableTMO;
+
+    // Output related
+    bool                enableOutput;
+    OutputMetric        outputMetric;
+    float               timeInterval;
+    uint32_t            sampleInterval;
+    bool                outputAsHDR;
+    std::string         outputName;
 };
 
 class ImageSaverI

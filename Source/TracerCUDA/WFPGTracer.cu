@@ -141,8 +141,6 @@ static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL
     std::make_tuple(256, 16, 16),                           // Third bounce not so much
     std::make_tuple(256, 16, 16),                           // Fourth bounce as well
     std::make_tuple(128, 8, 8)                              // Fifth is bad
-    //std::make_tuple(256, 16, 16)
-
 };
 
 //static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
@@ -151,7 +149,16 @@ static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//
+//
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(256, 16, 16),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(256, 16, 16),
+//    //std::make_tuple(256, 16, 16)
 //};
 
 static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),
@@ -169,6 +176,16 @@ static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_KE
     KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
     KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
     KCGenAndSampleDistribution<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
+};
+
+static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_PRODUCT_KERNELS =
+{
+
+    KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>,
+    KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>,
+    KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
+    KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
+    KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
 };
 
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_SHMEM_SIZE =
@@ -369,9 +386,11 @@ void WFPGTracer::GenerateGuidedDirections()
     // Call the Trace and Sample Kernel
     // Select the kernel depending on the depth
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
-    kernelIndex = 0;
+    //kernelIndex = 0;
 
-    auto KCSampleKernel= PG_KERNELS[kernelIndex];
+    auto KERNEL_LIST = options.productPG ? PG_PRODUCT_KERNELS : PG_KERNELS;
+
+    auto KCSampleKernel = KERNEL_LIST[kernelIndex];
     float coneAperture = CONE_APERTURES[kernelIndex];
     uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
     uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);

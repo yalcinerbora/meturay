@@ -86,6 +86,8 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
                                c.start[0], c.start[1], 0,
                                inSize[0], inSize[1], 1,
                                GL_RED, GL_FLOAT, &clearDataInt);
+            // Reset the sample count
+            receivedSampleCount = 0;
             break;
         }
         case VisorGLCommand::SET_PORTION:
@@ -141,6 +143,9 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
                             GL_TEXTURE_FETCH_BARRIER_BIT);
 
+            // Set the received sample count
+            receivedSampleCount += c.spp;
+
             // Swap input and output
             currentIndex = nextIndex;
             break;
@@ -151,7 +156,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // We cant use Vector3uc  here it is aligned to 4byte boundaries
             // use C array (std::array also does not guarantee the alignment)
             // ImageIO does not care about the underlying type it assumes data
-            // properly holds the format (PixelFormat type) contagiously
+            // properly holds the format (PixelFormat type) contiguously
             struct alignas(1) RGBData { unsigned char c[3]; };
             std::vector<RGBData> pixels(imageSize[0] * imageSize[1]);
             GLuint readTexture = sdrTexture;
@@ -371,6 +376,13 @@ void VisorGL::Render()
 
     // After Render GUI
     visorInput->RenderGUI();
+
+    // Check the output system
+    if(vOpts.enableOutput)
+    {
+
+    }
+
 
     // Finally Swap Buffers
     glfwSwapBuffers(window);

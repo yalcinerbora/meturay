@@ -51,6 +51,7 @@ class RayTracer : public GPUTracer
 
         void                    UpdateFrameAnalytics(const std::string& throughputSuffix,
                                                      uint32_t spp);
+        void                    ResetSPP();
 
     public:
         // Constructors & Destructor
@@ -64,6 +65,8 @@ class RayTracer : public GPUTracer
         size_t                  TotalGPUMemoryUsed() const override;
 
         void                    AttachReconFilter(GPUReconFilterI*) override;
+
+        void                    ResetImage() override;
 
         // Filtered Finalize
         void                    Finalize() override;

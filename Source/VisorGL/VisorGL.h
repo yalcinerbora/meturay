@@ -18,6 +18,7 @@ the VisorGL singleton.
 #include "RayLib/AnalyticData.h"
 #include "RayLib/Options.h"
 #include "RayLib/VisorI.h"
+#include "RayLib/CPUTimer.h"
 
 #include "ShaderGL.h"
 #include "VisorGUI.h"
@@ -45,6 +46,7 @@ struct VisorGLCommand
         Vector2i                start;
         Vector2i                end;
         size_t                  offset;
+        uint32_t                spp;
 
         // Commands should not be copied
                                 VisorGLCommand() = default;
@@ -122,6 +124,10 @@ class VisorGL : public VisorI
 
         // GUI / Input
         std::unique_ptr<VisorInputI>    visorInput;
+
+        // Output
+        Utility::CPUTimer               outputTimer;
+        uint32_t                        receivedSampleCount;
 
         // OGL Debug Context Callback
         static void             OGLCallbackRender(GLenum source,
