@@ -1043,6 +1043,9 @@ void WFPGTracer::Finalize()
     frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
     RayTracer::Finalize();
+
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(10s);
 }
 
 size_t WFPGTracer::TotalGPUMemoryUsed() const

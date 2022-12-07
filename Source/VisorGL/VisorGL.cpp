@@ -6,6 +6,7 @@
 #include "RayLib/CPUTimer.h"
 #include "RayLib/VisorError.h"
 #include "RayLib/VisorInputI.h"
+#include "RayLib/FileSystemUtility.h"
 
 #include "GLConversionFunctions.h"
 #include "GLFWCallbackDelegator.h"
@@ -418,15 +419,13 @@ void VisorGL::Render()
             double elapsedS = outputTimer.Elapsed<CPUTimeSeconds>();
             if(elapsedS >= vOpts.timeInterval)
             {
-                using namespace std::string_literals;
-
                 outputWRTTimeCount++;
                 // Generate the name
                 float seconds = vOpts.timeInterval * static_cast<float>(outputWRTTimeCount);
-
                 std::string fileName = fmt::format("{:s}_time_{:4.2f}s",
                                                    vOpts.outputName,
                                                    seconds);
+                Utility::ForceMakeDirectoriesInPath(fileName);
                 SaveImageInternal(vOpts.outputAsHDR, fileName);
 
                 // Restart the timer
@@ -438,15 +437,13 @@ void VisorGL::Render()
         {
             if(receivedSampleCount >= vOpts.sampleInterval)
             {
-                using namespace std::string_literals;
-
                 outputWRTSampleCount++;
                 // Generate the name
                 uint32_t samples = vOpts.sampleInterval * outputWRTSampleCount;
                 std::string fileName = fmt::format("{}_sample_{:04d}spp",
                                                    vOpts.outputName,
                                                    samples);
-
+                Utility::ForceMakeDirectoriesInPath(fileName);
                 SaveImageInternal(vOpts.outputAsHDR, fileName);
 
                 // Reset the sample count
