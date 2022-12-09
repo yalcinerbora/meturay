@@ -537,7 +537,7 @@ Vector3f SVOctree::ReadNormalAndSpecular(float& stdDev, float& specularity,
 }
 
 float SVOctree::ReadRadiance(const Vector3f& coneDirection,
-                             float coneAperture, uint32_t nodeIndex,
+                             float, uint32_t nodeIndex,
                              bool isLeaf) const
 {
     // Debug Visualizer does not have access to the boundary light
@@ -629,13 +629,13 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
                     SamplerGLInterpType::LINEAR)
     , gradientTexture(gradientTexture)
     , multiplyCosTheta(false)
-    , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
-    , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
     , maxValueDisplay(0.0f)
     , currentWorldPos(Zero3f)
     , readInterpolatedRadiance(false)
     , doGaussFilter(true)
     , showAsIfPiecewiseLinear(false)
+    , compReduction(ShaderType::COMPUTE, u8"Shaders/TextureMaxReduction.comp")
+    , compRefRender(ShaderType::COMPUTE, u8"Shaders/PGReferenceRender.comp")
 {
     // Load the Name
     name = config[GuideDebug::NAME];
@@ -687,7 +687,7 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     std::ptrdiff_t rrIndexLarge = std::distance(renderResolutionNameList.cbegin(),
                                                 std::find_if(renderResolutionNameList.cbegin(),
                                                              renderResolutionNameList.cend(),
-                                                             [=](const auto& pair)
+                                                             [this](const auto& pair)
                                                              {
                                                                  return (pair.first == mapSize);
                                                              }));

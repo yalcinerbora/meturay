@@ -64,8 +64,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
         __device__ __host__ void            operator/=(const Matrix&);
         __device__ __host__ void            operator/=(T);
 
-        __device__ __host__ Matrix                      operator+(const Matrix&) const;
-        __device__ __host__ Matrix                      operator-(const Matrix&) const;
+        __device__ __host__ Matrix          operator+(const Matrix&) const;
+        __device__ __host__ Matrix          operator-(const Matrix&) const;
         template<class Q = T>
         __device__ __host__ SignedEnable<Q, Matrix>     operator-() const;
         __device__ __host__ Matrix                      operator/(const Matrix&) const;
@@ -81,12 +81,14 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
         __device__ __host__ bool                        operator!=(const Matrix&) const;
 
         // Utility
-        __device__ __host__ T                           Determinant() const;
+        __device__ __host__ [[nodiscard]] T             Determinant() const;
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix>      Inverse() const;
+        __device__ __host__
+        [[nodiscard]] FloatEnable<Q, Matrix>            Inverse() const;
         template<class Q = T>
         __device__ __host__ FloatEnable<Q, Matrix&>     InverseSelf();
-        __device__ __host__ Matrix                      Transpose() const;
+        __device__ __host__
+        [[nodiscard]] Matrix                            Transpose() const;
         __device__ __host__ Matrix&                     TransposeSelf();
 
         __device__ __host__ Matrix          Clamp(const Matrix&, const Matrix&) const;
@@ -95,19 +97,23 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
         __device__ __host__ Matrix&         ClampSelf(T min, T max);
 
         template<class Q = T>
-        __device__ __host__ SignedEnable<Q, Matrix>     Abs() const;
+        __device__ __host__
+        [[nodiscard]] SignedEnable<Q, Matrix>           Abs() const;
         template<class Q = T>
         __device__ __host__ SignedEnable<Q, Matrix&>    AbsSelf();
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix>      Round() const;
+        __device__ __host__
+        [[nodiscard]] FloatEnable<Q, Matrix>            Round() const;
         template<class Q = T>
         __device__ __host__ FloatEnable<Q, Matrix&>     RoundSelf();
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix>      Floor() const;
+        __device__ __host__
+        [[nodiscard]] FloatEnable<Q, Matrix>            Floor() const;
         template<class Q = T>
         __device__ __host__ FloatEnable<Q, Matrix&>     FloorSelf();
         template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix>      Ceil() const;
+        __device__ __host__
+        [[nodiscard]] FloatEnable<Q, Matrix>            Ceil() const;
         template<class Q = T>
         __device__ __host__ FloatEnable<Q, Matrix&>     CeilSelf();
 
@@ -122,23 +128,29 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
 
 // Determinants
 template<class T>
-__device__ __host__ T Determinant2(const T*);
+__device__ __host__
+[[nodiscard]] T Determinant2(const T*);
 
 template<class T>
-__device__ __host__ T Determinant3(const T*);
+__device__ __host__
+[[nodiscard]] T Determinant3(const T*);
 
 template<class T>
-__device__ __host__ T Determinant4(const T*);
+__device__ __host__
+[[nodiscard]] T Determinant4(const T*);
 
 // Inverse
 template<class T>
-__device__ __host__ Matrix<2, T> Inverse2(const T*);
+__device__ __host__
+[[nodiscard]] Matrix<2, T> Inverse2(const T*);
 
 template<class T>
-__device__ __host__ Matrix<3, T> Inverse3(const T*);
+__device__ __host__
+[[nodiscard]] Matrix<3, T> Inverse3(const T*);
 
 template<class T>
-__device__ __host__ Matrix<4, T> Inverse4(const T*);
+__device__ __host__
+[[nodiscard]] Matrix<4, T> Inverse4(const T*);
 
 // Left Scalar operators
 template<int N, class T>

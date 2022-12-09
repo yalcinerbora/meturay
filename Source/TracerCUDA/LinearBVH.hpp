@@ -268,7 +268,8 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
                                                      gLeafData, gSortedIndices,
                                                      gSortedMortonCodes,
                                                      leafCount);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
+    __syncthreads();
 
     uint32_t depth = 1;
     while(gCounter < (leafCount - 1))
@@ -280,7 +281,7 @@ static void KCConstructLinearBVH(uint32_t& gRootIndex,
             gSortedMortonCodes,
             leafCount
         );
-        cudaDeviceSynchronize();
+        __syncthreads();
         depth++;
     }
     printf("LBVH Depth %u\n", depth);
@@ -380,7 +381,7 @@ static void BottomUpAABBUnion(uint32_t& gCounter,
     BottomUpAABBLeaf<<<blockCount, threadCount>>>(gNodes, gLRFlags,
                                                   leafCount);
 
-    cudaDeviceSynchronize();
+    __syncthreads();
     while(gCounter < (leafCount - 1))
     {
         BottomUpAABBInter<<<blockCount, threadCount>>>
@@ -390,7 +391,7 @@ static void BottomUpAABBUnion(uint32_t& gCounter,
             gSortedIndices,
             leafCount
         );
-        cudaDeviceSynchronize();
+        __syncthreads();
     }
 }
 

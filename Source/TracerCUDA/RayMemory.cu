@@ -206,8 +206,7 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys, uint32_t count,
                                                              dbKeys, dbIds,
                                                              static_cast<int>(count),
                                                              bitStart, bitEnd,
-                                                             (cudaStream_t)0,
-                                                             false));
+                                                             (cudaStream_t)0));
     }
 
     // Then sort batches
@@ -219,8 +218,7 @@ void RayMemory::SortKeys(RayId*& ids, HitKey*& keys, uint32_t count,
                                                              dbKeys, dbIds,
                                                              static_cast<int>(count),
                                                              bitStart, bitEnd,
-                                                             (cudaStream_t)0,
-                                                             false));
+                                                             (cudaStream_t)0));
     }
 
     ids = dbIds.Current();
@@ -270,8 +268,7 @@ RayPartitions<uint32_t> RayMemory::Partition(uint32_t rayCount)
                                      dSparseSplitIndices, dDenseSplitIndices, dSelectCount,
                                      static_cast<int>(rayCount),
                                      ValidSplit(),
-                                     (cudaStream_t)0,
-                                     false));
+                                     (cudaStream_t)0));
 
     // Copy Reduced Count
     uint32_t hSelectCount;

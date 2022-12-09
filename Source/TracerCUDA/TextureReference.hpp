@@ -130,7 +130,7 @@ T TextureRef<D, T>::operator()(const TexFloatType_t<D>& index,
 
 template <int D, class T>
 __device__
-typename TextureRefI<D, T>::DimType TextureRef<D, T>::Dim() const
+typename TextureRef<D, T>::DimType TextureRef<D, T>::Dim() const
 {
     return dim;
 }

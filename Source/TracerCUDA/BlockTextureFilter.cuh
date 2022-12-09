@@ -38,7 +38,7 @@ template<uint32_t TPB,
 class BlockTextureFilter2D
 {
     private:
-    static constexpr bool TPBCheck(uint32_t TPB, uint32_t X, uint32_t Y)
+    static constexpr bool TPBCheck()
     {
         auto PIX_COUNT = (X * Y);
         if(TPB > PIX_COUNT) return TPB % PIX_COUNT == 0;
@@ -47,7 +47,7 @@ class BlockTextureFilter2D
     }
 
     // No SFINAE, just static assert
-    static_assert(TPBCheck(TPB, X, Y),
+    static_assert(TPBCheck(),
                   "TBP and (X * Y) must be divisible, (X*Y) / TBP or TBP / (X*Y)");
     public:
     static constexpr uint32_t DATA_PER_THREAD = std::max(1u, (X * Y) / TPB);

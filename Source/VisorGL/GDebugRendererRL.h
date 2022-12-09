@@ -22,7 +22,7 @@ struct /*alignas(16)*/ SurfaceLBVHNode
     union
     {
         // Non-leaf part
-        struct
+        struct Leaf
         {
             Vector3 aabbMin;
             uint32_t left;

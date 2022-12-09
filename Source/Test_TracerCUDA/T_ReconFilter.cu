@@ -16,7 +16,7 @@
 template <class Filter>
 struct ReconFilterTestParams
 {
-    using ReconFilter = typename Filter;
+    using ReconFilter = Filter;
 };
 
 template <class T>

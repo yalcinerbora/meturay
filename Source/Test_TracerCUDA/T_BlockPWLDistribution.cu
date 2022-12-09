@@ -101,9 +101,9 @@ template <class T>
 class BlockPWL2DTest : public testing::Test
 {};
 
-using Implementations = ::testing::Types<BlockPWL2DTestParams<512, 64, 64>,
-                                         BlockPWL2DTestParams<512, 64, 32>,
-                                         BlockPWL2DTestParams<512, 32, 32>,
+using Implementations = ::testing::Types<BlockPWL2DTestParams<METU_DEBUG_BOOL ? 256 : 512, 64, 64>,
+                                         BlockPWL2DTestParams<METU_DEBUG_BOOL ? 256 : 512, 64, 32>,
+                                         BlockPWL2DTestParams<METU_DEBUG_BOOL ? 256 : 512, 32, 32>,
                                          BlockPWL2DTestParams<256, 32, 16>,
                                          BlockPWL2DTestParams<256, 16, 16>,
                                          BlockPWL2DTestParams<128, 16,  8>,

@@ -592,7 +592,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
         // Sample BxDF (solo)
         //if(isWarpLeader)
         {
-            GPUMediumI* outMedium;
+            const GPUMediumI* outMedium;
             RayF wo;
             Vector3f wi = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
             warpSurf.Sample(wo, pdfSampled,

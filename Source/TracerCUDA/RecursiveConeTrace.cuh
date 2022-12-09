@@ -30,7 +30,7 @@ class Span2D
     __device__ __forceinline__
     const float& operator()(int x, int y) const
     {
-        Vector2i xy = wrapFunc(Vector2i(x, y), mapSz);
+        Vector2i xy = wrapFunc(Vector2i(x, y), size);
         return memory[xy[1] * size[0] + xy[0]];
     }
 };
@@ -39,7 +39,7 @@ template <int32_t TPB, int32_t X, int32_t Y>
 class BatchConeTracer
 {
     private:
-    static constexpr bool TPBCheck(int32_t TPB, int32_t X, int32_t Y)
+    static constexpr bool TPBCheck()
     {
         auto PIX_COUNT = (X * Y);
         if(TPB > PIX_COUNT) return TPB % PIX_COUNT == 0;
@@ -47,7 +47,7 @@ class BatchConeTracer
         return false;
     }
     // No SFINAE, just static assert
-    static_assert(TPBCheck(TPB, X, Y),
+    static_assert(TPBCheck(),
                   "TBP and (X * Y) must be divisible, (X*Y) / TBP or TBP / (X*Y)");
 
     public:

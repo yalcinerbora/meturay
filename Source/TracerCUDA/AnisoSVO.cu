@@ -585,8 +585,8 @@ void KCBottomUpFilterIrradiance(//I-O
         avgIrrad[0] = (validChildrenCount[0] == 0) ? HALF_MAX_LOCAL : avgIrrad[0];
         avgIrrad[1] = (validChildrenCount[1] == 0) ? HALF_MAX_LOCAL : avgIrrad[1];
         // Normalize & Clamp the half range for now
-        Vector2h irradClampled = Vector2h((avgIrrad[0] <= HALF_MAX_LOCAL) ? avgIrrad[0] : MRAY_HALF_MAX,
-                                          (avgIrrad[1] <= HALF_MAX_LOCAL) ? avgIrrad[1] : MRAY_HALF_MAX);
+        Vector2h irradClampled = Vector2h((avgIrrad[0] <= HALF_MAX_LOCAL) ? avgIrrad[0] : half(MRAY_HALF_MAX),
+                                          (avgIrrad[1] <= HALF_MAX_LOCAL) ? avgIrrad[1] : half(MRAY_HALF_MAX));
         // Now set
         payload.dAvgIrradianceNode[nodeIndex] = irradClampled;
     }

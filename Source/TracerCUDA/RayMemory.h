@@ -377,8 +377,7 @@ bool RayMemory::PartitionRaysCustom(// Outputs
                                      dSparseSplitIndices, dDenseSplitIndices, dSelectCount,
                                      static_cast<int>(rayCount),
                                      ValidSplit(),
-                                     (cudaStream_t)0,
-                                     false));
+                                     (cudaStream_t)0));
     if(requiredSize > cubIfMemSize) return false;
 
     // Actual "Partition" algorithm
@@ -386,8 +385,7 @@ bool RayMemory::PartitionRaysCustom(// Outputs
                                      dSparseSplitIndices, dDenseSplitIndices, dSelectCount,
                                      static_cast<int>(rayCount),
                                      ValidSplit(),
-                                     (cudaStream_t)0,
-                                     false));
+                                     (cudaStream_t)0));
 
     // Copy Reduced Count
     uint32_t hSelectCount;

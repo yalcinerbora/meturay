@@ -82,19 +82,20 @@ class ConstantRef final : public TextureRefI<D, T>
                                    const TexFloatType_t<D>& dy) const override;
 
         __device__
-        TextureRefI<D, T>::DimType  Dim() const override;
+        typename TextureRefI<D, T>::DimType     Dim() const override;
         __device__
-        uint32_t                    MipCount() const override;
+        uint32_t                                MipCount() const override;
 };
 
 template <int D, class T>
 class TextureRef final : public TextureRefI<D, T>
 {
     using CudaType = CudaReturn_t<T>;
+    using DimType = typename TextureRefI<D, T>::DimType;
 
     private:
         cudaTextureObject_t                 t;
-        typename TextureRefI<D, T>::DimType dim;
+        DimType                             dim;
         uint32_t                            mipCount;
 
     public:
@@ -116,9 +117,9 @@ class TextureRef final : public TextureRefI<D, T>
                                    const TexFloatType_t<D>& dy) const override;
 
         __device__
-        TextureRefI<D, T>::DimType  Dim() const override;
+        DimType         Dim() const override;
         __device__
-        uint32_t                    MipCount() const override;
+        uint32_t        MipCount() const override;
 };
 
 template <int D, class T>

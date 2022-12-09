@@ -19,28 +19,28 @@ template<class T>
 class Quaternion<T>
 {
     private:
-    Vector<4, T>                        vec;
+    Vector<4, T>                            vec;
 
     protected:
 
     public:
-        // Constructors & Destructor
+    // Constructors & Destructor
     constexpr                               Quaternion() = default;
     constexpr __device__ __host__           Quaternion(T w, T x, T y, T z);
     constexpr __device__ __host__           Quaternion(const T*);
     __device__ __host__                     Quaternion(T angle, const Vector<3, T>& axis);
     __device__ __host__                     Quaternion(const Vector<4, T>& vec);
-    Quaternion(const Quaternion&) = default;
-    ~Quaternion() = default;
-    Quaternion& operator=(const Quaternion&) = default;
+                                            Quaternion(const Quaternion&) = default;
+                                            ~Quaternion() = default;
+    Quaternion&                             operator=(const Quaternion&) = default;
 
     //
     __device__ __host__ explicit            operator Vector<4, T>& ();
     __device__ __host__ explicit            operator const Vector<4, T>& () const;
     __device__ __host__ explicit            operator T* ();
     __device__ __host__ explicit            operator const T* () const;
-    __device__ __host__ T& operator[](int);
-    __device__ __host__ const T& operator[](int) const;
+    __device__ __host__ T&                  operator[](int);
+    __device__ __host__ const T&            operator[](int) const;
 
     // Operators
     __device__ __host__ Quaternion          operator*(const Quaternion&) const;
@@ -61,11 +61,13 @@ class Quaternion<T>
     __device__ __host__ bool                operator!=(const Quaternion&) const;
 
     // Utility
-    __device__ __host__ Quaternion          Normalize() const;
+    __device__ __host__ [[nodiscard]]
+    Quaternion                              Normalize() const;
     __device__ __host__ Quaternion&         NormalizeSelf();
     __device__ __host__ T                   Length() const;
     __device__ __host__ T                   LengthSqr() const;
-    __device__ __host__ Quaternion          Conjugate() const;
+    __device__ __host__ [[nodiscard]]
+    Quaternion                              Conjugate() const;
     __device__ __host__ Quaternion&         ConjugateSelf();
     __device__ __host__ T                   Dot(const Quaternion&) const;
     __device__ __host__ Vector<3, T>        ApplyRotation(const Vector<3, T>&) const;

@@ -16,6 +16,7 @@
 #include "ParallelReduction.cuh"
 
 #include <array>
+#include <thread>
 
 // DEBUG
 std::ostream& operator<<(std::ostream& stream, const RayAuxWFPG& v)

@@ -42,9 +42,9 @@
         }
     },
     {
-        "name": "Linux-Clang-12",
-        "displayName": "Linux-Clang-12-x64",
-        "description": "Linux Clang-12 using ninja multi config",
+        "name": "Linux-Clang-14",
+        "displayName": "Linux-Clang-14-x64",
+        "description": "Linux Clang-14 using ninja multi config",
         "inherits": "folders",
         "generator": "Ninja Multi-Config",
         "condition": {
@@ -53,22 +53,22 @@
             "rhs": "Linux"
         },
         "cacheVariables": {
-            "CMAKE_CXX_COMPILER": "clang++-12"
+            "CMAKE_CXX_COMPILER": "clang++-14"
         }
     },
     {
-        "name": "Linux-Clang-12-OptiX",
-        "displayName": "Linux-Clang-12-x64 with OptiX",
-        "description": "Linux Clang-12 using ninja multi config and using OptiX",
-        "inherits": "Linux-Clang-12",
+        "name": "Linux-Clang-14-OptiX",
+        "displayName": "Linux-Clang-14-x64 with OptiX",
+        "description": "Linux Clang-14 using ninja multi config and using OptiX",
+        "inherits": "Linux-Clang-14",
         "cacheVariables": {
             "USE_OPTIX": true
         }
     },
     {
-        "name": "Linux-GCC-9",
-        "displayName": "Linux-GCC-9-x64",
-        "description": "Linux GCC-9 using ninja multi config",
+        "name": "Linux-GCC-11",
+        "displayName": "Linux-GCC-11-x64",
+        "description": "Linux GCC-11 using ninja multi config",
         "inherits": "folders",
         "generator": "Ninja Multi-Config",
         "condition": {
@@ -77,14 +77,14 @@
             "rhs": "Linux"
         },
         "cacheVariables": {
-            "CMAKE_CXX_COMPILER": "g++-9"
+            "CMAKE_CXX_COMPILER": "g++-11"
         }
     },
     {
-        "name": "Linux-GCC-9-OptiX",
-        "displayName": "Linux-GCC-9-x64 with OptiX",
-        "description": "Linux GCC-9 using ninja multi config and using OptiX",
-        "inherits": "Linux-GCC-9",
+        "name": "Linux-GCC-11-OptiX",
+        "displayName": "Linux-GCC-11-x64 with OptiX",
+        "description": "Linux GCC-11 using ninja multi config and using OptiX",
+        "inherits": "Linux-GCC-11",
         "cacheVariables": {
             "USE_OPTIX": true
         }
@@ -110,13 +110,13 @@
         "description": "Debug Build",
         "displayName": "Debug",
         "configuration": "Debug",
-        "configurePreset": "Linux-Clang-12-OptiX"
+        "configurePreset": "Linux-Clang-14-OptiX"
     },
     {
         "name": "rel-clang",
         "description": "Release Build",
         "displayName": "Release",
         "configuration": "Release",
-        "configurePreset": "Linux-Clang-12-OptiX"
+        "configurePreset": "Linux-Clang-14-OptiX"
     }]
 }

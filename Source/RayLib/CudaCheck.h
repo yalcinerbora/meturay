@@ -84,8 +84,5 @@ Utility header for header only cuda vector and cpu vector implementations
     #define CUDA_CHECK(func) func
     #define CUDA_KERNEL_CHECK()
     //#define CUDA_CHECK(func) GPUAssert((func), __FILE__, __LINE__)
-    //#define CUDA_KERNEL_CHECK() \
-    //           CUDA_CHECK(cudaDeviceSynchronize()); \
-    //           CUDA_CHECK(cudaGetLastError())
     // TODO: Check this from time to time..
 #endif

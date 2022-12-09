@@ -235,7 +235,7 @@ void GPUMaterialGroupT<D, S, DF, P>::GeneratePerMaterialInterfaces()
                                    interfaceMemory,
                                    {totalMatCount, totalMatCount, 1});
 
-    CUDA_CHECK(cudaMemcpy(dData, &hData, sizeof(Data), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(dData, &this->hData, sizeof(Data), cudaMemcpyHostToDevice));
     // Set the pointer
     this->dMaterialInterfaces = dMaterialInterfaces;
     // Do actual object construction (virtual pointer set etc.)

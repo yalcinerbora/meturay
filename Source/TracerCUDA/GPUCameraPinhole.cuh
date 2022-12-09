@@ -79,20 +79,6 @@ class GPUCameraPinhole final : public GPUCameraI
                                                       const Vector2i& regionId,
                                                       const Vector2i& regionCount) const override;
 
-
-        __device__ void     Test(// Output
-                                 RayReg& ray,
-                                 Vector2f& localCoords,
-                                 // Input,
-                                 const Vector2i& sampleIdInner,
-                                 const Vector2i& sampleIdOuter,
-                                 const Vector2i& sampleCountInner,
-                                 const Vector2i& sampleCountOuter,
-                                 // I-O
-                                 RNGeneratorGPUI& rng,
-                                 // Options
-                                 bool antiAliasOn) const;
-
 };
 
 class CPUCameraGroupPinhole final : public CPUCameraGroupP<GPUCameraPinhole>

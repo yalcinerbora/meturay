@@ -229,9 +229,9 @@ Texture<D, T>::Texture(Texture&& other)
     , data(other.data)
     , interpType(other.interpType)
     , edgeResolveType(other.edgeResolveType)
-    , normalizeIntegers(normalizeIntegers)
-    , normalizeCoordinates(normalizeCoordinates)
-    , convertSRGB(convertSRGB)
+    , normalizeIntegers(other.normalizeIntegers)
+    , normalizeCoordinates(other.normalizeCoordinates)
+    , convertSRGB(other.convertSRGB)
 {
     other.data = nullptr;
 }

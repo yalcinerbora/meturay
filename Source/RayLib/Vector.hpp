@@ -516,7 +516,7 @@ constexpr T Vector<N, T>::LengthSqr() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-constexpr [[nodiscard]] FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Normalize() const
 {
     T lengthInv = static_cast<T>(1) / Length();
 
@@ -545,7 +545,7 @@ constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::NormalizeSelf()
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-constexpr [[nodiscard]]  Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) const
+constexpr Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, const Vector& maxVal) const
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -564,7 +564,7 @@ constexpr [[nodiscard]]  Vector<N, T> Vector<N, T>::Clamp(const Vector& minVal, 
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-constexpr [[nodiscard]] Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
+constexpr Vector<N, T> Vector<N, T>::Clamp(T minVal, T maxVal) const
 {
     // Clang min definition is only on std namespace
     // this is a crappy workaround
@@ -635,7 +635,7 @@ constexpr bool Vector<N, T>::HasNaN() const
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-constexpr [[nodiscard]] SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
+constexpr SignedEnable<Q, Vector<N, T>> Vector<N, T>::Abs() const
 {
     Vector v;
     UNROLL_LOOP
@@ -662,7 +662,7 @@ constexpr SignedEnable<Q, Vector<N, T>&> Vector<N, T>::AbsSelf()
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-constexpr [[nodiscard]] FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Round() const
 {
     Vector v;
     UNROLL_LOOP
@@ -689,7 +689,7 @@ constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::RoundSelf()
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-constexpr [[nodiscard]] FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Floor() const
 {
     Vector v;
     UNROLL_LOOP
@@ -716,7 +716,7 @@ constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::FloorSelf()
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-constexpr [[nodiscard]] FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Ceil() const
 {
     Vector v;
     UNROLL_LOOP

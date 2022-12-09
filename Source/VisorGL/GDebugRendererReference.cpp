@@ -226,7 +226,7 @@ void GDebugRendererRef::RenderGUI(const ImVec2& windowSize)
     ImGui::BeginChild("refPGTexture", windowSize, false);
     ImGui::SameLine(0.0f, GuideDebugGUIFuncs::CenteredTextLocation(fullName.c_str(),
                                                                    windowSize.x));
-    ImGui::Text(fullName.c_str());
+    ImGui::Text("%s", fullName.c_str());
     ImVec2 remainingSize = GuideDebugGUIFuncs::FindRemainingSize(windowSize);
     remainingSize.x = remainingSize.y;
     ImGui::NewLine();

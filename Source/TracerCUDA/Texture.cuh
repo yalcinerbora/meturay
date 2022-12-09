@@ -435,6 +435,7 @@ inline CudaSurfaceRAII& CudaSurfaceRAII::operator=(CudaSurfaceRAII&& other)
     if(surface) CUDA_CHECK(cudaDestroySurfaceObject(surface));
     surface = other.surface;
     other.surface = 0;
+    return *this;
 }
 
 inline CudaSurfaceRAII::~CudaSurfaceRAII()

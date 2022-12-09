@@ -312,8 +312,8 @@ VisorGL::VisorGL(const VisorOptions& opts,
     , vBuffer(0)
     , visorInput(nullptr)
     , receivedSampleCount(0)
-    , outputWRTSampleCount(0)
     , outputWRTTimeCount(0)
+    , outputWRTSampleCount(0)
 {}
 
 VisorGL::~VisorGL()

@@ -1362,7 +1362,7 @@ static void KCGenAndSampleDistribution(// Output
             {
                 // Sample Using BxDF
                 RayF wo;
-                GPUMediumI* outMedium;
+                const GPUMediumI* outMedium;
                 surf.Sample(wo, pdfSampled,
                             outMedium,
                             //

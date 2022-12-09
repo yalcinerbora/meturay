@@ -138,48 +138,56 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
         __device__ __host__ constexpr IntegralEnable<Q, Vector>   operator%(T) const;
 
         // Logic
-        __device__ __host__ constexpr bool            operator==(const Vector&) const;
-        __device__ __host__ constexpr bool            operator!=(const Vector&) const;
-        __device__ __host__ constexpr bool            operator<(const Vector&) const;
-        __device__ __host__ constexpr bool            operator<=(const Vector&) const;
-        __device__ __host__ constexpr bool            operator>(const Vector&) const;
-        __device__ __host__ constexpr bool            operator>=(const Vector&) const;
+        __device__ __host__ constexpr bool      operator==(const Vector&) const;
+        __device__ __host__ constexpr bool      operator!=(const Vector&) const;
+        __device__ __host__ constexpr bool      operator<(const Vector&) const;
+        __device__ __host__ constexpr bool      operator<=(const Vector&) const;
+        __device__ __host__ constexpr bool      operator>(const Vector&) const;
+        __device__ __host__ constexpr bool      operator>=(const Vector&) const;
 
         // Utility
-        __device__ __host__ constexpr T               Dot(const Vector&) const;
+        __device__ __host__ constexpr T         Dot(const Vector&) const;
 
         // Reduction
-        __device__ __host__ constexpr T               Sum() const;
-        __device__ __host__ constexpr T               Multiply() const;
+        __device__ __host__ constexpr T         Sum() const;
+        __device__ __host__ constexpr T         Multiply() const;
         // Max Min Reduction functions are selections instead
         // since it sometimes useful to fetch the which index
         // (axis) is maximum/minimum so that you can do other stuff with it.
-        __device__ __host__ constexpr int             Max() const;
-        __device__ __host__ constexpr int             Min() const;
+        __device__ __host__ constexpr int       Max() const;
+        __device__ __host__ constexpr int       Min() const;
 
         template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, T>         Length() const;
-        __device__ __host__ constexpr T                         LengthSqr() const;
+        __device__ __host__
+        constexpr FloatEnable<Q, T>                     Length() const;
+        __device__ __host__ constexpr T                 LengthSqr() const;
         template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector>    Normalize() const;
+        __device__ __host__
+        [[nodiscard]] constexpr FloatEnable<Q, Vector>  Normalize() const;
         template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector&>   NormalizeSelf();
-        __device__ __host__ constexpr Vector                    Clamp(const Vector&, const Vector&) const;
-        __device__ __host__ constexpr Vector                    Clamp(T min, T max) const;
-        __device__ __host__ constexpr Vector&                   ClampSelf(const Vector&, const Vector&);
-        __device__ __host__ constexpr Vector&                   ClampSelf(T min, T max);
-        __device__ __host__ constexpr bool                      HasNaN() const;
+        __device__ __host__
+        constexpr FloatEnable<Q, Vector&>               NormalizeSelf();
+        __device__ __host__
+        [[nodiscard]] constexpr Vector                  Clamp(const Vector&, const Vector&) const;
+        __device__ __host__
+        [[nodiscard]] constexpr Vector                  Clamp(T min, T max) const;
+        __device__ __host__
+        constexpr Vector&                               ClampSelf(const Vector&, const Vector&);
+        __device__ __host__
+        constexpr Vector&                               ClampSelf(T min, T max);
+        __device__ __host__
+        constexpr bool                                  HasNaN() const;
 
         template<class Q = T>
-        __device__ __host__ constexpr SignedEnable<Q, Vector>   Abs() const;
+        __device__ __host__ [[nodiscard]] constexpr SignedEnable<Q, Vector>     Abs() const;
         template<class Q = T>
-        __device__ __host__ constexpr SignedEnable<Q, Vector&>  AbsSelf();
+        __device__ __host__ constexpr SignedEnable<Q, Vector&>                  AbsSelf();
         template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector>    Round() const;
+        __device__ __host__ [[nodiscard]] constexpr FloatEnable<Q, Vector>      Round() const;
         template<class Q = T>
         __device__ __host__ constexpr FloatEnable<Q, Vector&>   RoundSelf();
         template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector>    Floor() const;
+        __device__ __host__ [[nodiscard]] constexpr FloatEnable<Q, Vector>      Floor() const;
         template<class Q = T>
         __device__ __host__ constexpr FloatEnable<Q, Vector&>   FloorSelf();
         template<class Q = T>

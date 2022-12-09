@@ -290,7 +290,7 @@ T ConvertUVSurface(const UVSurface& surf);
 
 template <>
 __device__ inline
-EmptySurface ConvertUVSurface(const UVSurface& surf)
+EmptySurface ConvertUVSurface(const UVSurface&)
 {
     return EmptySurface{};
 }
@@ -299,7 +299,11 @@ template <>
 __device__ inline
 BasicSurface ConvertUVSurface(const UVSurface& surf)
 {
-    return BasicSurface{surf.worldPosition, surf.worldToTangent, surf.worldGeoNormal};
+    return BasicSurface{surf.worldPosition,
+                        surf.worldToTangent,
+                        surf.worldGeoNormal,
+                        surf.backSide,
+                        0.0f};
 }
 
 template <>

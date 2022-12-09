@@ -37,9 +37,11 @@ class GaussianLobe
     __host__ __device__ float           PDF(const Vector3f& dir) const;
 
     // Some Helpers
-    __host__ __device__ GaussianLobe    Rotate(const QuatF&) const;
+    __host__ __device__
+    [[nodiscard]] GaussianLobe          Rotate(const QuatF&) const;
     __host__ __device__ GaussianLobe&   RotateSelf(const QuatF&);
-    __host__ __device__ GaussianLobe    Normalize() const;
+    __host__ __device__
+    [[nodiscard]] GaussianLobe          Normalize() const;
     __host__ __device__ GaussianLobe&   NormalizeSelf();
 
     __host__ __device__
@@ -157,7 +159,7 @@ inline GaussianLobe& GaussianLobe::RotateSelf(const QuatF& q)
 }
 
  __host__ __device__
-inline [[nodiscard]] GaussianLobe GaussianLobe::Normalize() const
+inline GaussianLobe GaussianLobe::Normalize() const
 {
     float integral = Integrate();
     GaussianLobe result = *this;

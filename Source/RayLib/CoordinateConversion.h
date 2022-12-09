@@ -150,6 +150,12 @@ FloatEnable<T, Vector<3, T>> Utility::CocentricOctohedralToDirection(const Vecto
 {
     static constexpr T piOvr4 = static_cast<T>(MathConstants::Pi_d * 0.25);
 
+    // Clang signbit definition is only on std namespace
+    // this is a crappy workaround
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
     // [0,1] to [-1,1]
     Vector<2, T> uv = st * 2 - 1;
     Vector<2, T> uvAbs = uv.Abs();

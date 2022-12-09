@@ -35,7 +35,7 @@ Options::Options(const nlohmann::json& jsonObj)
             if(val[0].is_number_integer())
             {
                 if(val.size() != 2)
-                    throw std::exception("Invalid Options Type");
+                    throw std::runtime_error("Invalid Options Type");
 
                 auto arr = val.get<std::array<int64_t, 2>>();
                 v = Vector<2, int64_t>(arr.data());
@@ -43,7 +43,7 @@ Options::Options(const nlohmann::json& jsonObj)
             else if(val[0].is_number_float())
             {
                 if(val.size() == 1 || val.size() > 4)
-                    throw std::exception("Invalid Options Type");
+                    throw std::runtime_error("Invalid Options Type");
                 else if(val.size() == 2)
                 {
                     auto arr = val.get<std::array<float, 2>>();
@@ -60,10 +60,10 @@ Options::Options(const nlohmann::json& jsonObj)
                     v = Vector<4, float>(arr.data());
                 }
             }
-            else throw std::exception("Invalid Options Type");
+            else throw std::runtime_error("Invalid Options Type");
         }
         // Other types are invalid for opts
-        else throw std::exception("Invalid Options Type");
+        else throw std::runtime_error("Invalid Options Type");
 
         variables.emplace(name, v);
     }

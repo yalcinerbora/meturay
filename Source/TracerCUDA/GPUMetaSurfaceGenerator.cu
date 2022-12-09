@@ -1,5 +1,3 @@
-#pragma once
-
 #include "GPUMetaSurfaceGenerator.h"
 #include "RayLib/GPUSceneI.h"
 #include "GPUWorkI.h"

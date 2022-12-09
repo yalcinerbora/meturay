@@ -338,7 +338,7 @@ T Matrix<N, T>::Determinant() const
 template <int N, class T>
 template <class Q>
 __device__ __host__
-inline [[nodiscard]] FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
+inline FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 {
     if constexpr(N == 2)
         return Inverse2<T>(static_cast<const T*>(*this));
@@ -352,7 +352,7 @@ inline [[nodiscard]] FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Inverse() const
 template <int N, class T>
 template <class Q>
 __device__ __host__
-inline [[nodiscard]] FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
+inline FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 {
     if constexpr(N == 2)
         (*this) = Inverse2<T>(static_cast<const T*>(*this));
@@ -365,7 +365,7 @@ inline [[nodiscard]] FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::InverseSelf()
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] Matrix<N, T> Matrix<N, T>::Transpose() const
+Matrix<N, T> Matrix<N, T>::Transpose() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -401,7 +401,7 @@ Matrix<N, T>& Matrix<N, T>::TransposeSelf()
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxVal) const
+Matrix<N, T> Matrix<N, T>::Clamp(const Matrix& minVal, const Matrix& maxVal) const
 {
     Matrix m;
     UNROLL_LOOP
@@ -452,7 +452,7 @@ Matrix<N, T>& Matrix<N, T>::ClampSelf(T minVal, T maxVal)
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
+SignedEnable<Q, Matrix<N, T>> Matrix<N, T>::Abs() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -479,7 +479,7 @@ SignedEnable<Q, Matrix<N, T>&> Matrix<N, T>::AbsSelf()
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
+FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Round() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -506,7 +506,7 @@ FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::RoundSelf()
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
+FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Floor() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -533,7 +533,7 @@ FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::FloorSelf()
 template <int N, class T>
 template <class Q>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
+FloatEnable<Q, Matrix<N, T>> Matrix<N, T>::Ceil() const
 {
     Matrix m;
     UNROLL_LOOP
@@ -559,7 +559,7 @@ FloatEnable<Q, Matrix<N, T>&> Matrix<N, T>::CeilSelf()
 
 template <int N, class T>
  __device__ __host__ HYBRID_INLINE
-[[nodiscard]] Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
+Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
@@ -572,7 +572,7 @@ template <int N, class T>
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
+Matrix<N, T> Matrix<N, T>::Min(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP
@@ -585,7 +585,7 @@ __device__ __host__ HYBRID_INLINE
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
+Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, const Matrix& mat1)
 {
     Matrix m;
     UNROLL_LOOP
@@ -598,7 +598,7 @@ __device__ __host__ HYBRID_INLINE
 
 template <int N, class T>
 __device__ __host__ HYBRID_INLINE
-[[nodiscard]] Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
+Matrix<N, T> Matrix<N, T>::Max(const Matrix& mat0, T t)
 {
     Matrix m;
     UNROLL_LOOP

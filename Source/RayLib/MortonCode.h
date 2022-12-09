@@ -104,6 +104,7 @@ uint64_t MortonCode::Detail::Expand2D(uint32_t val)
     x = (x | (x <<  4)) & 0x0F0F0F0F0F0F0F0F;
     x = (x | (x <<  2)) & 0x3333333333333333;
     x = (x | (x <<  1)) & 0x5555555555555555;
+    return x;
 }
 
 template<>

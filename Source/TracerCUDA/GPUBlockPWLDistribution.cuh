@@ -15,7 +15,7 @@ template<uint32_t TPB,
 class BlockPWLDistribution2D
 {
     private:
-    static constexpr bool TPBCheck(uint32_t TPB, uint32_t X, uint32_t Y)
+    static constexpr bool TPBCheck()
     {
         auto PIX_COUNT = (X * Y);
         if(TPB > PIX_COUNT) return TPB % PIX_COUNT == 0;
@@ -24,7 +24,7 @@ class BlockPWLDistribution2D
     }
 
     // No SFINAE, just static assert
-    static_assert(TPBCheck(TPB, X, Y),
+    static_assert(TPBCheck(),
                   "TBP and (X * Y) must be divisible, (X*Y) / TBP or TBP / (X*Y)");
 
     static constexpr float X_FLOAT          = static_cast<float>(X);

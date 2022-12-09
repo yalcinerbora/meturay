@@ -18,7 +18,7 @@ endif()
 # Use a drop-down menu for selecting Compute Capability
 # TODO: Add a "ReleaseAllCC" Configuration for final release compilation
 # including all compute capabilities etc.
-set(CMAKE_CUDA_ARCHITECTURES "61" CACHE STRING "Architecture chosen by the user at CMake configure time")
+set(CMAKE_CUDA_ARCHITECTURES "86" CACHE STRING "Architecture chosen by the user at CMake configure time")
 set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS 52 60 61 70 72 75 86 All)
 if(${CMAKE_CUDA_ARCHITECTURES} STREQUAL "All")
     set(CMAKE_CUDA_ARCHITECTURES 52 60 61 70 72 75 86)
