@@ -19,58 +19,58 @@ template<class T>
 class Quaternion<T>
 {
     private:
-    Vector<4, T>                            vec;
+    Vector<4, T>                vec;
 
     protected:
 
     public:
     // Constructors & Destructor
-    constexpr                               Quaternion() = default;
-    constexpr __device__ __host__           Quaternion(T w, T x, T y, T z);
-    constexpr __device__ __host__           Quaternion(const T*);
-    __device__ __host__                     Quaternion(T angle, const Vector<3, T>& axis);
-    __device__ __host__                     Quaternion(const Vector<4, T>& vec);
-                                            Quaternion(const Quaternion&) = default;
-                                            ~Quaternion() = default;
-    Quaternion&                             operator=(const Quaternion&) = default;
+    constexpr                   Quaternion() = default;
+    constexpr HYBRD_FUNC        Quaternion(T w, T x, T y, T z);
+    constexpr HYBRD_FUNC        Quaternion(const T*);
+    HYBRD_FUNC                  Quaternion(T angle, const Vector<3, T>& axis);
+    HYBRD_FUNC                  Quaternion(const Vector<4, T>& vec);
+                                Quaternion(const Quaternion&) = default;
+                                ~Quaternion() = default;
+    Quaternion&                 operator=(const Quaternion&) = default;
 
     //
-    __device__ __host__ explicit            operator Vector<4, T>& ();
-    __device__ __host__ explicit            operator const Vector<4, T>& () const;
-    __device__ __host__ explicit            operator T* ();
-    __device__ __host__ explicit            operator const T* () const;
-    __device__ __host__ T&                  operator[](int);
-    __device__ __host__ const T&            operator[](int) const;
+    HYBRD_FUNC explicit         operator Vector<4, T>& ();
+    HYBRD_FUNC explicit         operator const Vector<4, T>& () const;
+    HYBRD_FUNC explicit         operator T* ();
+    HYBRD_FUNC explicit         operator const T* () const;
+    HYBRD_FUNC T&               operator[](int);
+    HYBRD_FUNC const T&         operator[](int) const;
 
     // Operators
-    __device__ __host__ Quaternion          operator*(const Quaternion&) const;
-    __device__ __host__ Quaternion          operator*(T) const;
-    __device__ __host__ Quaternion          operator+(const Quaternion&) const;
-    __device__ __host__ Quaternion          operator-(const Quaternion&) const;
-    __device__ __host__ Quaternion          operator-() const;
-    __device__ __host__ Quaternion          operator/(T) const;
+    HYBRD_FUNC Quaternion       operator*(const Quaternion&) const;
+    HYBRD_FUNC Quaternion       operator*(T) const;
+    HYBRD_FUNC Quaternion       operator+(const Quaternion&) const;
+    HYBRD_FUNC Quaternion       operator-(const Quaternion&) const;
+    HYBRD_FUNC Quaternion       operator-() const;
+    HYBRD_FUNC Quaternion       operator/(T) const;
 
-    __device__ __host__ void                operator*=(const Quaternion&);
-    __device__ __host__ void                operator*=(T);
-    __device__ __host__ void                operator+=(const Quaternion&);
-    __device__ __host__ void                operator-=(const Quaternion&);
-    __device__ __host__ void                operator/=(T);
+    HYBRD_FUNC void             operator*=(const Quaternion&);
+    HYBRD_FUNC void             operator*=(T);
+    HYBRD_FUNC void             operator+=(const Quaternion&);
+    HYBRD_FUNC void             operator-=(const Quaternion&);
+    HYBRD_FUNC void             operator/=(T);
 
     // Logic
-    __device__ __host__ bool                operator==(const Quaternion&) const;
-    __device__ __host__ bool                operator!=(const Quaternion&) const;
+    HYBRD_FUNC bool             operator==(const Quaternion&) const;
+    HYBRD_FUNC bool             operator!=(const Quaternion&) const;
 
     // Utility
-    __device__ __host__ [[nodiscard]]
-    Quaternion                              Normalize() const;
-    __device__ __host__ Quaternion&         NormalizeSelf();
-    __device__ __host__ T                   Length() const;
-    __device__ __host__ T                   LengthSqr() const;
-    __device__ __host__ [[nodiscard]]
-    Quaternion                              Conjugate() const;
-    __device__ __host__ Quaternion&         ConjugateSelf();
-    __device__ __host__ T                   Dot(const Quaternion&) const;
-    __device__ __host__ Vector<3, T>        ApplyRotation(const Vector<3, T>&) const;
+    HYBRD_FUNC [[nodiscard]]
+    Quaternion                  Normalize() const;
+    HYBRD_FUNC Quaternion&      NormalizeSelf();
+    HYBRD_FUNC T                Length() const;
+    HYBRD_FUNC T                LengthSqr() const;
+    HYBRD_FUNC [[nodiscard]]
+    Quaternion                  Conjugate() const;
+    HYBRD_FUNC Quaternion&      ConjugateSelf();
+    HYBRD_FUNC T                Dot(const Quaternion&) const;
+    HYBRD_FUNC Vector<3, T>     ApplyRotation(const Vector<3, T>&) const;
 };
 
 // Quaternion Alias
@@ -84,48 +84,40 @@ static_assert(sizeof(QuatF) == sizeof(float) * 4, "IEQuaternion size is not 16 b
 
 // Left Scalar operators
 template<class T>
-__device__ __host__ HYBRID_INLINE
+HYBRD_FUNC
 Quaternion<T> operator*(T, const Quaternion<T>&);
 
 // Static Utility
 namespace Quat
 {
     template <class T>
-    __device__ __host__ HYBRID_INLINE
-    Quaternion<T>           NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
+    HYBRD_FUNC Quaternion<T>    NLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
     template <class T>
-    __device__ __host__ HYBRID_INLINE
-    Quaternion<T>           SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
+    HYBRD_FUNC Quaternion<T>    SLerp(const Quaternion<T>& start, const Quaternion<T>& end, T t);
     template <class T>
-    __device__ __host__ HYBRID_INLINE
-    Quaternion<T>           BarySLerp(const Quaternion<T>& q0,
-                                      const Quaternion<T>& q1,
-                                      const Quaternion<T>& q2,
-                                      T a, T b);
+    HYBRD_FUNC Quaternion<T>    BarySLerp(const Quaternion<T>& q0,
+                                          const Quaternion<T>& q1,
+                                          const Quaternion<T>& q2,
+                                          T a, T b);
     template <class T>
-    __device__ __host__ HYBRID_INLINE
-    Quaternion<T>           RotationBetween(const Vector<3, T>& a,
-                                            const Vector<3, T>& b);
+    HYBRD_FUNC Quaternion<T>    RotationBetween(const Vector<3, T>& a,
+                                                const Vector<3, T>& b);
     template <class T>
-    __device__ __host__ HYBRID_INLINE
-    Quaternion<T>           RotationBetweenZAxis(const Vector<3, T>& b);
+    HYBRD_FUNC Quaternion<T>    RotationBetweenZAxis(const Vector<3, T>& b);
 }
 
 namespace TransformGen
 {
     template <class T>
-    __device__ __host__ HYBRID_INLINE
-    void                    Space(Quaternion<T>&,
-                                  const Vector<3, T>& x,
-                                  const Vector<3, T>& y,
-                                  const Vector<3, T>& z);
-
+    HYBRD_FUNC void             Space(Quaternion<T>&,
+                                      const Vector<3, T>& x,
+                                      const Vector<3, T>& y,
+                                      const Vector<3, T>& z);
     template <class T>
-    __device__ __host__ HYBRID_INLINE
-    void                    InvSpace(Quaternion<T>&,
-                                     const Vector<3, T>& x,
-                                     const Vector<3, T>& y,
-                                     const Vector<3, T>& z);
+    HYBRD_FUNC void             InvSpace(Quaternion<T>&,
+                                         const Vector<3, T>& x,
+                                         const Vector<3, T>& y,
+                                         const Vector<3, T>& z);
 }
 
 // Implementation

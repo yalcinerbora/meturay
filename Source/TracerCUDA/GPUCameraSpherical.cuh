@@ -89,21 +89,6 @@ class GPUCameraSpherical final : public GPUCameraI
         GPUCameraI*                 GenerateSubCamera(Byte* memoryRegion, size_t memSize,
                                                       const Vector2i& regionId,
                                                       const Vector2i& regionCount) const override;
-
-
-        __device__ void     Test(// Output
-                                 RayReg& ray,
-                                 Vector2f& localCoords,
-                                 // Input,
-                                 const Vector2i& sampleIdInner,
-                                 const Vector2i& sampleIdOuter,
-                                 const Vector2i& sampleCountInner,
-                                 const Vector2i& sampleCountOuter,
-                                 // I-O
-                                 RNGeneratorGPUI& rng,
-                                 // Options
-                                 bool antiAliasOn) const override
-        {};
 };
 
 class CPUCameraGroupSpherical final : public CPUCameraGroupP<GPUCameraSpherical>
@@ -113,7 +98,8 @@ class CPUCameraGroupSpherical final : public CPUCameraGroupP<GPUCameraSpherical>
 
         // Node Names
         static constexpr const char* POSITION_NAME  = "position";
-        static constexpr const char* DIR_NAME       = "direction";
+        //static constexpr const char* DIR_NAME       = "direction";
+        static constexpr const char* GAZE_NAME      = "gaze";
         static constexpr const char* UP_NAME        = "up";
         static constexpr const char* PLANES_NAME    = "planes";
         static constexpr const char* PIX_RATIO_NAME = "pixelRatio";
@@ -406,7 +392,6 @@ inline const char* CPUCameraGroupSpherical::Type() const
 {
     return TypeName();
 }
-
 
 inline size_t CPUCameraGroupSpherical::UsedCPUMemory() const
 {

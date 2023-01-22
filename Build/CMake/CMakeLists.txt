@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 
 # All CMake Related files is in the current folder
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -18,11 +18,8 @@ endif()
 # Use a drop-down menu for selecting Compute Capability
 # TODO: Add a "ReleaseAllCC" Configuration for final release compilation
 # including all compute capabilities etc.
-set(CMAKE_CUDA_ARCHITECTURES "86" CACHE STRING "Architecture chosen by the user at CMake configure time")
-set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS 52 60 61 70 72 75 86 All)
-if(${CMAKE_CUDA_ARCHITECTURES} STREQUAL "All")
-    set(CMAKE_CUDA_ARCHITECTURES 52 60 61 70 72 75 86)
-endif()
+set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "Architecture chosen by the user at CMake configure time")
+set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS native 52 60 61 70 72 75 86 89 90 all all-major)
 
 option(USE_OPTIX "Try to find and use OptiX" OFF)
 
@@ -44,6 +41,18 @@ if(USE_OPTIX)
         set(USE_OPTIX CACHE BOOL OFF)
     else()
         set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC} -DMRAY_OPTIX)
+
+        # There is not a easiy way to convert "native" to actual cc number
+        # so that the optix can load the actual cc version so we add preporcessor directive
+        # so that the module loader select native
+        # TODO: Change this to environment variable or something better
+        # maybe query the native CC from nvcc ? if that is something.
+        if(${CMAKE_CUDA_ARCHITECTURES} STREQUAL "native")
+            set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC}
+                MRAY_OPTIX_USE_NATIVE_CC)
+        endif()
+
+
     endif()
 endif()
 
@@ -109,7 +118,8 @@ if(MSVC)
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4506>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zi>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/external:W0>)
+                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/external:W0>
+                        # Test
                         # DROPPED W4 On MSVC it shows many unnecessary info
                         # These Flags for W4 however /external does not work properly i think
                         # it still returns warnings and clutters the code extensively
@@ -119,6 +129,7 @@ if(MSVC)
                         # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4324>
                         # # '__cudaUnregisterBinaryUtil': unreferenced function with internal linkage has been removed
                         # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4505>)
+                        )
     add_link_options($<$<COMPILE_LANGUAGE:CXX>:/DEBUG>)
 else()
     # Clang / GCC both use same syntax
@@ -153,6 +164,7 @@ add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
 # Suppress that warning
 add_link_options($<DEVICE_LINK:--nvlink-options=-suppress-stack-size-warning>)
 #add_link_options($<DEVICE_LINK:--nvlink-options=--verbose>)
+#add_link_options($<DEVICE_LINK:--resource-usage>)
 
 # Platform Specific Lib Bin Folders
 set(MRAY_PLATFORM_LIB_DIRECTORY ${MRAY_LIB_DIRECTORY}/${MRAY_PLATFORM_NAME})

@@ -41,9 +41,9 @@ UB_LUM_DATA uniform LuminanceData
 
 UB_TM_PARAMS uniform Parameters
 {
-	bool	    doToneMap;
-	bool	    doGamma;
-	bool	    doKeyAdjust;
+	bool	doToneMap;
+	bool	doGamma;
+	bool	doKeyAdjust;
 	float	gammaValue;
 	float	burnRatio;
 	float	key;

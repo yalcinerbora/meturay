@@ -31,42 +31,42 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) AABB<N, T>
 
     protected:
     public:
-        // Constructors & Destructor
-        constexpr                                   AABB() = default;
-        constexpr __device__ __host__               AABB(const Vector<N, T>& min,
-                                                         const Vector<N, T>& max);
-        __device__ __host__                         AABB(const T* dataMin,
-                                                         const T* dataMax);
+    // Constructors & Destructor
+    constexpr                                   AABB() = default;
+    constexpr HYBRD_FUNC                        AABB(const Vector<N, T>& min,
+                                                     const Vector<N, T>& max);
+    HYBRD_FUNC                                  AABB(const T* dataMin,
+                                                     const T* dataMax);
 
-        template <class... Args0, class... Args1,
-                  typename = AllArithmeticEnable<Args1...>,
-                  typename = AllArithmeticEnable<Args0...>>
-            constexpr __device__ __host__           AABB(const Args0... dataList0,
-                                                         const Args1... dataList1);
-                                                    ~AABB() = default;
+    template<class... Args0, class... Args1,
+             typename = AllArithmeticEnable<Args1...>,
+             typename = AllArithmeticEnable<Args0...>>
+    constexpr HYBRD_FUNC                        AABB(const Args0... dataList0,
+                                                     const Args1... dataList1);
+                                                ~AABB() = default;
 
-        // Accessors
-        __device__ __host__ const Vector<N, T>&     Min() const;
-        __device__ __host__ const Vector<N, T>&     Max() const;
-        __device__ __host__ Vector<N, T>            Min();
-        __device__ __host__ Vector<N, T>            Max();
+    // Accessors
+    HYBRD_FUNC const Vector<N, T>&              Min() const;
+    HYBRD_FUNC const Vector<N, T>&              Max() const;
+    HYBRD_FUNC Vector<N, T>                     Min();
+    HYBRD_FUNC Vector<N, T>                     Max();
 
-        // Mutators
-        __device__ __host__ void                    SetMin(const Vector<N, T>&);
-        __device__ __host__ void                    SetMax(const Vector<N, T>&);
+    // Mutators
+    HYBRD_FUNC void                             SetMin(const Vector<N, T>&);
+    HYBRD_FUNC void                             SetMax(const Vector<N, T>&);
 
-        // Functionality
-        __device__ __host__ Vector<N, T>            Span() const;
-        __device__ __host__ Vector<N, T>            Centroid() const;
-        __device__ __host__ AABB                    Union(const AABB&) const;
-        __device__ __host__ AABB&                   UnionSelf(const AABB&);
-        __device__ __host__ bool                    IsInside(const Vector<N, T>&) const;
-        __device__ __host__ bool                    IsOutside(const Vector<N, T>&) const;
-        __device__ __host__ Vector<N,T>             FurthestCorner(const Vector<N, T>&) const;
+    // Functionality
+    HYBRD_FUNC Vector<N, T>                     Span() const;
+    HYBRD_FUNC Vector<N, T>                     Centroid() const;
+    HYBRD_FUNC [[nodiscard]] AABB               Union(const AABB&) const;
+    HYBRD_FUNC AABB&                            UnionSelf(const AABB&);
+    HYBRD_FUNC bool                             IsInside(const Vector<N, T>&) const;
+    HYBRD_FUNC bool                             IsOutside(const Vector<N, T>&) const;
+    HYBRD_FUNC Vector<N,T>                      FurthestCorner(const Vector<N, T>&) const;
 
-        // Intersection
-        __device__ __host__ bool                    IntersectsSphere(const Vector<N, T>& sphrPos,
-                                                                     float sphrRadius) const;
+    // Intersection
+    HYBRD_FUNC bool                             IntersectsSphere(const Vector<N, T>& sphrPos,
+                                                                 float sphrRadius) const;
 };
 
 // Typeless aabbs are defaulted to float

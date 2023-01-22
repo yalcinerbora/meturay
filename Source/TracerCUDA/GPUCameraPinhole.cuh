@@ -205,52 +205,6 @@ inline void GPUCameraPinhole::Sample(// Output
 }
 
 __device__
-inline void GPUCameraPinhole::Test(// Output
-                                   RayReg& ray,
-                                   Vector2f& localCoords,
-                                   // Input,
-                                   //const Vector2i& offset,
-                                   const Vector2i& sampleIdInner,
-                                   const Vector2i& sampleIdOuter,
-                                   const Vector2i& sampleCountInner,
-                                   const Vector2i& sampleCountOuter,
-                                   // I-O
-                                   RNGeneratorGPUI& rng,
-                                   // Options
-                                   bool antiAliasOn) const
-{
-    // DX DY from stratified sample
-    Vector2 delta = Vector2(planeSize[0] / static_cast<float>(sampleCountOuter[0]),
-                            planeSize[1] / static_cast<float>(sampleCountOuter[1]));
-    Vector2 deltaSub = Vector2(delta[0] / static_cast<float>(sampleCountInner[0]),
-                               delta[1] / static_cast<float>(sampleCountInner[1]));
-
-    // Create random location over sample rectangle
-    Vector2 randomOffset = (antiAliasOn)
-                            ? Vector2(rng.Uniform(), rng.Uniform())
-                            : Vector2(0.5f);
-
-    Vector2 outerDistance = Vector2(static_cast<float>(sampleIdOuter[0]),
-                                    static_cast<float>(sampleIdOuter[1])) * delta;
-    Vector2 innerDistance = Vector2(static_cast<float>(sampleIdInner[0]),
-                                    static_cast<float>(sampleIdInner[1])) * deltaSub;
-    //sampleDistance += (randomOffset * deltaSub);
-    Vector2 dist = outerDistance + innerDistance + (randomOffset * deltaSub);
-
-    Vector3 samplePoint = bottomLeft + ((dist[0] * right) +
-                                        (dist[1] * up));
-    Vector3 rayDir = (samplePoint - position).Normalize();
-
-    // Local Coords
-    localCoords = Zero2;
-
-    // Initialize Ray
-    ray.ray = RayF(rayDir, position);
-    ray.tMin = nearFar[0];
-    ray.tMax = nearFar[1];
-}
-
-__device__
 inline void GPUCameraPinhole::GenerateRay(// Output
                                           RayReg& ray,
                                           Vector2f& localCoords,

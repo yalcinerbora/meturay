@@ -27,134 +27,118 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Matrix<N, T>
     static_assert(N == 2 || N == 3 || N == 4, "Matrix size should be 2x2, 3x3 or 4x4");
 
     private:
-        T                                   matrix[N * N];
+    T                       matrix[N * N];
 
     protected:
     public:
-        // Constructors & Destructor
-        constexpr                           Matrix() = default;
-        template <class C, typename = ArithmeticEnable<C>>
-        __device__ __host__                 Matrix(C);
-        template <class C, typename = ArithmeticEnable<C>>
-        __device__ __host__                 Matrix(const C* data);
-        template <class... Args, typename = AllArithmeticEnable<Args...>>
-        constexpr __device__ __host__       Matrix(const Args... dataList);
-        __device__ __host__                 Matrix(const Vector<N, T> columns[]);
-        template <int M, typename = std::enable_if_t<(M >= N)>>
-        __device__ __host__                 Matrix(const Matrix<M, T>&);
-                                            ~Matrix() = default;
+    // Constructors & Destructor
+    constexpr               Matrix() = default;
+    template <class C, typename = ArithmeticEnable<C>>
+    HYBRD_FUNC              Matrix(C);
+    template <class C, typename = ArithmeticEnable<C>>
+    HYBRD_FUNC              Matrix(const C* data);
+    template <class... Args, typename = AllArithmeticEnable<Args...>>
+    constexpr HYBRD_FUNC    Matrix(const Args... dataList);
+    HYBRD_FUNC              Matrix(const Vector<N, T> columns[]);
+    template <int M, typename = std::enable_if_t<(M >= N)>>
+    HYBRD_FUNC              Matrix(const Matrix<M, T>&);
+                            ~Matrix() = default;
 
-        // MVC bug? these trigger std::trivially_copyable static assert
-        //                                  Matrix(const Matrix&) = default;
-        //Matrix&                           operator=(const Matrix&) = default;
+    // Accessors
+    HYBRD_FUNC explicit        operator T* ();
+    HYBRD_FUNC explicit        operator const T* () const;
+    HYBRD_FUNC T&              operator[](int);
+    HYBRD_FUNC const T&        operator[](int) const;
+    HYBRD_FUNC T&              operator()(int row, int column);
+    HYBRD_FUNC const T&        operator()(int row, int column) const;
 
-        // Accessors
-        __device__ __host__ explicit        operator T* ();
-        __device__ __host__ explicit        operator const T* () const;
-        __device__ __host__ T&              operator[](int);
-        __device__ __host__ const T&        operator[](int) const;
-        __device__ __host__ T&              operator()(int row, int column);
-        __device__ __host__ const T&        operator()(int row, int column) const;
+    // Modify
+    HYBRD_FUNC void            operator+=(const Matrix&);
+    HYBRD_FUNC void            operator-=(const Matrix&);
+    HYBRD_FUNC void            operator*=(const Matrix&);
+    HYBRD_FUNC void            operator*=(T);
+    HYBRD_FUNC void            operator/=(const Matrix&);
+    HYBRD_FUNC void            operator/=(T);
 
-        // Modify
-        __device__ __host__ void            operator+=(const Matrix&);
-        __device__ __host__ void            operator-=(const Matrix&);
-        __device__ __host__ void            operator*=(const Matrix&);
-        __device__ __host__ void            operator*=(T);
-        __device__ __host__ void            operator/=(const Matrix&);
-        __device__ __host__ void            operator/=(T);
+    HYBRD_FUNC Matrix          operator+(const Matrix&) const;
+    HYBRD_FUNC Matrix          operator-(const Matrix&) const;
+    template<class Q = T>
+    HYBRD_FUNC SignedEnable<Q, Matrix>      operator-() const;
+    HYBRD_FUNC Matrix                       operator/(const Matrix&) const;
+    HYBRD_FUNC Matrix                       operator/(T) const;
 
-        __device__ __host__ Matrix          operator+(const Matrix&) const;
-        __device__ __host__ Matrix          operator-(const Matrix&) const;
-        template<class Q = T>
-        __device__ __host__ SignedEnable<Q, Matrix>     operator-() const;
-        __device__ __host__ Matrix                      operator/(const Matrix&) const;
-        __device__ __host__ Matrix                      operator/(T) const;
+    HYBRD_FUNC Matrix                       operator*(const Matrix&) const;
+    template<int M>
+    HYBRD_FUNC Vector<M, T>                 operator*(const Vector<M, T>&) const;
+    HYBRD_FUNC Matrix                       operator*(T) const;
 
-        __device__ __host__ Matrix                      operator*(const Matrix&) const;
-        template<int M>
-        __device__ __host__ Vector<M, T>                operator*(const Vector<M, T>&) const;
-        __device__ __host__ Matrix                      operator*(T) const;
+    // Logic
+    HYBRD_FUNC bool                         operator==(const Matrix&) const;
+    HYBRD_FUNC bool                         operator!=(const Matrix&) const;
 
-        // Logic
-        __device__ __host__ bool                        operator==(const Matrix&) const;
-        __device__ __host__ bool                        operator!=(const Matrix&) const;
+    // Utility
+    HYBRD_FUNC [[nodiscard]] T                          Determinant() const;
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] FloatEnable<Q, Matrix>     Inverse() const;
+    template<class Q = T>
+    HYBRD_FUNC FloatEnable<Q, Matrix&>                  InverseSelf();
+    HYBRD_FUNC [[nodiscard]] Matrix                     Transpose() const;
+    HYBRD_FUNC Matrix&                                  TransposeSelf();
 
-        // Utility
-        __device__ __host__ [[nodiscard]] T             Determinant() const;
-        template<class Q = T>
-        __device__ __host__
-        [[nodiscard]] FloatEnable<Q, Matrix>            Inverse() const;
-        template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix&>     InverseSelf();
-        __device__ __host__
-        [[nodiscard]] Matrix                            Transpose() const;
-        __device__ __host__ Matrix&                     TransposeSelf();
+    HYBRD_FUNC Matrix           Clamp(const Matrix&, const Matrix&) const;
+    HYBRD_FUNC Matrix           Clamp(T min, T max) const;
+    HYBRD_FUNC Matrix&          ClampSelf(const Matrix&, const Matrix&);
+    HYBRD_FUNC Matrix&          ClampSelf(T min, T max);
 
-        __device__ __host__ Matrix          Clamp(const Matrix&, const Matrix&) const;
-        __device__ __host__ Matrix          Clamp(T min, T max) const;
-        __device__ __host__ Matrix&         ClampSelf(const Matrix&, const Matrix&);
-        __device__ __host__ Matrix&         ClampSelf(T min, T max);
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] SignedEnable<Q, Matrix>    Abs() const;
+    template<class Q = T>
+    HYBRD_FUNC SignedEnable<Q, Matrix&>                 AbsSelf();
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] FloatEnable<Q, Matrix>     Round() const;
+    template<class Q = T>
+    HYBRD_FUNC FloatEnable<Q, Matrix&>                  RoundSelf();
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] FloatEnable<Q, Matrix>     Floor() const;
+    template<class Q = T>
+    HYBRD_FUNC FloatEnable<Q, Matrix&>                  FloorSelf();
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] FloatEnable<Q, Matrix>     Ceil() const;
+    template<class Q = T>
+    HYBRD_FUNC FloatEnable<Q, Matrix&>                  CeilSelf();
 
-        template<class Q = T>
-        __device__ __host__
-        [[nodiscard]] SignedEnable<Q, Matrix>           Abs() const;
-        template<class Q = T>
-        __device__ __host__ SignedEnable<Q, Matrix&>    AbsSelf();
-        template<class Q = T>
-        __device__ __host__
-        [[nodiscard]] FloatEnable<Q, Matrix>            Round() const;
-        template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix&>     RoundSelf();
-        template<class Q = T>
-        __device__ __host__
-        [[nodiscard]] FloatEnable<Q, Matrix>            Floor() const;
-        template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix&>     FloorSelf();
-        template<class Q = T>
-        __device__ __host__
-        [[nodiscard]] FloatEnable<Q, Matrix>            Ceil() const;
-        template<class Q = T>
-        __device__ __host__ FloatEnable<Q, Matrix&>     CeilSelf();
+    template<class Q = T>
+    static HYBRD_FUNC FloatEnable<Q, Matrix>            Lerp(const Matrix&, const Matrix&, T);
 
-        template<class Q = T>
-        static __device__ __host__ FloatEnable<Q, Matrix>   Lerp(const Matrix&, const Matrix&, T);
-
-        static __device__ __host__ Matrix       Min(const Matrix&, const Matrix&);
-        static __device__ __host__ Matrix       Min(const Matrix&, T);
-        static __device__ __host__ Matrix       Max(const Matrix&, const Matrix&);
-        static __device__ __host__ Matrix       Max(const Matrix&, T);
+    static HYBRD_FUNC Matrix       Min(const Matrix&, const Matrix&);
+    static HYBRD_FUNC Matrix       Min(const Matrix&, T);
+    static HYBRD_FUNC Matrix       Max(const Matrix&, const Matrix&);
+    static HYBRD_FUNC Matrix       Max(const Matrix&, T);
 };
 
 // Determinants
 template<class T>
-__device__ __host__
-[[nodiscard]] T Determinant2(const T*);
+HYBRD_FUNC [[nodiscard]] T Determinant2(const T*);
 
 template<class T>
-__device__ __host__
-[[nodiscard]] T Determinant3(const T*);
+HYBRD_FUNC [[nodiscard]] T Determinant3(const T*);
 
 template<class T>
-__device__ __host__
-[[nodiscard]] T Determinant4(const T*);
+HYBRD_FUNC [[nodiscard]] T Determinant4(const T*);
 
 // Inverse
 template<class T>
-__device__ __host__
-[[nodiscard]] Matrix<2, T> Inverse2(const T*);
+HYBRD_FUNC [[nodiscard]] Matrix<2, T> Inverse2(const T*);
 
 template<class T>
-__device__ __host__
-[[nodiscard]] Matrix<3, T> Inverse3(const T*);
+HYBRD_FUNC [[nodiscard]] Matrix<3, T> Inverse3(const T*);
 
 template<class T>
-__device__ __host__
-[[nodiscard]] Matrix<4, T> Inverse4(const T*);
+HYBRD_FUNC [[nodiscard]] Matrix<4, T> Inverse4(const T*);
 
 // Left Scalar operators
 template<int N, class T>
-__device__ __host__ Matrix<N, T> operator*(float, const Matrix<N, T>&);
+HYBRD_FUNC Matrix<N, T> operator*(float, const Matrix<N, T>&);
 
 // Typeless matrices are defaulted to float
 using Matrix2x2 = Matrix<2, float>;
@@ -184,128 +168,114 @@ static_assert(std::is_polymorphic<Matrix3x3>::value == false, "Matrices should n
 
 //// Special 4x4 Matrix Operation
 //template<class T>
-//static __device__ __host__ Vector<3, T> ExtractScaleInfo(const Matrix<4, T>&);
+//static HYBRD_FUNC Vector<3, T> ExtractScaleInfo(const Matrix<4, T>&);
 
 // Spacial Matrix4x4 -> Matrix3x3
 template<class T>
-static __device__ __host__ Matrix<4, T> ToMatrix4x4(const Matrix<3, T>&);
+static HYBRD_FUNC Matrix<4, T> ToMatrix4x4(const Matrix<3, T>&);
 
 // Transformation Matrix Generation
 namespace TransformGen
 {
     // Extraction Functions
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Vector<3, T>     ExtractScale(const Matrix<4, T>&);
+    HYBRD_FUNC Vector<3, T>     ExtractScale(const Matrix<4, T>&);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Vector<3, T>     ExtractTranslation(const Matrix<4, T>&);
-
+    HYBRD_FUNC Vector<3, T>     ExtractTranslation(const Matrix<4, T>&);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     Translate(const Vector<3, T>&);
+    HYBRD_FUNC Matrix<4, T>     Translate(const Vector<3, T>&);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     Scale(T);
+    HYBRD_FUNC Matrix<4, T>     Scale(T);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix <4, T>    Scale(T x, T y, T z);
+    HYBRD_FUNC Matrix <4, T>    Scale(T x, T y, T z);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     Rotate(T angle, const Vector<3, T>&);
+    HYBRD_FUNC Matrix<4, T>     Rotate(T angle, const Vector<3, T>&);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     Rotate(const Quaternion<T>&);
+    HYBRD_FUNC Matrix<4, T>     Rotate(const Quaternion<T>&);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     Perspective(T fovXRadians, T aspectRatio,
-                                 T nearPlane, T farPlane);
+    HYBRD_FUNC Matrix<4, T>     Perspective(T fovXRadians, T aspectRatio,
+                                            T nearPlane, T farPlane);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     Ortogonal(T left, T right,
-                               T top, T bottom,
-                               T nearPlane, T farPlane);
+    HYBRD_FUNC Matrix<4, T>     Ortogonal(T left, T right,
+                                          T top, T bottom,
+                                          T nearPlane, T farPlane);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     Ortogonal(T width, T height,
-                               T nearPlane, T farPlane);
+    HYBRD_FUNC Matrix<4, T>     Ortogonal(T width, T height,
+                                          T nearPlane, T farPlane);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    Matrix<4, T>     LookAt(const Vector<3, T>& eyePos,
-                            const Vector<3, T>& at,
-                            const Vector<3, T>& up);
+    HYBRD_FUNC Matrix<4, T>     LookAt(const Vector<3, T>& eyePos,
+                                       const Vector<3, T>& at,
+                                       const Vector<3, T>& up);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    void             Space(Matrix<3, T>&,
-                           const Vector<3, T>& x,
-                           const Vector<3, T>& y,
-                           const Vector<3, T>& z);
+    HYBRD_FUNC void             Space(Matrix<3, T>&,
+                                      const Vector<3, T>& x,
+                                      const Vector<3, T>& y,
+                                      const Vector<3, T>& z);
     template<class T, typename = FloatEnable<T>>
-    __device__ __host__ HYBRID_INLINE
-    void             InvSpace(Matrix<3, T>&,
-                              const Vector<3, T>& x,
-                              const Vector<3, T>& y,
-                              const Vector<3, T>& z);
+    HYBRD_FUNC void             InvSpace(Matrix<3, T>&,
+                                         const Vector<3, T>& x,
+                                         const Vector<3, T>& y,
+                                         const Vector<3, T>& z);
 }
 
 // Implementation
 #include "Matrix.hpp"   // CPU & GPU
 
 // Constants
-static constexpr Matrix2x2  Indentity2x2 = Matrix2x2(1.0f, 0.0f,
-                                                     0.0f, 1.0f);
-static constexpr Matrix3x3  Indentity3x3 = Matrix3x3(1.0f, 0.0f, 0.0f,
-                                                     0.0f, 1.0f, 0.0f,
-                                                     0.0f, 0.0f, 1.0f);
-static constexpr Matrix4x4  Indentity4x4 = Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
-                                                     0.0f, 1.0f, 0.0f, 0.0f,
-                                                     0.0f, 0.0f, 1.0f, 0.0f,
-                                                     0.0f, 0.0f, 0.0f, 1.0f);
+static constexpr Matrix2x2 Indentity2x2 = Matrix2x2(1.0f, 0.0f,
+                                                    0.0f, 1.0f);
+static constexpr Matrix3x3 Indentity3x3 = Matrix3x3(1.0f, 0.0f, 0.0f,
+                                                    0.0f, 1.0f, 0.0f,
+                                                    0.0f, 0.0f, 1.0f);
+static constexpr Matrix4x4 Indentity4x4 = Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
+                                                    0.0f, 1.0f, 0.0f, 0.0f,
+                                                    0.0f, 0.0f, 1.0f, 0.0f,
+                                                    0.0f, 0.0f, 0.0f, 1.0f);
 
 // Zeros
-static constexpr Matrix2x2f  Zero2x2f = Matrix2x2f(0.0f, 0.0f,
-                                                   0.0f, 0.0f);
-static constexpr Matrix3x3f  Zero3x3f = Matrix3x3f(0.0f, 0.0f, 0.0f,
-                                                   0.0f, 0.0f, 0.0f,
-                                                   0.0f, 0.0f, 0.0f);
+static constexpr Matrix2x2f Zero2x2f = Matrix2x2f(0.0f, 0.0f,
+                                                  0.0f, 0.0f);
+static constexpr Matrix3x3f Zero3x3f = Matrix3x3f(0.0f, 0.0f, 0.0f,
+                                                  0.0f, 0.0f, 0.0f,
+                                                  0.0f, 0.0f, 0.0f);
 static constexpr Matrix4x4f Zero4x4f = Matrix4x4f(0.0f, 0.0f, 0.0f, 0.0f,
                                                   0.0f, 0.0f, 0.0f, 0.0f,
                                                   0.0f, 0.0f, 0.0f, 0.0f,
                                                   0.0f, 0.0f, 0.0f, 0.0f);
 
-static constexpr Matrix2x2d  Zero2x2d = Matrix2x2d(0.0f, 0.0f,
+static constexpr Matrix2x2d Zero2x2d = Matrix2x2d(0.0f, 0.0f,
                                                    0.0f, 0.0f);
-static constexpr Matrix3x3d  Zero3x3d = Matrix3x3d(0.0f, 0.0f, 0.0f,
+static constexpr Matrix3x3d Zero3x3d = Matrix3x3d(0.0f, 0.0f, 0.0f,
                                                    0.0f, 0.0f, 0.0f,
                                                    0.0f, 0.0f, 0.0f);
-static constexpr Matrix4x4d  Zero4x4d = Matrix4x4d(0.0f, 0.0f, 0.0f, 0.0f,
+static constexpr Matrix4x4d Zero4x4d = Matrix4x4d(0.0f, 0.0f, 0.0f, 0.0f,
                                                    0.0f, 0.0f, 0.0f, 0.0f,
                                                    0.0f, 0.0f, 0.0f, 0.0f,
                                                    0.0f, 0.0f, 0.0f, 0.0f);
 
-static constexpr Matrix2x2i  Zero2x2i = Matrix2x2i(0, 0,
-                                                   0, 0);
-static constexpr Matrix3x3i  Zero3x3i = Matrix3x3i(0, 0, 0,
-                                                   0, 0, 0,
-                                                   0, 0, 0);
-static constexpr Matrix4x4i  Zero4x4i = Matrix4x4i(0, 0, 0, 0,
-                                                   0, 0, 0, 0,
-                                                   0, 0, 0, 0,
-                                                   0, 0, 0, 0);
+static constexpr Matrix2x2i Zero2x2i = Matrix2x2i(0, 0,
+                                                  0, 0);
+static constexpr Matrix3x3i Zero3x3i = Matrix3x3i(0, 0, 0,
+                                                  0, 0, 0,
+                                                  0, 0, 0);
+static constexpr Matrix4x4i Zero4x4i = Matrix4x4i(0, 0, 0, 0,
+                                                  0, 0, 0, 0,
+                                                  0, 0, 0, 0,
+                                                  0, 0, 0, 0);
 
-static constexpr Matrix2x2ui  Zero2x2ui = Matrix2x2ui(0u, 0u,
-                                                      0u, 0u);
-static constexpr Matrix3x3ui  Zero3x3ui = Matrix3x3ui(0u, 0u, 0u,
-                                                      0u, 0u, 0u,
-                                                      0u, 0u, 0u);
-static constexpr Matrix4x4ui  Zero4x4ui = Matrix4x4ui(0u, 0u, 0u, 0u,
-                                                      0u, 0u, 0u, 0u,
-                                                      0u, 0u, 0u, 0u,
-                                                      0u, 0u, 0u, 0u);
+static constexpr Matrix2x2ui Zero2x2ui = Matrix2x2ui(0u, 0u,
+                                                     0u, 0u);
+static constexpr Matrix3x3ui Zero3x3ui = Matrix3x3ui(0u, 0u, 0u,
+                                                     0u, 0u, 0u,
+                                                     0u, 0u, 0u);
+static constexpr Matrix4x4ui Zero4x4ui = Matrix4x4ui(0u, 0u, 0u, 0u,
+                                                     0u, 0u, 0u, 0u,
+                                                     0u, 0u, 0u, 0u,
+                                                     0u, 0u, 0u, 0u);
 
-static constexpr Matrix2x2  Zero2x2 = Zero2x2f;
-static constexpr Matrix3x3  Zero3x3 = Zero3x3f;
-static constexpr Matrix4x4  Zero4x4 = Zero4x4f;
+static constexpr Matrix2x2 Zero2x2 = Zero2x2f;
+static constexpr Matrix3x3 Zero3x3 = Zero3x3f;
+static constexpr Matrix4x4 Zero4x4 = Zero4x4f;
 
 // Matrix Traits
 template<class T>

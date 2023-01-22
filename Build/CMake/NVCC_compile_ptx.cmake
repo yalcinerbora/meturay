@@ -24,6 +24,9 @@
 #    Finally It also outputs as <filename>_CC[50,61..].o.ptx
 #    because it is a good pun =) (Normally it was goint to be optx but maybe some
 #    files)
+#    Unfortunately this is changed it is now .optixir =(, and only optixir is used
+#    only (7.5 or above)
+#    TODO: change this to make it compatible with older versions of the optix
 
 FUNCTION(NVCC_COMPILE_PTX)
     set(oneValueArgs GENERATED_TARGET MAIN_TARGET)
@@ -50,10 +53,11 @@ FUNCTION(NVCC_COMPILE_PTX)
         "-I${MRAY_SOURCE_DIRECTORY}"
         #"-I${MRAY_SOURCE_DIRECTORY}/${NVCC_COMPILE_PTX_MAIN_TARGET}"
         "-I${MRAY_LIB_INCLUDE_DIRECTORY}"
-        --ptx
+        --optix-ir
         --machine=64
         "-std=c++${CMAKE_CUDA_STANDARD}"
         "--relocatable-device-code=true"
+        "--keep-device-functions"
         # OptiX Documentation says that -G'ed kernels may fail
         # So -lineinfo is used on both configurations
         $<$<CONFIG:Debug>:-G>
@@ -74,10 +78,27 @@ FUNCTION(NVCC_COMPILE_PTX)
 
         get_filename_component(INPUT_STEM "${INPUT}" NAME_WE)
 
+        if(${CMAKE_CUDA_ARCHITECTURES} STREQUAL "all")
+            # We need to manually set the list here
+            set(COMPUTE_CAPABILITY_LIST
+                50 52 53
+                60 61 62
+                70 72 75
+                80 86 87 89
+                90 90a)
+        elseif(${CMAKE_CUDA_ARCHITECTURES} STREQUAL "all-major")
+            set(COMPUTE_CAPABILITY_LIST 50 60 70 80 90)
+        else()
+            # "native" or old school numbered style is selected do nothing
+            set(COMPUTE_CAPABILITY_LIST ${CMAKE_CUDA_ARCHITECTURES})
+        endif()
+
+
+
         # Generate New Ptx file for each CC Requested
-        FOREACH(COMPUTE_CAPABILITY ${CMAKE_CUDA_ARCHITECTURES})
+        FOREACH(COMPUTE_CAPABILITY ${COMPUTE_CAPABILITY_LIST})
             # Generate the *.ptx files to the appropirate bin directory.
-            set(OUTPUT_FILE "${INPUT_STEM}.CC_${COMPUTE_CAPABILITY}.o.ptx")
+            set(OUTPUT_FILE "${INPUT_STEM}.CC_${COMPUTE_CAPABILITY}.optixir")
             set(OUTPUT_DIR "${MRAY_CONFIG_BIN_DIRECTORY}/OptiXShaders")
             set(OUTPUT "${OUTPUT_DIR}/${OUTPUT_FILE}")
 
@@ -86,6 +107,12 @@ FUNCTION(NVCC_COMPILE_PTX)
             #set(DEP_PATH "${DEP_DIR}/${DEP_FILE}")
 
             list(APPEND PTX_FILES ${OUTPUT})
+
+            set(CC_FLAG ${COMPUTE_CAPABILITY})
+            if(${COMPUTE_CAPABILITY} MATCHES "^[0-9]+$")
+                # If numbered add compute
+                set(CC_FLAG compute_${COMPUTE_CAPABILITY})
+            endif()
 
             # This prints the standalone NVCC command line for each CUDA file.
             #message(STATUS "${CMAKE_CUDA_COMPILER} ${NVCC_COMPILE_OPTIONS} ${INPUT} -o ${OUTPUT} -odir ${OUTPUT_DIR}")
@@ -103,7 +130,7 @@ FUNCTION(NVCC_COMPILE_PTX)
                 #         ${INPUT}
                 #COMMAND ${CMAKE_CUDA_COMPILER} --help
                 COMMAND ${CMAKE_CUDA_COMPILER} ${NVCC_COMPILE_OPTIONS}
-                         "--gpu-architecture=compute_${COMPUTE_CAPABILITY}"
+                         "--gpu-architecture=${CC_FLAG}"
                          -o ${OUTPUT}
                          ${INPUT}
             )

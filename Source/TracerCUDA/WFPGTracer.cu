@@ -150,7 +150,7 @@ static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
 //
 //
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
@@ -451,7 +451,9 @@ void WFPGTracer::GenerateGuidedDirections()
 
     CUDA_CHECK(cudaEventSynchronize(stop));
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
-    METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
+    //METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
+    //         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
+    METU_LOG("{:d}; {:d}; {:f}; {:f}",
              currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
 }
 
@@ -1046,7 +1048,7 @@ void WFPGTracer::Finalize()
     RayTracer::Finalize();
 
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(10s);
+    //std::this_thread::sleep_for(10s);
 }
 
 size_t WFPGTracer::TotalGPUMemoryUsed() const

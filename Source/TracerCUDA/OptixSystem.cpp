@@ -26,23 +26,32 @@ void OptiXSystem::OptixLOG(unsigned int level,
     logger->flush();
 }
 
-TracerError OptiXSystem::LoadPTXFile(std::string& ptxSource,
+TracerError OptiXSystem::LoadPTXFile(std::vector<Byte>& ptxSource,
                                      const CudaGPU& gpu,
                                      const std::string& baseName)
 {
     std::string fileName = baseName;
-    std::string ccName = ".CC_" + gpu.CC();
 
-    auto loc = fileName.rfind(".o.ptx");
+    // TODO: Change this later to better implementation
+    #ifdef MRAY_OPTIX_USE_NATIVE_CC
+        std::string ccName = ".CC_native";
+    #else
+        std::string ccName = ".CC_" + gpu.CC();
+    #endif
+
+    auto loc = fileName.rfind(".optixir");
     fileName.insert(loc, ccName);
 
-    std::ifstream file(Utility::MergeFileFolder(Utility::CurrentExecPath(), fileName));
+    std::string fullFileName = Utility::MergeFileFolder(Utility::CurrentExecPath(),
+                                                        fileName);
+    std::ifstream file(fullFileName, std::ios::binary | std::ios::ate);
     if(!file.is_open())
         return TracerError(TracerError::OPTIX_PTX_FILE_NOT_FOUND, fileName);
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    ptxSource = buffer.str();
+    std::ifstream::pos_type size = file.tellg();
+    ptxSource.resize(size);
+    file.seekg(0, std::ios::beg);
+    file.read(reinterpret_cast<char*>(ptxSource.data()), size);
     return TracerError::OK;
 }
 

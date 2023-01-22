@@ -31,13 +31,20 @@ if(USE_OPTIX)
         ${CURRENT_SOURCE_DIR}/RayCasterOptiX.cu
         ${CURRENT_SOURCE_DIR}/RayCasterOptiX.h)
 
+    set(SRC_WFPG_OPTIX
+        ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cu
+        ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cuh
+        ${CURRENT_SOURCE_DIR}/OctreeOptiX.cu
+        ${CURRENT_SOURCE_DIR}/OctreeOptiX.h)
+
     # Additionally Define PTX Source
     # Which will be passed to the OptiX Compile Target
     set(OPTIX_PTX_SOURCES
-        ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu)
+        ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu
+        ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cu)
     # Make OptiX Sources not participate in build
     set_source_files_properties(${OPTIX_PTX_SOURCES}
-                                 PROPERTIES HEADER_FILE_ONLY TRUE)
+                                PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
 
 set(SRC_RC
@@ -418,7 +425,8 @@ set(SRC_ALL
     ${SRC_RL_TRACER}
     ${SRC_RL_TRACER_AUX_CLASSES}
     ${SRC_WFPG_TRACER}
-    ${SRC_WFPG_TRACER_AUX_CLASSES})
+    ${SRC_WFPG_TRACER_AUX_CLASSES}
+    ${SRC_WFPG_OPTIX})
 
 # IDE Filters
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
@@ -458,6 +466,8 @@ if(USE_OPTIX)
     source_group("OptiX/RayCaster" FILES ${SRC_RC_OPTIX})
     source_group("OptiX/Accelerator" FILES ${SRC_ACCELS_OPTIX})
     source_group("OptiX" FILES ${SRC_OPTIX_SYSTEM})
+
+    source_group("Tracers/WFPGTracer/Aux Classes/OptiX" FILES ${SRC_WFPG_OPTIX})
 endif()
 
 source_group("Tracers" FILES ${SRC_TRACERS_COMMON})

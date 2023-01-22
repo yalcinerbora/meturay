@@ -128,13 +128,13 @@ TracerError RayCasterOptiX::CreateModules(const OptixModuleCompileOptions& mOpts
     uint32_t i = 0;
     for(const auto& [gpu, optixContext] : optixSystem.OptixCapableDevices())
     {
-        std::string ptxSource;
+        std::vector<Byte> ptxSource;
         if((err = OptiXSystem::LoadPTXFile(ptxSource, gpu, baseFileName)) != TracerError::OK)
             return err;
 
         OPTIX_CHECK(optixModuleCreateFromPTX(optixContext,
                                              &mOpts, &pOpts,
-                                             ptxSource.c_str(),
+                                             reinterpret_cast<const char*>(ptxSource.data()),
                                              ptxSource.size(),
                                              nullptr,
                                              nullptr,

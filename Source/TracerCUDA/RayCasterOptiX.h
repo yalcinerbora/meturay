@@ -12,7 +12,7 @@ class GPUAcceleratorI;
 class RayCasterOptiX : public RayCaster
 {
     public:
-        static constexpr const char* MODULE_BASE_NAME       = "OptiXShaders/GPUOptiXPTX.o.ptx";
+        static constexpr const char* MODULE_BASE_NAME       = "OptiXShaders/GPUOptiXPTX.optixir";
         static constexpr const char* RAYGEN_FUNC_NAME       = "__raygen__OptiX";
         static constexpr const char* MISS_FUNC_NAME         = "__miss__OptiX";
         static constexpr const char* CHIT_FUNC_PREFIX       = "__closesthit__";

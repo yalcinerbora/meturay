@@ -230,14 +230,14 @@ Vector3 DefaultSamplePos(Vector3& normal, float& pdf,
 template <class PrimitiveData>
 __device__ inline
 void DefaultPDFPosRef(// Outputs
-                   Vector3f& normal,
-                   float& pdf,
-                   float& distance,
-                   // Inputs
-                   const RayF&,
-                   const GPUTransformI&,
-                   const PrimitiveId,
-                   const PrimitiveData&)
+                      Vector3f& normal,
+                      float& pdf,
+                      float& distance,
+                      // Inputs
+                      const RayF&,
+                      const GPUTransformI&,
+                      const PrimitiveId,
+                      const PrimitiveData&)
 {
     normal = Vector3f(INFINITY);
     pdf = 0.0f;
@@ -261,10 +261,10 @@ float DefaultPDFPosHit(// Inputs
 template <class PrimitiveData, uint32_t PosCount>
 __device__ inline
 void DefaultAcqPosition(// Output
-                         Vector3f positions[PosCount],
-                         // Inputs
-                         PrimitiveId,
-                         const PrimitiveData&)
+                        Vector3f positions[PosCount],
+                        // Inputs
+                        PrimitiveId,
+                        const PrimitiveData&)
 {
     positions[0] = Zero3f;
 }
@@ -272,8 +272,8 @@ void DefaultAcqPosition(// Output
 template <class HitData, class PrimitiveData, class LeafData>
 __device__ inline
 bool DefaultAlphaTest(const HitData&,
-                           const LeafData&,
-                           const PrimitiveData&)
+                      const LeafData&,
+                      const PrimitiveData&)
 {
     return true;
 }

@@ -53,9 +53,12 @@ SceneError CPUCameraGroupSpherical::InitializeGroup(const EndpointGroupDataList&
     {
         const auto position = node.node->CommonVector3(POSITION_NAME);
         const auto up = node.node->CommonVector3(UP_NAME);
-        const auto direction = node.node->CommonVector3(DIR_NAME);
+        //const auto direction = node.node->CommonVector3(DIR_NAME);
         const auto nearFar = node.node->CommonVector2(PLANES_NAME);
         const auto pixRatio = node.node->CommonFloat(PIX_RATIO_NAME);
+        const auto gaze = node.node->CommonVector3(GAZE_NAME);
+
+        Vector3f direction = (gaze - position).Normalize();
 
         Data data = {};
         data.position = position;

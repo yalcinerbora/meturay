@@ -296,6 +296,10 @@ void PathTracer::Finalize()
 
     cudaSystem.SyncAllGPUs();
     frameTimer.Split();
+
+    double ms = frameTimer.Elapsed<CPUTimeMillis>();
+    METU_LOG("{}", ms);
+
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
 
     RayTracer::Finalize();

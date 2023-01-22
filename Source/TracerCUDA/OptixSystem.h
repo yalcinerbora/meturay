@@ -52,10 +52,9 @@
 
             const std::vector<OptixDevice>& OptixCapableDevices() const;
 
-            static TracerError              LoadPTXFile(std::string& ptxSource,
+            static TracerError              LoadPTXFile(std::vector<Byte>& ptxSource,
                                                         const CudaGPU&,
                                                         const std::string& baseName);
-
     };
 #endif
 #endif

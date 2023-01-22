@@ -1114,15 +1114,21 @@ inline void LoadBinInfo(//Output
             bool isLeaf = ReadSVONodeId(nodeId, sharedMem->sNodeId);
             sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
+            // Utilize voxel center
+            //Vector3f position = svo.NodeVoxelPosition(nodeId, isLeaf);
+
+            // Utilize a random ray
             uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * sharedMem->sRayCount);
             // Use the first rays hit position
             //uint32_t randomRayIndex = 0;
 
             uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
-            // Simple but less accurate version
             RayReg rayReg = metaSurfGenerator.Ray(rayId);
             Vector3f position = rayReg.ray.Advance(rayReg.tMax - rayReg.tMin).getPosition();
+
+
             sharedMem->sRadianceFieldOrigin = position;
+            //sharedMem->sRadianceFieldOrigin = Zero3f;
         };
 
         //// Roll a dice stochastically cull bin (TEST)
@@ -1221,6 +1227,12 @@ inline void GenerateRadianceField(// Output
                                            incRadiances,
                                            RFieldGaussFilter,
                                            WrapFunc);
+
+    //// Do filtering direct write
+    //#pragma unroll
+    //for(int i = 0; i < DATA_PER_THREAD; i++)
+    //    filteredRadiances[i] = incRadiances[i];
+
     __syncthreads();
 }
 

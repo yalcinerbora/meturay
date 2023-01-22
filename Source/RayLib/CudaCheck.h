@@ -86,3 +86,8 @@ Utility header for header only cuda vector and cpu vector implementations
     //#define CUDA_CHECK(func) GPUAssert((func), __FILE__, __LINE__)
     // TODO: Check this from time to time..
 #endif
+
+#define DEVICE_FUNC __device__
+#define HOST_FUNC __host__
+#define HYBRD_FUNC HOST_FUNC DEVICE_FUNC
+

@@ -76,139 +76,139 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
     static_assert(N == 2 || N == 3 || N == 4, "Vector size should be 2, 3 or 4");
 
     private:
-        T                                       vector[N];
+        T                               vector[N];
 
     protected:
     public:
-        // Constructors & Destructor
-        constexpr                               Vector() = default;
-        template<class C, typename = ArithmeticEnable<C>>
-        __device__ __host__ explicit            Vector(C);
-        template<class C, typename = ArithmeticEnable<C>>
-        __device__ __host__ explicit            Vector(const C* data);
-        template <class... Args, typename = AllArithmeticEnable<Args...>>
-        constexpr __device__ __host__ explicit  Vector(const Args... dataList);
-        template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
-        __device__ __host__                     Vector(const Vector<N - sizeof...(Args), T>&,
-                                                       const Args... dataList);
-        template <int M, typename = std::enable_if_t<(M >= N)>>
-        __device__ __host__                     Vector(const Vector<M, T>&);
-                                                ~Vector() = default;
+    // Constructors & Destructor
+    constexpr                           Vector() = default;
+    template<class C, typename = ArithmeticEnable<C>>
+    HYBRD_FUNC explicit                 Vector(C);
+    template<class C, typename = ArithmeticEnable<C>>
+    HYBRD_FUNC explicit                 Vector(const C* data);
+    template <class... Args, typename = AllArithmeticEnable<Args...>>
+    constexpr HYBRD_FUNC explicit       Vector(const Args... dataList);
+    template <class... Args, typename = std::enable_if_t<((N - sizeof...(Args)) > 1)>>
+    HYBRD_FUNC                          Vector(const Vector<N - sizeof...(Args), T>&,
+                                               const Args... dataList);
+    template <int M, typename = std::enable_if_t<(M >= N)>>
+    HYBRD_FUNC                          Vector(const Vector<M, T>&);
+                                        ~Vector() = default;
 
-        // MVC bug? these trigger std::trivially_copyable static assert
-        // __device__ __host__              Vector(const Vector&) = default;
-        // __device__ __host__ Vector&      operator=(const Vector&) = default;
+    // MVC bug? these trigger std::trivially_copyable static assert
+    // HYBRD_FUNC              Vector(const Vector&) = default;
+    // HYBRD_FUNC Vector&      operator=(const Vector&) = default;
 
-        // Accessors
-        __device__ __host__ explicit            operator T* ();
-        __device__ __host__ explicit            operator const T* () const;
-        __device__ __host__ T&                  operator[](int);
-        __device__ __host__ constexpr const T&  operator[](int) const;
+    // Accessors
+    HYBRD_FUNC explicit                 operator T* ();
+    HYBRD_FUNC explicit                 operator const T* () const;
+    HYBRD_FUNC T&                       operator[](int);
+    HYBRD_FUNC constexpr const T&       operator[](int) const;
 
-        // Type cast
-        template<int M, class C, typename = std::enable_if_t<(M <= N)>>
-        __device__ __host__ explicit            operator Vector<M, C>() const;
+    // Type cast
+    template<int M, class C, typename = std::enable_if_t<(M <= N)>>
+    HYBRD_FUNC explicit                 operator Vector<M, C>() const;
 
-        // Modify
-        __device__ __host__ constexpr void                    operator+=(const Vector&);
-        __device__ __host__ constexpr void                    operator-=(const Vector&);
-        __device__ __host__ constexpr void                    operator*=(const Vector&);
-        __device__ __host__ constexpr void                    operator*=(T);
-        __device__ __host__ constexpr void                    operator/=(const Vector&);
-        __device__ __host__ constexpr void                    operator/=(T);
+    // Modify
+    HYBRD_FUNC constexpr void                    operator+=(const Vector&);
+    HYBRD_FUNC constexpr void                    operator-=(const Vector&);
+    HYBRD_FUNC constexpr void                    operator*=(const Vector&);
+    HYBRD_FUNC constexpr void                    operator*=(T);
+    HYBRD_FUNC constexpr void                    operator/=(const Vector&);
+    HYBRD_FUNC constexpr void                    operator/=(T);
 
-        __device__ __host__ constexpr Vector                  operator+(const Vector&) const;
-        __device__ __host__ constexpr Vector                  operator+(T) const;
-        __device__ __host__ constexpr Vector                  operator-(const Vector&) const;
-        __device__ __host__ constexpr Vector                  operator-(T) const;
-        template<class Q = T>
-        __device__ __host__ constexpr SignedEnable<Q, Vector> operator-() const;
-        __device__ __host__ constexpr Vector                  operator*(const Vector&) const;
-        __device__ __host__ constexpr Vector                  operator*(T) const;
-        __device__ __host__ constexpr Vector                  operator/(const Vector&) const;
-        __device__ __host__ constexpr Vector                  operator/(T) const;
+    HYBRD_FUNC constexpr Vector                  operator+(const Vector&) const;
+    HYBRD_FUNC constexpr Vector                  operator+(T) const;
+    HYBRD_FUNC constexpr Vector                  operator-(const Vector&) const;
+    HYBRD_FUNC constexpr Vector                  operator-(T) const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr SignedEnable<Q, Vector> operator-() const;
+    HYBRD_FUNC constexpr Vector                  operator*(const Vector&) const;
+    HYBRD_FUNC constexpr Vector                  operator*(T) const;
+    HYBRD_FUNC constexpr Vector                  operator/(const Vector&) const;
+    HYBRD_FUNC constexpr Vector                  operator/(T) const;
 
-        template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector>      operator%(const Vector&) const;
-        template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector>      operator%(T) const;
-        template<class Q = T>
-        __device__ __host__ constexpr IntegralEnable<Q, Vector>   operator%(const Vector&) const;
-        template<class Q = T>
-        __device__ __host__ constexpr IntegralEnable<Q, Vector>   operator%(T) const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr FloatEnable<Q, Vector>     operator%(const Vector&) const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr FloatEnable<Q, Vector>     operator%(T) const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr IntegralEnable<Q, Vector>  operator%(const Vector&) const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr IntegralEnable<Q, Vector>  operator%(T) const;
 
-        // Logic
-        __device__ __host__ constexpr bool      operator==(const Vector&) const;
-        __device__ __host__ constexpr bool      operator!=(const Vector&) const;
-        __device__ __host__ constexpr bool      operator<(const Vector&) const;
-        __device__ __host__ constexpr bool      operator<=(const Vector&) const;
-        __device__ __host__ constexpr bool      operator>(const Vector&) const;
-        __device__ __host__ constexpr bool      operator>=(const Vector&) const;
+    // Logic
+    HYBRD_FUNC constexpr bool       operator==(const Vector&) const;
+    HYBRD_FUNC constexpr bool       operator!=(const Vector&) const;
+    HYBRD_FUNC constexpr bool       operator<(const Vector&) const;
+    HYBRD_FUNC constexpr bool       operator<=(const Vector&) const;
+    HYBRD_FUNC constexpr bool       operator>(const Vector&) const;
+    HYBRD_FUNC constexpr bool       operator>=(const Vector&) const;
 
-        // Utility
-        __device__ __host__ constexpr T         Dot(const Vector&) const;
+    // Utility
+    HYBRD_FUNC constexpr T          Dot(const Vector&) const;
 
-        // Reduction
-        __device__ __host__ constexpr T         Sum() const;
-        __device__ __host__ constexpr T         Multiply() const;
-        // Max Min Reduction functions are selections instead
-        // since it sometimes useful to fetch the which index
-        // (axis) is maximum/minimum so that you can do other stuff with it.
-        __device__ __host__ constexpr int       Max() const;
-        __device__ __host__ constexpr int       Min() const;
+    // Reduction
+    HYBRD_FUNC constexpr T          Sum() const;
+    HYBRD_FUNC constexpr T          Multiply() const;
+    // Max Min Reduction functions are selections instead
+    // since it sometimes useful to fetch the which index
+    // (axis) is maximum/minimum so that you can do other stuff with it.
+    HYBRD_FUNC constexpr int        Max() const;
+    HYBRD_FUNC constexpr int        Min() const;
 
-        template<class Q = T>
-        __device__ __host__
-        constexpr FloatEnable<Q, T>                     Length() const;
-        __device__ __host__ constexpr T                 LengthSqr() const;
-        template<class Q = T>
-        __device__ __host__
-        [[nodiscard]] constexpr FloatEnable<Q, Vector>  Normalize() const;
-        template<class Q = T>
-        __device__ __host__
-        constexpr FloatEnable<Q, Vector&>               NormalizeSelf();
-        __device__ __host__
-        [[nodiscard]] constexpr Vector                  Clamp(const Vector&, const Vector&) const;
-        __device__ __host__
-        [[nodiscard]] constexpr Vector                  Clamp(T min, T max) const;
-        __device__ __host__
-        constexpr Vector&                               ClampSelf(const Vector&, const Vector&);
-        __device__ __host__
-        constexpr Vector&                               ClampSelf(T min, T max);
-        __device__ __host__
-        constexpr bool                                  HasNaN() const;
+    template<class Q = T>
+    HYBRD_FUNC
+    constexpr FloatEnable<Q, T>     Length() const;
+    HYBRD_FUNC constexpr T          LengthSqr() const;
+    template<class Q = T>
+    HYBRD_FUNC
+    [[nodiscard]] constexpr FloatEnable<Q, Vector>  Normalize() const;
+    template<class Q = T>
+    HYBRD_FUNC
+    constexpr FloatEnable<Q, Vector&>               NormalizeSelf();
+    HYBRD_FUNC
+    [[nodiscard]] constexpr Vector                  Clamp(const Vector&, const Vector&) const;
+    HYBRD_FUNC
+    [[nodiscard]] constexpr Vector                  Clamp(T min, T max) const;
+    HYBRD_FUNC
+    constexpr Vector&                               ClampSelf(const Vector&, const Vector&);
+    HYBRD_FUNC
+    constexpr Vector&                               ClampSelf(T min, T max);
+    HYBRD_FUNC
+    constexpr bool                                  HasNaN() const;
 
-        template<class Q = T>
-        __device__ __host__ [[nodiscard]] constexpr SignedEnable<Q, Vector>     Abs() const;
-        template<class Q = T>
-        __device__ __host__ constexpr SignedEnable<Q, Vector&>                  AbsSelf();
-        template<class Q = T>
-        __device__ __host__ [[nodiscard]] constexpr FloatEnable<Q, Vector>      Round() const;
-        template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector&>   RoundSelf();
-        template<class Q = T>
-        __device__ __host__ [[nodiscard]] constexpr FloatEnable<Q, Vector>      Floor() const;
-        template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector&>   FloorSelf();
-        template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector>    Ceil() const;
-        template<class Q = T>
-        __device__ __host__ constexpr FloatEnable<Q, Vector&>   CeilSelf();
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] constexpr SignedEnable<Q, Vector>  Abs() const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr SignedEnable<Q, Vector&>               AbsSelf();
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] constexpr FloatEnable<Q, Vector>   Round() const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr FloatEnable<Q, Vector&>                RoundSelf();
+    template<class Q = T>
+    HYBRD_FUNC [[nodiscard]] constexpr FloatEnable<Q, Vector>   Floor() const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr FloatEnable<Q, Vector&>                FloorSelf();
+    template<class Q = T>
+    HYBRD_FUNC constexpr FloatEnable<Q, Vector>                 Ceil() const;
+    template<class Q = T>
+    HYBRD_FUNC constexpr FloatEnable<Q, Vector&>                CeilSelf();
 
-        static __device__ __host__ constexpr Vector             Min(const Vector&, const Vector&);
-        static __device__ __host__ constexpr Vector             Min(const Vector&, T);
-        static __device__ __host__ constexpr Vector             Max(const Vector&, const Vector&);
-        static __device__ __host__ constexpr Vector             Max(const Vector&, T);
+    static HYBRD_FUNC constexpr Vector                          Min(const Vector&, const Vector&);
+    static HYBRD_FUNC constexpr Vector                          Min(const Vector&, T);
+    static HYBRD_FUNC constexpr Vector                          Max(const Vector&, const Vector&);
+    static HYBRD_FUNC constexpr Vector                          Max(const Vector&, T);
 
-        template<class Q = T>
-        static __device__ __host__ constexpr FloatEnable<Q, Vector>   Lerp(const Vector&,
-                                                                           const Vector&,
-                                                                           T);
+    template<class Q = T>
+    static HYBRD_FUNC constexpr FloatEnable<Q, Vector>          Lerp(const Vector&,
+                                                                     const Vector&,
+                                                                     T);
 };
 
 // Left scalars
 template<int N, class T>
-__device__ __host__ HYBRID_INLINE
+HYBRD_FUNC HYBRID_INLINE
 constexpr Vector<N, T> operator*(T, const Vector<N, T>&);
 
 // Typeless vectors are defaulted to float
@@ -268,12 +268,12 @@ static_assert(sizeof(Vector4) == 16, "Vector4 should be tightly packed");
 
 // Cross product (only for 3d vectors)
 template <class T>
-__device__ __host__ HYBRID_INLINE
+HYBRD_FUNC HYBRID_INLINE
 constexpr Vector<3, T> Cross(const Vector<3, T>&, const Vector<3, T>&);
 
 // Arbitrary Orthogonal Vector Generation (only for 3D Vectors)
 template <class T>
-__device__ __host__ HYBRID_INLINE
+HYBRD_FUNC HYBRID_INLINE
 constexpr Vector<3, T> OrthogonalVector(const Vector<3, T>&);
 
 // Implementation

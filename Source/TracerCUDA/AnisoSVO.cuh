@@ -265,6 +265,9 @@ class AnisoSVOctreeGPU
     // array, thus, it can be slow (due to global memory access)
     __device__
     float               NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const;
+    // Find out the voxel center position directly from the node
+    __device__
+    Vector3f            NodeVoxelPosition(uint32_t nodeIndex, bool isLeaf) const;
 
     // Direct Set Functions
     // Normal and light emitted radiance information will be set by these
@@ -1175,6 +1178,121 @@ float AnisoSVOctreeGPU::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
     uint32_t levelDiff = leafDepth - static_cast<uint32_t>(levelFloat);
     float multiplier = static_cast<float>(1 << levelDiff);
     return leafVoxelSize * multiplier;
+}
+
+__device__ inline
+Vector3f AnisoSVOctreeGPU::NodeVoxelPosition(uint32_t nodeIndex, bool isLeaf) const
+{
+    // n is [1, sizeof(uint32_t) * BYTE_BITS)
+    // "n = 0" is undefined
+    // if "n > _popc(mask)" returns 0 (asserts in debug mode)
+    // returns one indexed location of the set bit
+    auto FindNthSet = [](uint32_t input, uint32_t n) -> uint32_t
+    {
+        // Not enough bits on input
+        if(__popc(input) < n)
+        {
+            assert(__popc(input) >= n);
+            return 0;
+        }
+
+        uint32_t index;
+        for(int i = 1; i <= n; i++)
+        {
+            index = __ffs(input);
+            uint32_t inverse = ~(1 << (index - 1));
+            //uint32_t oldMask = input;
+            input &= inverse;
+            //printf("[%d]--[%d] inverse %X, oldMask %X newMask %X index %u\n",
+            //       blockIdx.x, i, inverse, oldMask, input, index);
+        }
+        return index;
+    };
+
+    // Traverse up from the voxel and find the voxel morton code
+    // Then convert it to the position
+    uint64_t mortonCode = 0x0;
+    uint32_t bitPtr = 0;
+    static constexpr uint32_t DIMENSION = 3;
+
+    auto PushMortonToStack = [&](uint64_t node,
+                                 uint32_t nodeId,
+                                 uint32_t parentId)
+    {
+        uint32_t childrenStart = ChildrenIndex(node);
+        uint32_t bitIndex = nodeId - childrenStart;
+
+        //printf("[%d]--bit index %u = %u, %u\n", blockIdx.x,
+        //       bitIndex, childrenStart, nodeId);
+
+        uint32_t mortonSegment = FindNthSet(ChildMask(node), bitIndex + 1) - 1;
+
+        if(mortonSegment >= (1 << DIMENSION))
+        {
+            //printf("[%d]--mask 0x%X, bitindex %u, mySegment %u \n",
+            //       blockIdx.x,
+            //       ChildMask(node),
+            //       bitIndex,
+            //       mortonSegment);
+            assert(mortonSegment < (1 << DIMENSION));
+        }
+
+
+        mortonSegment = mortonSegment << bitPtr;
+        mortonCode |= mortonSegment;
+
+        bitPtr += DIMENSION;
+    };
+
+    uint32_t nodeId = nodeIndex;
+    // If leaf, data is on other array
+    uint64_t node;
+    if(isLeaf)
+    {
+        uint32_t parentId = dLeafParents[nodeId];
+        node = dNodes[parentId];
+
+        //printf("myNode %llu, nodeId %u, parentId %u\n",
+        //       node, nodeId, parentId);
+
+        PushMortonToStack(node, nodeId, parentId);
+        nodeId = parentId;
+    }
+    else
+    {
+        //printf("not leaf!\n");
+        node = dNodes[nodeId];
+    }
+
+
+    while(ParentIndex(node) != INVALID_PARENT)
+    {
+        uint32_t parentId = ParentIndex(node);
+        node = dNodes[parentId];
+
+        //printf("[%u] myNode %llu, nodeId %u, parentId %u\n",
+        //       nodeIndex, node, nodeId, parentId);
+
+        PushMortonToStack(node, nodeId, parentId);
+        //node = dNodes[parentId];
+        nodeId = parentId;
+    }
+    // Now calculate the voxel center using morton code
+    uint32_t depth = bitPtr / DIMENSION;
+    uint32_t levelDiff = leafDepth - static_cast<uint32_t>(depth);
+    float multiplier = static_cast<float>(1 << levelDiff);
+    float voxelSizeStart = leafVoxelSize * multiplier;
+    Vector3ui position = MortonCode::Decompose3D<uint64_t>(mortonCode);
+    Vector3f pos = Vector3f(position) + Vector3f(0.5f);
+    // Expand to worldSpaceCoords
+    pos *= voxelSizeStart;
+    pos += svoAABB.Min();
+
+    //printf("[%d]--Morton:%llu, pos[%f, %f, %f], voxelSize %f, level %u, leafVoxSize %f\n",
+    //       blockIdx.x, mortonCode, pos[0], pos[1], pos[2],
+    //       voxelSizeStart, depth, leafVoxelSize);
+
+    return pos;
 }
 
 __device__ inline

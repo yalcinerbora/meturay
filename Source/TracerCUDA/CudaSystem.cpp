@@ -235,6 +235,7 @@ cudaFuncAttributes CudaGPU::GetKernelAttributes(const void* kernelPtr) const
     CUDA_CHECK(cudaFuncGetAttributes(&result, kernelPtr));
     return result;
 }
+
 bool CudaGPU::SetKernelShMemSize(const void* kernelPtr, int sharedMemConfigSize) const
 {
     cudaError_t error = cudaFuncSetAttribute(kernelPtr,
