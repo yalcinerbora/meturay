@@ -13,6 +13,7 @@
 #include "GPUMetaSurfaceGenerator.h"
 
 class GPUDirectLightSamplerI;
+class SVOOptixConeCaster;
 
 class WFPGTracer final : public RayTracer
 {
@@ -39,6 +40,7 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    PURE_PG_NAME                = "PurePG";
     static constexpr const char*    MIS_RATIO_NAME              = "BXDF-GuideMISRatio";
     static constexpr const char*    PRODUCT_PG_NAME             = "DoProductPathGuiding";
+    static constexpr const char*    OPTIX_TRACE_NAME            = "OptiXTraceSVO";
 
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
 
@@ -71,6 +73,7 @@ class WFPGTracer final : public RayTracer
         bool                purePG              = false;
         bool                productPG           = true;
         float               misRatio            = 0.5f;
+        bool                optiXTrace          = false;
         //
         bool                pgDumpDebugData     = false;
         uint32_t            pgDumpInterval      = 2;
@@ -89,6 +92,9 @@ class WFPGTracer final : public RayTracer
         WorkPool<>                      debugPathWorkPool;
         // Device filter for radiance field
         GaussFilter                     rFieldGaussFilter;
+
+        // OptiX cone caster (allocated if requested)
+        std::unique_ptr<SVOOptixConeCaster> coneCasterOptiX;
 
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
@@ -138,8 +144,6 @@ class WFPGTracer final : public RayTracer
                 uint32_t nonTransformedCamIndex;
             };
         } currentCamera;
-
-
 
     protected:
     public:

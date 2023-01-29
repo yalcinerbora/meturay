@@ -98,13 +98,13 @@ FUNCTION(NVCC_COMPILE_PTX)
         # Generate New Ptx file for each CC Requested
         FOREACH(COMPUTE_CAPABILITY ${COMPUTE_CAPABILITY_LIST})
             # Generate the *.ptx files to the appropirate bin directory.
-            set(OUTPUT_FILE "${INPUT_STEM}.CC_${COMPUTE_CAPABILITY}.optixir")
+            set(OUTPUT_STEM "${INPUT_STEM}.CC_${COMPUTE_CAPABILITY}")
+            set(OUTPUT_FILE "${OUTPUT_STEM}.optixir")
             set(OUTPUT_DIR "${MRAY_CONFIG_BIN_DIRECTORY}/OptiXShaders")
             set(OUTPUT "${OUTPUT_DIR}/${OUTPUT_FILE}")
 
-            #set(DEP_FILE "${INPUT_STEM}.o.ptx.d")
-            #set(DEP_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NVCC_COMPILE_PTX_MAIN_TARGET}.dir/")
-            #set(DEP_PATH "${DEP_DIR}/${DEP_FILE}")
+            set(DEP_FILE "${OUTPUT_STEM}.d")
+            set(DEP_PATH "${OUTPUT_DIR}/${DEP_FILE}")
 
             list(APPEND PTX_FILES ${OUTPUT})
 
@@ -121,18 +121,20 @@ FUNCTION(NVCC_COMPILE_PTX)
                 OUTPUT  "${OUTPUT}"
                 COMMENT "Builidng PTX File (CC_${COMPUTE_CAPABILITY}) ${INPUT}"
                 DEPENDS "${INPUT}"
+                DEPFILE "${DEP_PATH}"
+                COMMAND ${CMAKE_CUDA_COMPILER} ${NVCC_COMPILE_OPTIONS}
+                         -MD
+                         "--gpu-architecture=${CC_FLAG}"
+                         -o ${OUTPUT}
+                         ${INPUT}
+
                 # TODO: Check that if this works
-                IMPLICIT_DEPENDS CXX "${INPUT}"
+                # IMPLICIT_DEPENDS CXX "${INPUT}"
                 # DEPFILE "${DEP_PATH}"
                 # COMMAND ${CMAKE_CUDA_COMPILER} ${NVCC_COMPILE_OPTIONS}
                 #         -M
                 #         -o ${DEP_PATH}
                 #         ${INPUT}
-                #COMMAND ${CMAKE_CUDA_COMPILER} --help
-                COMMAND ${CMAKE_CUDA_COMPILER} ${NVCC_COMPILE_OPTIONS}
-                         "--gpu-architecture=${CC_FLAG}"
-                         -o ${OUTPUT}
-                         ${INPUT}
             )
         ENDFOREACH()
   ENDFOREACH()

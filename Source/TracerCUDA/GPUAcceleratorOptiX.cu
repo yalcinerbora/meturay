@@ -270,8 +270,8 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<Opt
         deviceIndex++;
     }
     t.Split();
-    METU_LOG("OptiX IAS generated in {:f} seconds.",
-             t.Elapsed<CPUTimeSeconds>());
+    METU_LOG("OptiX IAS generated in {:f} ms.",
+             t.Elapsed<CPUTimeMillis>());
 
     // All Done!
     return TracerError::OK;
@@ -563,8 +563,8 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
     }
 
     t.Split();
-    METU_LOG("Surface{:d} OptiX GAS generated in {:f} seconds.",
-             surface, t.Elapsed<CPUTimeSeconds>());
+    METU_LOG("Surface{:d} OptiX GAS generated in {:f} ms.",
+             surface, t.Elapsed<CPUTimeMillis>());
 
     // All Done!
     return TracerError::OK;

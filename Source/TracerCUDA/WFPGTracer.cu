@@ -18,6 +18,10 @@
 #include <array>
 #include <thread>
 
+#ifdef MRAY_OPTIX
+    #include "OctreeOptiX.h"
+#endif
+
 // DEBUG
 std::ostream& operator<<(std::ostream& stream, const RayAuxWFPG& v)
 {
@@ -676,6 +680,27 @@ TracerError WFPGTracer::Initialize()
             return err;
     }
 
+
+    if(options.optiXTrace)
+    {
+        #ifdef MRAY_OPTIX
+        if(this->optiXScene)
+        {
+            RayCasterI* rc = rayCaster.get();
+            RayCasterOptiX* r = dynamic_cast<RayCasterOptiX*>(rc);
+            coneCasterOptiX = std::make_unique<SVOOptixConeCaster>(r->GetOptiXSystem());
+            coneCasterOptiX->GenerateSVOTraversable(svo);
+        }
+        else
+            return TracerError(TracerError::TRACER_INTERNAL_ERROR,
+                                "(WFPG) Enabling OptiX requires scene accelerators to be OptiX!");
+        #else
+
+        return TracerError(TracerError::TRACER_INTERNAL_ERROR,
+                           "(WFPG) Executable does not support OptiX!");
+        #endif
+    }
+
     // Generate a Sampler for the
     // Path Guide Sampling (Conservatively generate maximum amount of RNGs)
     const auto& gpu = cudaSystem.BestGPU();
@@ -741,6 +766,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.productPG, PRODUCT_PG_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.optiXTrace, OPTIX_TRACE_NAME)) != TracerError::OK)
+        return err;
 
     if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
@@ -775,6 +802,7 @@ void WFPGTracer::AskOptions()
     list.emplace(PURE_PG_NAME, OptionVariable(options.purePG));
     list.emplace(MIS_RATIO_NAME, OptionVariable(options.misRatio));
     list.emplace(PRODUCT_PG_NAME, OptionVariable(options.productPG));
+    list.emplace(OPTIX_TRACE_NAME, OptionVariable(options.optiXTrace));
 
     list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));
     list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));

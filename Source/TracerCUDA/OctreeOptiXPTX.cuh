@@ -15,6 +15,13 @@ struct OctreeAccelParams
 
 // SVO Hit Record
 // We only require the leaf id so nothing is held here
+template <class T>
+struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) SVOHitRecord
+{
+    __align__(OPTIX_SBT_RECORD_ALIGNMENT) char header[OPTIX_SBT_RECORD_HEADER_SIZE];
+
+    T* dMortonCode;
+};
 
 struct __align__(OPTIX_SBT_RECORD_ALIGNMENT) SVOEmptyRecord
 {

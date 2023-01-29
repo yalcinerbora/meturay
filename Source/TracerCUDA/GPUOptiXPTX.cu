@@ -20,10 +20,6 @@ HitStruct ReadHitStructFromAttribs()
 {
     constexpr uint32_t HitStructRegSize = ((sizeof(HitStruct) + sizeof(uint32_t) - 1)
                                            / sizeof(uint32_t));
-
-    // TODO: Maybe Implement this better without any UB
-    //const uint32_t* hitStructAsInts = reinterpret_cast<const uint32_t*>(&hs);
-
     // Non UB version
     uint32_t hitStructAsInts[HitStructRegSize];
     // This should get optimized out I hope

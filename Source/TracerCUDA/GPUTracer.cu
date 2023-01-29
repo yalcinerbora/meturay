@@ -239,9 +239,11 @@ GPUTracer::GPUTracer(const CudaSystem& system,
             rayCaster = std::make_unique<RayCasterOptiX>(scene, system);
         else
             rayCaster = std::make_unique<RayCasterCUDA>(scene, system);
+        optiXScene = allOptiXScene;
     #else
         // Just create original RayCaster
         rayCaster = std::make_unique<RayCasterCUDA>(scene, system);
+        optiXScene = false;
     #endif
 }
 

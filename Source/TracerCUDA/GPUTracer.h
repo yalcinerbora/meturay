@@ -75,6 +75,7 @@ class GPUTracer : public GPUTracerI
         const CudaSystem&                   cudaSystem;
         // Ray Caster
         std::unique_ptr<RayCaster>          rayCaster;
+        bool                                optiXScene;
         // GPU Memory
         std::unique_ptr<RNGeneratorCPUI>    rngCPU;
         ImageMemory                         imgMemory;

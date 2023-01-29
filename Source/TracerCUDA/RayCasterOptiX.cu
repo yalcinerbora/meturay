@@ -683,3 +683,8 @@ size_t RayCasterOptiX::UsedGPUMemory() const
     }
     return mem;
 }
+
+const OptiXSystem& RayCasterOptiX::GetOptiXSystem() const
+{
+    return optixSystem;
+}

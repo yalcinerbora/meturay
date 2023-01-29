@@ -267,7 +267,9 @@ class AnisoSVOctreeGPU
     float               NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const;
     // Find out the voxel center position directly from the node
     __device__
-    Vector3f            NodeVoxelPosition(uint32_t nodeIndex, bool isLeaf) const;
+    Vector3ui           NodeVoxelId(uint32_t& depth, uint32_t nodeIndex, bool isLeaf) const;
+    __device__
+    Vector3f            NodePosition(uint32_t nodeIndex, bool isLeaf) const;
 
     // Direct Set Functions
     // Normal and light emitted radiance information will be set by these
@@ -280,17 +282,21 @@ class AnisoSVOctreeGPU
     bool                SetLeafNormal(uint64_t mortonCode, Vector3f combinedNormal);
 
     // Accessors
-    __device__
+    __device__ __host__
     float               LeafVoxelSize() const;
-    __device__
+    __device__ __host__
+    float               LevelVoxelSize(uint32_t level) const;
+    __device__ __host__
     uint32_t            LeafCount() const;
-    __device__
+    __device__ __host__
     uint32_t            LeafDepth() const;
-    __device__
+    __device__ __host__
     uint32_t            NodeCount() const;
-    __device__
+    __device__ __host__
     uint32_t            VoxelResolution() const;
     __device__
+    uint32_t            LevelNodeStart(uint32_t level) const;
+    __device__ __host__
     AABB3f              OctreeAABB() const;
 
     // Convenience Functions
@@ -338,11 +344,16 @@ class AnisoSVOctreeCPU
                                                 const CudaSystem&);
     // Clear the ray counts for the next iteration
     void                    ClearRayCounts(const CudaSystem&);
-    // GPU Data Struct Access
-    AnisoSVOctreeGPU        TreeGPU();
+    // Accessors
+    AnisoSVOctreeGPU                TreeGPU();
+    AnisoSVOctreeGPU                TreeGPU() const;
+    const std::vector<uint32_t>&    LevelNodeOffsets() const;
+
     // Misc.
     size_t                  UsedGPUMemory() const;
     size_t                  UsedCPUMemory() const;
+
+
 
     void                    DumpSVOAsBinary(std::vector<Byte>& data,
                                             const CudaSystem& system) const;
@@ -1165,14 +1176,14 @@ __device__ inline
 float AnisoSVOctreeGPU::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
 {
     using namespace GPUFunctions;
-    static constexpr auto BinarySearch = GPUFunctions::BinarySearchInBetween<uint32_t>;
+    //static constexpr auto BinarySearch = GPUFunctions::BinarySearchInBetween<uint32_t>;
 
     if(isLeaf) return leafVoxelSize;
     // Binary search the node id from the offsets
     float levelFloat;
-    [[maybe_unused]] bool found = BinarySearch(levelFloat, nodeIndex,
-                                               dLevelNodeOffsets,
-                                               leafDepth + 1);
+    [[maybe_unused]] bool found = BinarySearchInBetween<uint32_t>(levelFloat, nodeIndex,
+                                                                  dLevelNodeOffsets,
+                                                                  leafDepth + 1);
     assert(found);
 
     uint32_t levelDiff = leafDepth - static_cast<uint32_t>(levelFloat);
@@ -1181,7 +1192,8 @@ float AnisoSVOctreeGPU::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
 }
 
 __device__ inline
-Vector3f AnisoSVOctreeGPU::NodeVoxelPosition(uint32_t nodeIndex, bool isLeaf) const
+Vector3ui AnisoSVOctreeGPU::NodeVoxelId(uint32_t& depth,
+                                        uint32_t nodeIndex, bool isLeaf) const
 {
     // n is [1, sizeof(uint32_t) * BYTE_BITS)
     // "n = 0" is undefined
@@ -1277,15 +1289,25 @@ Vector3f AnisoSVOctreeGPU::NodeVoxelPosition(uint32_t nodeIndex, bool isLeaf) co
         //node = dNodes[parentId];
         nodeId = parentId;
     }
+    depth = bitPtr / DIMENSION;
+    Vector3ui position = MortonCode::Decompose3D<uint64_t>(mortonCode);
+    return position;
+}
+
+__device__ inline
+Vector3f AnisoSVOctreeGPU::NodePosition(uint32_t nodeIndex, bool isLeaf) const
+{
+    uint32_t depth;
+    Vector3ui position = NodeVoxelId(depth, nodeIndex, isLeaf);
+
     // Now calculate the voxel center using morton code
-    uint32_t depth = bitPtr / DIMENSION;
     uint32_t levelDiff = leafDepth - static_cast<uint32_t>(depth);
     float multiplier = static_cast<float>(1 << levelDiff);
-    float voxelSizeStart = leafVoxelSize * multiplier;
-    Vector3ui position = MortonCode::Decompose3D<uint64_t>(mortonCode);
+    float levelVoxelSize = leafVoxelSize * multiplier;
+
     Vector3f pos = Vector3f(position) + Vector3f(0.5f);
     // Expand to worldSpaceCoords
-    pos *= voxelSizeStart;
+    pos *= levelVoxelSize;
     pos += svoAABB.Min();
 
     //printf("[%d]--Morton:%llu, pos[%f, %f, %f], voxelSize %f, level %u, leafVoxSize %f\n",
@@ -1344,46 +1366,73 @@ bool AnisoSVOctreeGPU::SetLeafNormal(uint64_t mortonCode, Vector3f combinedNorma
     return true;
 }
 
-__device__ inline
+__device__ __host__ inline
 float AnisoSVOctreeGPU::LeafVoxelSize() const
 {
     return leafVoxelSize;
 }
 
-__device__ inline
+__device__ __host__ inline
+float AnisoSVOctreeGPU::LevelVoxelSize(uint32_t level) const
+{
+    float leafVoxSize = leafVoxelSize;
+    uint32_t leafLevel = leafDepth;
+    float levelMultiplier = static_cast<float>(1 << (leafLevel - level));
+    return leafVoxSize * levelMultiplier;
+}
+
+__device__ __host__ inline
 uint32_t AnisoSVOctreeGPU::LeafCount() const
 {
     return leafCount;
 }
 
-__device__ inline
+__device__ __host__ inline
 uint32_t AnisoSVOctreeGPU::NodeCount() const
 {
     return nodeCount;
 }
 
-__device__ inline
+__device__ __host__ inline
 uint32_t AnisoSVOctreeGPU::LeafDepth() const
 {
     return leafDepth;
 }
 
-__device__ inline
+__device__ __host__ inline
 uint32_t AnisoSVOctreeGPU::VoxelResolution() const
 {
     return voxelResolution;
 }
 
-__device__ inline
+__device__ __host__ inline
 AABB3f AnisoSVOctreeGPU::OctreeAABB() const
 {
     return svoAABB;
+}
+
+__device__ inline
+uint32_t AnisoSVOctreeGPU::LevelNodeStart(uint32_t level) const
+{
+    return dLevelNodeOffsets[level];
 }
 
 inline
 AnisoSVOctreeGPU AnisoSVOctreeCPU::TreeGPU()
 {
     return treeGPU;
+}
+
+inline
+AnisoSVOctreeGPU AnisoSVOctreeCPU::TreeGPU() const
+{
+    return treeGPU;
+}
+
+inline
+const std::vector<uint32_t>& AnisoSVOctreeCPU::LevelNodeOffsets() const
+{
+    return levelNodeOffsets;
 }
 
 inline

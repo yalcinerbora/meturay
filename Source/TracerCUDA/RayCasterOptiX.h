@@ -79,4 +79,6 @@ class RayCasterOptiX : public RayCaster
 
         // Memory Usage
         size_t                      UsedGPUMemory() const override;
+
+        const OptiXSystem&          GetOptiXSystem() const;
 };

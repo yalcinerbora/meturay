@@ -446,8 +446,8 @@ TracerError GPUAccOptiXGroup<PGroup>::ConstructAccelerator(uint32_t surface,
             surfaceAABBs.emplace(surface, surfaceAABB);
     }
     t.Split();
-    METU_LOG("Surface{:d} OptiX GAS generated in {:f} seconds.",
-             surface, t.Elapsed<CPUTimeSeconds>());
+    METU_LOG("Surface{:d} OptiX GAS generated in {:f} ms.",
+             surface, t.Elapsed<CPUTimeMillis>());
     // All Done!
     return TracerError::OK;
 }
