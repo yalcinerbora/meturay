@@ -1,4 +1,5 @@
 #include  "OctreeOptiXPTX.cuh"
+#include "RayLib/RandomColor.h"
 
 extern "C" __constant__ OctreeAccelParams params;
 
@@ -67,10 +68,11 @@ void KCCamTraceSVO()
     // We Launch linearly
     const uint32_t launchDim = optixGetLaunchDimensions().x;
     const uint32_t launchIndex = optixGetLaunchIndex().x;
+    // Should we check this ??
+    if(launchIndex >= launchDim) return;
 
     // TODO: How do we generate rays
-    RayReg ray;// (params.gRays, launchIndex);
-
+    RayReg ray = RayReg(params.gRays, launchIndex);
 
     uint32_t foundLevel;
     uint32_t nodeRelativeIndex;
@@ -129,7 +131,47 @@ void KCCamTraceSVO()
                                       globalNodeId, isLeaf);
 
     // Write to heap (...)
+    uint32_t sampleIndex = params.gRayAux[launchIndex].sampleIndex;
 
+    // Octree Display Mode
+    Vector3f rayDir = ray.ray.getDirection();
+    Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
+    WFPGRenderMode mode = params.renderMode;
+    if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
+        locColor = (globalNodeId != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(globalNodeId), 1.0f)
+        : Vector4f(Vector3f(0.0f), 1.0f);
+    // Payload Display Mode
+    else if(globalNodeId == UINT32_MAX)
+        locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
+    else if(mode == WFPGRenderMode::SVO_RADIANCE)
+    {
+        //Vector3f hitPos = ray.ray.getPosition() + rayDir.Normalize() * tMin;
+        //float radianceF = ReadInterpolatedRadiance(hitPos, rayDir,
+        //                                           params.pixelAperture,
+        //                                           svo);
+
+        half radiance = svo.ReadRadiance(rayDir, params.pixelAperture,
+                                         globalNodeId, isLeaf);
+        float radianceF = radiance;
+        //if(radiance != static_cast<half>(MRAY_HALF_MAX))
+        locColor = Vector4f(Vector3f(radianceF), 1.0f);
+    }
+    else if(mode == WFPGRenderMode::SVO_NORMAL)
+    {
+        float stdDev;
+        Vector3f normal = svo.DebugReadNormal(stdDev, globalNodeId, isLeaf);
+
+        // Voxels are two sided show the normal for the current direction
+        normal = (normal.Dot(rayDir) >= 0.0f) ? normal : -normal;
+
+        // Convert normal to 0-1 range
+        normal += Vector3f(1.0f);
+        normal *= Vector3f(0.5f);
+        locColor = Vector4f(normal, stdDev);
+    }
+
+    // Actual Write
+    params.gSamples.gValues[sampleIndex] = locColor;
 }
 
 __device__ __forceinline__

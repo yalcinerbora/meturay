@@ -22,6 +22,8 @@ class SVOOptixConeCaster
     static constexpr const char* INTERSECT32_FUNC_NAME  = "__intersection__SVOMorton32";
     static constexpr const char* INTERSECT64_FUNC_NAME  = "__intersection__SVOMorton64";
 
+    static constexpr const char* PARAMS_BUFFER          = "params";
+
     // Implementation Dependant Program Group Indices
     static constexpr uint32_t LEVEL_32_BIT = 0;
     static constexpr uint32_t LEVEL_64_BIT = 1;
@@ -33,31 +35,35 @@ class SVOOptixConeCaster
     static constexpr int MORTON64_HIT_PG_INDEX = 4;
 
     private:
+    // SVO
+    const AnisoSVOctreeCPU&         svoCPU;
+    // OptiX Related
     const OptiXSystem&              optixSystem;
 
     OptixPipeline                   pipeline;
     OptixModule                     mdl;
     std::vector<OptixProgramGroup>  programGroups;
-    // Host copy of the Params
-    OctreeAccelParams               hSVOOptixLaunchParams;
     // Device copy of the params
-    OctreeAccelParams*              dSVOOptixLaunchParams;
     DeviceLocalMemory               paramsMemory;
+    OctreeAccelParams*              dOptixLaunchParams;
+    OptixTraversableHandle*         dOptixTraversables;
     // SBT
     OptixShaderBindingTable         sbtRadGen;
     OptixShaderBindingTable         sbtCamGen;
     DeviceLocalMemory               sbtMemory;
+    // Morton Codes on the records
     DeviceLocalMemory               mortonMemory;
+    std::vector<size_t>             mortonByteOffsets;
     // TODO: Change this to more dynamic representation
     // for Multi-GPU Systems
-    std::vector<size_t>                     mortonByteOffsets;
     std::vector<OptixTraversableHandle>     svoLevelAccelerators;
     std::vector<DeviceLocalMemory>          svoLevelAcceleratorMemory;
 
     protected:
     public:
     // Constructors & Destructor
-                            SVOOptixConeCaster(const OptiXSystem&);
+                            SVOOptixConeCaster(const OptiXSystem&,
+                                               const AnisoSVOctreeCPU&);
                             SVOOptixConeCaster(const SVOOptixConeCaster&) = delete;
                             SVOOptixConeCaster(SVOOptixConeCaster&&) = delete;
     SVOOptixConeCaster&     operator=(const SVOOptixConeCaster&) = delete;
@@ -65,17 +71,19 @@ class SVOOptixConeCaster
                             ~SVOOptixConeCaster();
 
     // Generate the Traversable
-    void                    GenerateSVOTraversable(const AnisoSVOctreeCPU&);
+    void                    GenerateSVOTraversable();
 
     // Calls
     // Cone Trace call for debugging
     void                    ConeTraceFromCamera(// Output
-                                                CamSampleGMem<Vector3f> gSamples,
+                                                CamSampleGMem<Vector4f> gSamples,
                                                 // Input
-                                                const GPUCameraI* gCamera,
+                                                const RayGMem* gRays,
+                                                const RayAuxWFPG* gRayAux,
                                                 WFPGRenderMode mode,
                                                 uint32_t maxQueryLevelOffset,
-                                                const Vector2i& totalPixelCount);
+                                                float pixelAperture,
+                                                const uint32_t totalRayCount);
 
 
     // Generate radiance map over the spatial locations

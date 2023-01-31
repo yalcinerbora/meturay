@@ -1199,12 +1199,16 @@ Vector3ui AnisoSVOctreeGPU::NodeVoxelId(uint32_t& depth,
     // "n = 0" is undefined
     // if "n > _popc(mask)" returns 0 (asserts in debug mode)
     // returns one indexed location of the set bit
-    auto FindNthSet = [](uint32_t input, uint32_t n) -> uint32_t
+    auto FindNthSet = [=](uint32_t input, uint32_t n) -> uint32_t
     {
         // Not enough bits on input
         if(__popc(input) < n)
         {
             assert(__popc(input) >= n);
+            //printf("[%u]: Find [%u]th set in %X failed\n",
+            //       nodeIndex,
+            //       n, input);
+
             return 0;
         }
 
@@ -1215,8 +1219,8 @@ Vector3ui AnisoSVOctreeGPU::NodeVoxelId(uint32_t& depth,
             uint32_t inverse = ~(1 << (index - 1));
             //uint32_t oldMask = input;
             input &= inverse;
-            //printf("[%d]--[%d] inverse %X, oldMask %X newMask %X index %u\n",
-            //       blockIdx.x, i, inverse, oldMask, input, index);
+            //printf("[%u]--[%d]: inverse %X, oldMask %X newMask %X index %u\n",
+            //       nodeIndex, i, inverse, oldMask, input, index);
         }
         return index;
     };
@@ -1234,15 +1238,15 @@ Vector3ui AnisoSVOctreeGPU::NodeVoxelId(uint32_t& depth,
         uint32_t childrenStart = ChildrenIndex(node);
         uint32_t bitIndex = nodeId - childrenStart;
 
-        //printf("[%d]--bit index %u = %u, %u\n", blockIdx.x,
+        //printf("[%u]:--bit index %u = %u, %u\n", nodeIndex,
         //       bitIndex, childrenStart, nodeId);
 
         uint32_t mortonSegment = FindNthSet(ChildMask(node), bitIndex + 1) - 1;
 
         if(mortonSegment >= (1 << DIMENSION))
         {
-            //printf("[%d]--mask 0x%X, bitindex %u, mySegment %u \n",
-            //       blockIdx.x,
+            //printf("[%u]:--mask 0x%X, bitindex %u, mySegment %u \n",
+            //       nodeIndex,
             //       ChildMask(node),
             //       bitIndex,
             //       mortonSegment);
@@ -1264,7 +1268,8 @@ Vector3ui AnisoSVOctreeGPU::NodeVoxelId(uint32_t& depth,
         uint32_t parentId = dLeafParents[nodeId];
         node = dNodes[parentId];
 
-        //printf("myNode %llu, nodeId %u, parentId %u\n",
+        //printf("[%u]: myNode %llu, nodeId %u, parentId %u\n",
+        //       nodeIndex,
         //       node, nodeId, parentId);
 
         PushMortonToStack(node, nodeId, parentId);
@@ -1272,7 +1277,6 @@ Vector3ui AnisoSVOctreeGPU::NodeVoxelId(uint32_t& depth,
     }
     else
     {
-        //printf("not leaf!\n");
         node = dNodes[nodeId];
     }
 

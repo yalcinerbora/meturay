@@ -101,6 +101,23 @@ void KCTraceSVOFromArrayCam(// Output
                                      totalSegments);
 }
 
+__global__
+void KCCamPixelApertureFromArrayCam(float& gOutPixAperture,
+                                    const GPUCameraI** gCameras,
+                                    uint32_t cameraIndex);
+{
+
+}
+
+__global__
+void KCCamPixelApertureFromObjectCam(float& gOutPixAperture,
+                                     const GPUCameraI* gCamera)
+{
+    if(threadIdx.x != 0) return;
+
+    gCamera->
+}
+
 // Currently These are compile time constants
 // since most of the internal call rely on compile time constants
 static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
@@ -486,78 +503,150 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                                     cudaFuncAttributeMaxDynamicSharedMemorySize,
                                     sharedMemSize));
 
+    bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
+
     // Generate rays appropriate to the camera type
     switch(currentCamera.type)
     {
         case SCENE_CAMERA:
         {
-            // Now we can call the kernel
-            const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
-                          THREAD_COUNT, gpu.SMCount() * 2,
-                          //
-                          KCTraceSVOFromArrayCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
-                          // Output
-                          sampleMemory.GMem<Vector4f>(),
-                          // Input
-                          dCameras,
-                          currentCamera.nonTransformedCamIndex,
-                          // Constants
-                          svo.TreeGPU(),
-                          options.renderMode,
-                          options.svoRenderLevel,
-                          // Camera region related
-                          totalPixelCount,
-                          totalSegments);
+            if(!options.optiXTrace)
+            {
+
+                // Now we can call the kernel
+                const auto& gpu = cudaSystem.BestGPU();
+                gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
+                              THREAD_COUNT, gpu.SMCount() * 2,
+                              //
+                              KCTraceSVOFromArrayCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
+                              // Output
+                              sampleMemory.GMem<Vector4f>(),
+                              // Input
+                              dCameras,
+                              currentCamera.nonTransformedCamIndex,
+                              // Constants
+                              svo.TreeGPU(),
+                              options.renderMode,
+                              options.svoRenderLevel,
+                              // Camera region related
+                              totalPixelCount,
+                              totalSegments);
+
+            }
+            else
+            {
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
+                (
+                    currentCamera.nonTransformedCamIndex,
+                    options.sampleCount,
+                    RayAuxInitWFPG(InitialWFPGAux,
+                                   options.sampleCount *
+                                   options.sampleCount),
+                    true,
+                    enableAA
+                );
+            }
             break;
         }
-
         case CUSTOM_CAMERA:
         {
-            // Now we can call the kernel
-            const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
-                          THREAD_COUNT, gpu.SMCount() * 2,
-                               //
-                          KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
-                          // Output
-                          sampleMemory.GMem<Vector4f>(),
-                          // Input
-                          currentCamera.dCustomCamera,
-                          // Constants
-                          svo.TreeGPU(),
-                          options.renderMode,
-                          options.svoRenderLevel,
-                          // Camera region related
-                          totalPixelCount,
-                          totalSegments);
+            if(!options.optiXTrace)
+            {
+                // Now we can call the kernel
+                const auto& gpu = cudaSystem.BestGPU();
+                gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
+                              THREAD_COUNT, gpu.SMCount() * 2,
+                                   //
+                              KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
+                              // Output
+                              sampleMemory.GMem<Vector4f>(),
+                              // Input
+                              currentCamera.dCustomCamera,
+                              // Constants
+                              svo.TreeGPU(),
+                              options.renderMode,
+                              options.svoRenderLevel,
+                              // Camera region related
+                              totalPixelCount,
+                              totalSegments);
+            }
+            else
+            {
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
+                (
+                    *currentCamera.dCustomCamera,
+                    options.sampleCount,
+                    RayAuxInitWFPG(InitialWFPGAux,
+                                   options.sampleCount *
+                                   options.sampleCount),
+                    true,
+                    enableAA
+                );
+            }
             break;
         }
         case TRANSFORMED_SCENE_CAMERA:
         {
             uint32_t camIndex = currentCamera.transformedSceneCam.cameraIndex;
             VisorTransform t = currentCamera.transformedSceneCam.transform;
-            const GPUCameraI* dCamera = GenerateCameraWithTransform(t, camIndex);
-                        // Now we can call the kernel
-            const auto& gpu = cudaSystem.BestGPU();
-            gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
-                          THREAD_COUNT, gpu.SMCount() * 2,
-                            //
-                          KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
-                          // Output
-                          sampleMemory.GMem<Vector4f>(),
-                          // Input
-                          dCamera,
-                          // Constants
-                          svo.TreeGPU(),
-                          options.renderMode,
-                          options.svoRenderLevel,
-                          // Camera region related
-                          totalPixelCount,
-                          totalSegments);
+            if(!options.optiXTrace)
+            {
+                const GPUCameraI* dCamera = GenerateCameraWithTransform(t, camIndex);
+                // Now we can call the kernel
+                const auto& gpu = cudaSystem.BestGPU();
+                gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
+                              THREAD_COUNT, gpu.SMCount() * 2,
+                              //
+                              KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
+                              // Output
+                              sampleMemory.GMem<Vector4f>(),
+                              // Input
+                              dCamera,
+                              // Constants
+                              svo.TreeGPU(),
+                              options.renderMode,
+                              options.svoRenderLevel,
+                              // Camera region related
+                              totalPixelCount,
+                              totalSegments);
+            }
+            else
+            {
+                GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
+                (
+                    t, camIndex, options.sampleCount,
+                    RayAuxInitWFPG(InitialWFPGAux,
+                                   options.sampleCount *
+                                   options.sampleCount),
+                    true,
+                    enableAA
+                );
+            }
             break;
         }
-        default: { crashed = true; break;}
+        default: { crashed = true; break; }
+    }
+
+    if(options.optiXTrace)
+    {
+        // Calculate Cone Aperture
+        // ...
+        float pixelAperture = 1.0f;
+
+
+        const RayGMem* dRays = rayCaster->RaysIn();
+        RayAuxWFPG* dRayAux = static_cast<RayAuxWFPG*>(*dAuxIn);
+        uint32_t rayCount = rayCaster->CurrentRayCount();
+
+        coneCasterOptiX->ConeTraceFromCamera(sampleMemory.GMem<Vector4f>(),
+                                             //
+                                             dRays,
+                                             dRayAux,
+                                             options.renderMode,
+                                             options.svoRenderLevel,
+                                             pixelAperture,
+                                             rayCount);
     }
 }
 
@@ -688,8 +777,9 @@ TracerError WFPGTracer::Initialize()
         {
             RayCasterI* rc = rayCaster.get();
             RayCasterOptiX* r = dynamic_cast<RayCasterOptiX*>(rc);
-            coneCasterOptiX = std::make_unique<SVOOptixConeCaster>(r->GetOptiXSystem());
-            coneCasterOptiX->GenerateSVOTraversable(svo);
+            coneCasterOptiX = std::make_unique<SVOOptixConeCaster>(r->GetOptiXSystem(),
+                                                                   svo);
+            coneCasterOptiX->GenerateSVOTraversable();
         }
         else
             return TracerError(TracerError::TRACER_INTERNAL_ERROR,

@@ -2,6 +2,9 @@
 
 #include <optix_device.h>
 #include "AnisoSVO.cuh"
+#include "ImageStructs.h"
+#include "RayAuxStruct.cuh"
+#include "WFPGCommon.h"
 
 struct OctreeAccelParams
 {
@@ -10,7 +13,22 @@ struct OctreeAccelParams
     // This holds many information
     AnisoSVOctreeGPU                svo;
 
-    // Output buffers
+    //===================//
+    // Cam Trace Related //
+    //===================//
+    const RayGMem*              gRays;              // Generated rays from separate kernel
+                                                    // (Not generating here because of virtual functions)
+    const RayAuxWFPG*           gRayAux;            // Ray auxiliary data (only using sample index)
+    CamSampleGMem<Vector4f>     gSamples;           // Sample Buffer (for writing)
+    // Constants
+    WFPGRenderMode              renderMode;         // What to output? (False_color, normal, radiance, etc)
+    uint32_t                    maxQueryOffset;     // Do not query below this level
+    float                       pixelAperture;
+
+    //======================//
+    // Radiance Gen Related //
+    //======================//
+    //....
 };
 
 // SVO Hit Record
