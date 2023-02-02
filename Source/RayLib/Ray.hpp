@@ -245,7 +245,8 @@ bool Ray<T>::IntersectsPlane(Vector<3, T>& intersectPos, T& t,
 
 template<class T>
 HYBRD_FUNC HYBRID_INLINE
-bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
+bool Ray<T>::IntersectsAABB(Vector<2, T>& tOut,
+                            const Vector<3, T>& aabbMin,
                             const Vector<3, T>& aabbMax,
                             const Vector<2, T>& tMinMax) const
 {
@@ -257,19 +258,28 @@ bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
     Vector<3, T> invD = Vector<3, T>(1) / direction;
     Vector<3, T> t0 = (aabbMin - position) * invD;
     Vector<3, T> t1 = (aabbMax - position) * invD;
-
-    T tMin = tMinMax[0];
-    T tMax = tMinMax[1];
+    tOut = tMinMax;
 
     UNROLL_LOOP
     for(int i = 0; i < 3; i++)
     {
         if(invD[i] < 0) HybridFuncs::Swap(t0[i], t1[i]);
 
-        tMin = max(tMin, min(t0[i], t1[i]));
-        tMax = min(tMax, max(t0[i], t1[i]));
+        tOut[0] = max(tOut[0], min(t0[i], t1[i]));
+        tOut[1] = min(tOut[1], max(t0[i], t1[i]));
     }
-    return tMax >= tMin;
+    return tOut[1] >= tOut[0];
+}
+
+template<class T>
+HYBRD_FUNC HYBRID_INLINE
+bool Ray<T>::IntersectsAABB(const Vector<3, T>& aabbMin,
+                            const Vector<3, T>& aabbMax,
+                            const Vector<2, T>& tMinMax) const
+{
+    Vector<2, T> tOut;
+    return IntersectsAABB(tOut, aabbMin, aabbMax,
+                          tMinMax);
 }
 
 template<class T>
@@ -279,33 +289,14 @@ bool Ray<T>::IntersectsAABB(Vector<3, T>& pos, T& tOut,
                             const Vector<3, T>& aabbMax,
                             const Vector<2, T>& tMinMax) const
 {
-    Vector<3, T> invD = Vector<3, T>(1) / direction;
-    Vector<3, T> t0 = (aabbMin - position) * invD;
-    Vector<3, T> t1 = (aabbMax - position) * invD;
-
-    T tMin = tMinMax[0];
-    T tMax = tMinMax[1];
-    T t = tMin;
-
-    UNROLL_LOOP
-    for(int i = 0; i < 3; i++)
+    Vector<2, T> t;
+    bool intersects = IntersectsAABB(t, aabbMin, aabbMax, tMinMax);
+    if(intersects)
     {
-        if(invD[i] < 0) HybridFuncs::Swap(t0[i], t1[i]);
-
-        tMin = max(tMin, min(t0[i], t1[i]));
-        tMax = min(tMax, max(t0[i], t1[i]));
-
-        t = (t0[i] > 0.0f) ? min(t, t0[i]) : t;
-        t = (t1[i] > 0.0f) ? min(t, t1[i]) : t;
+        tOut = t[0];
+        pos = AdvancedPos(t[0]);
     }
-
-    // Calculate intersect position and the multiplier t
-    if(tMax >= tMin)
-    {
-        tOut = t;
-        pos = position + t * direction;
-    }
-    return (tMax >= tMin);
+    return intersects;
 }
 
 template<class T>

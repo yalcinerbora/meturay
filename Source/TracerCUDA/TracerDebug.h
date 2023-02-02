@@ -59,7 +59,7 @@ namespace Debug
                                          const char* elementSeperator = "\n");
 
     template<class T>
-    static void     DumpMemToStdout(const T* mPtr, size_t count,
+    static void     DumpMemToStdOut(const T* mPtr, size_t count,
                                     bool hex = false,
                                     const char* seperator = "\n");
     template<class T>
@@ -142,7 +142,7 @@ void Debug::DumpBatchedMemToFile(const std::string& fName,
 }
 
 template<class T>
-void Debug::DumpMemToStdout(const T* mPtr, size_t count,
+void Debug::DumpMemToStdOut(const T* mPtr, size_t count,
                             bool hex, const char* seperator)
 {
     DumpMemToStream(std::cout, mPtr, count, hex, seperator);

@@ -28,7 +28,7 @@ DeviceLocalMemory::DeviceLocalMemory(const DeviceLocalMemory& other)
     CUDA_CHECK(cudaMemcpy(d_ptr, other.d_ptr, size, cudaMemcpyDeviceToDevice));
 }
 
-DeviceLocalMemory::DeviceLocalMemory(DeviceLocalMemory&& other)
+DeviceLocalMemory::DeviceLocalMemory(DeviceLocalMemory&& other) noexcept
     : DeviceLocalMemoryI(other.currentDevice)
     , d_ptr(other.d_ptr)
     , size(other.size)
@@ -70,7 +70,7 @@ DeviceLocalMemory& DeviceLocalMemory::operator=(const DeviceLocalMemory& other)
     return *this;
 }
 
-DeviceLocalMemory& DeviceLocalMemory::operator=(DeviceLocalMemory&& other)
+DeviceLocalMemory& DeviceLocalMemory::operator=(DeviceLocalMemory&& other) noexcept
 {
     assert(this != &other);
     size = other.size;

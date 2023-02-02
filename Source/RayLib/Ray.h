@@ -29,8 +29,8 @@ class Ray<T>
                                             const Vector<3,T>& position);
     constexpr HYBRD_FUNC                Ray(const Vector<3,T>[2]);
                                         Ray(const Ray&) = default;
-                                        ~Ray() = default;
     Ray&                                operator=(const Ray&) = default;
+                                        ~Ray() = default;
 
     // Assignment Operators
     HYBRD_FUNC Ray&                     operator=(const Vector<3, T>[2]);
@@ -40,26 +40,31 @@ class Ray<T>
 
     // Intersections
     HYBRD_FUNC bool         IntersectsSphere(Vector<3, T>& pos, T& t,
-                                                const Vector<3, T>& sphereCenter,
-                                                T sphereRadius) const;
+                                             const Vector<3, T>& sphereCenter,
+                                             T sphereRadius) const;
     HYBRD_FUNC bool         IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
-                                                const Vector<3, T> triCorners[3],
-                                                bool cullFace = true) const;
+                                               const Vector<3, T> triCorners[3],
+                                               bool cullFace = true) const;
     HYBRD_FUNC bool         IntersectsTriangle(Vector<3, T>& baryCoords, T& t,
-                                                const Vector<3, T>& t0,
-                                                const Vector<3, T>& t1,
-                                                const Vector<3, T>& t2,
-                                                bool cullFace = true) const;
+                                               const Vector<3, T>& t0,
+                                               const Vector<3, T>& t1,
+                                               const Vector<3, T>& t2,
+                                               bool cullFace = true) const;
     HYBRD_FUNC bool         IntersectsPlane(Vector<3, T>& position, T& t,
                                             const Vector<3, T>& planePos,
                                             const Vector<3, T>& normal);
+
+    HYBRD_FUNC bool         IntersectsAABB(Vector<2, T>& tOut,
+                                           const Vector<3, T>& aabbMin,
+                                           const Vector<3, T>& aabbMax,
+                                           const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
     HYBRD_FUNC bool         IntersectsAABB(const Vector<3, T>& min,
-                                            const Vector<3, T>& max,
-                                            const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
+                                           const Vector<3, T>& max,
+                                           const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
     HYBRD_FUNC bool         IntersectsAABB(Vector<3,T>& pos, T& t,
-                                            const Vector<3, T>& min,
-                                            const Vector<3, T>& max,
-                                            const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
+                                           const Vector<3, T>& min,
+                                           const Vector<3, T>& max,
+                                           const Vector<2, T>& tMinMax = Vector<2, T>(-INFINITY, INFINITY)) const;
 
     // Utility
     HYBRD_FUNC [[nodiscard]] Ray    Reflect(const Vector<3, T>& normal) const;
@@ -90,8 +95,8 @@ class Ray<T>
     HYBRD_FUNC Ray&                         TransformSelf(const Matrix<3, T>&);
     HYBRD_FUNC Ray&                         TransformSelf(const Matrix<4, T>&);
     HYBRD_FUNC [[nodiscard]] Vector<3,T>    AdvancedPos(T t) const;
-    HYBRD_FUNC [[nodiscard]] Ray            Nudge(const Vector<3, T>& direction, T curvatureOffset = T(0)) const;
-    HYBRD_FUNC Ray&                         NudgeSelf(const Vector<3, T>& direction, T curvatureOffset = T(0));
+    HYBRD_FUNC [[nodiscard]] Ray            Nudge(const Vector<3, T>& direction, T curvatureOffset = T{0}) const;
+    HYBRD_FUNC Ray&                         NudgeSelf(const Vector<3, T>& direction, T curvatureOffset = T{0});
 };
 
 using RayF = Ray<float>;

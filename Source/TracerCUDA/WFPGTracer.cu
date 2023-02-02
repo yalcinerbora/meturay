@@ -104,18 +104,23 @@ void KCTraceSVOFromArrayCam(// Output
 __global__
 void KCCamPixelApertureFromArrayCam(float& gOutPixAperture,
                                     const GPUCameraI** gCameras,
-                                    uint32_t cameraIndex);
+                                    uint32_t cameraIndex,
+                                    Vector2i resolution)
 {
-
+    if(threadIdx.x != 0) return;
+    float solidAngle = GenSolidAngle(*(gCameras[cameraIndex]),
+                                     resolution);
+    gOutPixAperture = solidAngle;
 }
 
 __global__
 void KCCamPixelApertureFromObjectCam(float& gOutPixAperture,
-                                     const GPUCameraI* gCamera)
+                                     const GPUCameraI* gCamera,
+                                     Vector2i resolution)
 {
     if(threadIdx.x != 0) return;
-
-    gCamera->
+    float solidAngle = GenSolidAngle(*gCamera, resolution);
+    gOutPixAperture = solidAngle;
 }
 
 // Currently These are compile time constants
@@ -476,10 +481,25 @@ void WFPGTracer::GenerateGuidedDirections()
     //         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
     METU_LOG("{:d}; {:d}; {:f}; {:f}",
              currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
+    CUDA_CHECK(cudaEventDestroy(start));
+    CUDA_CHECK(cudaEventDestroy(stop));
 }
 
 void WFPGTracer::LaunchDebugConeTraceKernel()
 {
+    // TIMER DEBUG
+    cudaEvent_t start, stop;
+    CUDA_CHECK(cudaEventCreate(&start));
+    CUDA_CHECK(cudaEventCreate(&stop));
+
+    DeviceMemory mem;
+    float* dPixelAperture;
+    if(options.optiXTrace)
+    {
+        mem = DeviceMemory(sizeof(float));
+        dPixelAperture = static_cast<float*>(mem);
+    }
+
     // Calculate segment sizes etc
     static constexpr Vector2i REGION_SIZE = Vector2i(32, 32);
     // On debug, register count is too high we reduce the thread per block instead
@@ -511,11 +531,10 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
     {
         case SCENE_CAMERA:
         {
+            const auto& gpu = cudaSystem.BestGPU();
             if(!options.optiXTrace)
             {
-
-                // Now we can call the kernel
-                const auto& gpu = cudaSystem.BestGPU();
+                CUDA_CHECK(cudaEventRecord(start));
                 gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
                               THREAD_COUNT, gpu.SMCount() * 2,
                               //
@@ -532,6 +551,7 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                               // Camera region related
                               totalPixelCount,
                               totalSegments);
+                CUDA_CHECK(cudaEventRecord(stop));
 
             }
             else
@@ -546,18 +566,28 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                     true,
                     enableAA
                 );
+
+                gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                              //
+                              KCCamPixelApertureFromArrayCam,
+                              //
+                              *dPixelAperture,
+                              dCameras,
+                              currentCamera.nonTransformedCamIndex,
+                              imgMemory.SegmentSize());
             }
             break;
         }
         case CUSTOM_CAMERA:
         {
+            const auto& gpu = cudaSystem.BestGPU();
             if(!options.optiXTrace)
             {
                 // Now we can call the kernel
-                const auto& gpu = cudaSystem.BestGPU();
+                CUDA_CHECK(cudaEventRecord(start));
                 gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
                               THREAD_COUNT, gpu.SMCount() * 2,
-                                   //
+                              //
                               KCTraceSVOFromObjectCam<THREAD_COUNT, REGION_SIZE[0], REGION_SIZE[1]>,
                               // Output
                               sampleMemory.GMem<Vector4f>(),
@@ -570,6 +600,7 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                               // Camera region related
                               totalPixelCount,
                               totalSegments);
+                CUDA_CHECK(cudaEventRecord(stop));
             }
             else
             {
@@ -583,6 +614,14 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                     true,
                     enableAA
                 );
+
+                gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                              //
+                              KCCamPixelApertureFromObjectCam,
+                              //
+                              *dPixelAperture,
+                              currentCamera.dCustomCamera,
+                              imgMemory.SegmentSize());
             }
             break;
         }
@@ -590,11 +629,12 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
         {
             uint32_t camIndex = currentCamera.transformedSceneCam.cameraIndex;
             VisorTransform t = currentCamera.transformedSceneCam.transform;
+            const GPUCameraI* dCamera = GenerateCameraWithTransform(t, camIndex);
+            const auto& gpu = cudaSystem.BestGPU();
             if(!options.optiXTrace)
             {
-                const GPUCameraI* dCamera = GenerateCameraWithTransform(t, camIndex);
                 // Now we can call the kernel
-                const auto& gpu = cudaSystem.BestGPU();
+                CUDA_CHECK(cudaEventRecord(start));
                 gpu.ExactKC_X(sharedMemSize, (cudaStream_t)0,
                               THREAD_COUNT, gpu.SMCount() * 2,
                               //
@@ -610,6 +650,7 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                               // Camera region related
                               totalPixelCount,
                               totalSegments);
+                CUDA_CHECK(cudaEventRecord(stop));
             }
             else
             {
@@ -622,6 +663,14 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                     true,
                     enableAA
                 );
+
+                gpu.ExactKC_X(0, (cudaStream_t)0, 1, 1,
+                              //
+                              KCCamPixelApertureFromObjectCam,
+                              //
+                              *dPixelAperture,
+                              dCamera,
+                              imgMemory.SegmentSize());
             }
             break;
         }
@@ -630,15 +679,15 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
 
     if(options.optiXTrace)
     {
-        // Calculate Cone Aperture
-        // ...
-        float pixelAperture = 1.0f;
-
+        float pixelAperture;
+        CUDA_CHECK(cudaMemcpy(&pixelAperture, dPixelAperture,
+                              sizeof(float), cudaMemcpyDeviceToHost));
 
         const RayGMem* dRays = rayCaster->RaysIn();
         RayAuxWFPG* dRayAux = static_cast<RayAuxWFPG*>(*dAuxIn);
         uint32_t rayCount = rayCaster->CurrentRayCount();
 
+        CUDA_CHECK(cudaEventRecord(start));
         coneCasterOptiX->ConeTraceFromCamera(sampleMemory.GMem<Vector4f>(),
                                              //
                                              dRays,
@@ -647,7 +696,17 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                                              options.svoRenderLevel,
                                              pixelAperture,
                                              rayCount);
+        CUDA_CHECK(cudaEventRecord(stop));
     }
+
+
+    float milliseconds = 0;
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
+    CUDA_CHECK(cudaEventDestroy(start));
+    CUDA_CHECK(cudaEventDestroy(stop));
+
+    METU_LOG("{}", milliseconds);
 }
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,
@@ -1158,7 +1217,7 @@ void WFPGTracer::Finalize()
         }
     }
 
-    METU_LOG("----------------");
+    //METU_LOG("----------------");
 
     cudaSystem.SyncAllGPUs();
     frameTimer.Split();

@@ -16,8 +16,8 @@ Vector3f Utility::RandomColorRGB(uint32_t index)
     static constexpr float VALUE = 0.95f;
     static constexpr float GOLDEN_RATIO_CONJ = 0.618033988749895f;
     // For large numbers use double arithmetic here
-    double hue = 0.1 + static_cast<double>(index) * GOLDEN_RATIO_CONJ;
-    hue = fmod(hue, 1.0);
+    float hue = 0.1f + static_cast<float>(index) * GOLDEN_RATIO_CONJ;
+    hue = fmod(hue, 1.0f);
 
     return HSVToRGB(Vector3f(hue, SATURATION, VALUE));
 }

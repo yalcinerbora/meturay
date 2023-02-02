@@ -12,7 +12,6 @@
 #include "RayLib/ImageIOError.h"
 
 #include "RefPGTracerWorks.cuh"
-#include "GPUCameraPixel.cuh"
 #include "GPUTransformIdentity.cuh"
 #include "DeviceMemory.h"
 #include "ParallelReduction.cuh"

@@ -57,26 +57,14 @@ uint64_t MortonCode::Detail::Expand3D(uint32_t val)
 
 template<>
 __device__ __host__ inline
-uint32_t MortonCode::Detail::Expand3D(uint32_t val)
+uint32_t MortonCode::Detail::Expand3D(uint32_t x)
 {
-    // https://stackoverflow.com/questions/18529057/produce-interleaving-bit-patterns-morton-keys-for-32-bit-64-bit-and-128bit
-    uint32_t x = val;
-    x = (x | x << 16) & 0x30000ff;
-    x = (x | x << 8 ) & 0x300f00f;
-    x = (x | x << 4 ) & 0x30c30c3;
-    x = (x | x << 2 ) & 0x9249249;
-    return x;
-}
-
-template<>
-__device__ __host__ inline
-uint32_t MortonCode::Detail::Shrink3D(uint32_t x)
-{
-    x = x & 0x55555555;
-    x = (x | x >> 1) & 0x13333333;
-    x = (x | x >> 2) & 0x0F0F0F0F;
-    x = (x | x >> 4) & 0x00FF00FF;
-    x = (x | x >> 8) & 0x0000FFFF;
+    // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
+    x &= 0x000003ff;
+    x = (x ^ (x << 16)) & 0xff0000ff;
+    x = (x ^ (x << 8 )) & 0x0300f00f;
+    x = (x ^ (x << 4 )) & 0x030c30c3;
+    x = (x ^ (x << 2 )) & 0x09249249;
     return x;
 }
 
@@ -84,13 +72,25 @@ template<>
 __device__ __host__ inline
 uint32_t MortonCode::Detail::Shrink3D(uint64_t x)
 {
-    x &=                  0x1249249249249249;
-    x = (x ^ (x >> 2))  & 0x30c30c30c30c30c3;
-    x = (x ^ (x >> 4))  & 0xf00f00f00f00f00f;
-    x = (x ^ (x >> 8))  & 0x00ff0000ff0000ff;
+    x &= 0x1249249249249249;
+    x = (x ^ (x >> 2)) & 0x30c30c30c30c30c3;
+    x = (x ^ (x >> 4)) & 0xf00f00f00f00f00f;
+    x = (x ^ (x >> 8)) & 0x00ff0000ff0000ff;
     x = (x ^ (x >> 16)) & 0x00ff00000000ffff;
     x = (x ^ (x >> 32)) & 0x00000000001fffff;
     return static_cast<uint32_t>(x);
+}
+
+template<>
+__device__ __host__ inline
+uint32_t MortonCode::Detail::Shrink3D(uint32_t x)
+{
+    x &= 0x09249249;
+    x = (x ^ (x >> 2 )) & 0x030c30c3;
+    x = (x ^ (x >> 4 )) & 0x0300f00f;
+    x = (x ^ (x >> 8 )) & 0xff0000ff;
+    x = (x ^ (x >> 16)) & 0x000003ff;
+    return x;
 }
 
 template<>

@@ -55,8 +55,6 @@ set(SRC_RC
     ${CURRENT_SOURCE_DIR}/RayCasterI.h)
 
 set(SRC_CAMERAS
-    ${CURRENT_SOURCE_DIR}/GPUCameraPixel.cu
-    ${CURRENT_SOURCE_DIR}/GPUCameraPixel.cuh
     ${CURRENT_SOURCE_DIR}/GPUCameraPinhole.cu
     ${CURRENT_SOURCE_DIR}/GPUCameraPinhole.cuh
     ${CURRENT_SOURCE_DIR}/GPUCameraSpherical.cu

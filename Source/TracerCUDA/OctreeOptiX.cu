@@ -5,6 +5,8 @@
 
 #include <optix_stack_size.h>
 
+#include "TracerDebug.h"
+
 template<class T>
 __global__
 void KCGenAABBAndMortonCode(// Ouptuts
@@ -34,7 +36,8 @@ void KCGenAABBAndMortonCode(// Ouptuts
         Vector3f voxIdF = Vector3f(voxelId);
         Vector3f voxAABBMin = svo.OctreeAABB().Min() + voxIdF * levelVoxSize;
         Vector3f voxAABBMax = voxAABBMin + levelVoxSize;
-
+        //printf("[%u, %u, %u]\n",
+        //       voxelId[0], voxelId[1], voxelId[2]);
         // Write
         gMortonCodes[threadId] = MortonCode::Compose3D<T>(voxelId);
         gAABBs[threadId] = AABB3f(voxAABBMin, voxAABBMax);
@@ -49,7 +52,6 @@ SVOOptixConeCaster::SVOOptixConeCaster(const OptiXSystem& optixSystem,
     , dOptixLaunchParams(nullptr)
     , dOptixTraversables(nullptr)
     , sbtMemory(&optixSystem.OptixCapableDevices()[0].first)
-    , mortonMemory(&optixSystem.OptixCapableDevices()[0].first)
 {
     const auto& [gpu, optixContext] = optixSystem.OptixCapableDevices()[0];
 
@@ -238,14 +240,14 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     // Slightly improve memory here use 32-bit for 1024 levels
     static constexpr uint32_t VOXEL_MORTON3D_FIT_THRESHOLD = 10;
     static constexpr std::array<size_t, 2> MORTON_SIZE = {sizeof(uint32_t), sizeof(uint64_t)};
-    std::vector<size_t> mortonOffsets;
-    mortonOffsets.reserve(svo.LeafDepth() + 1);
+    mortonByteOffsets.reserve(svo.LeafDepth() + 2);
 
     // Record type for the svo level
     std::vector<uint32_t> levelRecordTypeIndex;
 
     size_t offset = 0;
     // Determine Size & Record Type (32-bit or 64-bit)
+    mortonByteOffsets.push_back(0);
     for(uint32_t i = 1; i <= svo.LeafDepth(); i++)
     {
         uint32_t localPrimCount = levelNodeOffsets[i + 1] - levelNodeOffsets[i];
@@ -255,18 +257,18 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
 
         levelRecordTypeIndex.push_back((is32BitRecord) ? LEVEL_32_BIT : LEVEL_64_BIT);
         size_t localSize = localPrimCount * mortonSize;
-        mortonOffsets.push_back(offset);
+        mortonByteOffsets.push_back(offset);
         offset += localSize;
     }
-    mortonOffsets.push_back(offset);
-    mortonMemory = DeviceLocalMemory(&gpu, mortonOffsets.back());
+    mortonByteOffsets.push_back(offset);
+    mortonMemory = DeviceMemory(mortonByteOffsets.back());
 
     std::vector<uint32_t*> dMortonPtrs32(svo.LeafDepth() + 1, nullptr);
     std::vector<uint64_t*> dMortonPtrs64(svo.LeafDepth() + 1, nullptr);
     for(uint32_t i = 1; i <= svo.LeafDepth(); i++)
     {
         uint32_t localPrimCount = levelNodeOffsets[i + 1] - levelNodeOffsets[i];
-        Byte* dMortonStart = static_cast<Byte*>(mortonMemory) + mortonOffsets[i];
+        Byte* dMortonStart = static_cast<Byte*>(mortonMemory) + mortonByteOffsets[i];
         if(i <= VOXEL_MORTON3D_FIT_THRESHOLD)
             dMortonPtrs32[i] = reinterpret_cast<uint32_t*>(dMortonStart);
         else
@@ -277,11 +279,10 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     AABB3f* dTempAABBs = static_cast<AABB3f*>(tempAABB);
 
     // Call a kernel for each level to generate AABB
+    svoLevelAcceleratorMemory.resize(svo.LeafDepth(), DeviceLocalMemory(&gpu));
     for(uint32_t i = 1; i <= svo.LeafDepth(); i++)
     {
         uint32_t localPrimCount = levelNodeOffsets[i + 1] - levelNodeOffsets[i];
-        METU_LOG("local prim Count{}", localPrimCount);
-
 
         // Generate AABB
         if(dMortonPtrs32[i] != nullptr)
@@ -296,8 +297,6 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
                                svo,
                                i,
                                localPrimCount);
-
-            METU_LOG("---------------------------");
         }
         else
         {
@@ -312,6 +311,11 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
                                i,
                                localPrimCount);
         }
+        // Debug
+        //METU_LOG("-----------------------");
+        //Debug::DumpMemToStdOut(dMortonPtrs32[i], localPrimCount);
+        //METU_LOG("-----------------------");
+
         //
         uint32_t flags = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
         CUdeviceptr aabbBuffer = AsOptixPtr(dTempAABBs);
@@ -380,17 +384,20 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
             DeviceLocalMemory compactedMemory(&gpu, hCompactAccelSize);
 
             // use handle as input and output
+            OptixTraversableHandle compacted;
             OPTIX_CHECK(optixAccelCompact(optixContext, (cudaStream_t)0,
                                           traversable,
                                           AsOptixPtr(compactedMemory),
                                           hCompactAccelSize,
-                                          &traversable));
+                                          &compacted));
             CUDA_KERNEL_CHECK();
-
-            svoLevelAcceleratorMemory.emplace_back(std::move(compactedMemory));
+            traversable = compacted;
+            svoLevelAcceleratorMemory[i - 1] = std::move(compactedMemory);
         }
         else
-            svoLevelAcceleratorMemory.emplace_back(std::move(buildBuffer));
+        {
+            svoLevelAcceleratorMemory[i - 1] = std::move(buildBuffer);
+        }
 
         svoLevelAccelerators.emplace_back(traversable);
 
@@ -423,7 +430,7 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
                                             dMissRecord,
                                             dHitRecords),
                                    sbtMemory,
-                                   {1, 1, 1, (svo.LeafDepth() + 1)},
+                                   {1, 1, 1, svo.LeafDepth()},
                                    OPTIX_SBT_RECORD_ALIGNMENT);
 
     SVOEmptyRecord hRadRGRecord = SVOEmptyRecord{};
@@ -455,7 +462,7 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     {
         if(levelRecordTypeIndex[i] == LEVEL_32_BIT)
         {
-            hHitRecord32.dMortonCode = dMortonPtrs32[i];
+            hHitRecord32.dMortonCode = dMortonPtrs32[i + 1];
             CUDA_CHECK(cudaMemcpy(dHitRecords + i,
                                   reinterpret_cast<SVOHitRecord<uint64_t>*>(&hHitRecord32),
                                   sizeof(SVOHitRecord<uint32_t>),
@@ -463,7 +470,7 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
         }
         else
         {
-            hHitRecord64.dMortonCode = dMortonPtrs64[i];
+            hHitRecord64.dMortonCode = dMortonPtrs64[i + 1];
             CUDA_CHECK(cudaMemcpy(dHitRecords + i,
                                   &hHitRecord64, sizeof(SVOHitRecord<uint64_t>),
                                   cudaMemcpyHostToDevice));
@@ -473,6 +480,9 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     // SBT CAM GEN
     // Although we do not use the miss shader
     // Optix mandates these to be set
+    // Exception can be null though
+    // SBT RAD GEN
+    sbtRadGen = {};
     sbtRadGen.raygenRecord = AsOptixPtr(dRadRaygenRecord);
     //
     sbtRadGen.missRecordBase = AsOptixPtr(dMissRecord);
@@ -480,27 +490,31 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     sbtRadGen.missRecordStrideInBytes = sizeof(EmptyRecord);
     //
     sbtRadGen.hitgroupRecordBase = AsOptixPtr(dHitRecords);
-    sbtRadGen.hitgroupRecordStrideInBytes = sizeof(HIT_RECORD_STRIDE);
+    sbtRadGen.hitgroupRecordStrideInBytes = HIT_RECORD_STRIDE;
     sbtRadGen.hitgroupRecordCount = recordCount;
-    // SBT RAD GEN
-    sbtCamGen.raygenRecord = AsOptixPtr(dRadRaygenRecord);
+    // SBT CAM GEN
+    sbtCamGen = {};
+    sbtCamGen.raygenRecord = AsOptixPtr(dCamRaygenRecord);
     //
     sbtCamGen.missRecordBase = AsOptixPtr(dMissRecord);
     sbtCamGen.missRecordCount = 1;
     sbtCamGen.missRecordStrideInBytes = sizeof(EmptyRecord);
     //
     sbtCamGen.hitgroupRecordBase = AsOptixPtr(dHitRecords);
-    sbtCamGen.hitgroupRecordStrideInBytes = sizeof(HIT_RECORD_STRIDE);
+    sbtCamGen.hitgroupRecordStrideInBytes = HIT_RECORD_STRIDE;
     sbtCamGen.hitgroupRecordCount = recordCount;
-
 
     // Finally Allocate Traversable GPU Array & Parameter Buffer
     GPUMemFuncs::AllocateMultiData(std::tie(dOptixLaunchParams,
                                             dOptixTraversables),
                                    paramsMemory,
-                                   {1, svoLevelAccelerators.size()},
-                                   64);
-
+                                   {1, svoLevelAccelerators.size()});
+    // And copy the traversables to memory
+    CUDA_CHECK(cudaMemcpy(dOptixTraversables,
+                          svoLevelAccelerators.data(),
+                          sizeof(OptixTraversableHandle) *
+                          svoLevelAccelerators.size(),
+                          cudaMemcpyHostToDevice));
 }
 
 void SVOOptixConeCaster::ConeTraceFromCamera(// Output
@@ -514,7 +528,8 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
                                              const uint32_t totalRayCount)
 {
     // Copy Params to GPU
-    OctreeAccelParams params = {};
+    OctreeAccelParams& params = hOptixLaunchParams;
+    params = {};
     params.octreeLevelBVHs = dOptixTraversables;
     params.svo = svoCPU.TreeGPU();
     params.gRays = gRays;
@@ -522,16 +537,41 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
     params.renderMode = mode;
     params.maxQueryOffset = maxQueryLevelOffset;
     params.pixelAperture = pixelAperture;
+    params.gSamples = gSamples;
+
+    //// test large apertures
+    //params.pixelAperture = 4.0f * MathConstants::Pi / 64.0f / 64.0f;
 
     CUDA_CHECK(cudaMemcpyAsync(dOptixLaunchParams,
                                &params,
                                sizeof(OctreeAccelParams),
                                cudaMemcpyHostToDevice,
                                (cudaStream_t)0));
+
+
+    cudaEvent_t start, stop;
+    CUDA_CHECK(cudaEventCreate(&start));
+    CUDA_CHECK(cudaEventCreate(&stop));
+
+
+    CUDA_CHECK(cudaEventRecord(start));
     OPTIX_CHECK(optixLaunch(pipeline, (cudaStream_t)0,
                             AsOptixPtr(dOptixLaunchParams),
                             sizeof(OctreeAccelParams),
                             &sbtCamGen,
                             totalRayCount,
                             1, 1));
+    CUDA_CHECK(cudaEventRecord(stop));
+
+
+    float milliseconds = 0;
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
+    CUDA_CHECK(cudaEventDestroy(start));
+    CUDA_CHECK(cudaEventDestroy(stop));
+
+    METU_LOG("----{}", milliseconds);
+
+
+    CUDA_KERNEL_CHECK();
 }

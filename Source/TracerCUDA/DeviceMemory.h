@@ -65,10 +65,10 @@ class DeviceLocalMemory : public DeviceLocalMemoryI
                                     DeviceLocalMemory(const CudaGPU* gpu);
                                     DeviceLocalMemory(const CudaGPU* gpu, size_t sizeInBytes);
                                     DeviceLocalMemory(const DeviceLocalMemory&);
-                                    DeviceLocalMemory(DeviceLocalMemory&&);
+                                    DeviceLocalMemory(DeviceLocalMemory&&) noexcept;
                                     ~DeviceLocalMemory();
         DeviceLocalMemory&          operator=(const DeviceLocalMemory&);
-        DeviceLocalMemory&          operator=(DeviceLocalMemory&&);
+        DeviceLocalMemory&          operator=(DeviceLocalMemory&&) noexcept;
 
         // Access
         template<class T>

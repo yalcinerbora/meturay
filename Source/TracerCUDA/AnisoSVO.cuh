@@ -213,6 +213,9 @@ class AnisoSVOctreeGPU
     // Constructors & Destructor
     __host__            AnisoSVOctreeGPU();
     // Methods
+    //
+    __device__
+    static float        ConeDiameterSqr(float distance, float coneSolidAngle);
     // Trace the ray over the SVO; returns tMin and leafId/nodeId
     // cone can terminate on a node due to its aperture
     __device__
@@ -234,7 +237,7 @@ class AnisoSVOctreeGPU
     // Result will be the bi-linear spherical interpolation of
     // nearest samples
     __device__
-    float                ReadRadiance(const Vector3f& coneDirection, float coneAperture,
+    float               ReadRadiance(const Vector3f& coneDirection, float coneAperture,
                                      uint32_t nodeId, bool isLeaf) const;
     __device__
     Vector3f            DebugReadNormal(float& stdDev, uint32_t nodeId, bool isLeaf) const;
@@ -243,8 +246,16 @@ class AnisoSVOctreeGPU
     __device__
     void                IncrementLeafRayCount(uint32_t leafIndex);
 
+    // Descend down, find nodeIndex(nodeId) using "mortonCode", descent untill "depth"
     __device__
     bool                Descend(uint32_t& index, uint64_t mortonCode, uint32_t depth) const;
+    // Ascend from "startNodeId" which is at the "startLevel" (startDepth),
+    // find parent nodeId of this node at "requestedLevel"
+    __device__
+    uint32_t            Ascend(uint32_t requestedLevel,
+                               uint32_t startNodeId,
+                               uint32_t startLevel) const;
+
     // Return the leaf index of this position
     // Return false if no such leaf exists
     // Due to numerical precision, "worldPos" may be slightly outside of a voxel
@@ -265,6 +276,10 @@ class AnisoSVOctreeGPU
     // array, thus, it can be slow (due to global memory access)
     __device__
     float               NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const;
+    // Returns the level(depth) of the node
+    __device__
+    uint32_t            NodeLevel(uint32_t nodeIndex, bool isLeaf) const;
+
     // Find out the voxel center position directly from the node
     __device__
     Vector3ui           NodeVoxelId(uint32_t& depth, uint32_t nodeIndex, bool isLeaf) const;
@@ -706,6 +721,17 @@ uint16_t AnisoSVOctreeGPU::GetRayCount(uint16_t binInfo)
 }
 
 __device__ inline
+float AnisoSVOctreeGPU::ConeDiameterSqr(float distance, float coneSolidAngle)
+{
+    //float distance = tMaxOut - ray.tMin;
+    float area = distance * distance * coneSolidAngle;
+    // Approximate with a circle
+    float coneDiskRadusSqr = area * MathConstants::InvPi;
+    float coneDiskDiamSqr = 4.0f * coneDiskRadusSqr;
+    return coneDiskDiamSqr;
+}
+
+__device__ inline
 float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
                                      float tMin, float tMax,  float coneAperture,
                                      uint32_t maxQueryLevelOffset) const
@@ -765,15 +791,11 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
     };
 
     // Aperture Related Routines
-    const float CONE_DIAMETER_FACTOR = tan(0.5f * coneAperture) * 2.0f;
-    auto ConeDiameter = [CONE_DIAMETER_FACTOR](float distance)
-    {
-        return CONE_DIAMETER_FACTOR * distance;
-    };
-    auto LevelVoxelSize = [this](uint32_t currentLevel)
+    auto LevelVoxelSizeSqr = [this](uint32_t currentLevel)
     {
         float levelFactor = static_cast<float>(1 << (leafDepth - currentLevel));
-        return levelFactor * leafVoxelSize;
+        float voxelSize = levelFactor * leafVoxelSize;
+        return voxelSize * voxelSize;
     };
 
     // Set leaf to invalid value
@@ -945,18 +967,15 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
                 //               Again terminate, this voxel is assumed to cover the entire solid angle
                 //               of the cone
                 // Condition #3
-                bool isTerminated = ConeDiameter(tMin) > LevelVoxelSize(stack3BitCount + 1);
+                uint32_t voxelLevel = stack3BitCount + 1;
+                bool isTerminated = ConeDiameterSqr(tMin, coneAperture) > LevelVoxelSizeSqr(voxelLevel);
                 // Condition #1
                 bool isChildLeaf = IsChildrenLeaf(node);
                 // Condition #2
-                uint32_t voxelLevel = stack3BitCount + 1;
                 isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevelOffset;
 
                 if(isChildLeaf || isTerminated)
                 {
-                    // Now return the interpolation coefficients
-
-
                     isLeaf = isChildLeaf;
                     leafId = nodeId;
                     break;
@@ -984,19 +1003,20 @@ __device__ inline
 float AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneAperture,
                                      uint32_t nodeId, bool isLeaf) const
 {
-    float result;
+    float result = 0.0f;
     if(nodeId == UINT32_MAX)
     {
-        Vector3f resultRGB = (dBoundaryLight) ? dBoundaryLight->Emit(-coneDirection,
-                                                                     Vector3f(0.0f),
-                                                                     UVSurface{},
-                                                                     coneAperture)
-                                              : Zero3f;
-        result = Utility::RGBToLuminance(resultRGB);
+        if(dBoundaryLight)
+        {
+            Vector3f resultRGB = dBoundaryLight->Emit(-coneDirection,
+                                                      Vector3f(0.0f),
+                                                      UVSurface{},
+                                                      coneAperture);
+            result = Utility::RGBToLuminance(resultRGB);
+        }
     }
     else result = payload.ReadRadiance(coneDirection, coneAperture,
                                        nodeId, isLeaf);
-
     return result;
 }
 
@@ -1063,6 +1083,22 @@ bool AnisoSVOctreeGPU::Descend(uint32_t& index, uint64_t mortonCode, uint32_t de
     index = currentNodeIndex;
     return true;
 };
+
+__device__ inline
+uint32_t AnisoSVOctreeGPU::Ascend(uint32_t requestedLevel,
+                                  uint32_t startNodeId,
+                                  uint32_t startLevel) const
+{
+    bool isLeaf = (startLevel == leafDepth);
+    uint32_t nodeId = startNodeId;
+    for(uint32_t i = startLevel; i != requestedLevel; i--)
+    {
+        nodeId = (isLeaf)
+                    ? dLeafParents[nodeId]
+                    : ParentIndex(dNodes[nodeId]);
+    }
+    return nodeId;
+}
 
 __device__ inline
 bool AnisoSVOctreeGPU::NearestNodeIndex(uint32_t& index, const Vector3f& worldPos,
@@ -1173,20 +1209,25 @@ Vector3f AnisoSVOctreeGPU::VoxelToWorld(const Vector3ui& denseIndex) const
 }
 
 __device__ inline
-float AnisoSVOctreeGPU::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
+uint32_t AnisoSVOctreeGPU::NodeLevel(uint32_t nodeIndex, bool isLeaf) const
 {
-    using namespace GPUFunctions;
-    //static constexpr auto BinarySearch = GPUFunctions::BinarySearchInBetween<uint32_t>;
+    if(isLeaf) return leafDepth;
 
-    if(isLeaf) return leafVoxelSize;
+    using namespace GPUFunctions;
     // Binary search the node id from the offsets
     float levelFloat;
     [[maybe_unused]] bool found = BinarySearchInBetween<uint32_t>(levelFloat, nodeIndex,
                                                                   dLevelNodeOffsets,
                                                                   leafDepth + 1);
     assert(found);
+    return static_cast<uint32_t>(floor(levelFloat));
+}
 
-    uint32_t levelDiff = leafDepth - static_cast<uint32_t>(levelFloat);
+__device__ inline
+float AnisoSVOctreeGPU::NodeVoxelSize(uint32_t nodeIndex, bool isLeaf) const
+{
+    uint32_t nodeLevel = NodeLevel(nodeIndex, isLeaf);
+    uint32_t levelDiff = leafDepth - nodeLevel;
     float multiplier = static_cast<float>(1 << levelDiff);
     return leafVoxelSize * multiplier;
 }

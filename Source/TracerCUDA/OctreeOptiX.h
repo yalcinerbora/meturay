@@ -44,6 +44,7 @@ class SVOOptixConeCaster
     OptixModule                     mdl;
     std::vector<OptixProgramGroup>  programGroups;
     // Device copy of the params
+    OctreeAccelParams               hOptixLaunchParams;
     DeviceLocalMemory               paramsMemory;
     OctreeAccelParams*              dOptixLaunchParams;
     OptixTraversableHandle*         dOptixTraversables;
@@ -52,7 +53,7 @@ class SVOOptixConeCaster
     OptixShaderBindingTable         sbtCamGen;
     DeviceLocalMemory               sbtMemory;
     // Morton Codes on the records
-    DeviceLocalMemory               mortonMemory;
+    DeviceMemory                    mortonMemory;
     std::vector<size_t>             mortonByteOffsets;
     // TODO: Change this to more dynamic representation
     // for Multi-GPU Systems

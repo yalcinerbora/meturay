@@ -3,7 +3,6 @@
 #include "GPUCameraP.cuh"
 #include "GPUTransformI.h"
 #include "TypeTraits.h"
-#include "GPUCameraPixel.cuh"
 #include "MangledNames.h"
 
 #include "RayLib/VisorTransform.h"

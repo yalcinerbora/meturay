@@ -6,8 +6,8 @@ class MovementSchemeFPS final : public MovementSchemeI
 {
     public:
         static constexpr double     DefaultSensitivity          = 0.0025;
-        //static constexpr double     DefaultMoveRatio            = 1.5;
-        static constexpr double     DefaultMoveRatio = 4.05;
+        //static constexpr double     DefaultMoveRatio            = 0.01;
+        static constexpr double     DefaultMoveRatio = 5.05;
         static constexpr double     DefaultMoveRatioModifier    = 2.5;
     private:
         double                      prevMouseX;

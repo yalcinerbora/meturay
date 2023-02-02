@@ -25,7 +25,6 @@
 #include "GPUBlockPWLDistribution.cuh"
 #include "BlockTextureFilter.cuh"
 
-#include "GPUCameraPixel.cuh"
 #include "RecursiveConeTrace.cuh"
 #include "RNGConstant.cuh"
 
@@ -762,6 +761,81 @@ struct KCTraceSVOSharedMem
     float               sConeAperture;
 };
 
+__device__
+inline float GenSolidAngle(const GPUCameraI& gCamera,
+                           const Vector2i& resolution)
+{
+    // https://math.stackexchange.com/questions/1281112/how-to-calculate-a-solid-angle-in-steradians-given-only-horizontal-beam-angle
+    Vector2f f = gCamera.FoV();
+    Vector2f res = Vector2f(resolution);
+    float solidAngle = 4.0f * asin(sin(f[0] * 0.5) * sin(f[1] * 0.5));
+    // Case for x,y > Pi
+    if(f[0] > MathConstants::Pi || f[1] > MathConstants::Pi)
+        solidAngle = 4.0f * MathConstants::Pi - solidAngle;
+    // Assuming pixels are square here
+    float totalPixCount = res.Multiply();
+    return solidAngle / totalPixCount;
+}
+
+static constexpr int FALSE_COLOR_MASK_COUNT = 3;
+__device__ static const Vector3f SVO_LEVEL_FALSE_COLOR_MASK[FALSE_COLOR_MASK_COUNT] =
+{
+    Vector3f(1.0f, 0.0f, 0.0f),
+    Vector3f(0.0f, 1.0f, 0.0f),
+    Vector3f(0.0f, 0.0f, 1.0f)
+};
+
+__device__ inline
+Vector4f CalcColorSVO(WFPGRenderMode mode,
+                      const AnisoSVOctreeGPU& svo,
+                      Vector3f rayDir, float coneSolidAngle,
+                      uint32_t nodeId, uint32_t nodeLevel)
+{
+    bool isLeaf = (nodeLevel == svo.LeafDepth());
+    Vector3f result = Zero3f;
+    if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
+    {
+        // Saturate using level
+        Vector3f color = Utility::RandomColorRGB(nodeId);
+        uint32_t levelDiff = svo.LeafDepth() - nodeLevel;
+        Vector3f levelColor = Utility::RandomColorRGB(levelDiff);
+        //Vector3f levelColor = SVO_LEVEL_FALSE_COLOR_MASK[levelDiff % FALSE_COLOR_MASK_COUNT];
+
+        color = (color + levelColor) * 0.5f;
+        color = (nodeId != UINT32_MAX) ? color : Zero3f;
+        result = color;
+    }
+    // Payload Display Mode
+    else if(mode == WFPGRenderMode::SVO_RADIANCE)
+    {
+        //Vector3f hitPos = ray.ray.getPosition() + rayDir.Normalize() * currentTMax;
+        //float radianceF = ReadInterpolatedRadiance(hitPos, rayDir,
+        //                                           params.pixelAperture,
+        //                                           svo);
+
+        float radiance = svo.ReadRadiance(rayDir, coneSolidAngle,
+                                          nodeId, isLeaf);
+        result = Vector3f(radiance);
+    }
+    else if(nodeId == UINT32_MAX)
+        return Vector4f(result, 1.0f);
+    else if(mode == WFPGRenderMode::SVO_NORMAL)
+    {
+        float stdDev;
+        Vector3f normal = svo.DebugReadNormal(stdDev, nodeId, isLeaf);
+
+        // Voxels are two sided show the normal for the current direction
+        normal = (normal.Dot(rayDir) >= 0.0f) ? normal : -normal;
+
+        // Convert normal to 0-1 range
+        normal += Vector3f(1.0f);
+        normal *= Vector3f(0.5f);
+        return Vector4f(normal, stdDev);
+    }
+    return Vector4f(result, 1.0f);
+}
+
+
 template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 __device__
 inline void TraceSVO(// Output
@@ -777,16 +851,6 @@ inline void TraceSVO(// Output
                      const Vector2i& totalSegments)
 {
     const uint32_t totalBlockCount = totalSegments.Multiply();
-
-    auto GenConeAperture = [](const GPUCameraI& gCamera,
-                              const Vector2i& resolution) -> float
-    {
-        Vector2f fov = gCamera.FoV();
-        float coneAngleX = fov[0] / static_cast<float>(resolution[0]);
-        float coneAngleY = fov[1] / static_cast<float>(resolution[1]);
-        // Return average
-        return (coneAngleX + coneAngleY) * 0.5f;
-    };
 
     // TODO change this to dynamic
     using SharedMemType = KCTraceSVOSharedMem<THREAD_PER_BLOCK, X, Y>;
@@ -824,7 +888,7 @@ inline void TraceSVO(// Output
                                         rng, false);
             shMem->sPosition = ray.ray.getPosition();
             shMem->sTMinMax = Vector2f(ray.tMin, ray.tMax);
-            shMem->sConeAperture = GenConeAperture(*gCamera, totalPixelCount);
+            shMem->sConeAperture = GenSolidAngle(*gCamera, totalPixelCount);
         }
         __syncthreads();
 
@@ -851,53 +915,65 @@ inline void TraceSVO(// Output
         uint32_t nodeIndex[ConeTracer::DATA_PER_THREAD];
         Vector3f rayDir[ConeTracer::DATA_PER_THREAD];
 
-        batchedConeTracer.RecursiveConeTraceRay(rayDir, tMin, isLeaf,
-                                                nodeIndex,
-                                                // Inputs
-                                                shMem->sPosition,
-                                                shMem->sTMinMax,
-                                                shMem->sConeAperture,
-                                                0, 1, maxQueryLevelOffset,
-                                                ProjectionFunc,
-                                                WrapFunc);
+        //batchedConeTracer.RecursiveConeTraceRay(rayDir, tMin, isLeaf,
+        //                                        nodeIndex,
+        //                                        // Inputs
+        //                                        shMem->sPosition,
+        //                                        shMem->sTMinMax,
+        //                                        shMem->sConeAperture,
+        //                                        0, 1, maxQueryLevelOffset,
+        //                                        ProjectionFunc,
+        //                                        WrapFunc);
+        batchedConeTracer.BatchedConeTraceRay(rayDir, tMin, isLeaf,
+                                              nodeIndex,
+                                              // Inputs
+                                              shMem->sPosition,
+                                              shMem->sTMinMax,
+                                              shMem->sConeAperture,
+                                              maxQueryLevelOffset,
+                                              ProjectionFunc);
 
         // Write as color
         for(int i = 0; i < ConeTracer::DATA_PER_THREAD; i++)
         {
-            Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
-            // Octree Display Mode
-            if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
-                locColor = (nodeIndex[i] != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(nodeIndex[i]), 1.0f)
-                                                        : Vector4f(Vector3f(0.0f), 1.0f);
-            // Payload Display Mode
-            else if(nodeIndex[i] == UINT32_MAX)
-                locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
-            else if(mode == WFPGRenderMode::SVO_RADIANCE)
-            {
-                Vector3f hitPos = shMem->sPosition + rayDir[i].Normalize() * tMin[i];
-                //float radianceF = ReadInterpolatedRadiance(hitPos, rayDir[i],
-                //                                           shMem->sConeAperture,
-                //                                           svo);
+            uint32_t nodeLevel = svo.NodeLevel(nodeIndex[i], isLeaf[i]);
+            Vector4f locColor = CalcColorSVO(mode, svo, rayDir[i],
+                                             shMem->sConeAperture,
+                                             nodeIndex[i], nodeLevel);
+            //Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
+            //// Octree Display Mode
+            //if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
+            //    locColor = (nodeIndex[i] != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(nodeIndex[i]), 1.0f)
+            //                                            : Vector4f(Vector3f(0.0f), 1.0f);
+            //// Payload Display Mode
+            //else if(nodeIndex[i] == UINT32_MAX)
+            //    locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
+            //else if(mode == WFPGRenderMode::SVO_RADIANCE)
+            //{
+            //    Vector3f hitPos = shMem->sPosition + rayDir[i].Normalize() * tMin[i];
+            //    //float radianceF = ReadInterpolatedRadiance(hitPos, rayDir[i],
+            //    //                                           shMem->sConeAperture,
+            //    //                                           svo);
 
-                half radiance = svo.ReadRadiance(rayDir[i], shMem->sConeAperture,
-                                                 nodeIndex[i], isLeaf[i]);
-                float radianceF = radiance;
-                //if(radiance != static_cast<half>(MRAY_HALF_MAX))
-                    locColor = Vector4f(Vector3f(radianceF), 1.0f);
-            }
-            else if(mode == WFPGRenderMode::SVO_NORMAL)
-            {
-                float stdDev;
-                Vector3f normal = svo.DebugReadNormal(stdDev, nodeIndex[i], isLeaf[i]);
+            //    half radiance = svo.ReadRadiance(rayDir[i], shMem->sConeAperture,
+            //                                     nodeIndex[i], isLeaf[i]);
+            //    float radianceF = radiance;
+            //    //if(radiance != static_cast<half>(MRAY_HALF_MAX))
+            //        locColor = Vector4f(Vector3f(radianceF), 1.0f);
+            //}
+            //else if(mode == WFPGRenderMode::SVO_NORMAL)
+            //{
+            //    float stdDev;
+            //    Vector3f normal = svo.DebugReadNormal(stdDev, nodeIndex[i], isLeaf[i]);
 
-                // Voxels are two sided show the normal for the current direction
-                normal = (normal.Dot(rayDir[i]) >= 0.0f) ? normal : -normal;
+            //    // Voxels are two sided show the normal for the current direction
+            //    normal = (normal.Dot(rayDir[i]) >= 0.0f) ? normal : -normal;
 
-                // Convert normal to 0-1 range
-                normal += Vector3f(1.0f);
-                normal *= Vector3f(0.5f);
-                locColor = Vector4f(normal, stdDev);
-            }
+            //    // Convert normal to 0-1 range
+            //    normal += Vector3f(1.0f);
+            //    normal *= Vector3f(0.5f);
+            //    locColor = Vector4f(normal, stdDev);
+            //}
 
             // Determine output
             int32_t linearInnerSampleId = THREAD_PER_BLOCK * i + localThreadId;

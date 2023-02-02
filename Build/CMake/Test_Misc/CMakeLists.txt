@@ -1,6 +1,8 @@
 set(CURRENT_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/Test_Misc)
 
 set(SRC_MATH
+    ${CURRENT_SOURCE_DIR}/T_RayCPU.cpp
+    ${CURRENT_SOURCE_DIR}/T_RayGPU.cu
     ${CURRENT_SOURCE_DIR}/T_MatrixCPU.cpp
     ${CURRENT_SOURCE_DIR}/T_MatrixGPU.cu
     ${CURRENT_SOURCE_DIR}/T_Quaternion.cpp
