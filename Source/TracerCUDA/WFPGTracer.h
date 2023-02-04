@@ -14,6 +14,7 @@
 
 class GPUDirectLightSamplerI;
 class SVOOptixConeCaster;
+class SVOOptixRadianceBuffer;
 
 class WFPGTracer final : public RayTracer
 {
@@ -41,6 +42,7 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    MIS_RATIO_NAME              = "BXDF-GuideMISRatio";
     static constexpr const char*    PRODUCT_PG_NAME             = "DoProductPathGuiding";
     static constexpr const char*    OPTIX_TRACE_NAME            = "OptiXTraceSVO";
+    static constexpr const char*    OPTIX_BUFFER_NAME           = "OptixTraceBufferSize";
 
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
 
@@ -74,6 +76,7 @@ class WFPGTracer final : public RayTracer
         bool                productPG           = true;
         float               misRatio            = 0.5f;
         bool                optiXTrace          = false;
+        uint32_t            optiXBufferSize     = 16;
         //
         bool                pgDumpDebugData     = false;
         uint32_t            pgDumpInterval      = 2;
@@ -94,7 +97,9 @@ class WFPGTracer final : public RayTracer
         GaussFilter                     rFieldGaussFilter;
 
         // OptiX cone caster (allocated if requested)
-        std::unique_ptr<SVOOptixConeCaster> coneCasterOptiX;
+        std::unique_ptr<SVOOptixConeCaster>     coneCasterOptiX;
+        std::unique_ptr<SVOOptixRadianceBuffer> radianceBufferOptiX;
+        std::unique_ptr<DeviceMemory>           binInfoBufferOptiX;
 
         // Light Sampler Memory and Pointer
         DeviceMemory                    lightSamplerMemory;
@@ -111,6 +116,8 @@ class WFPGTracer final : public RayTracer
         // Path Memory
         DeviceMemory                    pathMemory;
         WFPGPathNode*                   dPathNodes;
+        // SVO Partition/Reduction Memory
+        DeviceMemory                    partitionMemory;
         // Product Path Guiding Related
         GPUMetaSurfaceHandler           metaSurfHandler;
         // Misc
@@ -118,6 +125,7 @@ class WFPGTracer final : public RayTracer
         uint32_t                        TotalPathNodeCount() const;
         uint32_t                        MaximumPathNodePerPath() const;
 
+        void                            AccumulateRayHitsToSVO();
         void                            GenerateGuidedDirections();
         void                            LaunchDebugConeTraceKernel();
 

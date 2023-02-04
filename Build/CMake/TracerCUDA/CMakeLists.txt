@@ -35,7 +35,8 @@ if(USE_OPTIX)
         ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cu
         ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cuh
         ${CURRENT_SOURCE_DIR}/OctreeOptiX.cu
-        ${CURRENT_SOURCE_DIR}/OctreeOptiX.h)
+        ${CURRENT_SOURCE_DIR}/OctreeOptiX.h
+        ${CURRENT_SOURCE_DIR}/SVOOptiXRadianceBuffer.cuh)
 
     # Additionally Define PTX Source
     # Which will be passed to the OptiX Compile Target
