@@ -89,13 +89,10 @@ class SVOOptixConeCaster
 
     // Generate radiance map over the spatial locations
     // on the scene
-    //void RadianceMapGen(uint32_t* dPartitionOffsets,
-    //                    uint32_t* dPartitionBinIds,
-
-    //                    // Range over this id/offsets
-    //                    uint32_t segmentStart,
-    //                    uint32_t segmentEnd,
-
-    //                    Vector2i radianceMapSize,
-    //                    );
+    void                    CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
+                                                     const float* dProjJitters,
+                                                     SVOOptixRadianceBuffer::SegmentedField<float*>,
+                                                     float coneAperture);
+    void                    RadianceMapGen(uint32_t segmentOffset,
+                                           uint32_t totalRayCount);
 };

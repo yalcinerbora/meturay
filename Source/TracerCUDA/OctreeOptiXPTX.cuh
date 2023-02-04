@@ -5,29 +5,51 @@
 #include "ImageStructs.h"
 #include "RayAuxStruct.cuh"
 #include "WFPGCommon.h"
+#include "SVOOptiXRadianceBuffer.cuh"
 
 struct OctreeAccelParams
 {
+    template<class T>
+    using SegmentedField = SVOOptixRadianceBuffer::SegmentedField<T>;
+
+    //===============//
+    //     Common    //
+    //===============//
     const OptixTraversableHandle*   octreeLevelBVHs;
     // Put everything to here
     // This holds many information
     AnisoSVOctreeGPU                svo;
+    // Aperture (in solid angles) of the pixel (when debugging)
+    // or cone when generating radiance fields
+    float                           pixelOrConeAperture;
 
+    union
+    {
     //===================//
     // Cam Trace Related //
     //===================//
-    const RayGMem*              gRays;              // Generated rays from separate kernel
+        struct
+        {
+            const RayGMem*          gRays;          // Generated rays from separate kernel
                                                     // (Not generating here because of virtual functions)
-    const RayAuxWFPG*           gRayAux;            // Ray auxiliary data (only using sample index)
-    CamSampleGMem<Vector4f>     gSamples;           // Sample Buffer (for writing)
-    // Constants
-    WFPGRenderMode              renderMode;         // What to output? (False_color, normal, radiance, etc)
-    uint32_t                    maxQueryOffset;     // Do not query below this level
-    float                       pixelAperture;
-
+            const RayAuxWFPG*       gRayAux;        // Ray auxiliary data (only using sample index)
+            CamSampleGMem<Vector4f> gSamples;       // Sample Buffer (for writing)
+            // Constants
+            WFPGRenderMode          renderMode;     // What to output? (False_color, normal, radiance, etc)
+            uint32_t                maxQueryOffset; // Do not query below this level
+        };
     //======================//
     // Radiance Gen Related //
     //======================//
+        struct
+        {
+            SegmentedField<float*>  fieldSegments;
+            // All of these are determined per bin
+            const Vector4f*         dRadianceFieldRayOrigins;
+            const float*            dProjJitters;
+            int32_t                 binOffset;
+        };
+    };
     //....
 };
 

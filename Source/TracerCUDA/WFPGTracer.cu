@@ -20,6 +20,9 @@
 
 #ifdef MRAY_OPTIX
     #include "OctreeOptiX.h"
+    #include "SVOOptiXRadianceBuffer.cuh"
+    template <class T>
+    using SegmentedField = SVOOptixRadianceBuffer::SegmentedField<T>;
 #endif
 
 // DEBUG
@@ -155,38 +158,58 @@ using PathGuideKernelFunction = void (*)(// Output
                                          bool,
                                          float);
 
+using PathGuideOptiXKernelFunction = void (*)(// Output
+                                              RayAuxWFPG*,
+                                              // I-O
+                                              RNGeneratorGPUI**,
+                                              // Input
+                                              // Per-ray
+                                              const RayId*,
+                                              const GPUMetaSurfaceGeneratorGroup,
+                                              // Per bin
+                                              const uint32_t*,
+                                              const uint32_t*,
+                                              // Buffer
+                                              SVOOptixRadianceBuffer::SegmentedField<const float*>,
+                                              // Constants
+                                              const GaussFilter,
+                                              const AnisoSVOctreeGPU,
+                                              uint32_t,
+                                              bool,
+                                              float);
+
 // 1st param is "Thread per block", 2nd and third params are X,Y resolution of the generated texture
 using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 
-static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
-{
-    // Kernel is passed the register limit of the device,
-    // compiling using 100s of registers :(.
-    // Reduce the block size for at least on debug mode
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // First bounce good approximation
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Second bounce as well
-    std::make_tuple(256, 16, 16),                           // Third bounce not so much
-    std::make_tuple(256, 16, 16),                           // Fourth bounce as well
-    std::make_tuple(128, 8, 8)                              // Fifth is bad
-};
-
 //static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 //{
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
-//
-//
-//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-//    //std::make_tuple(256, 16, 16),
-//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-//    //std::make_tuple(256, 16, 16),
-//    //std::make_tuple(256, 16, 16)
+//    // Kernel is passed the register limit of the device,
+//    // compiling using 100s of registers :(.
+//    // Reduce the block size for at least on debug mode
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // First bounce good approximation
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Second bounce as well
+//    std::make_tuple(256, 16, 16),                           // Third bounce not so much
+//    std::make_tuple(256, 16, 16),                           // Fourth bounce as well
+//    std::make_tuple(128, 8, 8)                              // Fifth is bad
 //};
+
+static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
+{
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
+
+
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(256, 16, 16),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(256, 16, 16),
+    //std::make_tuple(256, 16, 16)
+};
 
 static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),
                                                                          PG_KERNEL_PARAMS.cend(),
@@ -213,6 +236,26 @@ static constexpr std::array<PathGuideKernelFunction, PG_KERNEL_TYPE_COUNT> PG_PR
     KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
     KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
     KCGenAndSampleDistributionProduct<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
+};
+
+static constexpr std::array<PathGuideOptiXKernelFunction, PG_KERNEL_TYPE_COUNT> PG_OPTIX_KERNELS =
+{
+
+    KCSampleDistributionOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>,
+    KCSampleDistributionOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>,
+    KCSampleDistributionOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
+    KCSampleDistributionOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
+    KCSampleDistributionOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
+};
+
+static constexpr std::array<PathGuideOptiXKernelFunction, PG_KERNEL_TYPE_COUNT> PG_OPTIX_PRODUCT_KERNELS =
+{
+
+    KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>,
+    KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>,
+    KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
+    KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
+    KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
 };
 
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_SHMEM_SIZE =
@@ -343,6 +386,108 @@ uint32_t WFPGTracer::MaximumPathNodePerPath() const
     return (options.maximumDepth == 0) ? 0 : (options.maximumDepth + 1);
 }
 
+void WFPGTracer::AccumulateRayHitsToSVO()
+{
+    const CudaGPU& gpu = cudaSystem.BestGPU();
+
+    const RayGMem* dRays = rayCaster->RaysIn();
+    RayAuxWFPG* dRayAux = static_cast<RayAuxWFPG*>(*dAuxIn);
+    uint32_t rayCount = rayCaster->CurrentRayCount();
+
+    //
+    Byte* dRLETempMem;
+    uint32_t* dBinIdBuffer0 = nullptr;
+    uint32_t* dBinIdBuffer1 = nullptr;
+    uint32_t* dRLEOutCountBuffer = nullptr;
+    uint32_t* dRLECountAmount = nullptr;
+    cub::DoubleBuffer<uint32_t> sortBuffer(dBinIdBuffer0, dBinIdBuffer1);
+
+    size_t rleTempMemSize;
+    cub::DeviceRunLengthEncode::Encode(nullptr, rleTempMemSize,
+                                       dBinIdBuffer0, dBinIdBuffer1,
+                                       dRLEOutCountBuffer, dRLECountAmount,
+                                       rayCount);
+
+    size_t sortTempMemSize;
+    cub::DeviceRadixSort::SortKeysDescending(nullptr, sortTempMemSize,
+                                             sortBuffer, rayCount);
+
+    // Sort TempMem may be amortized because of the RLE output count buffer
+    // Check it
+    // Worst case scenario every ray hit to a different SVO leaf
+    // (highly unlikely but still we need to allocate for that)
+    size_t rleOutBufferSize = rayCount * sizeof(uint32_t);
+    if(sortTempMemSize > rleOutBufferSize + rleTempMemSize)
+    {
+        // Add the different to RLE temp mem
+        // Don't forget to allocate contagiously these two buffers though
+        rleTempMemSize += sortTempMemSize - (rleOutBufferSize + rleTempMemSize);
+    }
+
+    GPUMemFuncs::AllocateMultiData(std::tie(dBinIdBuffer0,
+                                            dBinIdBuffer1,
+                                            dRLEOutCountBuffer,
+                                            dRLETempMem,
+                                            dRLECountAmount),
+                                   partitionMemory,
+                                   {rayCount, rayCount, rayCount,
+                                   rleTempMemSize, 1});
+    // Actually populate the double buffer now
+    sortBuffer = cub::DoubleBuffer<uint32_t>(dBinIdBuffer0, dBinIdBuffer1);
+
+
+    // Init ray bins
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                       //
+                       KCInitializeSVOBins,
+                       // Outputs
+                       sortBuffer.Current(),
+                       dRayAux,
+                       // Input
+                       dRays,
+                       rayCaster->KeysOut(),
+                       scene.BaseBoundaryMaterial(),
+                       svo.TreeGPU(),
+                       rayCount);
+
+
+    // Now do the partitioning
+    // Sort
+    cub::DeviceRadixSort::SortKeysDescending(dRLEOutCountBuffer,
+                                             sortTempMemSize,
+                                             sortBuffer, rayCount);
+    CUDA_KERNEL_CHECK();
+    // Then RLE
+    // Rename buffers for clarity
+    uint32_t* dSortedBinIds = sortBuffer.Current();
+    uint32_t* dRLEOutBinIds = sortBuffer.Alternate();
+    cub::DeviceRunLengthEncode::Encode(dRLETempMem, rleTempMemSize,
+                                       dSortedBinIds, dRLEOutBinIds,
+                                       dRLEOutCountBuffer, dRLECountAmount,
+                                       rayCount);
+    CUDA_KERNEL_CHECK();
+
+    uint32_t hRLECountAmount;
+    CUDA_CHECK(cudaMemcpy(&hRLECountAmount, dRLECountAmount,
+                          sizeof(uint32_t), cudaMemcpyDeviceToHost));
+
+    //Debug::DumpMemToFile("dSortedBinIds", dSortedBinIds, rayCount, false, true);
+    //Debug::DumpMemToFile("dRLEOutBinIds", dRLEOutBinIds, hRLECountAmount, false, true);
+    //Debug::DumpMemToFile("dRLEOutCountBuffer", dRLEOutCountBuffer, hRLECountAmount);
+
+    // Then write to the SVO leafs
+    gpu.GridStrideKC_X(0, (cudaStream_t)0, hRLECountAmount,
+                       //
+                       KCWriteLeafRayAmounts,
+                       // Outputs
+                       svo.TreeGPU(),
+                       // Inputs
+                       dRLEOutBinIds,
+                       dRLEOutCountBuffer,
+                       // Constants
+                       hRLECountAmount);
+}
+
 void WFPGTracer::GenerateGuidedDirections()
 {
     const CudaGPU& gpu = cudaSystem.BestGPU();
@@ -354,17 +499,9 @@ void WFPGTracer::GenerateGuidedDirections()
     // Zero out the ray counts from the previous iteration
     svo.ClearRayCounts(cudaSystem);
 
-    // Init ray bins
-    gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
-                       //
-                       KCInitializeSVOBins,
-                       //
-                       dRayAux,
-                       dRays,
-                       rayCaster->KeysOut(),
-                       scene.BaseBoundaryMaterial(),
-                       svo.TreeGPU(),
-                       rayCount);
+    // Write how many rays hit to a certain leaf
+    // Store it on the SVO
+    AccumulateRayHitsToSVO();
 
     // While iterating with values user may forget to change the minRayBinLevel
     // to a valid value clamp it to the ray level
@@ -410,57 +547,184 @@ void WFPGTracer::GenerateGuidedDirections()
                                                                        dTransformIds,
                                                                        dHitStructPtr);
 
-    // Call the Trace and Sample Kernel
-    // Select the kernel depending on the depth
+    // Select the kernel depending on the path depth
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
-    //kernelIndex = 0;
+    //uint32_t kernelIndex = 0;
 
-    auto KERNEL_LIST = options.productPG ? PG_PRODUCT_KERNELS : PG_KERNELS;
-
-    auto KCSampleKernel = KERNEL_LIST[kernelIndex];
-    float coneAperture = CONE_APERTURES[kernelIndex];
-    uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
-    uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
-    RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
-
-    //auto data = gpu.GetKernelAttributes(reinterpret_cast<const void*>(KCSampleKernel));
-    CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
-                                    cudaFuncAttributeMaxDynamicSharedMemorySize,
-                                    kernelShmemSize));
-    //cudaFuncSetAttribute(KCSampleKernel, cudaFuncAttributePreferredSharedMemoryCarveout, 100*1024);
-
-    uint32_t activeBlockSize = gpu.DetermineGridStrideBlock(kernelShmemSize,
-                                                            kernelTPB,
-                                                            hPartitionCount * kernelTPB,
-                                                            reinterpret_cast<const void*>(KCSampleKernel));
-
+    // DEBUG TIMER
     cudaEvent_t start, stop;
     CUDA_CHECK(cudaEventCreate(&start));
     CUDA_CHECK(cudaEventCreate(&stop));
 
+    // Change code path (OptiX or CUDA)
     CUDA_CHECK(cudaEventRecord(start));
-    gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
-                  kernelTPB, pgKernelBlockCount,
-                  //
-                  KCSampleKernel,
-                  // Output
-                  dRayAux,
-                  // I-O
-                  gpuGenerators,
-                  // Input
-                  // Per-ray
-                  rayCaster->SortedRayIds(),
-                  metaSurfGenerator,
-                  // Per bin
-                  dPartitionOffsets,
-                  dPartitionBinIds,
-                  // Constants
-                  rFieldGaussFilter,
-                  coneAperture,
-                  svo.TreeGPU(),
-                  hPartitionCount,
-                  options.purePG,
-                  options.misRatio);
+    if(!options.optiXTrace)
+    {
+        // Select product or non-product versions of the kernels
+        auto KERNEL_LIST = options.productPG ? PG_PRODUCT_KERNELS : PG_KERNELS;
+
+        // Calculate Kernel Call parameters (block size etc.)
+        auto KCGenAndSampleKernel = KERNEL_LIST[kernelIndex];
+        float coneAperture = CONE_APERTURES[kernelIndex];
+        uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
+        uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
+        RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
+        CUDA_CHECK(cudaFuncSetAttribute(KCGenAndSampleKernel,
+                                        cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                        kernelShmemSize));
+
+        //uint32_t activeBlockSize = gpu.DetermineGridStrideBlock(kernelShmemSize,
+        //                                                        kernelTPB,
+        //                                                        hPartitionCount * kernelTPB,
+        //                                                        reinterpret_cast<const void*>(KCGenAndSampleKernel));
+
+        // Actual Kernel Call
+        gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
+                      kernelTPB, pgKernelBlockCount,
+                      //
+                      KCGenAndSampleKernel,
+                      // Output
+                      dRayAux,
+                      // I-O
+                      gpuGenerators,
+                      // Input
+                      // Per-ray
+                      rayCaster->SortedRayIds(),
+                      metaSurfGenerator,
+                      // Per bin
+                      dPartitionOffsets,
+                      dPartitionBinIds,
+                      // Constants
+                      rFieldGaussFilter,
+                      coneAperture,
+                      svo.TreeGPU(),
+                      hPartitionCount,
+                      options.purePG,
+                      options.misRatio);
+    }
+    else
+    {
+        // In OptiX there is no shared memory thus we need to segregate the kernel
+        // into two. In order to transfer data between kernels we need to allocate heap buffer.
+        //
+        // Partitions may not be processed using a single pass calculate pass count
+        Vector2i fieldResolution = Vector2i(std::get<1>(PG_KERNEL_PARAMS[kernelIndex]),
+                                            std::get<2>(PG_KERNEL_PARAMS[kernelIndex]));
+        SegmentedField<float*> fieldBuffer = radianceBufferOptiX->Segment(fieldResolution);
+        SegmentedField<const float*> fieldBufferConst = std::as_const(*radianceBufferOptiX.get()).Segment(fieldResolution);
+        uint32_t iterCount = (hPartitionCount + fieldBuffer.FieldCount() - 1) / fieldBuffer.FieldCount();
+
+        // Determine the CUDA Kernels
+        auto KERNEL_LIST = options.productPG ? PG_OPTIX_PRODUCT_KERNELS : PG_OPTIX_KERNELS;
+        auto KCSampleKernel = KERNEL_LIST[kernelIndex];
+        float coneAperture = CONE_APERTURES[kernelIndex];
+        RNGeneratorGPUI** gpuGenerators = pgSampleRNG.GetGPUGenerators(gpu);
+
+        // Allocate the OpitX required parameters
+        Vector4f* dRadianceFieldRayOrigins;
+        float* dProjectionJitters;
+        GPUMemFuncs::AllocateMultiData(std::tie(dRadianceFieldRayOrigins,
+                                                dProjectionJitters),
+                                       *binInfoBufferOptiX,
+                                       {hPartitionCount, hPartitionCount});
+        // Also pre-generate the bin information
+        // "Ray origin, tMin, and jitter" since we cant share
+        // these using shared memory as well
+        uint32_t blockCount = (hPartitionCount + KERNEL_TBP_MAX - 1) / KERNEL_TBP_MAX;
+        blockCount = min(pgKernelBlockCount, blockCount);
+        gpu.ExactKC_X(0, (cudaStream_t)0,
+                      KERNEL_TBP_MAX, blockCount,
+                      //
+                      KCGenerateBinInfoOptiX<RNGIndependentGPU>,
+                      // Output
+                      dRadianceFieldRayOrigins,
+                      dProjectionJitters,
+                      // I-O
+                      gpuGenerators,
+                      // Input
+                      // Per-Ray
+                      rayCaster->SortedRayIds(),
+                      metaSurfGenerator,
+                      // Per-Bin
+                      dPartitionOffsets,
+                      dPartitionBinIds,
+                      // Constants
+                      svo.TreeGPU(),
+                      hPartitionCount);
+
+        //Debug::DumpMemToFile("dPartitionOffsets",
+        //                     dPartitionOffsets,
+        //                     hPartitionCount);
+        //Debug::DumpMemToFile("dPartitionBinIds",
+        //                     dPartitionBinIds,
+        //                     hPartitionCount);
+        //Debug::DumpMemToFile("dRadianceFieldRayOrigins",
+        //                     dRadianceFieldRayOrigins,
+        //                     hPartitionCount);
+        //Debug::DumpMemToFile("dProjectionJitters",
+        //                     dProjectionJitters,
+        //                     hPartitionCount);
+
+        // Since we call multiple kernels, it is bad to memcopy "params"
+        // from host to device multiple times. Memcpy most of it
+        // then only memcopy single word as offset on each operation
+        coneCasterOptiX->CopyRadianceMapGenParams(dRadianceFieldRayOrigins,
+                                                  dProjectionJitters,
+                                                  fieldBuffer,
+                                                  coneAperture);
+        // Now do the iteration
+        METU_LOG("Iter {}", iterCount);
+        uint32_t processedBins = 0;
+        for(uint32_t i = 0; i < iterCount; i++)
+        {
+            uint32_t leftBins = (hPartitionCount - processedBins);
+            uint32_t processedBinThisIter = min(fieldBuffer.FieldCount(), leftBins);
+            uint32_t totalRayCount = processedBinThisIter * fieldBuffer.FieldDim().Multiply();
+
+            // First call tracing
+            coneCasterOptiX->RadianceMapGen(processedBins,
+                                            totalRayCount);
+            // Now call the CUDA
+            // Offset the buffers
+            uint32_t* dLocalPartitionBinIds = dPartitionBinIds + processedBins;
+            uint32_t* dLocalPartitionOffsets = dPartitionOffsets + processedBins;
+
+            uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
+            uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
+            CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
+                                            cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                            kernelShmemSize));
+
+            gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
+                          kernelTPB, pgKernelBlockCount,
+                          //
+                          KCSampleKernel,
+                          // Output
+                          dRayAux,
+                          // I-O
+                          gpuGenerators,
+                          // Input
+                          // Per-ray
+                          rayCaster->SortedRayIds(),
+                          metaSurfGenerator,
+                          // Per bin
+                          dLocalPartitionOffsets,
+                          dLocalPartitionBinIds,
+                          // Buffer
+                          fieldBufferConst,
+                          // Constants
+                          rFieldGaussFilter,
+                          svo.TreeGPU(),
+                          processedBinThisIter,
+                          options.purePG,
+                          options.misRatio);
+
+            processedBins += processedBinThisIter;
+        }
+        assert(processedBins == hPartitionCount);
+
+
+    }
     CUDA_CHECK(cudaEventRecord(stop));
 
     // Only Consider useful rays for bins
@@ -474,7 +738,6 @@ void WFPGTracer::GenerateGuidedDirections()
     float milliseconds = 0;
     float avgRayPerBin = (static_cast<float>(rayCount - invalidRayCount) /
                           static_cast<float>(hPartitionCount - 1));
-
     CUDA_CHECK(cudaEventSynchronize(stop));
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
     //METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
@@ -839,6 +1102,9 @@ TracerError WFPGTracer::Initialize()
             coneCasterOptiX = std::make_unique<SVOOptixConeCaster>(r->GetOptiXSystem(),
                                                                    svo);
             coneCasterOptiX->GenerateSVOTraversable();
+            size_t bufferSize = options.optiXBufferSize * 1024 * 1024 / sizeof(float);
+            radianceBufferOptiX = std::make_unique<SVOOptixRadianceBuffer>(static_cast<uint32_t>(bufferSize));
+            binInfoBufferOptiX = std::make_unique<DeviceMemory>();
         }
         else
             return TracerError(TracerError::TRACER_INTERNAL_ERROR,
@@ -917,6 +1183,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.optiXTrace, OPTIX_TRACE_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetUInt(options.optiXBufferSize, OPTIX_BUFFER_NAME)) != TracerError::OK)
+        return err;
 
     if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
@@ -952,6 +1220,7 @@ void WFPGTracer::AskOptions()
     list.emplace(MIS_RATIO_NAME, OptionVariable(options.misRatio));
     list.emplace(PRODUCT_PG_NAME, OptionVariable(options.productPG));
     list.emplace(OPTIX_TRACE_NAME, OptionVariable(options.optiXTrace));
+    list.emplace(OPTIX_BUFFER_NAME, OptionVariable(static_cast<int64_t>(options.optiXBufferSize)));
 
     list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));
     list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));
@@ -1197,7 +1466,6 @@ void WFPGTracer::Finalize()
             treeDumpCount++;
         }
     }
-
     // On SVO_Radiance mode clear the image memory
     // And trace the SVO from the camera and send the results
     // On voxel trace mode we just trace the rays without any material
@@ -1217,8 +1485,7 @@ void WFPGTracer::Finalize()
         }
     }
 
-    //METU_LOG("----------------");
-
+    METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();
     frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

@@ -143,21 +143,21 @@ static void KCExpandSamplesToPixels(// Outputs
 
 template <class T, class Filter, int TPB_X>
 __global__ __launch_bounds__(TPB_X)
-static void KCFilterToImg(ImageGMem<T> img,
-                          // Inputs per block
-                          const uint32_t* gOffsets,
-                          const uint32_t* gPixelIds,
-                          // Inputs per thread
-                          const uint32_t* gSampleIds,
-                          // Inputs Accessed by SampleId
-                          const T* gValues,
-                          const Vector2f* gImgCoords,
-                          // Constants
-                          Vector2i imgSegmentSize,
-                          Vector2i imgSegmentOffset,
-                          Vector2i imgResolution,
-                          Filter filter,
-                          uint32_t segmentCount)
+static void KCFilterToImgBlock(ImageGMem<T> img,
+                               // Inputs per block
+                               const uint32_t* gOffsets,
+                               const uint32_t* gPixelIds,
+                               // Inputs per thread
+                               const uint32_t* gSampleIds,
+                               // Inputs Accessed by SampleId
+                               const T* gValues,
+                               const Vector2f* gImgCoords,
+                               // Constants
+                               Vector2i imgSegmentSize,
+                               Vector2i imgSegmentOffset,
+                               Vector2i imgResolution,
+                               Filter filter,
+                               uint32_t segmentCount)
 {
     auto PixelIdToImgCoords = [&](int32_t pixId) -> Vector2f
     {
@@ -254,4 +254,123 @@ static void KCFilterToImg(ImageGMem<T> img,
         // Do sync here, maybe some trailing threads may fetch segment related info
         __syncthreads();
     }
+}
+
+template <class T, class Filter, int TPB_X>
+__global__ __launch_bounds__(TPB_X)
+static void KCFilterToImgWarp(ImageGMem<T> img,
+                              // Inputs per block
+                              const uint32_t* gOffsets,
+                              const uint32_t* gPixelIds,
+                              // Inputs per thread
+                              const uint32_t* gSampleIds,
+                              // Inputs Accessed by SampleId
+                              const T* gValues,
+                              const Vector2f* gImgCoords,
+                              // Constants
+                              Vector2i imgSegmentSize,
+                              Vector2i imgSegmentOffset,
+                              Vector2i imgResolution,
+                              Filter filter,
+                              uint32_t segmentCount)
+{
+    auto PixelIdToImgCoords = [&](int32_t pixId) -> Vector2f
+    {
+        Vector2i pix2D = Vector2i(pixId % imgResolution[0],
+                                  pixId / imgResolution[0]);
+
+        return Vector2f(static_cast<float>(pix2D[0]) + 0.5f,
+                        static_cast<float>(pix2D[1]) + 0.5f);
+    };
+    auto PixelIdToImgSegmentLocalId = [&](int32_t pixId) -> int32_t
+    {
+        Vector2i pix2D = Vector2i(pixId % imgResolution[0],
+                                  pixId / imgResolution[0]);
+        pix2D -= imgSegmentOffset;
+        int32_t segmentPixId = (pix2D[1] * imgSegmentSize[0] +
+                                pix2D[0]);
+
+        return segmentPixId;
+    };
+
+    // Each warp is responsible for a pixel
+    // Calculate the indices
+    // Warp-stride loop related params
+    uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
+    uint32_t globalWarpId = globalId / WARP_SIZE;
+    uint32_t localWarpId = threadIdx.x / WARP_SIZE;
+    uint32_t laneId = globalId % WARP_SIZE;
+    uint32_t totalWarps = (gridDim.x * blockDim.x) / WARP_SIZE;
+
+    static constexpr uint32_t WARP_PER_BLOCK = TPB_X / WARP_SIZE;
+    // Specialize WarpReduce for actual filter and value
+    using WarpReduceF = cub::WarpReduce<float, WARP_SIZE>;
+    using WarpReduceV4 = cub::WarpReduce<T, WARP_SIZE>;
+
+    // Shared Memory
+    __shared__ struct
+    {
+        union
+        {
+            typename WarpReduceF::TempStorage  reduceFMem;
+            typename WarpReduceV4::TempStorage reduceV4Mem;
+
+        } warp[WARP_PER_BLOCK];
+    } sMem;
+
+    // Grid-Stride Loop (Warp)
+    for(uint32_t segmentIndex = globalWarpId; segmentIndex < segmentCount;
+        segmentIndex += totalWarps)
+    {
+        // TODO: Is this better or single thread loads then broadcasts??
+        const Vector2ui offset = Vector2ui(gOffsets[segmentIndex],
+                                           gOffsets[segmentIndex + 1]);
+        const int32_t pixelId = static_cast<int32_t>(gPixelIds[segmentIndex]);
+
+        // Skip this segment if invalid
+        if(pixelId == UINT32_MAX) continue;
+
+        // Calculate Pixel Coordinates on the image space
+        const Vector2f pixCoords = PixelIdToImgCoords(pixelId);
+        // Calculate iteration count
+        // How many passes this block needs to finish
+        const uint32_t elementCount = offset[1] - offset[0];
+        uint32_t iterations = (elementCount + WARP_SIZE - 1) / WARP_SIZE;
+
+        // These variables are only valid on main thread
+        float totalWeight = 0.0f;
+        T totalValue = T(0.0f);
+        // Do the reduction batch by batch
+        for(uint32_t i = 0; i < iterations; i++)
+        {
+            const uint32_t localIndex = laneId + i * WARP_SIZE;
+            const uint32_t globalSampleIdIndex = offset[0] + localIndex;
+
+            // Fetch Value & Image Coords
+            T value = T(0.0f);
+            float filterWeight = 0.0f;
+            if(localIndex < elementCount)
+            {
+                uint32_t sampleId = gSampleIds[globalSampleIdIndex];
+                value = gValues[sampleId];
+                Vector2f sampleCoords = gImgCoords[sampleId];
+                // Do the filter operation here
+                // If this operator unavailable just do
+                filterWeight = filter(pixCoords, sampleCoords);
+            }
+            T weightedVal = filterWeight * value;
+
+            // Now do the reduction operations
+            totalWeight += WarpReduceF(sMem.warp[localWarpId].reduceFMem).Sum(filterWeight);
+            totalValue += WarpReduceV4(sMem.warp[localWarpId].reduceV4Mem).Sum(weightedVal);
+        }
+        // Now all is reduced, warp leader can write to the img buffer
+        if(laneId == 0)
+        {
+            int32_t segmentIndex = PixelIdToImgSegmentLocalId(pixelId);
+            img.gSampleCounts[segmentIndex] += totalWeight;
+            img.gPixels[segmentIndex] += totalValue;
+        }
+    }
+
 }

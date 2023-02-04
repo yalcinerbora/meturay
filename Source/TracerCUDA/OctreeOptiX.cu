@@ -529,18 +529,19 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
 {
     // Copy Params to GPU
     OctreeAccelParams& params = hOptixLaunchParams;
-    params = {};
+    // Common
     params.octreeLevelBVHs = dOptixTraversables;
     params.svo = svoCPU.TreeGPU();
+    params.pixelOrConeAperture = pixelAperture;
+    // Mode Related
     params.gRays = gRays;
     params.gRayAux = gRayAux;
     params.renderMode = mode;
     params.maxQueryOffset = maxQueryLevelOffset;
-    params.pixelAperture = pixelAperture;
     params.gSamples = gSamples;
 
     //// test large apertures
-    //params.pixelAperture = 4.0f * MathConstants::Pi / 64.0f / 64.0f;
+    //params.pixelOrConeAperture = 4.0f * MathConstants::Pi / 64.0f / 64.0f;
 
     CUDA_CHECK(cudaMemcpyAsync(dOptixLaunchParams,
                                &params,
@@ -574,4 +575,50 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
 
 
     CUDA_KERNEL_CHECK();
+}
+
+void SVOOptixConeCaster::CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
+                                                  const float* dProjJitters,
+                                                  SVOOptixRadianceBuffer::SegmentedField<float*> fieldSegments,
+                                                  float coneAperture)
+{
+    // Copy Params to GPU
+    OctreeAccelParams& params = hOptixLaunchParams;
+    // Common
+    params.octreeLevelBVHs = dOptixTraversables;
+    params.svo = svoCPU.TreeGPU();
+    params.pixelOrConeAperture = coneAperture;
+    // Mode Related
+    params.fieldSegments = fieldSegments;
+    params.dRadianceFieldRayOrigins = dRadianceFieldRayOrigins;
+    params.dProjJitters = dProjJitters;
+    params.binOffset = 0;
+
+    CUDA_CHECK(cudaMemcpyAsync(dOptixLaunchParams,
+                               &params,
+                               sizeof(OctreeAccelParams),
+                               cudaMemcpyHostToDevice,
+                               (cudaStream_t)0));
+}
+
+void SVOOptixConeCaster::RadianceMapGen(// Range over this id/offsets
+                                        uint32_t segmentOffset,
+                                        uint32_t totalRayCount)
+{
+    // Going full C here
+    size_t innerOffset = offsetof(OctreeAccelParams, binOffset);
+    Byte* dBinOffsetLoc = (reinterpret_cast<Byte*>(dOptixLaunchParams) +
+                           innerOffset);
+    CUDA_CHECK(cudaMemcpyAsync(dBinOffsetLoc,
+                               &segmentOffset,
+                               sizeof(int32_t),
+                               cudaMemcpyHostToDevice,
+                               (cudaStream_t)0));
+
+    OPTIX_CHECK(optixLaunch(pipeline, (cudaStream_t)0,
+                            AsOptixPtr(dOptixLaunchParams),
+                            sizeof(OctreeAccelParams),
+                            &sbtRadGen,
+                            totalRayCount,
+                            1, 1));
 }

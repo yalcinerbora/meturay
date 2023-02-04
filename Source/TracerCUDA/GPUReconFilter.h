@@ -199,29 +199,67 @@ inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
     const uint32_t* dSampleIds = dSortedSampleIndices;
     uint32_t segmentCount = hSelectCount;
 
-    // Call segmented reduce
-    static constexpr uint32_t TPB_X = 128;
-    // Maximum GPU Saturation
-    uint32_t filterKernelBlockCount = (gpu.MaxActiveBlockPerSM(TPB_X) *
-                                       gpu.SMCount() * TPB_X) / TPB_X;
+    // Check spp after sort
+    uint32_t spp = ppsTotal / segmentCount;
 
-    gpu.ExactKC_X(0, (cudaStream_t)0,
-                  TPB_X, filterKernelBlockCount,
-                  //
-                  KCFilterToImg<T, GPUFilterFunctor, TPB_X>,
-                  // Out
-                  img.GMem<T>(),
-                  // In
-                  dOffsets,
-                  dPixelIds,
-                  dSampleIds,
-                  dValues,
-                  dImgCoords,
-                  // Constants
-                  img.SegmentSize(),
-                  img.SegmentOffset(),
-                  img.Resolution(),
+    static constexpr uint32_t REDUCE_LOGIC_CHANGE_THRESHOLD = 256;
 
-                  filterGPU,
-                  segmentCount);
+    if(spp > REDUCE_LOGIC_CHANGE_THRESHOLD)
+    {
+        // Each Block is responsible for one pixel
+        // Call segmented reduce
+        static constexpr uint32_t TPB_X = 128;
+        // Maximum GPU Saturation
+        uint32_t filterKernelBlockCount = (gpu.MaxActiveBlockPerSM(TPB_X) *
+                                           gpu.SMCount() * TPB_X) / TPB_X;
+
+        gpu.ExactKC_X(0, (cudaStream_t)0,
+                      TPB_X, filterKernelBlockCount,
+                      //
+                      KCFilterToImgBlock<T, GPUFilterFunctor, TPB_X>,
+                      // Out
+                      img.GMem<T>(),
+                      // In
+                      dOffsets,
+                      dPixelIds,
+                      dSampleIds,
+                      dValues,
+                      dImgCoords,
+                      // Constants
+                      img.SegmentSize(),
+                      img.SegmentOffset(),
+                      img.Resolution(),
+
+                      filterGPU,
+                      segmentCount);
+    }
+    else
+    {
+        // Each warp is responsible for one pixel
+        // Call segmented reduce
+        static constexpr uint32_t TPB_X = 256;
+        // Maximum GPU Saturation
+        uint32_t filterKernelBlockCount = (gpu.MaxActiveBlockPerSM(TPB_X) *
+                                           gpu.SMCount() * TPB_X) / TPB_X;
+
+        gpu.ExactKC_X(0, (cudaStream_t)0,
+                      TPB_X, filterKernelBlockCount,
+                      //
+                      KCFilterToImgWarp<T, GPUFilterFunctor, TPB_X>,
+                      // Out
+                      img.GMem<T>(),
+                      // In
+                      dOffsets,
+                      dPixelIds,
+                      dSampleIds,
+                      dValues,
+                      dImgCoords,
+                      // Constants
+                      img.SegmentSize(),
+                      img.SegmentOffset(),
+                      img.Resolution(),
+
+                      filterGPU,
+                      segmentCount);
+    }
 }

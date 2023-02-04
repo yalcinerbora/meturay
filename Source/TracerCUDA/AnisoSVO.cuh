@@ -244,7 +244,7 @@ class AnisoSVOctreeGPU
 
     // Atomically Increment the ray count for that leafIndex
     __device__
-    void                IncrementLeafRayCount(uint32_t leafIndex);
+    void                SetLeafRayCount(uint32_t leafIndex, uint16_t rayAmount);
 
     // Descend down, find nodeIndex(nodeId) using "mortonCode", descent untill "depth"
     __device__
@@ -1050,9 +1050,9 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
 }
 
 __device__ inline
-void AnisoSVOctreeGPU::IncrementLeafRayCount(uint32_t leafIndex)
+void AnisoSVOctreeGPU::SetLeafRayCount(uint32_t leafIndex, uint16_t rayAmount)
 {
-    AtomicAddUInt16(dLeafBinInfo + leafIndex, 1u);
+    dLeafBinInfo[leafIndex] = rayAmount;
 }
 
 __device__ inline
