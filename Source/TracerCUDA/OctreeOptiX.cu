@@ -6,6 +6,7 @@
 #include <optix_stack_size.h>
 
 #include "TracerDebug.h"
+#include "GPUAcceleratorOptiX.cuh"
 
 template<class T>
 __global__
@@ -45,6 +46,7 @@ void KCGenAABBAndMortonCode(// Ouptuts
 }
 
 SVOOptixConeCaster::SVOOptixConeCaster(const OptiXSystem& optixSystem,
+                                       const GPUBaseAcceleratorI& baseAccelerator,
                                        const AnisoSVOctreeCPU& svoCPU)
     : svoCPU(svoCPU)
     , optixSystem(optixSystem)
@@ -54,6 +56,11 @@ SVOOptixConeCaster::SVOOptixConeCaster(const OptiXSystem& optixSystem,
     , sbtMemory(&optixSystem.OptixCapableDevices()[0].first)
 {
     const auto& [gpu, optixContext] = optixSystem.OptixCapableDevices()[0];
+
+    // TODO: Bad design, change this
+    const GPUBaseAcceleratorOptiX& baseAccel = static_cast<const GPUBaseAcceleratorOptiX&>(baseAccelerator);
+    sceneTraversable = baseAccel.GetBaseTraversable(0);
+    sceneSBTCount = baseAccel.TotalHitSBTCount();
 
     // Now do OptiX boilerplate
     // =============================== //
@@ -82,7 +89,9 @@ SVOOptixConeCaster::SVOOptixConeCaster(const OptiXSystem& optixSystem,
         pipelineCompileOpts.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
     }
     pipelineCompileOpts.usesMotionBlur = false;
-    pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
+    //pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS;
+    pipelineCompileOpts.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
+
     pipelineCompileOpts.exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE;
     pipelineCompileOpts.numPayloadValues = 3;
     pipelineCompileOpts.numAttributeValues = 0;
@@ -175,7 +184,24 @@ SVOOptixConeCaster::SVOOptixConeCaster(const OptiXSystem& optixSystem,
                                         &pgOpts,
                                         nullptr, 0,
                                         &programGroups.back()));
-    assert(programGroups.size() == (MORTON64_HIT_PG_INDEX + 1));
+
+    // HIT GROUP NAME (SCENE)
+    programGroups.emplace_back();
+    OptixProgramGroupDesc scenHitProgramDesc = {};
+    scenHitProgramDesc.kind = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+    scenHitProgramDesc.hitgroup.moduleCH = gpuModule;
+    scenHitProgramDesc.hitgroup.entryFunctionNameCH = CHIT_SCENE_FUNC_NAME;
+    scenHitProgramDesc.hitgroup.moduleAH = nullptr;
+    // TODO: This is not correct
+    scenHitProgramDesc.hitgroup.entryFunctionNameAH = nullptr;
+    scenHitProgramDesc.hitgroup.moduleIS = nullptr;
+    scenHitProgramDesc.hitgroup.entryFunctionNameIS = nullptr;
+    OPTIX_CHECK(optixProgramGroupCreate(optixContext,
+                                        &scenHitProgramDesc, 1,
+                                        &pgOpts,
+                                        nullptr, 0,
+                                        &programGroups.back()));
+    assert(programGroups.size() == (SCENE_HIT_PG_INDEX + 1));
 
     // =============================== //
     //      PIPELINE GENERATION        //
@@ -418,6 +444,8 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     SVOEmptyRecord* dCamRaygenRecord;
     SVOEmptyRecord* dMissRecord;
     SVOHitRecord<uint64_t>* dHitRecords;
+    SVOEmptyRecord* dSceneHitRecord;
+
     // Sanity Check
     static_assert(sizeof(SVOHitRecord<uint64_t>) == sizeof(SVOHitRecord<uint32_t>));
     static constexpr uint32_t HIT_RECORD_STRIDE = static_cast<uint32_t>(std::max(sizeof(SVOHitRecord<uint64_t>),
@@ -428,9 +456,10 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     GPUMemFuncs::AllocateMultiData(std::tie(dCamRaygenRecord,
                                             dRadRaygenRecord,
                                             dMissRecord,
+                                            dSceneHitRecord,
                                             dHitRecords),
                                    sbtMemory,
-                                   {1, 1, 1, svo.LeafDepth()},
+                                   {1, 1, 1, sceneSBTCount, svo.LeafDepth()},
                                    OPTIX_SBT_RECORD_ALIGNMENT);
 
     SVOEmptyRecord hRadRGRecord = SVOEmptyRecord{};
@@ -438,6 +467,7 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     SVOEmptyRecord hMissRecord = SVOEmptyRecord{};
     SVOHitRecord<uint32_t> hHitRecord32 = SVOHitRecord<uint32_t>{};
     SVOHitRecord<uint64_t> hHitRecord64 = SVOHitRecord<uint64_t>{};
+    SVOEmptyRecord hSceneHitRecord = SVOEmptyRecord{};
 
     // Set Raygen Record
     OPTIX_CHECK(optixSbtRecordPackHeader(programGroups[RAD_RAYGEN_PG_INDEX],
@@ -457,6 +487,21 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     // program)
     OPTIX_CHECK(optixSbtRecordPackHeader(programGroups[MORTON32_HIT_PG_INDEX], &hHitRecord32));
     OPTIX_CHECK(optixSbtRecordPackHeader(programGroups[MORTON64_HIT_PG_INDEX], &hHitRecord64));
+    OPTIX_CHECK(optixSbtRecordPackHeader(programGroups[SCENE_HIT_PG_INDEX], &hSceneHitRecord));
+
+    // Memcpys
+
+    // Scene Accelerator requires many SBTs (according to the scene)
+    // we need to provide single SBT for all of these
+    // so duplicate the common hit shader
+
+    hSceneHitRecord.empty = nullptr;
+    std::vector<SVOEmptyRecord> expandedSceneRecords(sceneSBTCount,
+                                                     hSceneHitRecord);
+    CUDA_CHECK(cudaMemcpy(dSceneHitRecord,
+                          expandedSceneRecords.data(),
+                          sizeof(SVOEmptyRecord) * sceneSBTCount,
+                          cudaMemcpyHostToDevice));
 
     for(uint32_t i = 0; i < svo.LeafDepth(); i++)
     {
@@ -492,6 +537,17 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     sbtRadGen.hitgroupRecordBase = AsOptixPtr(dHitRecords);
     sbtRadGen.hitgroupRecordStrideInBytes = HIT_RECORD_STRIDE;
     sbtRadGen.hitgroupRecordCount = recordCount;
+     // SBT RADGEN-SCENE
+    sbtRadGenScene = {};
+    sbtRadGenScene.raygenRecord = AsOptixPtr(dRadRaygenRecord);
+    //
+    sbtRadGenScene.missRecordBase = AsOptixPtr(dMissRecord);
+    sbtRadGenScene.missRecordCount = 1;
+    sbtRadGenScene.missRecordStrideInBytes = sizeof(EmptyRecord);
+    //
+    sbtRadGenScene.hitgroupRecordBase = AsOptixPtr(dSceneHitRecord);
+    sbtRadGenScene.hitgroupRecordStrideInBytes = sizeof(EmptyRecord);
+    sbtRadGenScene.hitgroupRecordCount = sceneSBTCount;
     // SBT CAM GEN
     sbtCamGen = {};
     sbtCamGen.raygenRecord = AsOptixPtr(dCamRaygenRecord);
@@ -503,6 +559,18 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     sbtCamGen.hitgroupRecordBase = AsOptixPtr(dHitRecords);
     sbtCamGen.hitgroupRecordStrideInBytes = HIT_RECORD_STRIDE;
     sbtCamGen.hitgroupRecordCount = recordCount;
+    // SBT CAMGEN-SCENE
+    sbtCamGenScene = {};
+    sbtCamGenScene.raygenRecord = AsOptixPtr(dCamRaygenRecord);
+    //
+    sbtCamGenScene.missRecordBase = AsOptixPtr(dMissRecord);
+    sbtCamGenScene.missRecordCount = 1;
+    sbtCamGenScene.missRecordStrideInBytes = sizeof(EmptyRecord);
+    //
+    sbtCamGenScene.hitgroupRecordBase = AsOptixPtr(dSceneHitRecord);
+    sbtCamGenScene.hitgroupRecordStrideInBytes = sizeof(EmptyRecord);
+    sbtCamGenScene.hitgroupRecordCount = sceneSBTCount;
+
 
     // Finally Allocate Traversable GPU Array & Parameter Buffer
     GPUMemFuncs::AllocateMultiData(std::tie(dOptixLaunchParams,
@@ -524,6 +592,7 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
                                              const RayAuxWFPG* gRayAux,
                                              WFPGRenderMode mode,
                                              uint32_t maxQueryLevelOffset,
+                                             bool useSceneAccelerator,
                                              float pixelAperture,
                                              const uint32_t totalRayCount)
 {
@@ -531,6 +600,8 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
     OctreeAccelParams& params = hOptixLaunchParams;
     // Common
     params.octreeLevelBVHs = dOptixTraversables;
+    params.sceneBVH = sceneTraversable;
+    params.utilizeSceneAccelerator = useSceneAccelerator;
     params.svo = svoCPU.TreeGPU();
     params.pixelOrConeAperture = pixelAperture;
     // Mode Related
@@ -549,6 +620,9 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
                                cudaMemcpyHostToDevice,
                                (cudaStream_t)0));
 
+    OptixShaderBindingTable* sbt = (useSceneAccelerator)
+                                    ? &sbtCamGenScene
+                                    : &sbtCamGen;
 
     cudaEvent_t start, stop;
     CUDA_CHECK(cudaEventCreate(&start));
@@ -559,7 +633,7 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
     OPTIX_CHECK(optixLaunch(pipeline, (cudaStream_t)0,
                             AsOptixPtr(dOptixLaunchParams),
                             sizeof(OctreeAccelParams),
-                            &sbtCamGen,
+                            sbt,
                             totalRayCount,
                             1, 1));
     CUDA_CHECK(cudaEventRecord(stop));
@@ -580,12 +654,15 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
 void SVOOptixConeCaster::CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
                                                   const float* dProjJitters,
                                                   SVOOptixRadianceBuffer::SegmentedField<float*> fieldSegments,
+                                                  bool useSceneAccelerator,
                                                   float coneAperture)
 {
     // Copy Params to GPU
     OctreeAccelParams& params = hOptixLaunchParams;
     // Common
     params.octreeLevelBVHs = dOptixTraversables;
+    params.sceneBVH = sceneTraversable;
+    params.utilizeSceneAccelerator = useSceneAccelerator;
     params.svo = svoCPU.TreeGPU();
     params.pixelOrConeAperture = coneAperture;
     // Mode Related
@@ -615,10 +692,14 @@ void SVOOptixConeCaster::RadianceMapGen(// Range over this id/offsets
                                cudaMemcpyHostToDevice,
                                (cudaStream_t)0));
 
+    OptixShaderBindingTable* sbt = (hOptixLaunchParams.utilizeSceneAccelerator)
+                                        ? &sbtRadGenScene
+                                        : &sbtRadGen;
+
     OPTIX_CHECK(optixLaunch(pipeline, (cudaStream_t)0,
                             AsOptixPtr(dOptixLaunchParams),
                             sizeof(OctreeAccelParams),
-                            &sbtRadGen,
+                            sbt,
                             totalRayCount,
                             1, 1));
 }

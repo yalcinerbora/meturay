@@ -401,11 +401,11 @@ TracerError RayCasterOptiX::ConstructAccelerators(const GPUTransformI** dTransfo
     // (d_first can be equal to first)
     // Clang does not like this and fails so i do it over
     // an temp buffer instead (probably a bug on either MSVC or Clang)
-    std::vector<uint32_t> hGlobalSBTOffsets(hGlobalSBTCounts.size());
-    std::exclusive_scan(std::execution::par_unseq,
+    std::vector<uint32_t> hGlobalSBTOffsets(hGlobalSBTCounts.size() + 1, 0);
+    std::inclusive_scan(std::execution::par_unseq,
                         hGlobalSBTCounts.cbegin(),
                         hGlobalSBTCounts.cend(),
-                        hGlobalSBTOffsets.begin(), 0u);
+                        hGlobalSBTOffsets.begin() + 1);
     hGlobalSBTCounts.clear();
 
     // Construct Base accelerator using the fetched data

@@ -2082,22 +2082,22 @@ static void KCGenerateBinInfoOptiX(// Output
             uint32_t binVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
             // Utilize voxel center
-            //Vector3f position = svo.NodeVoxelPosition(nodeId, isLeaf);
+            Vector3f position = svo.NodePosition(nodeId, isLeaf);
 
-            // Utilize a random ray
-            uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
-            // Use the first rays hit position
-            //uint32_t randomRayIndex = 0;
+            //// Utilize a random ray
+            //uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
+            ////uint32_t randomRayIndex = 0;
 
-            uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
-            RayReg rayReg = metaSurfGenerator.Ray(rayId);
-            Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
+            //uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
+            //RayReg rayReg = metaSurfGenerator.Ray(rayId);
+            //Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
 
             // TODO: Better offset maybe?
-            float tMin = (binVoxelSize * MathConstants::Sqrt3 +
-                          MathConstants::LargeEpsilon);
+            //float tMin = (binVoxelSize * MathConstants::Sqrt3 +
+            //              MathConstants::LargeEpsilon);
+            float tMin = binVoxelSize + MathConstants::Epsilon;
 
-            float jitter = rng.Uniform();
+            float jitter = 0.5f;// rng.Uniform();
 
             dRadianceFieldRayOrigins[threadId] = Vector4f(position, tMin);
             dProjectionJitters[threadId] = jitter;

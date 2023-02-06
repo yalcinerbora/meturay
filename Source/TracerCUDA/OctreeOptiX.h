@@ -19,6 +19,7 @@ class SVOOptixConeCaster
     static constexpr const char* RAYGEN_RAD_FUNC_NAME   = "__raygen__SVORadGen";
     static constexpr const char* MISS_FUNC_NAME         = "__miss__SVO";
     static constexpr const char* CHIT_FUNC_NAME         = "__closesthit__SVO";
+    static constexpr const char* CHIT_SCENE_FUNC_NAME   = "__closesthit__Scene";
     static constexpr const char* INTERSECT32_FUNC_NAME  = "__intersection__SVOMorton32";
     static constexpr const char* INTERSECT64_FUNC_NAME  = "__intersection__SVOMorton64";
 
@@ -33,6 +34,7 @@ class SVOOptixConeCaster
     static constexpr int MISS_PG_INDEX = 2;
     static constexpr int MORTON32_HIT_PG_INDEX = 3;
     static constexpr int MORTON64_HIT_PG_INDEX = 4;
+    static constexpr int SCENE_HIT_PG_INDEX = 5;
 
     private:
     // SVO
@@ -50,7 +52,9 @@ class SVOOptixConeCaster
     OptixTraversableHandle*         dOptixTraversables;
     // SBT
     OptixShaderBindingTable         sbtRadGen;
+    OptixShaderBindingTable         sbtRadGenScene;
     OptixShaderBindingTable         sbtCamGen;
+    OptixShaderBindingTable         sbtCamGenScene;
     DeviceLocalMemory               sbtMemory;
     // Morton Codes on the records
     DeviceMemory                    mortonMemory;
@@ -60,10 +64,16 @@ class SVOOptixConeCaster
     std::vector<OptixTraversableHandle>     svoLevelAccelerators;
     std::vector<DeviceLocalMemory>          svoLevelAcceleratorMemory;
 
+    // DEBUG
+    // Entire Scene Traversable
+    OptixTraversableHandle                  sceneTraversable;
+    uint32_t                                sceneSBTCount;
+
     protected:
     public:
     // Constructors & Destructor
                             SVOOptixConeCaster(const OptiXSystem&,
+                                               const GPUBaseAcceleratorI& baseAccelerator,
                                                const AnisoSVOctreeCPU&);
                             SVOOptixConeCaster(const SVOOptixConeCaster&) = delete;
                             SVOOptixConeCaster(SVOOptixConeCaster&&) = delete;
@@ -83,6 +93,7 @@ class SVOOptixConeCaster
                                                 const RayAuxWFPG* gRayAux,
                                                 WFPGRenderMode mode,
                                                 uint32_t maxQueryLevelOffset,
+                                                bool useSceneAccelerator,
                                                 float pixelAperture,
                                                 const uint32_t totalRayCount);
 
@@ -92,6 +103,7 @@ class SVOOptixConeCaster
     void                    CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
                                                      const float* dProjJitters,
                                                      SVOOptixRadianceBuffer::SegmentedField<float*>,
+                                                     bool useSceneAccelerator,
                                                      float coneAperture);
     void                    RadianceMapGen(uint32_t segmentOffset,
                                            uint32_t totalRayCount);

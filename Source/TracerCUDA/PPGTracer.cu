@@ -198,6 +198,10 @@ TracerError PPGTracer::SetOptions(const OptionsI& opts)
 
     if((err = opts.GetBool(options.skipPG, SKIP_PG_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.purePG, PURE_PG_NAME)) != TracerError::OK)
+        return err;
+    if((err = opts.GetFloat(options.bxdfPGMisRatio, MIS_RATIO_NAME)) != TracerError::OK)
+        return err;
     if((err = opts.GetBool(options.alwaysSendSamples, ALWAYS_SEND_NAME)) != TracerError::OK)
         return err;
 
@@ -258,6 +262,8 @@ bool PPGTracer::Render()
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
 
     globalData.skipPG = options.skipPG;
+    globalData.purePG = options.purePG;
+    globalData.bxdfPGMisRatio = options.bxdfPGMisRatio;
     globalData.nee = options.nextEventEstimation;
     globalData.directLightMIS = options.directLightMIS;
     globalData.rrStart = options.rrStart;
@@ -476,6 +482,8 @@ void PPGTracer::AskOptions()
 
     list.emplace(ALWAYS_SEND_NAME, OptionVariable(options.alwaysSendSamples));
     list.emplace(SKIP_PG_NAME, OptionVariable(options.skipPG));
+    list.emplace(PURE_PG_NAME, OptionVariable(options.purePG));
+    list.emplace(MIS_RATIO_NAME, OptionVariable(options.bxdfPGMisRatio));
 
     list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));
     list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));

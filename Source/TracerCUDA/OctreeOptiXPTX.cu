@@ -10,9 +10,34 @@ extern "C" __constant__ OctreeAccelParams params;
 __device__ __forceinline__
 void KCClosestHitSVO()
 {
-    const int leafId = optixGetPrimitiveIndex();
+    const unsigned int leafId = optixGetPrimitiveIndex();
     optixSetPayload_1(leafId);
     optixSetPayload_2(__float_as_uint(optixGetRayTmax()));
+}
+
+__device__ __forceinline__
+void KCBaseAcceleratorClosestHit()
+{
+    // SBT is kinda hacky here we cannot acquire payload
+    // Fortunately we dont have to
+    // TODO: Design this better, if it will stay
+    float3 rayOrig = optixGetWorldRayOrigin();
+    float3 rayDir = optixGetWorldRayDirection();
+    float tMax = optixGetRayTmax();
+
+    RayF ray = RayF(Vector3f(rayDir.x, rayDir.y, rayDir.z),
+                    Vector3f(rayOrig.x, rayOrig.y, rayOrig.z));
+    // Estimate Hit Position
+    Vector3f worldPos = ray.AdvancedPos(tMax + MathConstants::Epsilon);
+    uint32_t leafId;
+    bool found = params.svo.NearestNodeIndex(leafId, worldPos, params.svo.LeafDepth(), true);
+
+    if(!found) printf("NotFound!, tMax %f, leaf: %u, p:(%f, %f, %f)\n",
+                      tMax, leafId,
+                      worldPos[0], worldPos[1], worldPos[2]);
+
+    optixSetPayload_1(leafId);
+    optixSetPayload_2(__float_as_uint(tMax));
 }
 
 __device__ __forceinline__
@@ -89,9 +114,17 @@ void KCCamTraceSVO()
     uint32_t leafNodeIdOut = UINT32_MAX;
     uint32_t tMaxOutUInt32 = __float_as_uint(ray.tMax);
 
+
+    OptixTraversableHandle traversable = (params.utilizeSceneAccelerator)
+                                            ? params.sceneBVH
+                                            : params.octreeLevelBVHs[accIndex];
+    uint32_t sbtOffset = (params.utilizeSceneAccelerator)
+                            ? 0u
+                            : static_cast<uint32_t>(accIndex);
+
     // Trace Call
     optixTrace(// Accelerator
-               params.octreeLevelBVHs[accIndex],
+               traversable,
                // Ray Input
                make_float3(ray.ray.getPosition()[0],
                            ray.ray.getPosition()[1],
@@ -107,11 +140,33 @@ void KCCamTraceSVO()
                // Flags
                OPTIX_RAY_FLAG_DISABLE_ANYHIT,
                // SBT
-               accIndex, 1, 0,
+               sbtOffset, 1, 0,
                // Payload
                currentLevel,
                leafNodeIdOut,
                tMaxOutUInt32);
+    //optixTrace(// Accelerator
+    //           params.octreeLevelBVHs[accIndex],
+    //           // Ray Input
+    //           make_float3(ray.ray.getPosition()[0],
+    //                       ray.ray.getPosition()[1],
+    //                       ray.ray.getPosition()[2]),
+    //           make_float3(ray.ray.getDirection()[0],
+    //                       ray.ray.getDirection()[1],
+    //                       ray.ray.getDirection()[2]),
+    //           ray.tMin,
+    //           ray.tMax,
+    //           0.0f,
+    //           //
+    //           OptixVisibilityMask(255),
+    //           // Flags
+    //           OPTIX_RAY_FLAG_DISABLE_ANYHIT,
+    //           // SBT
+    //           accIndex, 1, 0,
+    //           // Payload
+    //           currentLevel,
+    //           leafNodeIdOut,
+    //           tMaxOutUInt32);
 
     // Convert tMax after trace
     float tMaxOut = __uint_as_float(tMaxOutUInt32);
@@ -229,9 +284,16 @@ void KCRadGenSVO()
     uint32_t leafNodeIdOut = UINT32_MAX;
     uint32_t tMaxOutUInt32 = __float_as_uint(tMinMax[1]);
 
+    OptixTraversableHandle traversable = (params.utilizeSceneAccelerator)
+                                            ? params.sceneBVH
+                                            : params.octreeLevelBVHs[accIndex];
+    uint32_t sbtOffset = (params.utilizeSceneAccelerator)
+                            ? 0u
+                            : static_cast<uint32_t>(accIndex);
+
     // Trace Call
     optixTrace(// Accelerator
-               params.octreeLevelBVHs[accIndex],
+               traversable,
                // Ray Input
                make_float3(rayOrigin[0], rayOrigin[1], rayOrigin[2]),
                make_float3(rayDir[0], rayDir[1], rayDir[2]),
@@ -242,7 +304,7 @@ void KCRadGenSVO()
                // Flags
                OPTIX_RAY_FLAG_DISABLE_ANYHIT,
                // SBT
-               accIndex, 1, 0,
+               sbtOffset, 1, 0,
                // Payload
                currentLevel,
                leafNodeIdOut,
@@ -288,5 +350,6 @@ WRAP_FUCTION(__raygen__SVOCamTrace, KCCamTraceSVO);
 WRAP_FUCTION(__raygen__SVORadGen, KCRadGenSVO);
 WRAP_FUCTION(__miss__SVO, KCMissSVOOptiX);
 WRAP_FUCTION(__closesthit__SVO, KCClosestHitSVO);
+WRAP_FUCTION(__closesthit__Scene, KCBaseAcceleratorClosestHit);
 WRAP_FUCTION(__intersection__SVOMorton32, KCIntersectVoxel<uint32_t>)
 WRAP_FUCTION(__intersection__SVOMorton64, KCIntersectVoxel<uint64_t>)

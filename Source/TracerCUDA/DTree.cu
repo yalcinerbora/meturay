@@ -127,7 +127,8 @@ static void KCReconstructEmptyTrees(// Output
                                     DTreeGPU* gDTree,
                                     uint32_t* gTreeNodeAllocationCounters,
                                     // Input
-                                    const DTreeGPU* gSiblingTree,
+                                    const DTreeGPU* gSiblingTrees,
+                                    const uint32_t* gTreeAllocatedNodeCounts,
                                     //
                                     const uint32_t* gTreeIndices,
                                     const uint32_t* gNodeOffsets,
@@ -148,7 +149,8 @@ static void KCReconstructEmptyTrees(// Output
                              *(gDTree + treeIndex),
                              gTreeAllocCounter,
                              // Input
-                             *(gSiblingTree + treeIndex),
+                             *(gSiblingTrees + treeIndex),
+                             gTreeAllocatedNodeCounts[treeIndex],
                              fluxRatio,
                              depthLimit,
                              localNodeIndex);
@@ -846,8 +848,9 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        // Output
                        readTrees.DTrees(),
                        dTreeNodeAllocationCounters,
-                       //
+                       // Input
                        writeTrees.DTrees(),
+                       dTreeChildCounts,
                        // Access Related
                        dNodeTreeIndices,
                        dNodeOffsets,
@@ -855,6 +858,18 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        fluxRatio,
                        depthLimit,
                        totalNodeCount);
+
+
+    // DEBUG
+    for(uint32_t i = 0; i < TreeCount(); i++)
+    {
+        DTreeGPU tree;
+        std::vector<DTreeNode> nodes;
+        GetWriteTreeToCPU(tree, nodes, i);
+        Debug::DumpMemToFile("AfterBottomUp-writeNodes",
+                             nodes.data(), nodes.size(),
+                             (i != 0));
+    }
 
     // Check that we allocated all the requested nodes
     // Copy the actual allocated node count to "tree.nodeCount"

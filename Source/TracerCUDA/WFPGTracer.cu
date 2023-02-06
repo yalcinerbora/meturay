@@ -671,6 +671,7 @@ void WFPGTracer::GenerateGuidedDirections()
         coneCasterOptiX->CopyRadianceMapGenParams(dRadianceFieldRayOrigins,
                                                   dProjectionJitters,
                                                   fieldBuffer,
+                                                  options.optiXUseSceneAcc,
                                                   coneAperture);
         // Now do the iteration
         METU_LOG("Iter {}", iterCount);
@@ -957,6 +958,7 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                                              dRayAux,
                                              options.renderMode,
                                              options.svoRenderLevel,
+                                             options.optiXUseSceneAcc,
                                              pixelAperture,
                                              rayCount);
         CUDA_CHECK(cudaEventRecord(stop));
@@ -1099,7 +1101,9 @@ TracerError WFPGTracer::Initialize()
         {
             RayCasterI* rc = rayCaster.get();
             RayCasterOptiX* r = dynamic_cast<RayCasterOptiX*>(rc);
+            const GPUBaseAcceleratorI& baseAccelOptiX = *scene.BaseAccelerator().get();
             coneCasterOptiX = std::make_unique<SVOOptixConeCaster>(r->GetOptiXSystem(),
+                                                                   baseAccelOptiX,
                                                                    svo);
             coneCasterOptiX->GenerateSVOTraversable();
             size_t bufferSize = options.optiXBufferSize * 1024 * 1024 / sizeof(float);
@@ -1183,6 +1187,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.optiXTrace, OPTIX_TRACE_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.optiXUseSceneAcc, OPTIX_USE_SCENE_NAME)) != TracerError::OK)
+        return err;
     if((err = opts.GetUInt(options.optiXBufferSize, OPTIX_BUFFER_NAME)) != TracerError::OK)
         return err;
 
@@ -1220,6 +1226,7 @@ void WFPGTracer::AskOptions()
     list.emplace(MIS_RATIO_NAME, OptionVariable(options.misRatio));
     list.emplace(PRODUCT_PG_NAME, OptionVariable(options.productPG));
     list.emplace(OPTIX_TRACE_NAME, OptionVariable(options.optiXTrace));
+    list.emplace(OPTIX_USE_SCENE_NAME, OptionVariable(options.optiXUseSceneAcc));
     list.emplace(OPTIX_BUFFER_NAME, OptionVariable(static_cast<int64_t>(options.optiXBufferSize)));
 
     list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));

@@ -39,6 +39,8 @@ struct PPGTracerGlobalState
     // Options
     // Path Guiding
     bool                            skipPG;
+    bool                            purePG;
+    float                           bxdfPGMisRatio;
     // Options for NEE
     bool                            directLightMIS;
     bool                            nee;
@@ -367,7 +369,9 @@ void PPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        const float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
+        float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : renderState.bxdfPGMisRatio;
+        BxDF_GuideSampleRatio       = (renderState.purePG) ? 1.0f : renderState.bxdfPGMisRatio;
+
         // Sample a chance
         float xi = rng.Uniform();
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
@@ -431,15 +435,18 @@ void PPGTracerPathWork(// Output
             selectedPDFZero = (pdfGuide == 0.0f);
         }
         // Pdf Average
-        //pdfPath = pdfBxDF;
         // One-sample MIS Using Balance Heuristic
-        if(!renderState.skipPG)
+        if(renderState.skipPG)
+            pdfPath = pdfBxDF;
+        else if(!renderState.purePG)
+            pdfPath = pdfGuide;
+        else
         {
             pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
             pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
             pdfPath = selectedPDFZero ? 0.0f : pdfPath;
         }
-        else pdfPath = pdfBxDF;
+
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))

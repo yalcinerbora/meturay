@@ -153,6 +153,7 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<Opt
                           hTransformTypes.size() * sizeof(PrimTransformType),
                           cudaMemcpyHostToDevice));
 
+    hitSBTCount = hGlobalSBTOffsets.back();
     //===============================//
     //  ACTUAL TRAVERSAL GENERATION  //
     //===============================//
@@ -598,6 +599,11 @@ void GPUBaseAcceleratorOptiX::SetOptiXSystem(const OptiXSystem* sys)
 OptixTraversableHandle GPUBaseAcceleratorOptiX::GetBaseTraversable(int optixGPUIndex) const
 {
     return optixGPUData[optixGPUIndex].traversable;
+}
+
+uint32_t GPUBaseAcceleratorOptiX::TotalHitSBTCount() const
+{
+    return hitSBTCount;
 }
 
 // Accelerator Instancing for basic primitives

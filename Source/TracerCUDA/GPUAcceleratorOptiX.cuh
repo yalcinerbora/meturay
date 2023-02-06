@@ -201,6 +201,7 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
         // CPU Memory
         const OptiXSystem*              optixSystem;
         AABB3f                          sceneAABB;
+        uint32_t                        hitSBTCount;
         //
         std::map<uint32_t, uint32_t>    idLookup;
         // GPU Memory
@@ -249,6 +250,7 @@ class GPUBaseAcceleratorOptiX final : public GPUBaseAcceleratorI
         // OptiX Related
         void                        SetOptiXSystem(const OptiXSystem*);
         OptixTraversableHandle      GetBaseTraversable(int optixGPUIndex) const;
+        uint32_t                    TotalHitSBTCount() const;
         TracerError                 Construct(const std::vector<std::vector<OptixTraversableHandle>>&,
                                               const std::vector<PrimTransformType>& hTransformTypes,
                                               const std::vector<uint32_t>& hGlobalSBTOffsets,

@@ -179,15 +179,19 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
     };
 
     // Aperture Related Routines
-    const float CONE_DIAMETER_FACTOR = tan(0.5f * coneAperture) * 2.0f;
-    auto ConeDiameter = [&CONE_DIAMETER_FACTOR](float distance)
+    auto ConeDiameterSqr = [](float distance, float coneSolidAngle)
     {
-        return CONE_DIAMETER_FACTOR * distance;
+        float area = distance * distance * coneSolidAngle;
+        // Approximate with a circle
+        float coneDiskRadusSqr = area * MathConstants::InvPi;
+        float coneDiskDiamSqr = 4.0f * coneDiskRadusSqr;
+        return coneDiskDiamSqr;
     };
-    auto LevelVoxelSize = [this](uint32_t currentLevel)
+    auto LevelVoxelSizeSqr = [this](uint32_t currentLevel)
     {
         float levelFactor = static_cast<float>(1 << (leafDepth - currentLevel));
-        return levelFactor * leafVoxelSize;
+        float voxelSize = levelFactor * leafVoxelSize;
+        return voxelSize * voxelSize;
     };
 
     // Set leaf to invalid value
@@ -351,14 +355,21 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
                 // Only update the node if it has an actual children
                 nodeId = ChildrenIndex(node) + FindChildOffset(node, mirChildId);
 
-                // Check if the current cone aperture is larger than the
-                // current voxel size, then terminate
+                // We can terminate the traversal on several conditions
+                // Condition #1: This child is a leaf voxel, terminate (basic case)
+                // Condition #2: Consider this voxel as leaf (due to maxQueryLevelOffset parameter)
+                //               and terminate as if this node is leaf
+                // Condition #3: ConeApterture is larger than the this level's voxel size,
+                //               Again terminate, this voxel is assumed to cover the entire solid angle
+                //               of the cone
+                // Condition #3
                 uint32_t voxelLevel = stack3BitCount + 1;
-                bool isTerminated = ConeDiameter(tMin) > LevelVoxelSize(stack3BitCount + 1);
-                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevelOffset;
+                bool isTerminated = ConeDiameterSqr(tMin, coneAperture) > LevelVoxelSizeSqr(voxelLevel);
+                // Condition #1
                 bool isChildLeaf = IsChildrenLeaf(node);
-                // If it is leaf just return the
-                // "nodeId" it is actually leaf id
+                // Condition #2
+                isTerminated |= (static_cast<uint32_t>(leafDepth) - voxelLevel) <= maxQueryLevelOffset;
+
                 if(isChildLeaf || isTerminated)
                 {
                     isLeaf = isChildLeaf;
@@ -684,6 +695,8 @@ GDebugRendererSVO::GDebugRendererSVO(const nlohmann::json& config,
     renderResolutionNameList.push_back(std::make_pair(Vector2ui(64, 64), "64x64"));
     renderResolutionNameList.push_back(std::make_pair(Vector2ui(128, 128), "128x128"));
     renderResolutionNameList.push_back(std::make_pair(Vector2ui(256, 256), "256x256"));
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(512, 512), "512x512"));
+    renderResolutionNameList.push_back(std::make_pair(Vector2ui(1024, 1024), "1024x1024"));
     std::ptrdiff_t rrIndexLarge = std::distance(renderResolutionNameList.cbegin(),
                                                 std::find_if(renderResolutionNameList.cbegin(),
                                                              renderResolutionNameList.cend(),
@@ -1153,7 +1166,7 @@ bool GDebugRendererSVO::RenderGUI(bool& overlayCheckboxChanged,
         // TODO: assuming all trees are the same here change if necessary
         binLevelChanged = ComboBox(maxBinLevelSelectIndex,
                                    maxBinLevelNameList,
-                                   octrees[0].leafDepth,
+                                   octrees[0].leafDepth + 1,
                                    "##BinLevelCombo");
         // Render Level Select
         ImGui::Text("Resolution           :"); ImGui::SameLine();

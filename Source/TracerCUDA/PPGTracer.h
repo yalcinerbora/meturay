@@ -29,11 +29,14 @@ class PPGTracer final : public RayTracer
         static constexpr const char* SD_TREE_MAX_SIZE_NAME      = "SDTreeMaxSizeMB";
         static constexpr const char* SD_TREE_PATH_NAME          = "InitialSDTree";
 
+
         static constexpr const char* ALWAYS_SEND_NAME           = "AlwaysSendSamples";
         static constexpr const char* SKIP_PG_NAME               = "SkipPG";
+        static constexpr const char* PURE_PG_NAME               = "PurePG";
+        static constexpr const char* MIS_RATIO_NAME             = "BXDF-GuideMISRatio";
 
-        static constexpr const char* PG_DUMP_DEBUG_NAME        = "PGDumpDataStruct";
-        static constexpr const char* PG_DUMP_INTERVAL_NAME     = "PGDataStructDumpIntervalExp";
+        static constexpr const char* PG_DUMP_DEBUG_NAME         = "PGDumpDataStruct";
+        static constexpr const char* PG_DUMP_INTERVAL_NAME      = "PGDataStructDumpIntervalExp";
         static constexpr const char* PG_DUMP_PATH_NAME          = "PGDataStructDumpName";
 
         struct Options
@@ -60,6 +63,8 @@ class PPGTracer final : public RayTracer
             // Misc
             bool                alwaysSendSamples   = false;
             bool                skipPG              = false;
+            bool                purePG              = false;
+            float               bxdfPGMisRatio      = 0.5;
 
             bool                pgDumpDebugData     = false;
             uint32_t            pgDumpInterval      = 2;

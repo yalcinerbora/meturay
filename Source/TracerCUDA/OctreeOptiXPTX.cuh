@@ -16,6 +16,8 @@ struct OctreeAccelParams
     //     Common    //
     //===============//
     const OptixTraversableHandle*   octreeLevelBVHs;
+    OptixTraversableHandle          sceneBVH;
+    bool                            utilizeSceneAccelerator;
     // Put everything to here
     // This holds many information
     AnisoSVOctreeGPU                svo;

@@ -64,7 +64,9 @@ bool DTreeNode::IsLeaf(uint8_t childId) const
 __device__ inline
 float DTreeNode::IrradianceEst(NodeOrder o) const
 {
-    return irradianceEstimates[static_cast<int>(o)];
+    // Do not return zero
+    float irrad = irradianceEstimates[static_cast<int>(o)];
+    return irrad;
 }
 
 __device__ inline
@@ -141,11 +143,6 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
     if(xi[1] < 0.0f || xi[1] >= 1.0f)
         printf("xi[1] fail from start xi: %f\n", xi[1]);
 
-    //if(threadIdx.x == 0)
-    //    printf("Start DC(%f, %f), pdf(%f), XI(%f, %f)\n",
-    //           discreteCoords[0], discreteCoords[1],
-    //           pdf,
-    //           xi[0], xi[1]);
     int i = 0;
     DTreeNode* node = gRoot;
     if(irradiance == 0.0f)
@@ -171,17 +168,37 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
         // CDF of Y Axis is depends on the selection of X
         float cdfMidY;
 
+        float xi0Old = xi[0];
+
         uint8_t nextIndex = 0b00;
         // Locate X pos
         if(xi[0] < cdfMidX)
         {
             // Re-normalize sample for next iteration
             xi[0] = xi[0] / cdfMidX;
+
+            if(isnan(xi[0]))
+            {
+                printf("L xi[0] is nan! at level %d, cdfMid %f, xi[0]:%f\n",
+                       i, cdfMidX, xi0Old);
+            }
         }
         else
         {
+
             // Re-normalize sample for next iteration
+            //if((1.0f - cdfMidX) != 0.0f)
+            //{
             xi[0] = (xi[0] - cdfMidX) / (1.0f - cdfMidX);
+            //}
+            //else xi[0] =
+
+            if(isnan(xi[0]))
+            {
+                printf("R xi[0] is nan! at level %d, cdfMid %f, xi[0]:%f\n",
+                       i, cdfMidX, xi0Old);
+            }
+
             // Set the X bit on the iteration
             nextIndex |= (1 << 0) & (0b01);
         }
@@ -192,6 +209,7 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
                    : node->IrradianceEst(DTreeNode::BOTTOM_LEFT) / totalLeft;
 
         // Locate Y Pos
+        float xi1Old = xi[1];
         if(xi[1] < cdfMidY)
         {
             // Re-normalize sample for next iteration
@@ -202,19 +220,32 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
                        node->sampleCounts[2], node->sampleCounts[3]);
 
             xi[1] = xi[1] / cdfMidY;
+
+
+            if(isnan(xi[1]))
+            {
+                printf("L xi[1] is nan! at level %d, cdfMid %f, xi[1]:%f\n", i,
+                       cdfMidY, xi1Old);
+            }
         }
         else
         {
-            if(xi[1] == 1.0f && cdfMidY == 1.0f)
-                printf("xi[1] Nan xi(%f, %f), midY %f, samples (%u, %u, %u, %u)\n",
-                       xi[0], xi[1], cdfMidY,
-                       node->sampleCounts[0], node->sampleCounts[1],
-                       node->sampleCounts[2], node->sampleCounts[3]);
+            //if(xi[1] == 1.0f && cdfMidY == 1.0f)
+            //    printf("xi[1] Nan xi(%f, %f), midY %f, samples (%u, %u, %u, %u)\n",
+            //           xi[0], xi[1], cdfMidY,
+            //           node->sampleCounts[0], node->sampleCounts[1],
+            //           node->sampleCounts[2], node->sampleCounts[3]);
 
             // Re-normalize sample for next iteration
             xi[1] = (xi[1] - cdfMidY) / (1.0f - cdfMidY);
             // Set the Y bit on the iteration
             nextIndex |= (1 << 1) & (0b10);
+
+            if(isnan(xi[1]))
+            {
+                printf("R xi[1] is nan! at level %d, cdfMid %f, xi[1]:%f\n", i,
+                       cdfMidY, xi1Old);
+            }
         }
 
         // Due to numerical precision, xi sometimes becomes one
@@ -241,6 +272,12 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
         discreteCoords += gridOffset * descentFactor;
         descentFactor *= 0.5f;
 
+        if(isnan(pdf) || discreteCoords.HasNaN())
+            printf("pdf(%f) and/or DC(%f, %f) become "
+                   "NAN at level %d, xi(%f, %f) mid(%f, %f) \n",
+                   pdf, discreteCoords[0], discreteCoords[1], i,
+                   xi[0], xi[1], cdfMidX, cdfMidY);
+
         //if(threadIdx.x == 0)
         //    printf("[%d] DC(%f, %f), pdf(%f), XI(%f, %f)\n",
         //            i, discreteCoords[0], discreteCoords[1],
@@ -257,14 +294,16 @@ Vector3f DTreeGPU::Sample(float& pdf, RNGeneratorGPUI& rng) const
     }
 
     if(isnan(pdf) || discreteCoords.HasNaN())
-        printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f) initXi(%f, %f)\n", i, pdf,
+        printf("%d NAN? PDF(%f) DC(%f, %f) xi(%f, %f) initXi(%f, %f)\n",
+               i, pdf,
                discreteCoords[0], discreteCoords[1],
                xi[0], xi[1], initXi[0], initXi[1]);
 
     Vector3f dir = GPUDataStructCommon::DiscreteCoordsToDir(pdf, discreteCoords);
 
     if(isnan(pdf) || dir.HasNaN())
-        printf("%d NAN? PDF(%f) Dir(%f, %f, %f) xi(%f, %f)\n", i, pdf,
+        printf("%d NAN? PDF(%f) Dir(%f, %f, %f) xi(%f, %f)\n",
+               i, pdf,
                dir[0], dir[1], dir[2],
                xi[0], xi[1]);
 
@@ -470,6 +509,7 @@ void CalculateParentIrradiance(// I-O
                     ? 0.0f
                     //: irrad[i] / static_cast<float>(sampleCounts[i]);
                     : irrad[i];
+        irrad[i] = max(irrad[i], MathConstants::VeryLargeEpsilon);
     };
     AverageIrrad(0);
     AverageIrrad(1);
@@ -599,6 +639,7 @@ void ReconstructEmptyTree(// Output
                           uint32_t& gDTreeAllocator,
                           // Input
                           const DTreeGPU& gSiblingTree,
+                          uint32_t allocatedNodeCount,
                           float fluxRatio,
                           uint32_t depthLimit,
                           uint32_t nodeIndex)
@@ -634,7 +675,7 @@ void ReconstructEmptyTree(// Output
         childId = (parentNode->childIndices[3] == nodeIndex) ? 3 : childId;
 
         Vector2f childCoordOffset(((childId >> 0) & 0b01) ? 0.5f : 0.0f,
-                                    ((childId >> 1) & 0b01) ? 0.5f : 0.0f);
+                                  ((childId >> 1) & 0b01) ? 0.5f : 0.0f);
         discretePoint = childCoordOffset + 0.5f * discretePoint;
         depth++;
 
@@ -642,8 +683,12 @@ void ReconstructEmptyTree(// Output
         n = parentNode;
     }
 
-    // Do not create this not if it is over depth limit
-    if(depth > depthLimit) return;
+    // Do not create this node if it is over depth limit
+    if(depth > depthLimit)
+    {
+        printf("depthLimit-normal-reached\n");
+        return;
+    }
 
     //printf("My Point %f %f \n", discretePoint[0], discretePoint[1]);
 
@@ -655,7 +700,11 @@ void ReconstructEmptyTree(// Output
     uint32_t punchedNodeId = static_cast<uint32_t>(punchedNode - gDTree.gRoot);
 
     // Do not create children if children over depth limit
-    if((depth + 1) > depthLimit) return;
+    if((depth + 1) > depthLimit)
+    {
+        //printf("depthLimit-forchild-reached\n");
+        return;
+    }
     // We allocated up to this point
     // Check children if they need allocation
     uint8_t childCount = 0;
@@ -676,6 +725,13 @@ void ReconstructEmptyTree(// Output
 
     // Allocate children
     uint32_t childGlobalOffset = atomicAdd(&gDTreeAllocator, childCount);
+
+    if(allocatedNodeCount < childCount + childGlobalOffset)
+    {
+        printf("Overallocating children skipping!\n");
+        assert(false);
+        return;
+    }
 
     //printf("Child Count %u, Offsets %u %u %u %u\n",
     //       static_cast<uint32_t>(childCount),

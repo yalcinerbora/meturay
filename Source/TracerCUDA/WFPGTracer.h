@@ -43,6 +43,7 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    PRODUCT_PG_NAME             = "DoProductPathGuiding";
     static constexpr const char*    OPTIX_TRACE_NAME            = "OptiXTraceSVO";
     static constexpr const char*    OPTIX_BUFFER_NAME           = "OptixTraceBufferSize";
+    static constexpr const char*    OPTIX_USE_SCENE_NAME        = "UseSceneAccelerator";
 
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
 
@@ -76,6 +77,7 @@ class WFPGTracer final : public RayTracer
         bool                productPG           = true;
         float               misRatio            = 0.5f;
         bool                optiXTrace          = false;
+        bool                optiXUseSceneAcc    = true;
         uint32_t            optiXBufferSize     = 16;
         //
         bool                pgDumpDebugData     = false;
