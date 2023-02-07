@@ -102,7 +102,7 @@ static void KCMarkChildRequest(// Output
                                const DTreeGPU* gDTrees,
                                const uint32_t* gTreeIndices,
                                const uint32_t* gNodeOffsets,
-                               float fluxRatio,
+                               float fluxRatio, uint32_t depthLimit,
                                uint32_t totalNodeCount)
 {
     // Kernel Grid - Stride Loop
@@ -118,7 +118,8 @@ static void KCMarkChildRequest(// Output
 
         MarkChildRequest(gLocalRequestedChilds,
                          *(gDTrees + treeIndex),
-                         fluxRatio, localNodeIndex);
+                         fluxRatio, depthLimit,
+                         localNodeIndex);
     }
 }
 
@@ -280,6 +281,7 @@ static void KCSetNodePointers(// Output
 __global__ CUDA_LAUNCH_BOUNDS_1D
 static void KCCopyNodeCount(DTreeGPU* gDTrees,
                             const uint32_t* gAllocators,
+                            const uint32_t* dTreeChildCounts,
                             uint32_t treeCount)
 {
     for(uint32_t globalId = threadIdx.x + blockDim.x * blockIdx.x;
@@ -287,6 +289,12 @@ static void KCCopyNodeCount(DTreeGPU* gDTrees,
         globalId += (blockDim.x * gridDim.x))
     {
         gDTrees[globalId].nodeCount = gAllocators[globalId];
+        if(dTreeChildCounts[globalId] < gAllocators[globalId])
+        {
+            printf("DTree Allocation is not proper! ((Capacity)%u < (Alloc)%u)\n",
+                   dTreeChildCounts[globalId], gAllocators[globalId]);
+            //__trap();
+        }
     }
 }
 
@@ -807,7 +815,7 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        dNodeTreeIndices,
                        dNodeOffsets,
                        // Constants
-                       fluxRatio,
+                       fluxRatio, depthLimit,
                        totalNodeCount);
     gpu.WaitMainStream();
 
@@ -861,15 +869,15 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
 
 
     // DEBUG
-    for(uint32_t i = 0; i < TreeCount(); i++)
-    {
-        DTreeGPU tree;
-        std::vector<DTreeNode> nodes;
-        GetWriteTreeToCPU(tree, nodes, i);
-        Debug::DumpMemToFile("AfterBottomUp-writeNodes",
-                             nodes.data(), nodes.size(),
-                             (i != 0));
-    }
+    //for(uint32_t i = 0; i < TreeCount(); i++)
+    //{
+    //    DTreeGPU tree;
+    //    std::vector<DTreeNode> nodes;
+    //    GetWriteTreeToCPU(tree, nodes, i);
+    //    Debug::DumpMemToFile("After-KCReconstructEmptyTrees-ReadTree",
+    //                         nodes.data(), nodes.size(),
+    //                         (i != 0));
+    //}
 
     // Check that we allocated all the requested nodes
     // Copy the actual allocated node count to "tree.nodeCount"
@@ -879,6 +887,7 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        //
                        readTrees.DTrees(),
                        dTreeNodeAllocationCounters,
+                       dTreeChildCounts,
                        treeCount);
     // Finally swap the trees
     std::swap(readTrees, writeTrees);

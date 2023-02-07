@@ -94,7 +94,7 @@ TEST(PPG_STree, Split)
     // Maximum of 5 depth for each DTree
     static constexpr uint32_t D_MAX_DEPT = 50;
     // Split a DTree when it reaches more than %10 of total energy
-    static constexpr float D_FLUX_SPLIT = 0.001f;
+    static constexpr float D_FLUX_SPLIT = 0.1f;
     // Split a STree leaf when it reaches 100 samples
     static constexpr uint32_t S_SPLIT = 100;
     //

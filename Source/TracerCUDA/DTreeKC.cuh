@@ -608,8 +608,26 @@ void MarkChildRequest(// Output
                       // Input
                       const DTreeGPU& gDTree,
                       float fluxRatio,
+                      uint32_t depthLimit,
                       uint32_t nodeIndex)
 {
+    uint32_t depth = 0;
+    DTreeNode* n = gDTree.gRoot + nodeIndex;
+    while(!(n->IsRoot()))
+    {
+        DTreeNode* parentNode = gDTree.gRoot + n->parentIndex;
+        // Traverse upwards
+        n = parentNode;
+        depth++;
+    }
+
+    // We can't create anymore children depth limit reached
+    if(depth > depthLimit)
+    {
+        gRequestedChilds[nodeIndex] = 0;
+        return;
+    }
+
     // Kernel Grid - Stride Loop
     DTreeNode* node = gDTree.gRoot + nodeIndex;
     uint32_t requestedChildCount = 0;
@@ -728,7 +746,7 @@ void ReconstructEmptyTree(// Output
 
     if(allocatedNodeCount < childCount + childGlobalOffset)
     {
-        printf("Overallocating children skipping!\n");
+        printf("Overallocating children (depth %u), skipping!\n", depth);
         assert(false);
         return;
     }
