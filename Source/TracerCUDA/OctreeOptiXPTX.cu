@@ -171,6 +171,12 @@ void KCCamTraceSVO()
     // Convert tMax after trace
     float tMaxOut = __uint_as_float(tMaxOutUInt32);
 
+    // For scene accelerator we will find leaf
+    // Change currentLevel to leaf depth
+    currentLevel = (params.utilizeSceneAccelerator)
+                    ? svo.LeafDepth()
+                    : currentLevel;
+
     // We find a hit, now find the voxel level
     // from the distance
     uint32_t globalNodeId = UINT32_MAX;
@@ -188,6 +194,9 @@ void KCCamTraceSVO()
         // Find the level
         float dvRatio = max(0.0f, log2(coneDiskDiamSqr / levelVoxelSizeSqr) * 0.5f);
         requiredLevel = currentLevel - static_cast<uint32_t>(floor(dvRatio));
+
+        // Clamp the required level according to the "params.maxQueryOffset"
+        requiredLevel = min(requiredLevel, svo.LeafDepth() - params.maxQueryOffset);
         // Required level is above and found queried level is leaf
         // Ascend to level
         globalNodeId = svo.Ascend(requiredLevel, leafNodeIdOut, currentLevel);
@@ -208,10 +217,8 @@ void KCRadGenSVO()
 {
     auto ProjectionFunc = [](const Vector2i& localPixelId,
                              const Vector2i& segmentSize,
-                             float xi)
+                             Vector2f xi)
     {
-        // Jitter the values
-        //Vector2f xi = Vector2f(0.5f);
         Vector2f st = Vector2f(localPixelId) + xi;
         st /= Vector2f(segmentSize);
         Vector3 result = Utility::CocentricOctohedralToDirection(st);
@@ -248,26 +255,8 @@ void KCRadGenSVO()
     // Project using co-centric octohedral projection (mapping)
     // Globally jitter the field (entire field is offseted by this
     // value)
-    float projJitter = params.dProjJitters[binIndex];
+    Vector2f projJitter = params.dProjJitters[binIndex];
     Vector3f rayDir = ProjectionFunc(rayId, fieldDim, projJitter);
-
-    // DEBUG
-    //if(rayDir.HasNaN() ||
-    //   rayOrigin.HasNaN() ||
-    //   tMinMax.HasNaN())
-    //{
-    //    printf("(%s)(%s) I: %u, [%u], tMinMax[0]: %f binIndex: %u, threadIndex %u\n"
-    //           "Invalid Ray Param D:(%f, %f, %f), P:(%f, %f, %f): T:(%f, %f)\n"
-    //           "----\n",
-    //           isnan(tMinMax[0]) ? "True" : "False",
-    //           (tMinMax[0] != tMinMax[0]) ? "True" : "False",
-    //           launchIndex, launchDim, tMinMax[0], binIndex, binThreadIndex,
-    //           rayDir[0], rayDir[1], rayDir[2],
-    //           rayOrigin[0], rayOrigin[1], rayOrigin[2],
-    //           tMinMax[0], tMinMax[1]);
-    //    return;
-    //}
-
     // Actual SVO structure will be used to expand the hit location wrt.
     // query level
     const AnisoSVOctreeGPU& svo = params.svo;
@@ -339,8 +328,11 @@ void KCRadGenSVO()
 
     float radiance = svo.ReadRadiance(rayDir, params.pixelOrConeAperture,
                                       globalNodeId, isLeaf);
+    //float radiance = svo.ReadRadiance(rayDir, params.pixelOrConeAperture,
+    //                                  leafNodeIdOut, true);
     if(radiance == 0.0f)
-        radiance = MathConstants::LargeEpsilon;
+        radiance = MathConstants::Epsilon;
+
     // Now write
     float* dataRange = params.fieldSegments[fieldWriteIndex];
     dataRange[binThreadIndex] = radiance;

@@ -1181,12 +1181,49 @@ struct KCGenSampleShMem
         typename ConeTracer::TempStorage sTraceMem;
     };
     // Bin parameters
-    Vector3f sRadianceFieldOrigin;
+    Vector4f sRadianceFieldOriginTMin;
+    Vector2f sFieldJitter;
     uint32_t sRayCount;
     uint32_t sOffsetStart;
     uint32_t sNodeId;
     float sBinVoxelSize;
 };
+
+template <class RNG>
+__device__
+inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
+                                           Vector2f& jitter,
+                                           RNG& rng,
+                                           const uint32_t* gRayIds,
+                                           const AnisoSVOctreeGPU& svo,
+                                           const GPUMetaSurfaceGeneratorGroup& metaSurfGenerator,
+                                           Vector2ui rayRange,
+                                           uint32_t nodeIdPacked)
+{
+    // Calculate the voxel size of the bin
+    uint32_t nodeId;
+    bool isLeaf = ReadSVONodeId(nodeId, nodeIdPacked);
+    float binVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
+
+    // Utilize voxel center
+    Vector3f position = svo.NodePosition(nodeId, isLeaf);
+
+    // Utilize a random ray
+    //uint32_t rayCount = rayRange[1] - rayRange[0];
+    //uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
+    //uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
+    //RayReg rayReg = metaSurfGenerator.Ray(rayId);
+    //Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
+
+    // TODO: Better offset maybe?
+    float tMin = (binVoxelSize * MathConstants::Sqrt3 +
+                  MathConstants::LargeEpsilon);
+    //float tMin = binVoxelSize + MathConstants::Epsilon;
+
+    // Out
+    posTMin = Vector4f(position, tMin);
+    jitter = Vector2f(0.5f);// rng.Uniform2D();
+}
 
 template <class RNG, int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 __device__
@@ -1217,31 +1254,24 @@ inline void LoadBinInfo(//Output
 
         if(sharedMem->sNodeId != INVALID_BIN_ID)
         {
-            // Calculate the voxel size of the bin
             uint32_t nodeId;
             bool isLeaf = ReadSVONodeId(nodeId, sharedMem->sNodeId);
             sharedMem->sBinVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
-            // Utilize voxel center
-            //Vector3f position = svo.NodeVoxelPosition(nodeId, isLeaf);
-
-            // Utilize a random ray
-            uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * sharedMem->sRayCount);
-            // Use the first rays hit position
-            //uint32_t randomRayIndex = 0;
-
-            uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
-            RayReg rayReg = metaSurfGenerator.Ray(rayId);
-            //Vector3f position = rayReg.ray.Advance(rayReg.tMax - rayReg.tMin).getPosition();
-            Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
-
-            sharedMem->sRadianceFieldOrigin = position;
-            //sharedMem->sRadianceFieldOrigin = Zero3f;
+            // Calculate the voxel size of the bin
+            Vector2f jitter;
+            Vector4f posTMin;
+            CalculateJitterAndBinRayOrigin(posTMin, jitter,
+                                           rng,
+                                           gRayIds,
+                                           svo,
+                                           metaSurfGenerator,
+                                           rayRange,
+                                           sharedMem->sNodeId);
+            // Write
+            sharedMem->sRadianceFieldOriginTMin = posTMin;
+            sharedMem->sFieldJitter = jitter;
         }
-
-        //// Roll a dice stochastically cull bin (TEST)
-        //if(rng.Uniform() < 0.5f)
-        //    sNodeId = INVALID_BIN_ID;
     }
     __syncthreads();
 }
@@ -1272,8 +1302,9 @@ inline void GenerateRadianceField(// Output
 
     ConeTracer coneTracer(sharedMem->sTraceMem, svo);
 
-    float tMin = (sharedMem->sBinVoxelSize * MathConstants::Sqrt3 +
-                  MathConstants::LargeEpsilon);
+    Vector4f rayOriginTMin = sharedMem->sRadianceFieldOriginTMin;
+    float tMin = rayOriginTMin[3];
+    Vector3f rayOrigin = Vector3f(rayOriginTMin);
 
     // Uniform Test
     //for(int i = 0; i < RT_ITER_COUNT; i++)
@@ -1289,7 +1320,7 @@ inline void GenerateRadianceField(// Output
                                    isLeaf,
                                    nodeId,
                                    // Inputs
-                                   sharedMem->sRadianceFieldOrigin,
+                                   rayOrigin,
                                    Vector2f(tMin, FLT_MAX),
                                    coneAperture, 0,
                                    // Functors
@@ -1391,13 +1422,15 @@ static void KCGenAndSampleDistribution(// Output
     using ConeTracer = typename SharedMemType::ConeTracer;
     static_assert(RT_ITER_COUNT == ConeTracer::DATA_PER_THREAD);
 
+    // Change the type of the shared memory
+    extern __shared__ Byte sharedMemRAW[];
+    SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
+
     // Functors for batched cone trace
     auto ProjectionFunc = [&](const Vector2i& localPixelId,
                               const Vector2i& segmentSize)
     {
-        // Jitter the values
-        //Vector2f xi = Vector2f(0.5f);
-        Vector2f xi = rng.Uniform2D();
+        Vector2f xi = sharedMem->sFieldJitter;
         Vector2f st = Vector2f(localPixelId) + xi;
         st /= Vector2f(segmentSize);
         Vector3 result = Utility::CocentricOctohedralToDirection(st);
@@ -1421,11 +1454,6 @@ static void KCGenAndSampleDistribution(// Output
     {
         return Utility::CocentricOctohedralWrapInt(pixelId, segmentSize);
     };
-
-    // Change the type of the shared memory
-    extern __shared__ Byte sharedMemRAW[];
-    SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
-
 
     ConeTracer coneTracer(sharedMem->sTraceMem, svo);
     // For each block (we allocate enough blocks for the GPU)
@@ -1562,13 +1590,16 @@ static void KCGenAndSampleDistributionProduct(// Output
     using SharedMemType = KCGenSampleShMem<THREAD_PER_BLOCK, X, Y>;
     using ProductSampler8x8 = typename SharedMemType::ProductSampler8x8;
 
+    // Change the type of the shared memory
+    extern __shared__ Byte sharedMemRAW[];
+    SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
+
     // Functors for batched cone trace
     auto ProjectionFunc = [&](const Vector2i& localPixelId,
                               const Vector2i& segmentSize)
     {
         // Jitter the values
-        //Vector2f xi = Vector2f(0.5f);
-        Vector2f xi = rng.Uniform2D();
+        Vector2f xi = sharedMem->sFieldJitter;
         Vector2f st = Vector2f(localPixelId) + xi;
         st /= Vector2f(segmentSize);
         Vector3 result = Utility::CocentricOctohedralToDirection(st);
@@ -1597,10 +1628,6 @@ static void KCGenAndSampleDistributionProduct(// Output
                                                                   RT_ITER_COUNT,
                                                                   THREAD_PER_BLOCK, X, Y>;
     static constexpr auto LoadBinInfoFunc = LoadBinInfo<RNG, THREAD_PER_BLOCK, X, Y>;
-
-    // Change the type of the shared memory
-    extern __shared__ Byte sharedMemRAW[];
-    SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
 
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
@@ -2050,7 +2077,7 @@ template <class RNG>
 __global__
 static void KCGenerateBinInfoOptiX(// Output
                                    Vector4f* dRadianceFieldRayOrigins,
-                                   float* dProjectionJitters,
+                                   Vector2f* dProjectionJitters,
                                    // I-O
                                    RNGeneratorGPUI** gRNGs,
                                    // Input
@@ -2070,42 +2097,27 @@ static void KCGenerateBinInfoOptiX(// Output
         threadId += (blockDim.x * gridDim.x))
     {
         Vector2ui rayRange = Vector2ui(gBinOffsets[threadId], gBinOffsets[threadId + 1]);
-        uint32_t rayCount = rayRange[1] - rayRange[0];
-        uint32_t offsetStart = rayRange[0];
         uint32_t nodeIdPacked = gNodeIds[threadId];
 
         if(nodeIdPacked != INVALID_BIN_ID)
         {
-            // Calculate the voxel size of the bin
-            uint32_t nodeId;
-            bool isLeaf = ReadSVONodeId(nodeId, nodeIdPacked);
-            uint32_t binVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
+            Vector2f jitter;
+            Vector4f posTMin;
+            CalculateJitterAndBinRayOrigin(posTMin, jitter,
+                                           rng,
+                                           gRayIds,
+                                           svo,
+                                           metaSurfGenerator,
+                                           rayRange,
+                                           nodeIdPacked);
 
-            // Utilize voxel center
-            Vector3f position = svo.NodePosition(nodeId, isLeaf);
-
-            //// Utilize a random ray
-            //uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
-            ////uint32_t randomRayIndex = 0;
-
-            //uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
-            //RayReg rayReg = metaSurfGenerator.Ray(rayId);
-            //Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
-
-            // TODO: Better offset maybe?
-            //float tMin = (binVoxelSize * MathConstants::Sqrt3 +
-            //              MathConstants::LargeEpsilon);
-            float tMin = binVoxelSize + MathConstants::Epsilon;
-
-            float jitter = 0.5f;// rng.Uniform();
-
-            dRadianceFieldRayOrigins[threadId] = Vector4f(position, tMin);
+            dRadianceFieldRayOrigins[threadId] = posTMin;
             dProjectionJitters[threadId] = jitter;
         }
         else
         {
             dRadianceFieldRayOrigins[threadId] = Vector4f(NAN);
-            dProjectionJitters[threadId] = NAN;
+            dProjectionJitters[threadId] = Vector2f(NAN);
         }
     }
 }

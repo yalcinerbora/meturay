@@ -48,7 +48,7 @@ struct OctreeAccelParams
             SegmentedField<float*>  fieldSegments;
             // All of these are determined per bin
             const Vector4f*         dRadianceFieldRayOrigins;
-            const float*            dProjJitters;
+            const Vector2f*         dProjJitters;
             int32_t                 binOffset;
         };
     };

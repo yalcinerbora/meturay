@@ -369,12 +369,16 @@ void PPGTracerPathWork(// Output
     // Sample a path using SDTree
     if(!isSpecularMat)
     {
-        float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : renderState.bxdfPGMisRatio;
-        BxDF_GuideSampleRatio       = (renderState.purePG) ? 1.0f : renderState.bxdfPGMisRatio;
-
+        float BxDF_GuideSampleRatio = renderState.bxdfPGMisRatio;
+        if(renderState.purePG)
+            BxDF_GuideSampleRatio = 1.0f;
+        else if(renderState.skipPG)
+            BxDF_GuideSampleRatio = 0.0f;
         // Sample a chance
         float xi = rng.Uniform();
         const DTreeGPU& dReadTree = renderState.gReadDTrees[dTreeIndex];
+
+
 
         float misWeight;
         bool selectedPDFZero = false;
@@ -438,15 +442,77 @@ void PPGTracerPathWork(// Output
         // One-sample MIS Using Balance Heuristic
         if(renderState.skipPG)
             pdfPath = pdfBxDF;
-        else if(!renderState.purePG)
+        else if(renderState.purePG)
             pdfPath = pdfGuide;
         else
         {
             pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
             pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
-            pdfPath = selectedPDFZero ? 0.0f : pdfPath;
-        }
 
+        }
+        pdfPath = selectedPDFZero ? 0.0f : pdfPath;
+
+
+
+        // DIFFERENT VERSION
+        //float pdfSampled, pdfOther;
+        //if(xi >= BxDF_GuideSampleRatio)
+        //{
+        //    // Sample using BxDF
+        //    reflectance = MGroup::Sample(// Outputs
+        //                                 rayPath, pdfSampled, outM,
+        //                                 // Inputs
+        //                                 wi,
+        //                                 position,
+        //                                 m,
+        //                                 //
+        //                                 surface,
+        //                                 // I-O
+        //                                 rng,
+        //                                 // Constants
+        //                                 gMatData,
+        //                                 matIndex,
+        //                                 0);
+        //    pdfOther = dReadTree.Pdf(rayPath.getDirection());
+        //    BxDF_GuideSampleRatio = (1.0f - BxDF_GuideSampleRatio);
+        //}
+        //else
+        //{
+        //    // Sample a path using SDTree
+        //    Vector3f direction = dReadTree.Sample(pdfSampled, rng);
+        //    direction.NormalizeSelf();
+        //    // Calculate BxDF
+        //    reflectance = MGroup::Evaluate(// Input
+        //                                   direction,
+        //                                   wi,
+        //                                   position,
+        //                                   m,
+        //                                   //
+        //                                   surface,
+        //                                   // Constants
+        //                                   gMatData,
+        //                                   matIndex);
+
+        //    pdfOther = MGroup::Pdf(direction,
+        //                           wi,
+        //                           position,
+        //                           m,
+        //                           //
+        //                           surface,
+        //                           gMatData,
+        //                           matIndex);
+
+        //    // Generate a ray using the values
+        //    rayPath = RayF(direction, position);
+        //    rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
+        //}
+        //// Pdf Average
+        //// One-sample MIS Using Balance Heuristic
+        //using namespace TracerFunctions;
+        //pdfPath = pdfSampled * BxDF_GuideSampleRatio;
+        //pdfPath /= BalanceHeuristic(BxDF_GuideSampleRatio, pdfSampled,
+        //                            1.0f - BxDF_GuideSampleRatio, pdfOther);
+        //pdfPath = (pdfSampled == 0.0f) ? 0.0f : pdfPath;
 
         // DEBUG
         if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
@@ -466,9 +532,9 @@ void PPGTracerPathWork(// Output
                    reflectance[1],
                    reflectance[2]);
 
-        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide) ||
-        //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
-        //    return;
+        if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide) ||
+           rayPath.getDirection().HasNaN() || reflectance.HasNaN())
+            return;
     }
     else
     {
@@ -495,11 +561,14 @@ void PPGTracerPathWork(// Output
     // Check singularities
     pathRadianceFactor = (pdfPath == 0.0f) ? Zero3 : (pathRadianceFactor / pdfPath);
 
-    if(pathRadianceFactor.HasNaN())
-        printf("NAN PATH R: %f %f %f = {%f %f %f} * {%f %f %f} / %f  \n",
-               pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
-               radianceFactor[0], radianceFactor[1], radianceFactor[2],
-               reflectance[0], reflectance[1], reflectance[2], pdfPath);
+    // TEST LIMIT FIREFLIES
+    //if(pdfPath < 1.e-4f) pathRadianceFactor = Zero3;
+
+    //if(pathRadianceFactor.HasNaN())
+    //    printf("NAN PATH R: %f %f %f = {%f %f %f} * {%f %f %f} / %f  \n",
+    //           pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
+    //           radianceFactor[0], radianceFactor[1], radianceFactor[2],
+    //           reflectance[0], reflectance[1], reflectance[2], pdfPath);
 
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));

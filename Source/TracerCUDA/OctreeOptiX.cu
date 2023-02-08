@@ -652,7 +652,7 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
 }
 
 void SVOOptixConeCaster::CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
-                                                  const float* dProjJitters,
+                                                  const Vector2f* dProjJitters,
                                                   SVOOptixRadianceBuffer::SegmentedField<float*> fieldSegments,
                                                   bool useSceneAccelerator,
                                                   float coneAperture)

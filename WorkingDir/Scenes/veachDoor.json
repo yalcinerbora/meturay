@@ -76,6 +76,7 @@
             "primitive": 20,
             "accelerator": 1,
             "radiance" : [1420, 1552, 1642]
+            //"radiance" : [142, 155, 164]
         }
     ],
 

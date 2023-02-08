@@ -377,6 +377,10 @@ void PPGTracer::Finalize()
                  currentSTreeSplitThreshold,
                  mbSize,
                  sTree->TotalTreeCount());
+
+        //if(currentTreeIteration == 256)
+        //    options.purePG = true;
+
         // Completely Reset the Image
         // This is done to eliminate variance from prev samples
         ResetImage();

@@ -46,7 +46,7 @@ void STree::ExpandTree(size_t newNodeCount)
     memory = std::move(newMem);
 }
 
-void STree::LoadSDTree(const std::string& path, const CudaSystem& system)
+uint64_t STree::LoadSDTree(const std::string& path, const CudaSystem& system)
 {
     std::ifstream file(path, std::ios::binary);
     std::istreambuf_iterator<char>fileIt(file);
@@ -109,6 +109,7 @@ void STree::LoadSDTree(const std::string& path, const CudaSystem& system)
 
     // Reset the d-trees using the data
     dTrees.InitializeTrees(hDTreeBases, hDTreeNodes, system);
+    return sTreeNodeCount;
 }
 
 STree::STree(const AABB3f& sceneExtents,
@@ -146,7 +147,7 @@ STree::STree(const AABB3f& sceneExtents,
 STree::STree(const std::string& sdTreePath,
              const CudaSystem& system)
 {
-    LoadSDTree(sdTreePath, system);
+    nodeCount = LoadSDTree(sdTreePath, system);
 }
 
 void STree::SplitLeaves(uint32_t maxSamplesPerNode,

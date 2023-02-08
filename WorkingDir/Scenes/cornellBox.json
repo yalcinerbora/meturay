@@ -10,11 +10,11 @@
 		"planes": [0.05, 90.0],
 
         // // TEST
-        // "gaze"     : [-0.00166431, 1.67172, 2.49813],
-        // "position" : [-0.00773513, 2.25885, 3.30762],
+        "gaze"     : [-0.00166431, 1.67172, 2.49813],
+        "position" : [-0.00773513, 2.25885, 3.30762],
 
-        "gaze": [0.0, 1, 0.0],
-		"position": [0, 1, 6.8],
+        // "gaze": [0.0, 1, 0.0],
+		// "position": [0, 1, 6.8],
 
 		"up": [0.0, 1.0, 0.0]
 	},
@@ -23,16 +23,19 @@
 		"type": "Spherical",
 
 		// Ratio of the Pixels
-		"pixelRatio": 1.0,
+		"pixelRatio": 0.5,
 		// Camera Position
-		"position": [-0.99, 1, 0],
+		//"position": [-0.99, 1, 0],
 		// Near & Far Planes
 		"planes": [0.05, 100.0],
 
-        "gaze": [0.0, 1, 0.0],
-		"direction": [1.0, 0.0, 0.0],
-        //"direction": [-0.0235629, -0.988653, 0.148366],
-		"up": [0.0, 1.0, 0.0]
+        // "gaze": [0.0, 1, 0.0],
+		// "direction": [1.0, 0.0, 0.0],
+        // //"direction": [-0.0235629, -0.988653, 0.148366],
+		// "up": [0.0, 1.0, 0.0]
+        "gaze"     : [-0.374971, -1.00439, 0.04511],
+        "position" : [-0.37614, -0.00439283, 0.0394334],
+        "up"       : [0, 1, 0]
 	}
 ],
 
@@ -45,9 +48,9 @@
 			"type" : "Primitive",
 			"primitive": 0,
 			"accelerator": 0,
-            "radiance": [68, 48, 16]
+            //"radiance": [68, 48, 16]
             //"radiance": [136, 96, 32]
-            //"radiance": [1.7, 1.2, 0.4]
+            "radiance": [1.7, 1.2, 0.4]
 		}
 	],
 
@@ -119,9 +122,9 @@
             "layout": "trs",
             "translate": [-0.005, 1.98, -0.03],
             "rotate": [90, 0, 0],
-            "scale": [0.47, 1, 0.38]
+            //"scale": [0.47, 1, 0.38]
             //"scale": [0.235, 1, 0.19]
-            //"scale": [2.47, 1, 2.38]
+            "scale": [2.47, 1, 2.38]
         },
         {
             // Occluder Box
@@ -188,22 +191,23 @@
 	"Surfaces":
     [
         // Floor
-        { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0},
-        // Ceiling
-        { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
-        // Back Wall
-        { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
-        // Left Wall
-        { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
-        // Right Wall
-        { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
+        { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0}
+        //,
+        // // Ceiling
+        // { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
+        // // Back Wall
+        // { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
+        // // Left Wall
+        // { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
+        // // Right Wall
+        // { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
         // // Tall Box
         // { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
         // // Short Box
         // { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
 
-         // Occuluder Prism
-         { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
+        //  // Occuluder Prism
+        //  { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
 	],
 
 	"LightSurfaces": [{"light": 1, "transform": 6}],

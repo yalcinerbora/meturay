@@ -622,7 +622,7 @@ void WFPGTracer::GenerateGuidedDirections()
 
         // Allocate the OpitX required parameters
         Vector4f* dRadianceFieldRayOrigins;
-        float* dProjectionJitters;
+        Vector2f* dProjectionJitters;
         GPUMemFuncs::AllocateMultiData(std::tie(dRadianceFieldRayOrigins,
                                                 dProjectionJitters),
                                        *binInfoBufferOptiX,
@@ -1472,6 +1472,13 @@ void WFPGTracer::Finalize()
             METU_LOG("Dumping {:s}", fName);
             treeDumpCount++;
         }
+
+        //if(iterationCount == dumpInterval)
+        //{
+        //    ResetImage();
+        //    treeDumpCount++;
+        //}
+
     }
     // On SVO_Radiance mode clear the image memory
     // And trace the SVO from the camera and send the results

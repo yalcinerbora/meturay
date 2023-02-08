@@ -793,8 +793,7 @@ float AnisoSVOctreeGPU::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF&
     // Aperture Related Routines
     auto LevelVoxelSizeSqr = [this](uint32_t currentLevel)
     {
-        float levelFactor = static_cast<float>(1 << (leafDepth - currentLevel));
-        float voxelSize = levelFactor * leafVoxelSize;
+        float voxelSize = LevelVoxelSize(currentLevel);
         return voxelSize * voxelSize;
     };
 
@@ -1089,10 +1088,10 @@ uint32_t AnisoSVOctreeGPU::Ascend(uint32_t requestedLevel,
                                   uint32_t startNodeId,
                                   uint32_t startLevel) const
 {
-    bool isLeaf = (startLevel == leafDepth);
     uint32_t nodeId = startNodeId;
     for(uint32_t i = startLevel; i != requestedLevel; i--)
     {
+        bool isLeaf = (i == leafDepth);
         nodeId = (isLeaf)
                     ? dLeafParents[nodeId]
                     : ParentIndex(dNodes[nodeId]);
@@ -1111,10 +1110,8 @@ bool AnisoSVOctreeGPU::NearestNodeIndex(uint32_t& index, const Vector3f& worldPo
         index = UINT32_MAX;
         return false;
     }
-
-    float levelVoxelSize = leafVoxelSize * static_cast<float>(1 << (leafDepth - depth));
-
     // Calculate Dense Voxel Id
+    float levelVoxelSize = LevelVoxelSize(depth);
     Vector3f lIndex = ((worldPos - svoAABB.Min()) / levelVoxelSize);
     Vector3f lIndexInt;
     Vector3f lIndexFrac = Vector3f(modff(lIndex[0], &(lIndexInt[0])),
@@ -1346,9 +1343,7 @@ Vector3f AnisoSVOctreeGPU::NodePosition(uint32_t nodeIndex, bool isLeaf) const
     Vector3ui position = NodeVoxelId(depth, nodeIndex, isLeaf);
 
     // Now calculate the voxel center using morton code
-    uint32_t levelDiff = leafDepth - static_cast<uint32_t>(depth);
-    float multiplier = static_cast<float>(1 << levelDiff);
-    float levelVoxelSize = leafVoxelSize * multiplier;
+    float levelVoxelSize = LevelVoxelSize(depth);
 
     Vector3f pos = Vector3f(position) + Vector3f(0.5f);
     // Expand to worldSpaceCoords

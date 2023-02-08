@@ -621,8 +621,11 @@ void MarkChildRequest(// Output
         depth++;
     }
 
+    //printf("[%p] n:%u, myDepth %u\n",
+    //       gDTree.gRoot, nodeIndex, depth);
+
     // We can't create anymore children depth limit reached
-    if(depth > depthLimit)
+    if(depth >= depthLimit)
     {
         gRequestedChilds[nodeIndex] = 0;
         return;

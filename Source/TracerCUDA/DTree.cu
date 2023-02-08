@@ -831,6 +831,12 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
         (cudaStream_t)0
     );
 
+    //Debug::DumpMemToFile("dTreeChildCounts",
+    //                     dTreeChildCounts, writeTrees.DTreeCount());
+    //Debug::DumpMemToFile("dNodeChildCounts",
+    //                     dNodeChildCounts, totalNodeCount);
+
+
     // Add root node (DTree will at least have a root node)
     // And above kernel only checks if children should be generated
     // Root does not have any parent so we need to manually include here
@@ -868,12 +874,12 @@ void DTreeGroup::SwapTrees(float fluxRatio, uint32_t depthLimit,
                        totalNodeCount);
 
 
-    // DEBUG
+    //// DEBUG
     //for(uint32_t i = 0; i < TreeCount(); i++)
     //{
     //    DTreeGPU tree;
     //    std::vector<DTreeNode> nodes;
-    //    GetWriteTreeToCPU(tree, nodes, i);
+    //    GetReadTreeToCPU(tree, nodes, i);
     //    Debug::DumpMemToFile("After-KCReconstructEmptyTrees-ReadTree",
     //                         nodes.data(), nodes.size(),
     //                         (i != 0));

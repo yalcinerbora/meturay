@@ -43,7 +43,7 @@ class STree
         void                SwapTrees(float fluxRatio,
                                       uint32_t depthLimit,
                                       const CudaSystem& system);
-        void                LoadSDTree(const std::string& path,
+        uint64_t            LoadSDTree(const std::string& path,
                                        const CudaSystem& system);
 
     protected:

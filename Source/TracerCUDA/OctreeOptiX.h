@@ -101,7 +101,7 @@ class SVOOptixConeCaster
     // Generate radiance map over the spatial locations
     // on the scene
     void                    CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
-                                                     const float* dProjJitters,
+                                                     const Vector2f* dProjJitters,
                                                      SVOOptixRadianceBuffer::SegmentedField<float*>,
                                                      bool useSceneAccelerator,
                                                      float coneAperture);

@@ -137,42 +137,64 @@ __host__ void ReduceArrayGPU(Type& result,
                              Type identityElement,
                              cudaStream_t stream = (cudaStream_t)0)
 {
-    static constexpr unsigned int TPB = StaticThreadPerBlock1D;
-    static constexpr unsigned int SharedSize = (TPB / WarpSize) * sizeof(Type);
+    //static constexpr unsigned int TPB = StaticThreadPerBlock1D;
+    //static constexpr unsigned int SharedSize = (TPB / WarpSize) * sizeof(Type);
 
-    unsigned int allocBig = (static_cast<unsigned int>(elementCount) + TPB - 1) / TPB;
-    unsigned int allocSmall = (allocBig + TPB - 1) / TPB;
-    DeviceMemory buffer(allocBig * sizeof(Type) +
-                        allocSmall * sizeof(Type));
-    Type* dRead = static_cast<Type*>(buffer) + allocBig;
-    Type* dWrite = static_cast<Type*>(buffer);
+    //unsigned int allocBig = (static_cast<unsigned int>(elementCount) + TPB - 1) / TPB;
+    //unsigned int allocSmall = (allocBig + TPB - 1) / TPB;
+    //DeviceMemory buffer(allocBig * sizeof(Type) +
+    //                    allocSmall * sizeof(Type));
+    //Type* dRead = static_cast<Type*>(buffer) + allocBig;
+    //Type* dWrite = static_cast<Type*>(buffer);
 
-    unsigned int dataSize = static_cast<unsigned int>(elementCount);
-    unsigned int gridSize;
+    //unsigned int dataSize = static_cast<unsigned int>(elementCount);
+    //unsigned int gridSize;
 
-    const Type* inData = dData;
-    do
-    {
-        // Current Grid Size is reduced by previous data size
-        gridSize = (dataSize + TPB - 1) / TPB;
+    //const Type* inData = dData;
+    //do
+    //{
+    //    // Current Grid Size is reduced by previous data size
+    //    gridSize = (dataSize + TPB - 1) / TPB;
 
-        // KC Parallel Reduction
-        KCParallelReduction<Type, F> <<<gridSize, TPB, SharedSize, stream>>>
-        (
-            dWrite,
-            inData,
-            dataSize,
-            identityElement
-        );
-        CUDA_KERNEL_CHECK();
+    //    // KC Parallel Reduction
+    //    KCParallelReduction<Type, F> <<<gridSize, TPB, SharedSize, stream>>>
+    //    (
+    //        dWrite,
+    //        inData,
+    //        dataSize,
+    //        identityElement
+    //    );
+    //    CUDA_KERNEL_CHECK();
 
-        dataSize = gridSize;
-        std::swap(dRead, dWrite);
-        inData = dRead;
-    } while(dataSize > 1);
-
+    //    dataSize = gridSize;
+    //    std::swap(dRead, dWrite);
+    //    inData = dRead;
+    //} while(dataSize > 1);
     // Just get the data from gpu (first element at dRead)
-    CUDA_CHECK(cudaMemcpyAsync(&result, dRead, sizeof(Type), cpyKind, stream));
+    //CUDA_CHECK(cudaMemcpyAsync(&result, dRead, sizeof(Type), cpyKind, stream));
+
+    Byte* dTempBuffer = nullptr;
+    Type* dOutputBuffer = nullptr;
+
+    size_t tempMemSize;
+    cub::DeviceReduce::Reduce(nullptr, tempMemSize,
+                              dData, dOutputBuffer,
+                              static_cast<int>(elementCount),
+                              ReduceWrapper<Type, F>(),
+                              identityElement,
+                              stream);
+
+    DeviceMemory buffer;
+    GPUMemFuncs::AllocateMultiData(std::tie(dTempBuffer, dOutputBuffer),
+                                            buffer, {tempMemSize, 1});
+
+    cub::DeviceReduce::Reduce(dTempBuffer, tempMemSize,
+                              dData, dOutputBuffer,
+                              static_cast<int>(elementCount),
+                              ReduceWrapper<Type, F>(),
+                              identityElement);
+
+    CUDA_CHECK(cudaMemcpyAsync(&result, dOutputBuffer, sizeof(Type), cpyKind, stream));
 }
 
 template<class Type, ReduceFunc<Type> F, cudaMemcpyKind cpyKind = cudaMemcpyDeviceToDevice>
@@ -245,94 +267,94 @@ __host__ void SegmentedReduceArrayGPU(Type* dResultData,
     CUDA_KERNEL_CHECK();
 }
 
-// Meta Definition
-#define DEFINE_REDUCE_ARRAY_SINGLE(type, func, cpy) \
-    template \
-    __host__ void ReduceArrayGPU<type, func, cpy>(type&, const type*, \
-                                                  size_t, type, \
-                                                  cudaStream_t);
-#define DEFINE_REDUCE_TEXTURE_SINGLE(type, func, cpy) \
-    template \
-    __host__ void ReduceTextureGPU<type, func, cpy>(type&, cudaTextureObject_t, \
-                                                    const uint2&, \
-                                                    const uint2&, \
-                                                    type, cudaStream_t);
-
-// Cluster Definitions ARRAY
-#define EXTERN_REDUCE_ARRAY_SINGLE(type, func, copy) \
-    extern DEFINE_REDUCE_ARRAY_SINGLE(type, func, copy)
-
-#define EXTERN_REDUCE_ARRAY_BOTH(type, func) \
-    EXTERN_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToHost) \
-    EXTERN_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToDevice)
-
-#define EXTERN_REDUCE_ARRAY_ALL(type) \
-    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceAdd) \
-    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceSubtract) \
-    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceMultiply) \
-    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceDivide) \
-    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceMin) \
-    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceMax)
-
-// Cluster Definitions TEXTURE
-#define EXTERN_REDUCE_TEXTURE_SINGLE(type, func, copy) \
-    extern DEFINE_REDUCE_TEXTURE_SINGLE(type, func, copy)
-
-#define EXTERN_REDUCE_TEXTURE_BOTH(type, func) \
-    EXTERN_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToHost) \
-    EXTERN_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToDevice)
-
-#define EXTERN_REDUCE_TEXTURE_ALL(type) \
-    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceAdd) \
-    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceSubtract) \
-    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMultiply) \
-    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceDivide) \
-    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMin) \
-    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMax)
-
-// Integral Types
-EXTERN_REDUCE_ARRAY_ALL(int)
-EXTERN_REDUCE_ARRAY_ALL(unsigned int)
-EXTERN_REDUCE_ARRAY_ALL(float)
-EXTERN_REDUCE_ARRAY_ALL(double)
-
-// Vector Types
-EXTERN_REDUCE_ARRAY_ALL(Vector2f)
-EXTERN_REDUCE_ARRAY_ALL(Vector2d)
-EXTERN_REDUCE_ARRAY_ALL(Vector2i)
-EXTERN_REDUCE_ARRAY_ALL(Vector2ui)
-
-EXTERN_REDUCE_ARRAY_ALL(Vector3f)
-EXTERN_REDUCE_ARRAY_ALL(Vector3d)
-EXTERN_REDUCE_ARRAY_ALL(Vector3i)
-EXTERN_REDUCE_ARRAY_ALL(Vector3ui)
-
-EXTERN_REDUCE_ARRAY_ALL(Vector4f)
-EXTERN_REDUCE_ARRAY_ALL(Vector4d)
-EXTERN_REDUCE_ARRAY_ALL(Vector4i)
-EXTERN_REDUCE_ARRAY_ALL(Vector4ui)
-
-// Matrix Types
-EXTERN_REDUCE_ARRAY_ALL(Matrix2x2f)
-EXTERN_REDUCE_ARRAY_ALL(Matrix2x2d)
-EXTERN_REDUCE_ARRAY_ALL(Matrix2x2i)
-EXTERN_REDUCE_ARRAY_ALL(Matrix2x2ui)
-
-EXTERN_REDUCE_ARRAY_ALL(Matrix3x3f)
-EXTERN_REDUCE_ARRAY_ALL(Matrix3x3d)
-EXTERN_REDUCE_ARRAY_ALL(Matrix3x3i)
-EXTERN_REDUCE_ARRAY_ALL(Matrix3x3ui)
-
-EXTERN_REDUCE_ARRAY_ALL(Matrix4x4f)
-EXTERN_REDUCE_ARRAY_ALL(Matrix4x4d)
-EXTERN_REDUCE_ARRAY_ALL(Matrix4x4i)
-EXTERN_REDUCE_ARRAY_ALL(Matrix4x4ui)
-
-// Quaternion Types
-EXTERN_REDUCE_ARRAY_BOTH(QuatF, ReduceMultiply)
-EXTERN_REDUCE_ARRAY_BOTH(QuatD, ReduceMultiply)
-
-// Texture Types
-EXTERN_REDUCE_TEXTURE_ALL(float)
-EXTERN_REDUCE_TEXTURE_ALL(float2)
-EXTERN_REDUCE_TEXTURE_ALL(float4)
+//// Meta Definition
+//#define DEFINE_REDUCE_ARRAY_SINGLE(type, func, cpy) \
+//    template \
+//    __host__ void ReduceArrayGPU<type, func, cpy>(type&, const type*, \
+//                                                  size_t, type, \
+//                                                  cudaStream_t);
+//#define DEFINE_REDUCE_TEXTURE_SINGLE(type, func, cpy) \
+//    template \
+//    __host__ void ReduceTextureGPU<type, func, cpy>(type&, cudaTextureObject_t, \
+//                                                    const uint2&, \
+//                                                    const uint2&, \
+//                                                    type, cudaStream_t);
+//
+//// Cluster Definitions ARRAY
+//#define EXTERN_REDUCE_ARRAY_SINGLE(type, func, copy) \
+//    extern DEFINE_REDUCE_ARRAY_SINGLE(type, func, copy)
+//
+//#define EXTERN_REDUCE_ARRAY_BOTH(type, func) \
+//    EXTERN_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToHost) \
+//    EXTERN_REDUCE_ARRAY_SINGLE(type, func, cudaMemcpyDeviceToDevice)
+//
+//#define EXTERN_REDUCE_ARRAY_ALL(type) \
+//    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceAdd) \
+//    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceSubtract) \
+//    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceMultiply) \
+//    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceDivide) \
+//    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceMin) \
+//    EXTERN_REDUCE_ARRAY_BOTH(type, ReduceMax)
+//
+//// Cluster Definitions TEXTURE
+//#define EXTERN_REDUCE_TEXTURE_SINGLE(type, func, copy) \
+//    extern DEFINE_REDUCE_TEXTURE_SINGLE(type, func, copy)
+//
+//#define EXTERN_REDUCE_TEXTURE_BOTH(type, func) \
+//    EXTERN_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToHost) \
+//    EXTERN_REDUCE_TEXTURE_SINGLE(type, func, cudaMemcpyDeviceToDevice)
+//
+//#define EXTERN_REDUCE_TEXTURE_ALL(type) \
+//    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceAdd) \
+//    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceSubtract) \
+//    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMultiply) \
+//    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceDivide) \
+//    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMin) \
+//    EXTERN_REDUCE_TEXTURE_BOTH(type, ReduceMax)
+//
+//// Integral Types
+//EXTERN_REDUCE_ARRAY_ALL(int)
+//EXTERN_REDUCE_ARRAY_ALL(unsigned int)
+//EXTERN_REDUCE_ARRAY_ALL(float)
+//EXTERN_REDUCE_ARRAY_ALL(double)
+//
+//// Vector Types
+//EXTERN_REDUCE_ARRAY_ALL(Vector2f)
+//EXTERN_REDUCE_ARRAY_ALL(Vector2d)
+//EXTERN_REDUCE_ARRAY_ALL(Vector2i)
+//EXTERN_REDUCE_ARRAY_ALL(Vector2ui)
+//
+//EXTERN_REDUCE_ARRAY_ALL(Vector3f)
+//EXTERN_REDUCE_ARRAY_ALL(Vector3d)
+//EXTERN_REDUCE_ARRAY_ALL(Vector3i)
+//EXTERN_REDUCE_ARRAY_ALL(Vector3ui)
+//
+//EXTERN_REDUCE_ARRAY_ALL(Vector4f)
+//EXTERN_REDUCE_ARRAY_ALL(Vector4d)
+//EXTERN_REDUCE_ARRAY_ALL(Vector4i)
+//EXTERN_REDUCE_ARRAY_ALL(Vector4ui)
+//
+//// Matrix Types
+//EXTERN_REDUCE_ARRAY_ALL(Matrix2x2f)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix2x2d)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix2x2i)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix2x2ui)
+//
+//EXTERN_REDUCE_ARRAY_ALL(Matrix3x3f)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix3x3d)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix3x3i)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix3x3ui)
+//
+//EXTERN_REDUCE_ARRAY_ALL(Matrix4x4f)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix4x4d)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix4x4i)
+//EXTERN_REDUCE_ARRAY_ALL(Matrix4x4ui)
+//
+//// Quaternion Types
+//EXTERN_REDUCE_ARRAY_BOTH(QuatF, ReduceMultiply)
+//EXTERN_REDUCE_ARRAY_BOTH(QuatD, ReduceMultiply)
+//
+//// Texture Types
+//EXTERN_REDUCE_TEXTURE_ALL(float)
+//EXTERN_REDUCE_TEXTURE_ALL(float2)
+//EXTERN_REDUCE_TEXTURE_ALL(float4)
