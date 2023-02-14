@@ -26,19 +26,25 @@ struct PathGuidingNode;
 
 namespace Debug
 {
-    void                PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count);
-    void                WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file);
-    void                DumpImage(const std::string& fName,
-                                  const ImageMemory&);
-    void                DumpImage(const std::string& fName,
-                                  const Vector4* iMem,
-                                  const Vector2ui& resolution);
-    void                DumpBitmap(const std::string& fName,
-                                  const Byte* bits,
-                                  const Vector2ui& resolution);
-    void                DumpTextureMip(const std::string& fName,
-                                       const Texture<2, Vector4f>& texture,
-                                       uint32_t mipLevel);
+    void            PrintHitPairs(const RayId* ids, const HitKey* keys, size_t count);
+    void            WriteHitPairs(const RayId* ids, const HitKey* keys, size_t count, const std::string& file);
+    void            DumpImage(const std::string& fName,
+                              const ImageMemory&);
+    void            DumpImage(const std::string& fName,
+                              const Vector4* iMem,
+                              const Vector2ui& resolution);
+    void            DumpBitmap(const std::string& fName,
+                              const Byte* bits,
+                              const Vector2ui& resolution);
+    void            DumpTextureMip(const std::string& fName,
+                                   const Texture<2, Vector4f>& texture,
+                                   uint32_t mipLevel);
+
+    void            Dump2DDataToImage(const std::string& fName,
+                                      const float* images,
+                                      Vector2i texSize,
+                                      uint32_t imageCount);
+
 
     // Memory Debugging
     template<class T>

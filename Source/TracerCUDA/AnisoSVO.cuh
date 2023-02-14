@@ -339,6 +339,7 @@ class AnisoSVOctreeCPU
                                           const GPULightI** dSceneLights,
                                           uint32_t totalLightCount,
                                           HitKey boundaryLightKey,
+                                          bool omitDirectRadiance,
                                           const CudaSystem&);
     // Construct (Actually Load) the tree directly from binary
     TracerError                 Constrcut(const std::vector<Byte>& data,

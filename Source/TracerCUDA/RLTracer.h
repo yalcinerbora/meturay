@@ -22,15 +22,16 @@ class RLTracer final : public RayTracer
         static constexpr const char* NEE_NAME                   = "NextEventEstimation";
         static constexpr const char* DIRECT_LIGHT_MIS_NAME      = "DirectLightMIS";
 
-        static constexpr const char* RAW_PG_NAME                = "RawPathGuiding";
+        static constexpr const char* RAW_PG_NAME                = "PurePG";
         static constexpr const char* DIRECTONAL_RES_NAME        = "DirectionalResolution";
         static constexpr const char* NORM_THRESHOLD_NAME        = "NormalThreshold";
         static constexpr const char* SPATIAL_SAMPLE_NAME        = "SpatialSampleCount";
         static constexpr const char* ALPHA_NAME                 = "Alpha";
         static constexpr const char* DEBUG_RENDER_NAME          = "DebugRender";
 
-        static constexpr const char* DUMP_DEBUG_NAME            = "DumpDebugData";
-        static constexpr const char* DUMP_INTERVAL_NAME         = "DataDumpIntervalExp";
+        static constexpr const char* DUMP_DEBUG_NAME            = "PGDumpDataStruct";
+        static constexpr const char* DUMP_INTERVAL_NAME         = "PGDataStructDumpIntervalExp";
+        static constexpr const char* DUMP_NAME_NAME             = "PGDataStructDumpName";
 
         struct Options
         {
@@ -56,6 +57,7 @@ class RLTracer final : public RayTracer
 
             bool                dumpDebugData       = false;
             uint32_t            qDumpInterval       = 2;
+            std::string         dumpName            = "";
         };
 
     private:

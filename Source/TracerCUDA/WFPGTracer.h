@@ -44,7 +44,7 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    OPTIX_TRACE_NAME            = "OptiXTraceSVO";
     static constexpr const char*    OPTIX_BUFFER_NAME           = "OptixTraceBufferSize";
     static constexpr const char*    OPTIX_USE_SCENE_NAME        = "UseSceneAccelerator";
-
+    static constexpr const char*    OMIT_LIGHT_NAME             = "OmitDirectRadiance";
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
 
     static constexpr const char*    PG_DUMP_DEBUG_NAME          = "PGDumpDataStruct";
@@ -71,6 +71,7 @@ class WFPGTracer final : public RayTracer
         uint32_t            svoRadRenderIter    = 2;
         uint32_t            svoRenderLevel      = 0;
         std::string         svoInitPath         = "";
+        bool                omitLightRadiance   = false;
         float               rFieldGaussAlpha    = 1.0f; // Filter of the radiance field
         bool                skipPG              = false;
         bool                purePG              = false;

@@ -91,6 +91,7 @@ TEST(AnisoSVO, NormalReductionTest)
                        dLightKeys,
                        dLights,
                        lightCount,
+                       false,
                        uniqueVoxCount,
                        lightKeyCount,
                        svoAABB,

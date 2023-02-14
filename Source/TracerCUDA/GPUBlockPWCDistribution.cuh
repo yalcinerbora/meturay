@@ -3,6 +3,7 @@
 #include "cub/block/block_scan.cuh"
 
 #include "RayLib/Vector.h"
+#include "RayLib/Constants.h"
 
 #include "BlockSegmentedScan.cuh"
 #include "RNGenerator.h"
@@ -47,11 +48,19 @@ class BlockPWCDistribution2D
             typename BlockSScan::TempStorage    sSScanTempStorage;
             typename BlockScan::TempStorage     sScanTempStorage;
         } algo;
-        float sCDFX[Y][X + 1];
-        float sPDFX[Y][X];
+
+        // State is changing depending on the situation
+        // PDF of CDF (implicit 1.0f) is omitted
+        float sPCDFX[Y][X];
+        float sPCDFY[Y];
+
+
+//        float sCDFX[Y][X + 1];
+//        float sPDFX[Y][X];
         // Y axis distribution data (PDF of CDF depending on the situation)
-        float sCDFY[Y + 1];
-        float sPDFY[Y];
+//        float sCDFY[Y + 1];
+//        float sPDFY[Y];
+
     };
 
     private:
@@ -61,32 +70,40 @@ class BlockPWCDistribution2D
     const bool      isMainThread;
     const bool      isRowLeader;
     const bool      isValidThread;
+    // Whether shared memory holds the PDF or not
+    bool            sharedHasPDF;
 
-    //// Eeach
-    //float           registerBuffer[DATA_PER_THREAD];
-    //// Swap the register buffer to shared memory and vice versa
-    //__device__
-    //void        Swap();
+    // Each Thread holds either PDF of CDF
+    // (whatever is not on the shared memory)
+    float           pcdfRegisterX[DATA_PER_THREAD];
+    float           pcdfRegisterY;
 
     protected:
     public:
     // Constructors & Destructor
+    // Constructors PWC Distribution over the shared memory
+    // Initially shared memory holds CDF
     __device__
                 BlockPWCDistribution2D(TempStorage& storage,
                                        const float(&data)[DATA_PER_THREAD]);
 
     template <class RNG>
     __device__
-    Vector2f    Sample(float& pdf, Vector2f& index, RNG& rng) const;
+    Vector2f    Sample(Vector2f& index, RNG& rng) const;
 
     __device__
     float       Pdf(const Vector2f& index) const;
 
-
+    // Swap the register buffer to shared memory and vice versa
+    __device__
+    void        Swap();
+    // Returns the shared memory situation
+    __device__
+    bool        IsPDFInShared() const;
 
     __device__
     void        DumpSharedMem(float* pdfXOut, float* cdfXOut,
-                              float* pdfYOut, float* cdfYOut) const;
+                              float* pdfYOut, float* cdfYOut);
 };
 
 template<uint32_t TPB,
@@ -101,6 +118,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
     , isMainThread(threadIdx.x == 0)
     , isRowLeader((threadIdx.x % X) == 0)
     , isValidThread(threadIdx.x < PIX_COUNT)
+    , sharedHasPDF(false)
 {
     // Initialize the CDF/PDF
     // Generate PWC Distribution over the date
@@ -124,7 +142,7 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         __syncthreads();
         // Row leader will do marginal PDF/CDF data
         // the Y Function value of this row
-        if(isRowLeader && rowId < Y) sMem.sPDFY[rowId] = totalSum;
+        if(isRowLeader && rowId < Y) sMem.sPCDFY[rowId] = totalSum;
         // Now normalize the pdf/cdf with the dimension
         // Getting ready for the scan operation
         cdfData *= DELTA_X;
@@ -141,16 +159,15 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
         // Only valid rows do the write
         if(rowId < Y)
         {
-            sMem.sPDFX[rowId][columnId] = pdfData;
-            sMem.sCDFX[rowId][columnId + 1] = cdfData;
-            if(isRowLeader) sMem.sCDFX[rowId][0] = 0.0f;
+            pcdfRegisterX[i] = pdfData;
+            sMem.sPCDFX[rowId][columnId] = cdfData;
         }
     }
     __syncthreads();
 
     // Generate PDF CDF of the column (marginal pdf)
     //"sPDFY" variable holds the Y values
-    float pdfDataY = (isColumnThread) ? sMem.sPDFY[threadId]
+    float pdfDataY = (isColumnThread) ? sMem.sPCDFY[threadId]
                                       : 0.0f;
     // Now normalize the pdf with the dimension
     // Getting ready for the scan operation
@@ -177,12 +194,14 @@ BlockPWCDistribution2D<TPB, X, Y>::BlockPWCDistribution2D(TempStorage& storage,
 
     if(isColumnThread)
     {
-        sMem.sCDFY[threadId + 1] = cdfDataY;
-        sMem.sPDFY[threadId] = pdfDataY;
-        if(isMainThread) sMem.sCDFY[0] = 0.0f;
+        sMem.sPCDFY[threadId] = cdfDataY;
+        pcdfRegisterY = pdfDataY;
     }
     __syncthreads();
     // All CDF's and PDFs are generated
+    // CDF's are on shared memory
+    // PDF's are on registers
+    // Need to swap to utilize PDF(...) function
 }
 
 template<uint32_t TPB,
@@ -190,23 +209,34 @@ template<uint32_t TPB,
          uint32_t Y>
 template <class RNG>
 __device__ inline
-Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& index,
+Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(Vector2f& index,
                                                         RNG& rng) const
 {
-    static constexpr int32_t CDF_SIZE_Y = Y + 1;
-    static constexpr int32_t CDF_SIZE_X = X + 1;
+    assert(!sharedHasPDF);
 
     Vector2f xi = rng.Uniform2D();
     // If entire distribution is invalid
     // Just sample uniformly
-    if(sMem.sCDFY[Y] == 0.0f)
+    if(sMem.sPCDFY[Y - 1] == 0.0f)
     {
         index = xi * Vector2f(X, Y);
-        pdf = 1.0f;
         return xi;
     }
-    GPUFunctions::BinarySearchInBetween<float>(index[1], xi[1],
-                                               sMem.sCDFY, CDF_SIZE_Y);
+    bool foundY = GPUFunctions::BinarySearchInBetween<float>(index[1], xi[1],
+                                                            sMem.sPCDFY, Y);
+
+    // We are between 0 and first element, calculate accordingly
+    if(!foundY && (xi[1] < sMem.sPCDFY[Y - 1]))
+        index[1] = xi[1] / sMem.sPCDFY[0];
+    // We exceed the CDF (probably due to numerical error)
+    // clamp to edge
+    else if(!foundY && (xi[1] >= sMem.sPCDFY[Y - 1]))
+        index[1] = static_cast<float>(Y) - MathConstants::Epsilon;
+    // We searched from first element so add one
+    else
+        index[1] += 1.0f;
+
+
     int32_t indexYInt = static_cast<int32_t>(index[1]);
 
     // Extremely rarely index becomes the light count
@@ -215,45 +245,31 @@ Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(float& pdf, Vector2f& in
     // if it happens just return the last light on the list
     if(indexYInt >= Y)
     {
-        KERNEL_DEBUG_LOG("CUDA Error: Illegal Index on PwC Sample [Y = %f]\n",
-                         index[1]);
+        printf("CUDA Error: Illegal Index on PwC Sample [Y = %.10f] [xi = %.10f], F: %s\n",
+                         index[1], xi[1], foundY ? "True" : "False");
         indexYInt--;
     }
-    const float* sRowCDF = sMem.sCDFX[indexYInt];
-    const float* sRowPDF = sMem.sPDFX[indexYInt];
 
-    GPUFunctions::BinarySearchInBetween<float>(index[0], xi[0],
-                                               sRowCDF, CDF_SIZE_X);
+    const float* sRowCDF = sMem.sPCDFX[indexYInt];
+    bool foundX = GPUFunctions::BinarySearchInBetween<float>(index[0], xi[0],
+                                                             sRowCDF, X);
+    // We are between 0 and first element, calculate accordingly
+    if(!foundX && (xi[0] < sRowCDF[X - 1]))
+        index[0] = xi[0] / sRowCDF[0];
+    // We exceed the CDF (probably due to numerical error)
+    // clamp to edge
+    else if(!foundX && (xi[0] >= sRowCDF[X - 1]))
+        index[0] = static_cast<float>(X) - MathConstants::Epsilon;
+    // We searched from first element so add one
+    else index[0] += 1.0f;
+
     int32_t indexXInt = static_cast<int32_t>(index[0]);
     if(indexXInt >= X)
     {
-        KERNEL_DEBUG_LOG("CUDA Error: Illegal Index on PwC Sample [X = %f]\n",
-                         index[0]);
+        printf("CUDA Error: Illegal Index on PwC Sample [X = %.10f] [xi = %.10f], F: %s\n",
+               index[0], xi[0], foundX ? "True" : "False");
         indexXInt--;
     }
-
-    // Samples are dependent so we need to multiply the pdf results
-    pdf = sMem.sPDFY[indexYInt] * sRowPDF[indexXInt];
-
-    if(sMem.sPDFY[indexYInt] == 0.0f || sRowPDF[indexXInt] == 0)
-    {
-        printf("[Z] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
-               sRowPDF[indexXInt], sMem.sPDFY[indexYInt],
-               xi[0], xi[1], index[0], index[1],
-               indexXInt, indexYInt);
-    }
-    if(isnan(sMem.sPDFY[indexYInt]) || isnan(sRowPDF[indexXInt]))
-    {
-        printf("[NaN] pdf(%.10f, %.10f), xi (%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
-               sRowPDF[indexXInt], sMem.sPDFY[indexYInt],
-               xi[0], xi[1], index[0], index[1],
-               indexXInt, indexYInt);
-    }
-    if(index.HasNaN())
-    {
-        printf("[NaN] index(%f, %f)\n", index[0], index[1]);
-    }
-
     // Return the index as a normalized coordinate as well
     return index * Vector2f(DELTA_X, DELTA_Y);
 }
@@ -264,10 +280,69 @@ template<uint32_t TPB,
 __device__ inline
 float BlockPWCDistribution2D<TPB, X, Y>::Pdf(const Vector2f& index) const
 {
+    assert(sharedHasPDF);
     Vector2ui indexInt = Vector2ui(static_cast<uint32_t>(index[0]),
                                    static_cast<uint32_t>(index[1]));
+    float pdfX = sMem.sPCDFX[indexInt[1]][indexInt[0]];
+    float pdfY = sMem.sPCDFY[indexInt[1]];
 
-    return sMem.sPDFY[indexInt[1]] * sMem.sPDFX[indexInt[1]][indexInt[0]];
+    if(pdfY == 0.0f || pdfX == 0)
+    {
+        printf("[Z] pdf(% .10f, % .10f), index(% .10f, % .10f) (% d, % d)\n",
+               pdfX, pdfY, index[0], index[1], indexInt[0], indexInt[1]);
+    }
+    if(isnan(pdfX) || isnan(pdfY))
+    {
+        printf("[NaN] pdf(%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
+               pdfX, pdfY, index[0], index[1], indexInt[0], indexInt[1]);
+    }
+    if(index.HasNaN())
+    {
+        printf("[NaN] index(%f, %f)\n", index[0], index[1]);
+    }
+
+    return pdfX * pdfY;
+}
+
+template<uint32_t TPB,
+         uint32_t X,
+         uint32_t Y>
+__device__ inline
+void BlockPWCDistribution2D<TPB, X, Y>::Swap()
+{
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
+    {
+        //  Determine your row
+        uint32_t pixelId = (i * TPB) + threadId;
+        uint32_t rowId = pixelId / X;
+        uint32_t columnId = pixelId % X;
+
+        if(pixelId < (X * Y))
+        {
+            float temp = sMem.sPCDFX[rowId][columnId];
+            sMem.sPCDFX[rowId][columnId] = pcdfRegisterX[i];
+            pcdfRegisterX[i] = temp;
+        }
+    }
+
+    // Do the marginal
+    if(isColumnThread)
+    {
+        float temp = sMem.sPCDFY[threadId];
+        sMem.sPCDFY[threadId] = pcdfRegisterY;
+        pcdfRegisterY = temp;
+    }
+    sharedHasPDF = !sharedHasPDF;
+    __syncthreads();
+}
+
+template<uint32_t TPB,
+         uint32_t X,
+         uint32_t Y>
+__device__ inline
+bool BlockPWCDistribution2D<TPB, X, Y>::IsPDFInShared() const
+{
+    return sharedHasPDF;
 }
 
 template<uint32_t TPB,
@@ -277,8 +352,10 @@ __device__ inline
 void BlockPWCDistribution2D<TPB, X, Y>::DumpSharedMem(float* pdfX,
                                                       float* cdfX,
                                                       float* pdfY,
-                                                      float* cdfY) const
+                                                      float* cdfY)
 {
+    assert(!sharedHasPDF);
+
     for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
     {
         uint32_t pixelId = (i * TPB) + threadId;
@@ -289,18 +366,38 @@ void BlockPWCDistribution2D<TPB, X, Y>::DumpSharedMem(float* pdfX,
         // Only valid rows do the write
         if(rowId < Y)
         {
-            pdfX[pixelId] = sMem.sPDFX[rowId][columnId];
-            cdfX[cdfId] = sMem.sCDFX[rowId][columnId + 1];
-            // Don't forget to add the first data (which should be zero)
-            if(isRowLeader) cdfX[rowId * (X + 1)] = sMem.sCDFX[rowId][0];
+
+            cdfX[cdfId] = sMem.sPCDFX[rowId][columnId];
+            // Don't forget to add the first data (which is zero)
+            if(isRowLeader) cdfX[rowId * (X + 1)] = 0.0f;
         }
     }
     // Dump Marginal PDF / CDF
     if(isColumnThread)
     {
-        pdfY[threadId] = sMem.sPDFY[threadId];
-        cdfY[threadId + 1] = sMem.sCDFY[threadId + 1];
+        cdfY[threadId + 1] = sMem.sPCDFY[threadId];
     }
     // Don't forget to write the first cdf y
-    if(isMainThread) cdfY[0] = sMem.sCDFY[0];
+    if(isMainThread) cdfY[0] = 0.0f;
+
+    // Swap the buffers
+    Swap();
+    // Now do the PDF
+
+    for(uint32_t i = 0; i < DATA_PER_THREAD; i++)
+    {
+        uint32_t pixelId = (i * TPB) + threadId;
+        uint32_t rowId = pixelId / X;
+        uint32_t columnId = pixelId % X;
+        if(rowId < Y)
+        {
+            pdfX[pixelId] = sMem.sPCDFX[rowId][columnId];
+        }
+
+    }
+    // Dump Marginal PDF / CDF
+    if(isColumnThread)
+    {
+        pdfY[threadId] = sMem.sPCDFY[threadId];
+    }
 }

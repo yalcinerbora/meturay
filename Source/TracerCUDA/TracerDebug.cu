@@ -82,6 +82,56 @@ void Debug::DumpTextureMip(const std::string& fName,
         METU_ERROR_LOG(static_cast<std::string>(e));
 }
 
+void Debug::Dump2DDataToImage(const std::string& fName,
+                              const float* images,
+                              Vector2i texSize,
+                              uint32_t imageCount)
+{
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+    const ImageIOI& io = *ImageIOInstance();
+
+    // Square out the image
+    // Find the padding
+    uint32_t columnCount = static_cast<uint32_t>(std::sqrt(static_cast<float>(imageCount)));
+    uint32_t rowCount = (imageCount + columnCount - 1) / columnCount;
+    assert((columnCount * rowCount) >= imageCount);
+    uint32_t rowPixels = rowCount * texSize[1];
+    uint32_t columnPixels = columnCount * texSize[0];
+    // Allocate memory
+    std::vector<float> hPixels(rowPixels * columnPixels);
+    CUDA_CHECK(cudaMemcpy(hPixels.data(), images,
+                          texSize.Multiply() * imageCount * sizeof(float),
+                          cudaMemcpyDeviceToHost));
+
+    // Convert to Row-major
+    std::vector<float> hPixelsRM(rowPixels * columnPixels, 0.0f);
+    uint32_t readLinearIndex = 0;
+    for(uint32_t y = 0; y < rowCount; y++)
+    for(uint32_t x = 0; x < columnCount; x++)
+    {
+        for(int32_t j = 0; j < texSize[1]; j++)
+        for(int32_t i = 0; i < texSize[0]; i++)
+        {
+            uint32_t writeRow = y * texSize[1] + j;
+            uint32_t writeColumn = x * texSize[0] + i;
+            uint32_t writeLinear = writeRow * columnPixels + writeColumn;
+            assert(readLinearIndex < hPixels.size());
+            hPixelsRM[writeLinear] = hPixels[readLinearIndex];
+            readLinearIndex++;
+        }
+    }
+
+    Vector2ui totalPixels = Vector2ui(columnPixels, rowPixels);
+    std::string fNameWithExt = fName + ".exr";
+    ImageIOError e = ImageIOError::OK;
+    if((e = io.WriteImage(reinterpret_cast<Byte*>(hPixelsRM.data()),
+                          totalPixels,
+                          PixelFormat::R_FLOAT, ImageType::EXR,
+                          fNameWithExt)) != ImageIOError::OK)
+        METU_ERROR_LOG(static_cast<std::string>(e));
+}
+
 void Debug::DumpBitmap(const std::string& fName,
                        const Byte* bits,
                        const Vector2ui& resolution)

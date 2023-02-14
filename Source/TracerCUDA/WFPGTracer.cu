@@ -158,6 +158,12 @@ using PathGuideKernelFunction = void (*)(// Output
                                          bool,
                                          float);
 
+using PathGuideFilterKernelFunction = void (*)(// I-O
+                                               SVOOptixRadianceBuffer::SegmentedField<float*>,
+                                               // Constants
+                                               const GaussFilter,
+                                               uint32_t);
+
 using PathGuideOptiXKernelFunction = void (*)(// Output
                                               RayAuxWFPG*,
                                               // I-O
@@ -172,7 +178,6 @@ using PathGuideOptiXKernelFunction = void (*)(// Output
                                               // Buffer
                                               SVOOptixRadianceBuffer::SegmentedField<const float*>,
                                               // Constants
-                                              const GaussFilter,
                                               const AnisoSVOctreeGPU,
                                               uint32_t,
                                               bool,
@@ -195,12 +200,29 @@ using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 
 static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128)
 
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
+
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32)
+
+    //std::make_tuple(256, 8, 8),
+    //std::make_tuple(256, 8, 8),
+    //std::make_tuple(256, 8, 8),
+    //std::make_tuple(256, 8, 8),
+    //std::make_tuple(256, 8, 8)
 
     //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
     //std::make_tuple(256, 16, 16),
@@ -256,6 +278,25 @@ static constexpr std::array<PathGuideOptiXKernelFunction, PG_KERNEL_TYPE_COUNT> 
     KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
     KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
     KCSampleDistributionProductOptiX<RNGIndependentGPU, std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
+};
+
+static constexpr std::array<PathGuideFilterKernelFunction, PG_KERNEL_TYPE_COUNT> PG_GAUSS_FILTER_KERNELS =
+{
+
+    KCFilterRadianceFields<std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>,
+    KCFilterRadianceFields<std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>,
+    KCFilterRadianceFields<std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
+    KCFilterRadianceFields<std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
+    KCFilterRadianceFields<std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
+};
+
+static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> FILTER_KERNEL_SHMEM_SIZE =
+{
+    sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>),
+    sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>),
+    sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>),
+    sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>),
+    sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>)
 };
 
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_SHMEM_SIZE =
@@ -692,10 +733,41 @@ void WFPGTracer::GenerateGuidedDirections()
 
             uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
             uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
+
+
+            //Debug::Dump2DDataToImage("filterBefore",
+            //                         fieldBufferConst[0],
+            //                         Vector2i(std::get<1>(PG_KERNEL_PARAMS[kernelIndex]),
+            //                                  std::get<2>(PG_KERNEL_PARAMS[kernelIndex])),
+            //                                  processedBinThisIter);
+
+            // Call Filter Kernel
+            uint32_t filterSharedMemSize = FILTER_KERNEL_SHMEM_SIZE[kernelIndex];
+            auto KCFilterKernel = PG_GAUSS_FILTER_KERNELS[kernelIndex];
+
+            CUDA_CHECK(cudaFuncSetAttribute(KCFilterKernel,
+                                            cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                            filterSharedMemSize));
+
+            gpu.ExactKC_X(filterSharedMemSize, (cudaStream_t)0,
+                          kernelTPB, pgKernelBlockCount,
+                          //
+                          KCFilterKernel,
+                          //
+                          fieldBuffer,
+                          rFieldGaussFilter,
+                          processedBinThisIter);
+
+            //Debug::Dump2DDataToImage("filterAfter",
+            //                         fieldBufferConst[0],
+            //                         Vector2i(std::get<1>(PG_KERNEL_PARAMS[kernelIndex]),
+            //                                  std::get<2>(PG_KERNEL_PARAMS[kernelIndex])),
+            //                                  processedBinThisIter);
+
+            // Call Sample Kernel
             CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
                                             cudaFuncAttributeMaxDynamicSharedMemorySize,
                                             kernelShmemSize));
-
             gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
                           kernelTPB, pgKernelBlockCount,
                           //
@@ -714,7 +786,6 @@ void WFPGTracer::GenerateGuidedDirections()
                           // Buffer
                           fieldBufferConst,
                           // Constants
-                          rFieldGaussFilter,
                           svo.TreeGPU(),
                           processedBinThisIter,
                           options.purePG,
@@ -1079,6 +1150,7 @@ TracerError WFPGTracer::Initialize()
                                 scene.AcceleratorBatchMappings(),
                                 dLights, lightCount,
                                 scene.BaseBoundaryMaterial(),
+                                options.omitLightRadiance,
                                 cudaSystem)) != TracerError::OK)
             return err;
     }
@@ -1191,6 +1263,9 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.optiXBufferSize, OPTIX_BUFFER_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.omitLightRadiance, OMIT_LIGHT_NAME)) != TracerError::OK)
+        return err;
+
 
     if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
@@ -1228,6 +1303,8 @@ void WFPGTracer::AskOptions()
     list.emplace(OPTIX_TRACE_NAME, OptionVariable(options.optiXTrace));
     list.emplace(OPTIX_USE_SCENE_NAME, OptionVariable(options.optiXUseSceneAcc));
     list.emplace(OPTIX_BUFFER_NAME, OptionVariable(static_cast<int64_t>(options.optiXBufferSize)));
+
+    list.emplace(OMIT_LIGHT_NAME, OptionVariable(options.omitLightRadiance));
 
     list.emplace(PG_DUMP_DEBUG_NAME, OptionVariable(options.pgDumpDebugData));
     list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));

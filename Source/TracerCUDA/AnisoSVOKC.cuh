@@ -20,6 +20,7 @@ void KCReduceVoxelPayload(// I-O
                           const GPULightI** gLights,
                           uint32_t lightCount,
                           // Constants
+                          bool omitDirectRadiance,
                           uint32_t uniqueVoxCount,
                           uint32_t lightKeyCount,
                           const AABB3f svoAABB,
@@ -303,6 +304,11 @@ void KCReduceVoxelPayload(// I-O
                 // there shouldn't be any updates to this voxel anyway but just to be sure
                 Vector2ui initialSampleCount = Vector2ui(100);
                 combinedLuminance *= Vector2f(initialSampleCount);
+
+                // Omit direct illumination if requested
+                // NEE will be better
+                combinedLuminance = (omitDirectRadiance) ? Vector3f(0.0f) : combinedLuminance;
+
                 // Set the combined values
                 treeGPU.SetLeafRadiance(mortonCode, combinedLuminance, initialSampleCount);
             }

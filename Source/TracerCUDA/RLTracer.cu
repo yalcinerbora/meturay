@@ -175,6 +175,9 @@ TracerError RLTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetUInt(options.qDumpInterval, DUMP_INTERVAL_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetString(options.dumpName, DUMP_NAME_NAME)) != TracerError::OK)
+        return err;
+
 
     return TracerError::OK;
 }
@@ -280,7 +283,9 @@ void RLTracer::Finalize()
     {
         std::vector<Byte> qData;
         qFunction.DumpFunctionAsBinary(qData);
-        std::string fName = fmt::format("{:d}_qFunc", iterationCount);
+        std::string fName = fmt::format("{:d}_{:s}",
+                                        iterationCount,
+                                        options.dumpName);
         Utility::DumpStdVectorToFile(qData, fName);
         qDumpCount++;
     }

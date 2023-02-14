@@ -637,6 +637,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                         const GPULightI** dSceneLights,
                                         uint32_t totalLightCount,
                                         HitKey boundaryLightKey,
+                                        bool omitDirectRadiance,
                                         const CudaSystem& system)
 {
     treeGPU = {};
@@ -1097,6 +1098,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                        dSortedLights,
                        totalLightCount,
                        // Constants
+                       omitDirectRadiance,
                        hUniqueVoxelCount,
                        static_cast<uint32_t>(hTotalVoxCount),
                        treeGPU.svoAABB,
