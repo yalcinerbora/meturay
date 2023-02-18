@@ -512,6 +512,139 @@ bool SVOctree::NodeIndex(uint32_t& index, const Vector3f& worldPos,
     return found;
 }
 
+Vector3ui SVOctree::NodeVoxelId(uint32_t& depth,
+                                uint32_t nodeIndex, bool isLeaf) const
+{
+    // n is [1, sizeof(uint32_t) * BYTE_BITS)
+    // "n = 0" is undefined
+    // if "n > _popc(mask)" returns 0 (asserts in debug mode)
+    // returns one indexed location of the set bit
+    auto FindNthSet = [=](uint32_t input, uint32_t n) -> uint32_t
+    {
+        // Not enough bits on input
+        if(static_cast<uint32_t>(Utility::BitCount(input)) < n)
+        {
+            assert(Utility::BitCount(input) >= n);
+            //printf("[%u]: Find [%u]th set in %X failed\n",
+            //       nodeIndex,
+            //       n, input);
+            return 0;
+        }
+
+        uint32_t index;
+        for(uint32_t i = 1; i <= n; i++)
+        {
+            index = Utility::FindFirstSet(input);
+            uint32_t inverse = ~(1 << (index - 1));
+            //uint32_t oldMask = input;
+            input &= inverse;
+            //printf("[%u]--[%d]: inverse %X, oldMask %X newMask %X index %u\n",
+            //       nodeIndex, i, inverse, oldMask, input, index);
+        }
+        return index;
+    };
+
+    // Traverse up from the voxel and find the voxel morton code
+    // Then convert it to the position
+    uint64_t mortonCode = 0x0;
+    uint32_t bitPtr = 0;
+    static constexpr uint32_t DIMENSION = 3;
+
+    auto PushMortonToStack = [&](uint64_t node,
+                                 uint32_t nodeId,
+                                 uint32_t parentId)
+    {
+        uint32_t childrenStart = ChildrenIndex(node);
+        uint32_t bitIndex = nodeId - childrenStart;
+
+        //printf("[%u]:--bit index %u = %u, %u\n", nodeIndex,
+        //       bitIndex, childrenStart, nodeId);
+
+        uint32_t mortonSegment = FindNthSet(ChildMask(node), bitIndex + 1) - 1;
+
+        if(mortonSegment >= (1 << DIMENSION))
+        {
+            //printf("[%u]:--mask 0x%X, bitindex %u, mySegment %u \n",
+            //       nodeIndex,
+            //       ChildMask(node),
+            //       bitIndex,
+            //       mortonSegment);
+            assert(mortonSegment < (1 << DIMENSION));
+        }
+
+
+        mortonSegment = mortonSegment << bitPtr;
+        mortonCode |= mortonSegment;
+
+        bitPtr += DIMENSION;
+    };
+
+    uint32_t nodeId = nodeIndex;
+    // If leaf, data is on other array
+    uint64_t node;
+    if(isLeaf)
+    {
+        uint32_t parentId = leafParents[nodeId];
+        node = nodes[parentId];
+
+        //printf("[%u]: myNode %llu, nodeId %u, parentId %u\n",
+        //       nodeIndex,
+        //       node, nodeId, parentId);
+
+        PushMortonToStack(node, nodeId, parentId);
+        nodeId = parentId;
+    }
+    else
+    {
+        node = nodes[nodeId];
+    }
+
+
+    while(ParentIndex(node) != INVALID_PARENT)
+    {
+        uint32_t parentId = ParentIndex(node);
+        node = nodes[parentId];
+
+        //printf("[%u] myNode %llu, nodeId %u, parentId %u\n",
+        //       nodeIndex, node, nodeId, parentId);
+
+        PushMortonToStack(node, nodeId, parentId);
+        //node = dNodes[parentId];
+        nodeId = parentId;
+    }
+    depth = bitPtr / DIMENSION;
+    Vector3ui position = MortonCode::Decompose3D<uint64_t>(mortonCode);
+    return position;
+}
+
+Vector3f SVOctree::NodePosition(uint32_t nodeIndex, bool isLeaf) const
+{
+    uint32_t depth;
+    Vector3ui position = NodeVoxelId(depth, nodeIndex, isLeaf);
+
+    // Now calculate the voxel center using morton code
+    float levelVoxelSize = LevelVoxelSize(depth);
+
+    Vector3f pos = Vector3f(position) + Vector3f(0.5f);
+    // Expand to worldSpaceCoords
+    pos *= levelVoxelSize;
+    pos += svoAABB.Min();
+
+    //printf("[%d]--Morton:%llu, pos[%f, %f, %f], voxelSize %f, level %u, leafVoxSize %f\n",
+    //       blockIdx.x, mortonCode, pos[0], pos[1], pos[2],
+    //       voxelSizeStart, depth, leafVoxelSize);
+
+    return pos;
+}
+
+float SVOctree::LevelVoxelSize(uint32_t level) const
+{
+    float leafVoxSize = leafVoxelSize;
+    uint32_t leafLevel = leafDepth;
+    float levelMultiplier = static_cast<float>(1 << (leafLevel - level));
+    return leafVoxSize * levelMultiplier;
+}
+
 Vector3f SVOctree::ReadNormalAndSpecular(float& stdDev, float& specularity,
                                          uint32_t nodeIndex, bool isLeaf) const
 {
@@ -920,17 +1053,21 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
     //
     Vector3f pos = worldPos;
     currentWorldPos = pos;
+    bool isLeaf = (minBinLevel == svo.leafDepth);
+    uint32_t svoLevel = std::min(minBinLevel, svo.leafDepth);
     // Convert location to the
     uint32_t nodeIndex;
-    bool found = svo.NodeIndex(nodeIndex, pos,
-                               std::min(minBinLevel, svo.leafDepth),
-                               true);
-    if(!found) METU_ERROR_LOG("Unable to locate a voxel! Using direct world space for ray position!");
+    bool found = svo.NodeIndex(nodeIndex, pos, svoLevel, true);
+    if(!found)
+        METU_ERROR_LOG("Unable to locate a voxel! "
+                       "Using direct world space for ray position!");
+    else
+        pos = svo.NodePosition(nodeIndex, isLeaf);
 
     Vector3f normal = pixelNormals[pixelIndex[1] * normalTexSize[0] + pixelIndex[0]];
 
     // Now find out the node id and offset the tmin accordingly
-    float voxSize = svo.NodeVoxelSize(nodeIndex, (minBinLevel == svo.leafDepth));
+    float voxSize = svo.NodeVoxelSize(nodeIndex, isLeaf);
     float tMin = voxSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
 
     float coneAperture = ConeAperture(mapSize);
@@ -959,7 +1096,7 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
                       float radiance = 0.0f;
                       if(readInterpolatedRadiance)
                       {
-                          Vector3f hitPos = ray.AdvancedPos(hitT);
+                          Vector3f hitPos = ray.AdvancedPos(hitT + voxSize * 0.5f);
                           radiance = ReadInterpolatedRadiance(hitPos, ray.getDirection(),
                                                               coneAperture, svo);
                       }

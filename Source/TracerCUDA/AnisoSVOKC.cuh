@@ -302,7 +302,7 @@ void KCReduceVoxelPayload(// I-O
                 combinedLuminance /= static_cast<float>(dupVoxCount);
                 // We are setting initial sample count to this voxel
                 // there shouldn't be any updates to this voxel anyway but just to be sure
-                Vector2ui initialSampleCount = Vector2ui(100);
+                Vector2ui initialSampleCount = Vector2ui(10'000);
                 combinedLuminance *= Vector2f(initialSampleCount);
 
                 // Omit direct illumination if requested

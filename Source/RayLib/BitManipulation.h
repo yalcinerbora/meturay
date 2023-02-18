@@ -10,6 +10,8 @@ namespace Utility
 {
     template<class T>
     T       FindLastSet(T);
+    template<class T>
+    T       FindFirstSet(T);
 
     template<class T>
     T       NextPowOfTwo(T);
@@ -32,3 +34,6 @@ extern template uint64_t Utility::NextPowOfTwo<uint64_t>(uint64_t);
 
 extern template uint32_t Utility::FindLastSet<uint32_t>(uint32_t);
 extern template uint64_t Utility::FindLastSet<uint64_t>(uint64_t);
+
+extern template uint32_t Utility::FindFirstSet<uint32_t>(uint32_t);
+extern template uint64_t Utility::FindFirstSet<uint64_t>(uint64_t);

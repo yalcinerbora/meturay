@@ -27,6 +27,14 @@ T Utility::FindLastSet(T val)
     return (sizeof(T) * BYTE_BITS) - std::countl_zero(val) - 1;
 }
 
+template<class T>
+T Utility::FindFirstSet(T val)
+{
+    // TODO: It returns sizeof(T) * BYTE_BITS + 1
+    // if no bit is set. Is it OK?
+    return std::countr_zero(val) + 1;
+}
+
 template uint32_t Utility::Log2Floor<uint32_t>(uint32_t);
 template uint64_t Utility::Log2Floor<uint64_t>(uint64_t);
 
@@ -38,3 +46,6 @@ template uint64_t Utility::NextPowOfTwo<uint64_t>(uint64_t);
 
 template uint32_t Utility::FindLastSet<uint32_t>(uint32_t);
 template uint64_t Utility::FindLastSet<uint64_t>(uint64_t);
+
+template uint32_t Utility::FindFirstSet<uint32_t>(uint32_t);
+template uint64_t Utility::FindFirstSet<uint64_t>(uint64_t);

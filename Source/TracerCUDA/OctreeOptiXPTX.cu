@@ -203,8 +203,10 @@ void KCCamTraceSVO()
     }
 
     // Finally Query the result
+    Vector3f hitPos = ray.ray.AdvancedPos(tMaxOut);
     Vector4f locColor = CalcColorSVO(params.renderMode, svo,
                                      ray.ray.getDirection(),
+                                     hitPos,
                                      params.pixelOrConeAperture,
                                      globalNodeId, requiredLevel);
     // Actual Write
@@ -326,12 +328,19 @@ void KCRadGenSVO()
         isLeaf = (globalNodeId == leafNodeIdOut);
     }
 
+    // Interpolated
+    Vector3f hitPos = rayOrigin + rayDir * tMaxOut;
+    //float radiance = ReadInterpolatedRadiance(hitPos, rayDir,
+    //                                          params.pixelOrConeAperture,
+    //                                          requiredLevel, svo);
+
+    // Nearest
     float radiance = svo.ReadRadiance(rayDir, params.pixelOrConeAperture,
                                       globalNodeId, isLeaf);
     //float radiance = svo.ReadRadiance(rayDir, params.pixelOrConeAperture,
     //                                  leafNodeIdOut, true);
     if(radiance == 0.0f)
-        radiance = MathConstants::Epsilon;
+        radiance = MathConstants::VeryLargeEpsilon;
 
     // Now write
     float* dataRange = params.fieldSegments[fieldWriteIndex];

@@ -85,9 +85,6 @@ struct SVOctree
     static uint32_t  FindChildOffset(uint64_t packedData, uint32_t childId);
     static bool      HasChild(uint64_t packedData, uint32_t childId);
 
-    static Vector4uc DirectionToAnisoLocations(Vector2f& interp,
-                                               const Vector3f& direction);
-
     // Generic
     std::vector<uint32_t>       levelNodeOffsets;
     // Node Related
@@ -124,6 +121,9 @@ struct SVOctree
                              float coneAperture = 0.0f,
                              uint32_t maxQueryLevel = 0) const;
 
+    Vector3ui   NodeVoxelId(uint32_t& depth, uint32_t nodeIndex, bool isLeaf) const;
+    Vector3f    NodePosition(uint32_t nodeIndex, bool isLeaf) const;
+    float       LevelVoxelSize(uint32_t level) const;
     bool        NodeIndex(uint32_t& index, const Vector3f& worldPos,
                           uint32_t levelCap, bool checkNeighbours = false) const;
 

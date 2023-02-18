@@ -593,6 +593,7 @@ void WFPGTracerPathWork(// Output
     node.prevNext[0] = prevPathIndex;
     node.worldPosition = position;
     node.SetNormal(surface.WorldGeoNormal());
+    node.pdf = pdfPath;
     // Unlike other techniques that holds incoming radiance
     // WFPG holds outgoing radiance. To calculate that, wee need to store
     // previous paths throughput
@@ -696,12 +697,15 @@ void WFPGTracerDebugWork(// Output
 
 __device__ inline
 float ReadInterpolatedRadiance(const Vector3f& hitPos,
-                               const Vector3f& direction, float coneApterture,
+                               const Vector3f& direction,
+                               float coneApterture,
+                               uint32_t queryLevel,
                                const AnisoSVOctreeGPU& svo)
 {
-    float queryVoxelSize = svo.LeafVoxelSize();
-    Vector3f offsetPos = hitPos + direction.Normalize() * queryVoxelSize * 0.5f;
-
+    float queryVoxelSize = svo.LevelVoxelSize(queryLevel);
+    Vector3f offsetPos = hitPos;// +direction.Normalize() * queryVoxelSize * 0.5f;
+    bool isLeaf = (queryLevel == svo.LeafDepth());
+    uint32_t levelDiff = svo.LeafDepth() - queryLevel;
 
     // Interp values for currentLevel
     Vector3f lIndex = (offsetPos - svo.OctreeAABB().Min()) / queryVoxelSize;
@@ -731,10 +735,11 @@ float ReadInterpolatedRadiance(const Vector3f& hitPos,
         uint64_t voxelMorton = MortonCode::Compose3D<uint64_t>(voxIndex);
 
         uint32_t nodeId;
-        bool found = svo.Descend(nodeId, voxelMorton, svo.LeafDepth());
+        bool found = svo.Descend(nodeId, voxelMorton << 3 * levelDiff, queryLevel);
+        found &= (voxIndex < Vector3ui(1 << queryLevel));
 
-        irradiance[i] = (found) ? static_cast<float>(svo.ReadRadiance(direction, coneApterture,
-                                                                      nodeId, true))
+        irradiance[i] = (found) ? svo.ReadRadiance(direction, coneApterture,
+                                                   nodeId, isLeaf)
                                 : 0.0f;
     }
 
@@ -789,7 +794,8 @@ __device__ static const Vector3f SVO_LEVEL_FALSE_COLOR_MASK[FALSE_COLOR_MASK_COU
 __device__ inline
 Vector4f CalcColorSVO(WFPGRenderMode mode,
                       const AnisoSVOctreeGPU& svo,
-                      Vector3f rayDir, float coneSolidAngle,
+                      const Vector3f& rayDir, const Vector3f& hitPos,
+                      float coneSolidAngle,
                       uint32_t nodeId, uint32_t nodeLevel)
 {
     bool isLeaf = (nodeLevel == svo.LeafDepth());
@@ -809,10 +815,10 @@ Vector4f CalcColorSVO(WFPGRenderMode mode,
     // Payload Display Mode
     else if(mode == WFPGRenderMode::SVO_RADIANCE)
     {
-        //Vector3f hitPos = ray.ray.getPosition() + rayDir.Normalize() * currentTMax;
-        //float radianceF = ReadInterpolatedRadiance(hitPos, rayDir,
-        //                                           params.pixelAperture,
-        //                                           svo);
+        //float radiance = ReadInterpolatedRadiance(hitPos, rayDir,
+        //                                          coneSolidAngle,
+        //                                          nodeLevel,
+        //                                          svo);
 
         float radiance = svo.ReadRadiance(rayDir, coneSolidAngle,
                                           nodeId, isLeaf);
@@ -826,12 +832,13 @@ Vector4f CalcColorSVO(WFPGRenderMode mode,
         Vector3f normal = svo.DebugReadNormal(stdDev, nodeId, isLeaf);
 
         // Voxels are two sided show the normal for the current direction
-        normal = (normal.Dot(rayDir) >= 0.0f) ? normal : -normal;
+        normal = (normal.Dot(-rayDir) >= 0.0f) ? normal : -normal;
 
         // Convert normal to 0-1 range
         normal += Vector3f(1.0f);
         normal *= Vector3f(0.5f);
-        return Vector4f(/*normal,*/ stdDev);
+        //return Vector4f(stdDev);
+        return Vector4f(normal, stdDev);
     }
     return Vector4f(result, 1.0f);
 }
@@ -938,43 +945,10 @@ inline void TraceSVO(// Output
         for(int i = 0; i < ConeTracer::DATA_PER_THREAD; i++)
         {
             uint32_t nodeLevel = svo.NodeLevel(nodeIndex[i], isLeaf[i]);
-            Vector4f locColor = CalcColorSVO(mode, svo, rayDir[i],
+            Vector3f hitPos = shMem->sPosition + rayDir[i] * tMin[i];
+            Vector4f locColor = CalcColorSVO(mode, svo, rayDir[i], hitPos,
                                              shMem->sConeAperture,
                                              nodeIndex[i], nodeLevel);
-            //Vector4f locColor = Vector4f(0.0f, 0.0f, 10.0f, 1.0f);
-            //// Octree Display Mode
-            //if(mode == WFPGRenderMode::SVO_FALSE_COLOR)
-            //    locColor = (nodeIndex[i] != UINT32_MAX) ? Vector4f(Utility::RandomColorRGB(nodeIndex[i]), 1.0f)
-            //                                            : Vector4f(Vector3f(0.0f), 1.0f);
-            //// Payload Display Mode
-            //else if(nodeIndex[i] == UINT32_MAX)
-            //    locColor = Vector4f(1.0f, 0.0f, 1.0f, 1.0f);
-            //else if(mode == WFPGRenderMode::SVO_RADIANCE)
-            //{
-            //    Vector3f hitPos = shMem->sPosition + rayDir[i].Normalize() * tMin[i];
-            //    //float radianceF = ReadInterpolatedRadiance(hitPos, rayDir[i],
-            //    //                                           shMem->sConeAperture,
-            //    //                                           svo);
-
-            //    half radiance = svo.ReadRadiance(rayDir[i], shMem->sConeAperture,
-            //                                     nodeIndex[i], isLeaf[i]);
-            //    float radianceF = radiance;
-            //    //if(radiance != static_cast<half>(MRAY_HALF_MAX))
-            //        locColor = Vector4f(Vector3f(radianceF), 1.0f);
-            //}
-            //else if(mode == WFPGRenderMode::SVO_NORMAL)
-            //{
-            //    float stdDev;
-            //    Vector3f normal = svo.DebugReadNormal(stdDev, nodeIndex[i], isLeaf[i]);
-
-            //    // Voxels are two sided show the normal for the current direction
-            //    normal = (normal.Dot(rayDir[i]) >= 0.0f) ? normal : -normal;
-
-            //    // Convert normal to 0-1 range
-            //    normal += Vector3f(1.0f);
-            //    normal *= Vector3f(0.5f);
-            //    locColor = Vector4f(normal, stdDev);
-            //}
 
             // Determine output
             int32_t linearInnerSampleId = THREAD_PER_BLOCK * i + localThreadId;
@@ -1236,9 +1210,9 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     //Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
 
     // TODO: Better offset maybe?
-    //float tMin = (binVoxelSize * MathConstants::Sqrt3 +
-    //              MathConstants::LargeEpsilon);
-    float tMin = svo.LeafVoxelSize() * 0.1f;// +MathConstants::Epsilon;
+    float tMin = (binVoxelSize * MathConstants::Sqrt3 +
+                  MathConstants::LargeEpsilon);
+    //float tMin = svo.LeafVoxelSize() * 0.1f;// +MathConstants::Epsilon;
 
     // Out
     posTMin = Vector4f(position, tMin);
