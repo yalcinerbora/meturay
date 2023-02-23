@@ -1200,24 +1200,32 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     float binVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
     // Utilize voxel center
-    Vector3f position = svo.NodePosition(nodeId, isLeaf);
+    //Vector3f position = svo.NodePosition(nodeId, isLeaf);
+    //position[1] = 0.0f;
+
+    //printf("NodePosition[%u] (%f, %f, %f)\n",
+    //       nodeId,
+    //       position[0], position[1], position[2]);
 
     // Utilize a random ray
-    //uint32_t rayCount = rayRange[1] - rayRange[0];
-    //uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
-    //uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
-    //RayReg rayReg = metaSurfGenerator.Ray(rayId);
-    //Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
+    uint32_t rayCount = rayRange[1] - rayRange[0];
+    uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
+    uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
+    RayReg rayReg = metaSurfGenerator.Ray(rayId);
+    Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
 
     // TODO: Better offset maybe?
-    float tMin = (binVoxelSize * MathConstants::Sqrt3 +
-                  MathConstants::LargeEpsilon);
-    //float tMin = svo.LeafVoxelSize() * 0.1f;// +MathConstants::Epsilon;
+    //float tMin = (binVoxelSize * MathConstants::Sqrt3 +
+    //              MathConstants::LargeEpsilon);
+    float tMin = svo.LeafVoxelSize() * 0.1f;
+    //float tMin = svo.LeafVoxelSize();
+    //float tMin = 0.0f;
 
     // Out
     posTMin = Vector4f(position, tMin);
-    jitter = Vector2f(0.5f);
-    //jitter = rng.Uniform2D();
+    //jitter = Vector2f(0.5f);
+    //jitter = Vector2f(0.0f);
+    jitter = rng.Uniform2D();
 }
 
 template <class RNG, int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
@@ -1428,6 +1436,7 @@ static void KCGenAndSampleDistribution(// Output
         Vector2f xi = sharedMem->sFieldJitter;
         Vector2f st = Vector2f(localPixelId) + xi;
         st /= Vector2f(segmentSize);
+        st = Utility::CocentricOctohedralWrap(st);
         Vector3 result = Utility::CocentricOctohedralToDirection(st);
         Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
         return dirYUp;
@@ -1568,6 +1577,7 @@ static void KCGenAndSampleDistribution(// Output
 
                 gRayAux[rayId].guideDir = Vector2h(sampledUV[0], sampledUV[1]);
                 gRayAux[rayId].guidePDF = pdf;
+                gRayAux[rayId].bxdfSelected = bxdfSampled;
             }
         }
 
@@ -1620,13 +1630,40 @@ static void KCGenAndSampleDistributionProduct(// Output
     SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
 
     // Functors for batched cone trace
-    auto ProjectionFunc = [&](const Vector2i& localPixelId,
+    auto BxDFProjFunc = [](const Vector2i& localPixelId,
+                           const Vector2i& segmentSize,
+                           const Vector3f& surfNormal)
+    {
+        // Calculate the ST of the pixel
+        Vector2f sizeRecip = Vector2f(1.0f) / Vector2f(segmentSize);
+        Vector2f st = (Vector2f(localPixelId) + 0.5f) * sizeRecip;
+        // To world space
+        Vector3 result = Utility::CocentricOctohedralToDirection(st);
+        Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
+        // Skew the data towards the normal
+        // Always try to get positive values
+        // to prevent bias
+        // Move normal to projection sphere
+        // TODO: Probably less computational solution avail?
+        Vector3f right = Cross(dirYUp, surfNormal).Normalize();
+        // TODO: this is projection dependent change this
+        // Co-octo solid angle approx of each cell
+        // assume it is normal angle in radians
+        float angle = 4.0f * MathConstants::Pi / Vector2f(segmentSize).Multiply();
+
+        QuatF q(angle, right);
+        dirYUp = q.ApplyRotation(dirYUp);
+        return dirYUp;
+    };
+    auto RFieldProjFunc = [&](const Vector2i& localPixelId,
                               const Vector2i& segmentSize)
     {
         // Jitter the values
         Vector2f xi = sharedMem->sFieldJitter;
         Vector2f st = Vector2f(localPixelId) + xi;
         st /= Vector2f(segmentSize);
+        st = Utility::CocentricOctohedralWrap(st);
         Vector3 result = Utility::CocentricOctohedralToDirection(st);
         Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
         return dirYUp;
@@ -1668,14 +1705,14 @@ static void KCGenAndSampleDistributionProduct(// Output
 
         // Generate Radiance Field
         float filteredRadiances[RT_ITER_COUNT];
-        GenerateRadianceField<RNG, decltype(WrapFunc), decltype(ProjectionFunc),
+        GenerateRadianceField<RNG, decltype(WrapFunc), decltype(RFieldProjFunc),
                               RT_ITER_COUNT, THREAD_PER_BLOCK, X, Y>
         (
             filteredRadiances,
             rng,
             sharedMem,
             WrapFunc,
-            ProjectionFunc,
+            RFieldProjFunc,
             RFieldGaussFilter,
             svo,
             coneAperture
@@ -1700,6 +1737,7 @@ static void KCGenAndSampleDistributionProduct(// Output
         {
             float pdf;
             Vector2f uv;
+            bool isBxDFSelected;
             if(purePG)
             {
                 // Sample using the surface/material,
@@ -1711,18 +1749,20 @@ static void KCGenAndSampleDistributionProduct(// Output
                 // Then multiply the PDFs for inner and outer etc. and return the sample
                 uv = productSampler.SampleWithProduct(pdf, rng,
                                                       rayIndex,
-                                                      ProjectionFunc);
+                                                      BxDFProjFunc);
                 // Our projection function is co-centric octahedral so it is area preserving
                 // directly divide with Omega (4 * PI)
                 pdf *= 0.25f * MathConstants::InvPi;
+                isBxDFSelected = false;
             }
             else
             {
                 // Same as above but also combine with MIS (BxDF <=> Guide)
-                uv = productSampler.SampleMIS(pdf,
+                uv = productSampler.SampleMIS(isBxDFSelected,
+                                              pdf,
                                               rng,
                                               rayIndex,
-                                              ProjectionFunc,
+                                              BxDFProjFunc,
                                               InvProjectionFunc,
                                               NormProjectionFunc,
                                               misRatio,
@@ -1742,6 +1782,7 @@ static void KCGenAndSampleDistributionProduct(// Output
                 uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
                 gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
                 gRayAux[rayId].guidePDF = pdf;
+                gRayAux[rayId].bxdfSelected = isBxDFSelected;
             }
         }
 
@@ -1765,10 +1806,11 @@ struct KCFilterRadianceShMemOptiX
         typename BlockLoad::TempStorage loadMem;
         typename Filter2D::TempStorage filterMem;
     };
+
 };
 
 template <int32_t TPB, int32_t X, int32_t Y>
-__global__
+__global__ __launch_bounds__(TPB)
 static void KCFilterRadianceFields(// I-O
                                    SVOOptixRadianceBuffer::SegmentedField<float*> radBuffer,
                                    // Constants
@@ -1798,22 +1840,41 @@ static void KCFilterRadianceFields(// I-O
     for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
         binIndex += gridDim.x)
     {
-        float* gRadianceField = radBuffer[binIndex];
+        {
+            float* gRadianceField = radBuffer.FieldRadianceArray(binIndex);
 
-        float radianceIn[DATA_PER_THREAD];
-        BlockLoad(sShared->loadMem).Load(gRadianceField,
-                                         radianceIn, TOTAL_DATA);
+            float radianceIn[DATA_PER_THREAD];
+            BlockLoad(sShared->loadMem).Load(gRadianceField,
+                                             radianceIn, TOTAL_DATA);
+            __syncthreads();
+
+            float radianceOut[DATA_PER_THREAD];
+            Filter2D(sShared->filterMem).Filter(radianceOut,
+                                                radianceIn,
+                                                RFieldGaussFilter,
+                                                WrapFunc);
+            __syncthreads();
+            BlockStore(sShared->storeMem).Store(gRadianceField,
+                                                radianceOut, TOTAL_DATA);
+        }
         __syncthreads();
+        {
+            float* gDistanceField = radBuffer.FieldDistanceArray(binIndex);
 
-        float radianceOut[DATA_PER_THREAD];
-        Filter2D(sShared->filterMem).Filter(radianceOut,
-                                            radianceIn,
-                                            RFieldGaussFilter,
-                                            WrapFunc);
-        __syncthreads();
-        BlockStore(sShared->storeMem).Store(gRadianceField,
-                                            radianceOut, TOTAL_DATA);
+            float distanceIn[DATA_PER_THREAD];
+            BlockLoad(sShared->loadMem).Load(gDistanceField,
+                                             distanceIn, TOTAL_DATA);
+            __syncthreads();
 
+            float distanceOut[DATA_PER_THREAD];
+            Filter2D(sShared->filterMem).Filter(distanceOut,
+                                                distanceIn,
+                                                RFieldGaussFilter,
+                                                WrapFunc);
+            __syncthreads();
+            BlockStore(sShared->storeMem).Store(gDistanceField,
+                                                distanceOut, TOTAL_DATA);
+        }
         // Before doing any other field wait other threads to finish
         __syncthreads();
     }
@@ -1861,7 +1922,7 @@ static void KCSampleDistributionOptiX(// Output
     // Functors for batched cone trace
     auto InvProjectionFunc = [](const Vector3f& direction)
     {
-        Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
+        Vector3f dirZUp = Vector3(direction[2], direction[0], direction[1]);
         return Utility::DirectionToCocentricOctohedral(dirZUp);
     };
     auto NormProjectionFunc = [](const Vector2f& st)
@@ -1896,16 +1957,14 @@ static void KCSampleDistributionOptiX(// Output
             continue;
         }
 
-        // Load Radiance Field
         float filteredRadiances[RT_ITER_COUNT];
         for(int i = 0; i < RT_ITER_COUNT; i++)
         {
             int32_t localId = i * THREAD_PER_BLOCK + THREAD_ID;
             if(localId >= X * Y) continue;
 
-            filteredRadiances[i] = radBuffer[binIndex][localId];
+            filteredRadiances[i] = radBuffer.FieldRadianceArray(binIndex)[localId];
         };
-
         // Non product sample version
         // Generate PWC Distribution over the radiances
         Distribution2D dist2D(sharedMem->sDistMem, filteredRadiances);
@@ -1919,7 +1978,7 @@ static void KCSampleDistributionOptiX(// Output
             const bool isValidIteration = (rayIndex < sharedMem->sRayCount);
             bool isLight = false;
             uint32_t rayId;
-            bool bxdfSampled;
+            bool isBxDFSampled;
             float pdfBxDF, sampleRatio;
             Vector2f sampledUV;
             // Only do this if it is required
@@ -1935,7 +1994,7 @@ static void KCSampleDistributionOptiX(// Output
                 Vector3f wi = -(metaSurfGenerator.Ray(rayId).ray.getDirection());
                 if(xi >= sampleRatio)
                 {
-                    bxdfSampled = true;
+                    isBxDFSampled = true;
 
                     // Sample Using BxDF
                     RayF wo;
@@ -1948,14 +2007,25 @@ static void KCSampleDistributionOptiX(// Output
                                 rng);
                     sampledUV = InvProjectionFunc(wo.getDirection());
                     sampleRatio = 1.0f - sampleRatio;
+                    if(sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
+                       sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f)
+                    {
+                        printf("[PG]err on sample (%f, %f)\n", sampledUV[0], sampledUV[1]);
+                    }
                 }
                 else
                 {
-                    bxdfSampled = false;
+                    isBxDFSampled = false;
 
                     // Sample Using Radiance Field
                     Vector2f index;
                     sampledUV = dist2D.Sample(index, rng);
+                    if(sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
+                       sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f)
+                    {
+                        printf("[PG]err on sample (%f, %f)\n", sampledUV[0], sampledUV[1]);
+                    }
+
                     Vector3f wo = NormProjectionFunc(sampledUV);
                     pdfBxDF = surf.Pdf(wo, wi, GPUMediumVacuum(0));
                 }
@@ -1971,8 +2041,8 @@ static void KCSampleDistributionOptiX(// Output
                 float pdfGuide = dist2D.Pdf(sampledUV * Vector2f(X, Y));
                 pdfGuide *= 0.25f * MathConstants::InvPi;
 
-                pdfSampled = (bxdfSampled) ? pdfBxDF : pdfGuide;
-                pdfOther = (bxdfSampled) ? pdfGuide : pdfBxDF;
+                pdfSampled = (isBxDFSampled) ? pdfBxDF : pdfGuide;
+                pdfOther = (isBxDFSampled) ? pdfGuide : pdfBxDF;
             }
             // Revert to CDF Again
             __syncthreads();
@@ -1989,6 +2059,7 @@ static void KCSampleDistributionOptiX(// Output
 
                 gRayAux[rayId].guideDir = Vector2h(sampledUV[0], sampledUV[1]);
                 gRayAux[rayId].guidePDF = pdf;
+                gRayAux[rayId].bxdfSelected = isBxDFSampled;
             }
         }
 
@@ -2037,16 +2108,30 @@ static void KCSampleDistributionProductOptiX(// Output
     using ProductSampler8x8 = typename SharedMemType::ProductSampler8x8;
 
     // Functors for batched cone trace
-    auto ProjectionFunc = [&](const Vector2i& localPixelId,
-                              const Vector2i& segmentSize)
+    auto BxDFProjFunc = [](const Vector2i& localPixelId,
+                           const Vector2i& segmentSize,
+                           const Vector3f& surfNormal)
     {
-        // Jitter the values
-        //Vector2f xi = Vector2f(0.5f);
-        Vector2f xi = rng.Uniform2D();
-        Vector2f st = Vector2f(localPixelId) + xi;
-        st /= Vector2f(segmentSize);
+        // Calculate the ST of the pixel
+        Vector2f sizeRecip = Vector2f(1.0f) / Vector2f(segmentSize);
+        Vector2f st = (Vector2f(localPixelId) + 0.5f) * sizeRecip;
+        // To world space
         Vector3 result = Utility::CocentricOctohedralToDirection(st);
         Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
+        // Skew the data towards the normal
+        // Always try to get positive values
+        // to prevent bias
+        // Move normal to projection sphere
+        // TODO: Probably less computational solution avail?
+        Vector3f right = Cross(dirYUp, surfNormal).Normalize();
+        // TODO: this is projection dependent change this
+        // Co-octo solid angle approx of each cell
+        // assume it is normal angle in radians
+        float angle = 4.0f * MathConstants::Pi / Vector2f(segmentSize).Multiply();
+
+        QuatF q(angle, right);
+        dirYUp = q.ApplyRotation(dirYUp);
         return dirYUp;
     };
     auto InvProjectionFunc = [](const Vector3f& direction)
@@ -2092,7 +2177,7 @@ static void KCSampleDistributionProductOptiX(// Output
             int32_t localId = i * THREAD_PER_BLOCK + THREAD_ID;
             if(localId >= X * Y) continue;
 
-            filteredRadiances[i] = radBuffer[binIndex][localId];
+            filteredRadiances[i] = radBuffer.FieldRadianceArray(binIndex)[localId];
         };
 
         static constexpr uint32_t WARP_PER_BLOCK = THREAD_PER_BLOCK / WARP_SIZE;
@@ -2114,6 +2199,7 @@ static void KCSampleDistributionProductOptiX(// Output
         {
             float pdf;
             Vector2f uv;
+            bool bxdfSelected;
             if(purePG)
             {
                 // Sample using the surface/material,
@@ -2125,18 +2211,21 @@ static void KCSampleDistributionProductOptiX(// Output
                 // Then multiply the PDFs for inner and outer etc. and return the sample
                 uv = productSampler.SampleWithProduct(pdf, rng,
                                                       rayIndex,
-                                                      ProjectionFunc);
+                                                      BxDFProjFunc);
                 // Our projection function is co-centric octahedral so it is area preserving
                 // directly divide with Omega (4 * PI)
                 pdf *= 0.25f * MathConstants::InvPi;
+                // Pure pg we always choose PG
+                bxdfSelected = false;
             }
             else
             {
                 // Same as above but also combine with MIS (BxDF <=> Guide)
-                uv = productSampler.SampleMIS(pdf,
+                uv = productSampler.SampleMIS(bxdfSelected,
+                                              pdf,
                                               rng,
                                               rayIndex,
-                                              ProjectionFunc,
+                                              BxDFProjFunc,
                                               InvProjectionFunc,
                                               NormProjectionFunc,
                                               misRatio,
@@ -2156,6 +2245,7 @@ static void KCSampleDistributionProductOptiX(// Output
                 uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
                 gRayAux[rayId].guideDir = Vector2h(uv[0], uv[1]);
                 gRayAux[rayId].guidePDF = pdf;
+                gRayAux[rayId].bxdfSelected = bxdfSelected;
             }
         }
 
@@ -2209,6 +2299,172 @@ static void KCGenerateBinInfoOptiX(// Output
         {
             dRadianceFieldRayOrigins[threadId] = Vector4f(NAN);
             dProjectionJitters[threadId] = Vector2f(NAN);
+        }
+    }
+}
+
+template <int32_t X, int32_t Y>
+struct KCParallaxShMem
+{
+    float       sDistanceField[Y][X];
+    // Bin parameters
+    uint32_t    sRayCount;
+    uint32_t    sOffsetStart;
+    uint32_t    sNodeId;
+    Vector3f    sFieldOrigin;
+};
+
+
+template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
+__global__ __launch_bounds__(THREAD_PER_BLOCK)
+static void KCAdjustParallax(// I-O
+                             RayAuxWFPG* gRayAux,
+                             // Input
+                             // Per-ray
+                             const RayId* gRayIds,
+                             // Per bin
+                             const uint32_t* gBinOffsets,
+                             const uint32_t* gNodeIds,
+                             const Vector4f* gFieldOriginAndTMin,
+                             // MetaSurfaceGenerator
+                             const GPUMetaSurfaceGeneratorGroup metaSurfGenerator,
+                             // Buffer
+                             SVOOptixRadianceBuffer::SegmentedField<const float*> radBuffer,
+                             // Constants
+                             uint32_t binCount)
+{
+    const int32_t THREAD_ID = threadIdx.x;
+    const bool isMainThread = (THREAD_ID == 0);
+    // Number of threads that contributes to the ray tracing operation
+    static constexpr int32_t RT_CONTRIBUTING_THREAD_COUNT = (THREAD_PER_BLOCK < X* Y) ? THREAD_PER_BLOCK : (X * Y);
+    // How many rows can we process in parallel
+    static constexpr int32_t ROW_PER_ITERATION = RT_CONTRIBUTING_THREAD_COUNT / X;
+    // How many iterations the entire image would take
+    static constexpr int32_t ROW_ITER_COUNT = Y / ROW_PER_ITERATION;
+    static_assert(RT_CONTRIBUTING_THREAD_COUNT % X == 0, "RT_THREADS must be multiple of X or vice versa.");
+    static_assert(Y % ROW_PER_ITERATION == 0, "RT_THREADS must exactly iterate over X * Y");
+    // Ray tracing related
+    static constexpr int32_t RT_ITER_COUNT = ROW_ITER_COUNT;
+
+    // PWC Distribution over the shared memory
+    using SharedMemType = KCParallaxShMem<X, Y>;
+
+    // Change the type of the shared memory
+    extern __shared__ Byte sharedMemRAW[];
+    SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
+
+    // For each block (we allocate enough blocks for the GPU)
+    // Each block will process multiple bins
+    for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
+        binIndex += gridDim.x)
+    {
+        // Load the bin Info
+        if(isMainThread)
+        {
+            Vector2ui rayRange = Vector2ui(gBinOffsets[binIndex], gBinOffsets[binIndex + 1]);
+            sharedMem->sRayCount = rayRange[1] - rayRange[0];
+            sharedMem->sOffsetStart = rayRange[0];
+            sharedMem->sNodeId = gNodeIds[binIndex];
+            sharedMem->sFieldOrigin = Vector3f(gFieldOriginAndTMin[binIndex]);
+        }
+        __syncthreads();
+
+        // Kill the entire block if Node Id is invalid
+        if(sharedMem->sNodeId == INVALID_BIN_ID)
+        {
+            __syncthreads();
+            continue;
+        }
+
+        // Load Distance Field &
+        // Put it on Shared Memory
+        for(int i = 0; i < RT_ITER_COUNT; i++)
+        {
+            int32_t localId = i * THREAD_PER_BLOCK + THREAD_ID;
+            if(localId >= X * Y) continue;
+
+            int32_t y = localId / X;
+            int32_t x = localId % X;
+
+            sharedMem->sDistanceField[y][x] = radBuffer.FieldDistanceArray(binIndex)[localId];
+        }
+        __syncthreads();
+
+        // Iterate trough rays on the bin
+        for(uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
+            rayIndex += THREAD_PER_BLOCK)
+        {
+            uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
+            bool isBxDFSelected = gRayAux[rayId].bxdfSelected;
+
+            // Skip if material is used for sampling
+            if(isBxDFSelected) continue;
+
+            // If field is used adjust the direction
+            RayReg rayReg = metaSurfGenerator.Ray(rayId);
+            Vector3f rayPosition = rayReg.ray.AdvancedPos(rayReg.tMax);
+            Vector2h uv = gRayAux[rayId].guideDir;
+            Vector2f uvF = Vector2f(uv[0], uv[1]);
+
+            Vector3f dir = Utility::CocentricOctohedralToDirection(uvF);
+            dir = Vector3(dir[1], dir[2], dir[0]);
+
+            // TODO: Do linear filter here at least
+            // Maybe change the field to texture for HW acceleration
+            Vector2i uvI = Vector2i(uvF * Vector2f(X, Y));
+            float distance = sharedMem->sDistanceField[uvI[1]][uvI[0]];
+            // If we missed the scene and sampled it
+            // no parallax effect
+            if(distance < FLT_MAX)
+            {
+                // Find the hit position
+                Vector3f fieldWorldPos = sharedMem->sFieldOrigin + distance * dir.Normalize();
+
+                // Calculate parallax adjusted new dir and convert it to UV
+                Vector3f adjDir = (fieldWorldPos - rayPosition);
+                float distanceSqrAdj = adjDir.LengthSqr();
+                adjDir.NormalizeSelf();
+
+                // Compansate the PDF value as well
+                // Convert the angular pdf to geometric pdf
+                float pdfOmega = gRayAux[rayId].guidePDF;
+
+                // TODO: get normals?
+                // How to get normals
+                Vector3f hitNormal = Vector3f(0.0f, -1.0f, 0.0f);
+                //Vector3f FAKE_NORMAL_CHANGE_THIS = (-dir);
+
+                float cosTheta = (-dir).Dot(hitNormal);
+                float cosThetaAdj = (-adjDir).Dot(hitNormal);
+
+                float distanceSqr = distance * distance;
+                float pdfGeo = pdfOmega * cosTheta / distanceSqr;
+                // Now convert back to adjusted
+                float pdfOmegaAdj = pdfGeo * compDistSqr / cosThetaAdj;
+
+                //if(pdfOmegaAdj < 0.000001f)
+                //{
+                //    printf("Bad Adjustment oldOmega %f, newOmega %f, "
+                //           "oldDir(%f, %f, %f), newDir(%f, %f, %f), "
+                //           "distOld %f, distNew %f, "
+                //           "cosOld %f, cosNew %f\n",
+                //           pdfOmega, pdfOmegaAdj,
+                //           dir[0], dir[1], dir[2],
+                //           adjDir[0], adjDir[1], adjDir[2],
+                //           distanceSqr, compDistSqr,
+                //           (-dir).Dot(FAKE_NORMAL_CHANGE_THIS),
+                //           (-adjDir).Dot(FAKE_NORMAL_CHANGE_THIS));
+                //}
+
+                // Zup to Yup
+                adjDir = Vector3(adjDir[2], adjDir[0], adjDir[1]);
+                Vector2f adjUV = Utility::DirectionToCocentricOctohedral(adjDir);
+                // Write back the UV
+                gRayAux[rayId].guideDir = Vector2h(adjUV[0], adjUV[1]);
+                // And the adjusted PDF
+                gRayAux[rayId].guidePDF = pdfOmegaAdj;
+            }
+
         }
     }
 }

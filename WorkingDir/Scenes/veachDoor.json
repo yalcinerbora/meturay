@@ -335,8 +335,8 @@
         "type": "Triangle",
         "name": "../Surfaces/Door/walls.obj",
         "tag": "assimp_",
-        "innerIndex": 0,
-        "cullFace": false
+        "innerIndex": 0
+        //"cullFace": false
     }],
 
     "Accelerators":[

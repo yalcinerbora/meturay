@@ -46,6 +46,7 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    OPTIX_USE_SCENE_NAME        = "UseSceneAccelerator";
     static constexpr const char*    OMIT_LIGHT_NAME             = "OmitDirectRadiance";
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
+    static constexpr const char*    PARALLAX_NAME               = "AdjustParallax";
 
     static constexpr const char*    PG_DUMP_DEBUG_NAME          = "PGDumpDataStruct";
     static constexpr const char*    PG_DUMP_INTERVAL_NAME       = "PGDataStructDumpIntervalExp";
@@ -80,6 +81,7 @@ class WFPGTracer final : public RayTracer
         bool                optiXTrace          = false;
         bool                optiXUseSceneAcc    = true;
         uint32_t            optiXBufferSize     = 16;
+        bool                adjustParallax      = true;
         //
         bool                pgDumpDebugData     = false;
         uint32_t            pgDumpInterval      = 2;

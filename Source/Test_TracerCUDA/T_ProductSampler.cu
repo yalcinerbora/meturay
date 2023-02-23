@@ -55,7 +55,8 @@ void KCProductSamplerSampleTest(// Outputs
     using ProductSamplerType = ProductSampler<TPB, X, Y, PX, PY>;
     // We will not do product sampling so give an invalid kernel
     auto ProjectionFunc = [](const Vector2i& localPixelId,
-                             const Vector2i& segmentSize)
+                             const Vector2i& segmentSize,
+                             const Vector3f& surfNormal)
     {
         return Zero3f;
     };

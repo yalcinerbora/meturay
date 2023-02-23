@@ -183,6 +183,22 @@ using PathGuideOptiXKernelFunction = void (*)(// Output
                                               bool,
                                               float);
 
+using ParallaxAdjustKernelFunction = void(*)(// I-O
+                                             RayAuxWFPG*,
+                                             // Input
+                                             // Per-ray
+                                             const RayId*,
+                                             // Per bin
+                                             const uint32_t*,
+                                             const uint32_t*,
+                                             const Vector4f*,
+                                             // MetaSurfaceGenerator
+                                             const GPUMetaSurfaceGeneratorGroup,
+                                             // Buffer
+                                             SVOOptixRadianceBuffer::SegmentedField<const float*>,
+                                             // Constants
+                                             uint32_t);
+
 // 1st param is "Thread per block", 2nd and third params are X,Y resolution of the generated texture
 using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 
@@ -191,10 +207,10 @@ using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 //    // Kernel is passed the register limit of the device,
 //    // compiling using 100s of registers :(.
 //    // Reduce the block size for at least on debug mode
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // First bounce good approximation
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Second bounce as well
-//    std::make_tuple(256, 16, 16),                           // Third bounce not so much
-//    std::make_tuple(256, 16, 16),                           // Fourth bounce as well
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128), // First bounce good approximation
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // Second bounce as well
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Third bounce not so much
+//    std::make_tuple(256, 16, 16),                           // Fourth bounce not good
 //    std::make_tuple(128, 8, 8)                              // Fifth is bad
 //};
 
@@ -218,19 +234,17 @@ static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL
     //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
     //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32)
 
+    //std::make_tuple(256, 16, 16),
+    //std::make_tuple(256, 16, 16),
+    //std::make_tuple(256, 16, 16),
+    //std::make_tuple(256, 16, 16),
+    //std::make_tuple(256, 16, 16)
+
     //std::make_tuple(256, 8, 8),
     //std::make_tuple(256, 8, 8),
     //std::make_tuple(256, 8, 8),
     //std::make_tuple(256, 8, 8),
     //std::make_tuple(256, 8, 8)
-
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(256, 16, 16),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(256, 16, 16),
-    //std::make_tuple(256, 16, 16)
 };
 
 static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),
@@ -290,6 +304,16 @@ static constexpr std::array<PathGuideFilterKernelFunction, PG_KERNEL_TYPE_COUNT>
     KCFilterRadianceFields<std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
 };
 
+static constexpr std::array<ParallaxAdjustKernelFunction, PG_KERNEL_TYPE_COUNT> PG_PARALLAX_KERNELS =
+{
+
+    KCAdjustParallax<std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>,
+    KCAdjustParallax<std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>,
+    KCAdjustParallax<std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>,
+    KCAdjustParallax<std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>,
+    KCAdjustParallax<std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>
+};
+
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> FILTER_KERNEL_SHMEM_SIZE =
 {
     sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>),
@@ -297,6 +321,15 @@ static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> FILTER_KERNEL_SHMEM_
     sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>),
     sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>),
     sizeof(KCFilterRadianceShMemOptiX<std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>)
+};
+
+static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PARALLAX_KERNEL_SHMEM_SIZE =
+{
+    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>),
+    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>),
+    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>),
+    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>),
+    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>)
 };
 
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_SHMEM_SIZE =
@@ -715,7 +748,7 @@ void WFPGTracer::GenerateGuidedDirections()
                                                   options.optiXUseSceneAcc,
                                                   coneAperture);
         // Now do the iteration
-        METU_LOG("Iter {}", iterCount);
+        //METU_LOG("Iter {}", iterCount);
         uint32_t processedBins = 0;
         for(uint32_t i = 0; i < iterCount; i++)
         {
@@ -730,16 +763,22 @@ void WFPGTracer::GenerateGuidedDirections()
             // Offset the buffers
             uint32_t* dLocalPartitionBinIds = dPartitionBinIds + processedBins;
             uint32_t* dLocalPartitionOffsets = dPartitionOffsets + processedBins;
+            Vector4f* dLocalFieldOrigins = dRadianceFieldRayOrigins + processedBins;
 
             uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
             uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
 
 
             //Debug::Dump2DDataToImage("filterBefore",
-            //                         fieldBufferConst[0],
+            //                         fieldBufferConst.FieldRadianceArray(0),
             //                         Vector2i(std::get<1>(PG_KERNEL_PARAMS[kernelIndex]),
             //                                  std::get<2>(PG_KERNEL_PARAMS[kernelIndex])),
             //                                  processedBinThisIter);
+            //Debug::Dump2DDataToImage("filterDistBefore",
+            //                         fieldBufferConst.FieldDistanceArray(0),
+            //                         Vector2i(std::get<1>(PG_KERNEL_PARAMS[kernelIndex]),
+            //                                  std::get<2>(PG_KERNEL_PARAMS[kernelIndex])),
+            //                         processedBinThisIter);
 
             // Call Filter Kernel
             uint32_t filterSharedMemSize = FILTER_KERNEL_SHMEM_SIZE[kernelIndex];
@@ -759,10 +798,15 @@ void WFPGTracer::GenerateGuidedDirections()
                           processedBinThisIter);
 
             //Debug::Dump2DDataToImage("filterAfter",
-            //                         fieldBufferConst[0],
+            //                         fieldBufferConst.FieldRadianceArray(0),
             //                         Vector2i(std::get<1>(PG_KERNEL_PARAMS[kernelIndex]),
             //                                  std::get<2>(PG_KERNEL_PARAMS[kernelIndex])),
             //                                  processedBinThisIter);
+            //Debug::Dump2DDataToImage("filterDistAfter",
+            //                         fieldBufferConst.FieldDistanceArray(0),
+            //                         Vector2i(std::get<1>(PG_KERNEL_PARAMS[kernelIndex]),
+            //                                  std::get<2>(PG_KERNEL_PARAMS[kernelIndex])),
+            //                         processedBinThisIter);
 
             // Call Sample Kernel
             CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
@@ -791,6 +835,34 @@ void WFPGTracer::GenerateGuidedDirections()
                           options.purePG,
                           options.misRatio);
 
+            if(options.adjustParallax)
+            {
+                auto KCAdjustParallaxKernel = PG_PARALLAX_KERNELS[kernelIndex];
+                auto paralaxKernelShmemSize = PARALLAX_KERNEL_SHMEM_SIZE[kernelIndex];
+                CUDA_CHECK(cudaFuncSetAttribute(KCAdjustParallaxKernel,
+                                                cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                                paralaxKernelShmemSize));
+                gpu.ExactKC_X(paralaxKernelShmemSize, (cudaStream_t)0,
+                              kernelTPB, pgKernelBlockCount,
+                              //
+                              KCAdjustParallaxKernel,
+                              // I-O
+                              dRayAux,
+                              // Input
+                              // Per-ray
+                              rayCaster->SortedRayIds(),
+                              // Per bin
+                              dLocalPartitionOffsets,
+                              dLocalPartitionBinIds,
+                              dLocalFieldOrigins,
+                              // MetaSurfaceGenerator
+                              metaSurfGenerator,
+                              // Buffer
+                              fieldBufferConst,
+                              // Constants
+                              processedBinThisIter);
+
+            }
             processedBins += processedBinThisIter;
         }
         assert(processedBins == hPartitionCount);
@@ -814,8 +886,8 @@ void WFPGTracer::GenerateGuidedDirections()
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
     //METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
     //         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
-    METU_LOG("{:d}; {:d}; {:f}; {:f}",
-             currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
+    //METU_LOG("{:d}; {:d}; {:f}; {:f}",
+    //         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
     CUDA_CHECK(cudaEventDestroy(start));
     CUDA_CHECK(cudaEventDestroy(stop));
 }
@@ -1178,7 +1250,7 @@ TracerError WFPGTracer::Initialize()
                                                                    baseAccelOptiX,
                                                                    svo);
             coneCasterOptiX->GenerateSVOTraversable();
-            size_t bufferSize = options.optiXBufferSize * 1024 * 1024 / sizeof(float);
+            size_t bufferSize = options.optiXBufferSize * 1024 * 1024 / sizeof(float) / 2;
             radianceBufferOptiX = std::make_unique<SVOOptixRadianceBuffer>(static_cast<uint32_t>(bufferSize));
             binInfoBufferOptiX = std::make_unique<DeviceMemory>();
         }
@@ -1265,6 +1337,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.omitLightRadiance, OMIT_LIGHT_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetBool(options.adjustParallax, PARALLAX_NAME)) != TracerError::OK)
+        return err;
 
 
     if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
@@ -1303,6 +1377,8 @@ void WFPGTracer::AskOptions()
     list.emplace(OPTIX_TRACE_NAME, OptionVariable(options.optiXTrace));
     list.emplace(OPTIX_USE_SCENE_NAME, OptionVariable(options.optiXUseSceneAcc));
     list.emplace(OPTIX_BUFFER_NAME, OptionVariable(static_cast<int64_t>(options.optiXBufferSize)));
+
+    list.emplace(PARALLAX_NAME, OptionVariable(options.adjustParallax));
 
     list.emplace(OMIT_LIGHT_NAME, OptionVariable(options.omitLightRadiance));
 
@@ -1576,7 +1652,7 @@ void WFPGTracer::Finalize()
         }
     }
 
-    METU_LOG("----------------");
+    //METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();
     frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

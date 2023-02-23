@@ -136,7 +136,8 @@ class ProductSampler
                                       ProjFunc&& Project) const;
     template <class ProjFunc, class InvProjFunc, class NormProjFunc>
     __device__
-    Vector2f        SampleMIS(float& pdf,
+    Vector2f        SampleMIS(bool& isBxDFSelected,
+                              float& pdf,
                               RNGeneratorGPUI& rng,
                               int32_t rayIndex,
                               ProjFunc&& Project,
@@ -281,7 +282,7 @@ void ProductSampler<TPB, X, Y, PX, PY>::MultiplyWithBXDF(float(&productField)[RE
             //const GPUMediumI& m = *(renderState.mediumList[aux.mediumIndex]);
             GPUMediumVacuum medium(0);
             // Project the mapped id to world space
-            Vector3f wo = Project(loc2D, Vector2i(PX, PY));
+            Vector3f wo = Project(loc2D, Vector2i(PX, PY), warpSurf.WorldNormal());
 
             // TODO: for large solid angles (in our case 8x8 is probably large)
             // we need to better approximate the BxDF single point sample of the material
@@ -545,7 +546,8 @@ template <int32_t TPB, int32_t X, int32_t Y,
           int32_t PX, int32_t PY>
 template <class ProjFunc, class InvProjFunc, class NormProjFunc>
 __device__ __forceinline__
-Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
+Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(bool& isBxDFSelected,
+                                                      float& pdf,
                                                       RNGeneratorGPUI& rng,
                                                       int32_t rayIndex,
                                                       ProjFunc&& Project,
@@ -577,6 +579,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
     if(isLight || isSpecular || invalidRay)
     {
         pdf = 1.0f;
+        isBxDFSelected = true;
         return Vector2f(0.0f);
     }
 
@@ -590,7 +593,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
     if(xi >= sampleRatio)
     {
         // Sample BxDF (solo)
-        //if(isWarpLeader)
+        if(isWarpLeader)
         {
             const GPUMediumI* outMedium;
             RayF wo;
@@ -614,6 +617,8 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
         pdfOther *= 2;
         sampleRatio = 1.0f - sampleRatio;
 
+        isBxDFSelected = true;
+
         //printf("[BxDF] pdfBxDF %f, pdfGuide %f\n", pdfSampled, pdfOther);
     }
     else
@@ -623,7 +628,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
         sampledUV = Sample(innerIsUniformSampled, pdfSampled,
                              rng, pdfX, cdfX, pdfY, cdfY);
         // Pdf BxDF (solo)
-        //if(isWarpLeader)
+        if(isWarpLeader)
         {
             pdfSampled *= projectionPdfMultiplier;
             pdfSampled *= 2;
@@ -634,6 +639,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(float& pdf,
 
             //printf("[Guide] pdfBxDF %f, pdfGuide %f\n", pdfSampled, pdfOther);
         }
+        isBxDFSelected = false;
     }
 
     if(isWarpLeader)

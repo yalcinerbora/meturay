@@ -223,8 +223,9 @@ void KCRadGenSVO()
     {
         Vector2f st = Vector2f(localPixelId) + xi;
         st /= Vector2f(segmentSize);
-        Vector3 result = Utility::CocentricOctohedralToDirection(st);
-        Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+        st = Utility::CocentricOctohedralWrap(st);
+        Vector3f result = Utility::CocentricOctohedralToDirection(st);
+        Vector3f dirYUp = Vector3(result[1], result[2], result[0]);
         return dirYUp;
     };
 
@@ -259,9 +260,29 @@ void KCRadGenSVO()
     // value)
     Vector2f projJitter = params.dProjJitters[binIndex];
     Vector3f rayDir = ProjectionFunc(rayId, fieldDim, projJitter);
+
+    //if(fieldWriteIndex == 1)
+    //{
+    //    printf("[%u] D(%f, %f, %f) Length(%f)\n",
+    //           binThreadIndex, rayDir[0], rayDir[1], rayDir[2],
+    //           rayDir.Length());
+    //}
+
+    // Calculate tMax from SVO AABB
     // Actual SVO structure will be used to expand the hit location wrt.
     // query level
+    // This would work only if the ray is inside the SVO AABB
+    // for path guiding all rays will be launched inside the scene
+    // so this should be OK.
+    // (Unlike camera rays may originate from outside of the scene)
     const AnisoSVOctreeGPU& svo = params.svo;
+    Vector2f tMMOut;
+    RayF(rayDir, rayOrigin).IntersectsAABB(tMMOut,
+                                           svo.OctreeAABB().Min(),
+                                           svo.OctreeAABB().Max(),
+                                           tMinMax);
+    // Epsilon this out for good measure
+    tMinMax[1] = tMMOut[1] + MathConstants::VeryLargeEpsilon;
 
     // Start level is leaf or the offseted leaf
     // (query offset is used  for debugging only)
@@ -293,7 +314,8 @@ void KCRadGenSVO()
                //
                OptixVisibilityMask(255),
                // Flags
-               OPTIX_RAY_FLAG_DISABLE_ANYHIT,
+               OPTIX_RAY_FLAG_DISABLE_ANYHIT |
+               OPTIX_RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
                // SBT
                sbtOffset, 1, 0,
                // Payload
@@ -343,8 +365,11 @@ void KCRadGenSVO()
         radiance = MathConstants::VeryLargeEpsilon;
 
     // Now write
-    float* dataRange = params.fieldSegments[fieldWriteIndex];
+    float* dataRange = params.fieldSegments.FieldRadianceArray(fieldWriteIndex);
     dataRange[binThreadIndex] = radiance;
+
+    float* distRange = params.fieldSegments.FieldDistanceArray(fieldWriteIndex);
+    distRange[binThreadIndex] = tMaxOut;
 }
 
 WRAP_FUCTION(__raygen__SVOCamTrace, KCCamTraceSVO);

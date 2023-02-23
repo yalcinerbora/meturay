@@ -16,23 +16,27 @@ class SVOOptixRadianceBuffer
 
         private:
         T               dRadiances; // Linear Radiances
+        T               dDistances; // Distance of the hit
         Vector3i        fieldDim;   // Size of each field (x,y, fieldAmount)
 
         public:
         // Helper Access
         __device__ __host__
-        T               operator[](int32_t fieldIndex);
-        //__device__ __host__
-        //auto            operator[](int32_t fieldIndex) const  -> std::add_const_t<T>;
+        T               FieldRadianceArray(int32_t fieldIndex);
+        __device__ __host__
+        T               FieldDistanceArray(int32_t fieldIndex);
         __device__ __host__
         Vector2i        FieldDim() const;
         __device__ __host__
-        int32_t        FieldCount() const;
+        int32_t         FieldCount() const;
     };
 
     private:
     DeviceMemory        mem;
     size_t              radianceCount;
+
+    float*              dRadiances;
+    float*              dDistances;
 
     public:
     // Constructors & Destructor
@@ -48,12 +52,19 @@ class SVOOptixRadianceBuffer
 
 inline SVOOptixRadianceBuffer::SVOOptixRadianceBuffer()
     : radianceCount(0)
+    , dRadiances(nullptr)
+    , dDistances(nullptr)
 {}
 
 inline SVOOptixRadianceBuffer::SVOOptixRadianceBuffer(int32_t radianceCount)
-    : mem(radianceCount * sizeof(float))
-    , radianceCount(radianceCount)
+    : radianceCount(radianceCount)
+    , dRadiances(nullptr)
+    , dDistances(nullptr)
 {
+    size_t count = static_cast<size_t>(radianceCount);
+    GPUMemFuncs::AllocateMultiData(std::tie(dRadiances, dDistances),
+                                   mem,
+                                   {count, count});
     assert(radianceCount >= 0);
 }
 
@@ -65,7 +76,8 @@ SVOOptixRadianceBuffer::SegmentedField<float*> SVOOptixRadianceBuffer::Segment(c
 
     Vector3i fieldDim3D = Vector3i(fieldDim, fieldCount);
     SegmentedField<float*> result;
-    result.dRadiances = static_cast<float*>(mem);
+    result.dRadiances = dRadiances;
+    result.dDistances = dDistances;
     result.fieldDim = fieldDim3D;
     return result;
 }
@@ -78,18 +90,28 @@ const SVOOptixRadianceBuffer::SegmentedField<const float*> SVOOptixRadianceBuffe
 
     Vector3i fieldDim3D = Vector3i(fieldDim, fieldCount);
     SegmentedField<const float*> result;
-    result.dRadiances = static_cast<const float*>(mem);
+    result.dRadiances = dRadiances;
+    result.dDistances = dDistances;
     result.fieldDim = fieldDim3D;
     return result;
 }
 
 template <class T>
 __device__ __host__ __forceinline__
-T SVOOptixRadianceBuffer::SegmentedField<T>::operator[](int32_t fieldIndex)
+T SVOOptixRadianceBuffer::SegmentedField<T>::FieldRadianceArray(int32_t fieldIndex)
 {
     assert(fieldIndex <= fieldDim[2]);
     int32_t pixelPerField = fieldDim[0] * fieldDim[1];
     return dRadiances + fieldIndex * pixelPerField;
+}
+
+template <class T>
+__device__ __host__ __forceinline__
+T SVOOptixRadianceBuffer::SegmentedField<T>::FieldDistanceArray(int32_t fieldIndex)
+{
+    assert(fieldIndex <= fieldDim[2]);
+    int32_t pixelPerField = fieldDim[0] * fieldDim[1];
+    return dDistances + fieldIndex * pixelPerField;
 }
 
 template <class T>

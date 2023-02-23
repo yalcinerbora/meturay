@@ -137,7 +137,8 @@ struct PPGPathNode : public PathGuidingNode
 struct WFPGPathNode : public PathGuidingNode
 {
     Vector2us               packedNormal;
-    float pdf;
+    // For testing
+    float                   pdf;
 
     __device__ Vector3f     Normal() const;
     __device__ void         SetNormal(const Vector3f& normal);
@@ -163,17 +164,17 @@ void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
     // Add to yourself
     AccumRadiance(endPointRadiance);
 
-    if constexpr(std::is_same_v<Node, WFPGPathNode>)
-    {
-        if(largeRadiance)
-            printf("l[%f], i[%u], pdf(%f), p(%f, %f, %f)\n",
-                   luminance,
-                   static_cast<uint32_t>(gLocalChain[prevNext[0]].prevNext[1]),
-                   static_cast<WFPGPathNode&>(*this).pdf,
-                   worldPosition[0],
-                   worldPosition[1],
-                   worldPosition[2]);
-    }
+    //if constexpr(std::is_same_v<Node, WFPGPathNode>)
+    //{
+    //    if(largeRadiance)
+    //        printf("l[%f], i[%u], pdf(%f), p(%f, %f, %f)\n",
+    //               luminance,
+    //               static_cast<uint32_t>(gLocalChain[prevNext[0]].prevNext[1]),
+    //               static_cast<WFPGPathNode&>(*this).pdf,
+    //               worldPosition[0],
+    //               worldPosition[1],
+    //               worldPosition[2]);
+    //}
 
     for(IndexType i = prevNext[0];
         i != InvalidIndex;
@@ -181,16 +182,16 @@ void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
     {
         gLocalChain[i].AccumRadiance(endPointRadiance);
 
-        if constexpr(std::is_same_v<Node, WFPGPathNode>)
-        {
-            if(largeRadiance)
-                printf("l[%f], i[%u], pdf(%f), p(%f, %f, %f)\n",
-                       luminance, static_cast<uint32_t>(i),
-                       static_cast<WFPGPathNode&>(gLocalChain[i]).pdf,
-                       gLocalChain[i].worldPosition[0],
-                       gLocalChain[i].worldPosition[1],
-                       gLocalChain[i].worldPosition[2]);
-        }
+        //if constexpr(std::is_same_v<Node, WFPGPathNode>)
+        //{
+        //    if(largeRadiance)
+        //        printf("l[%f], i[%u], pdf(%f), p(%f, %f, %f)\n",
+        //               luminance, static_cast<uint32_t>(i),
+        //               static_cast<WFPGPathNode&>(gLocalChain[i]).pdf,
+        //               gLocalChain[i].worldPosition[0],
+        //               gLocalChain[i].worldPosition[1],
+        //               gLocalChain[i].worldPosition[2]);
+        //}
 
     }
 }

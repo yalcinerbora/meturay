@@ -88,6 +88,8 @@ struct alignas(16) RayAuxWFPG
     uint32_t    binId;          // Position bin id
     Vector2h    guideDir;       // Spherical coords of the guided direction
     half        guidePDF;       // Guided direction's sample pdf
+    bool        bxdfSelected;   // BxDF is selected from one sampleMIS
+                                // is used by parallax adjustment
 };
 
 struct alignas(16) RayAuxPhotonWFPG
