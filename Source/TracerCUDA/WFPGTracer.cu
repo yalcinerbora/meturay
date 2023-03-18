@@ -197,6 +197,8 @@ using ParallaxAdjustKernelFunction = void(*)(// I-O
                                              // Buffer
                                              SVOOptixRadianceBuffer::SegmentedField<const float*>,
                                              // Constants
+                                             const AnisoSVOctreeGPU,
+                                             float,
                                              uint32_t);
 
 // 1st param is "Thread per block", 2nd and third params are X,Y resolution of the generated texture
@@ -626,6 +628,7 @@ void WFPGTracer::GenerateGuidedDirections()
     //uint32_t kernelIndex = 0;
 
     // DEBUG TIMER
+    uint32_t iterCount = 1;
     cudaEvent_t start, stop;
     CUDA_CHECK(cudaEventCreate(&start));
     CUDA_CHECK(cudaEventCreate(&stop));
@@ -686,7 +689,7 @@ void WFPGTracer::GenerateGuidedDirections()
                                             std::get<2>(PG_KERNEL_PARAMS[kernelIndex]));
         SegmentedField<float*> fieldBuffer = radianceBufferOptiX->Segment(fieldResolution);
         SegmentedField<const float*> fieldBufferConst = std::as_const(*radianceBufferOptiX.get()).Segment(fieldResolution);
-        uint32_t iterCount = (hPartitionCount + fieldBuffer.FieldCount() - 1) / fieldBuffer.FieldCount();
+        iterCount = (hPartitionCount + fieldBuffer.FieldCount() - 1) / fieldBuffer.FieldCount();
 
         // Determine the CUDA Kernels
         auto KERNEL_LIST = options.productPG ? PG_OPTIX_PRODUCT_KERNELS : PG_OPTIX_KERNELS;
@@ -748,7 +751,6 @@ void WFPGTracer::GenerateGuidedDirections()
                                                   options.optiXUseSceneAcc,
                                                   coneAperture);
         // Now do the iteration
-        //METU_LOG("Iter {}", iterCount);
         uint32_t processedBins = 0;
         for(uint32_t i = 0; i < iterCount; i++)
         {
@@ -860,6 +862,8 @@ void WFPGTracer::GenerateGuidedDirections()
                               // Buffer
                               fieldBufferConst,
                               // Constants
+                              svo.TreeGPU(),
+                              coneAperture,
                               processedBinThisIter);
 
             }
@@ -886,8 +890,10 @@ void WFPGTracer::GenerateGuidedDirections()
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
     //METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
     //         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
-    //METU_LOG("{:d}; {:d}; {:f}; {:f}",
-    //         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
+    METU_LOG("{:d}; {:d}; {:f}; {:f}; i:{}",
+             currentDepth, hPartitionCount,
+             avgRayPerBin, milliseconds,
+             iterCount);
     CUDA_CHECK(cudaEventDestroy(start));
     CUDA_CHECK(cudaEventDestroy(stop));
 }
@@ -1339,6 +1345,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
         return err;
     if((err = opts.GetBool(options.adjustParallax, PARALLAX_NAME)) != TracerError::OK)
         return err;
+    if((err = opts.GetUInt(options.guideBounceCount, GUIDE_BOUNCE_COUNT_NAME)) != TracerError::OK)
+        return err;
 
 
     if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
@@ -1379,6 +1387,7 @@ void WFPGTracer::AskOptions()
     list.emplace(OPTIX_BUFFER_NAME, OptionVariable(static_cast<int64_t>(options.optiXBufferSize)));
 
     list.emplace(PARALLAX_NAME, OptionVariable(options.adjustParallax));
+    list.emplace(GUIDE_BOUNCE_COUNT_NAME, OptionVariable(static_cast<int64_t>(options.guideBounceCount)));
 
     list.emplace(OMIT_LIGHT_NAME, OptionVariable(options.omitLightRadiance));
 
@@ -1515,7 +1524,7 @@ bool WFPGTracer::Render()
     globalData.svo = svo.TreeGPU();
     globalData.gPathNodes = dPathNodes;
     globalData.maximumPathNodePerRay = MaximumPathNodePerPath();
-    globalData.skipPG = options.skipPG;
+    globalData.skipPG = options.skipPG || (currentDepth >= options.guideBounceCount);
     //
     globalData.directLightMIS = options.directLightMIS;
     globalData.nee = options.nextEventEstimation;
@@ -1538,7 +1547,7 @@ bool WFPGTracer::Render()
     // Generate guideDirection and PDF
 
     if((options.renderMode != WFPGRenderMode::SVO_INITIAL_HIT_QUERY) &&
-       !options.skipPG)
+       !options.skipPG && !(currentDepth >= options.guideBounceCount))
     {
         GenerateGuidedDirections();
     }
@@ -1652,7 +1661,7 @@ void WFPGTracer::Finalize()
         }
     }
 
-    //METU_LOG("----------------");
+    METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();
     frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);

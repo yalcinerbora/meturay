@@ -351,7 +351,7 @@ void KCRadGenSVO()
     }
 
     // Interpolated
-    Vector3f hitPos = rayOrigin + rayDir * tMaxOut;
+    //Vector3f hitPos = rayOrigin + rayDir * tMaxOut;
     //float radiance = ReadInterpolatedRadiance(hitPos, rayDir,
     //                                          params.pixelOrConeAperture,
     //                                          requiredLevel, svo);

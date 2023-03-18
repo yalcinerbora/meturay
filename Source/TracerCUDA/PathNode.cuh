@@ -160,7 +160,7 @@ void PathGuidingNode::AccumRadianceDownChain(const Vector3f& endPointRadiance,
                                              Node* gLocalChain)
 {
     float luminance = Utility::RGBToLuminance(endPointRadiance);
-    bool largeRadiance = (luminance > 300.0f);
+    //bool largeRadiance = (luminance > 300.0f);
     // Add to yourself
     AccumRadiance(endPointRadiance);
 

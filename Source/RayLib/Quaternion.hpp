@@ -384,7 +384,7 @@ void TransformGen::Space(Quaternion<T>& q,
     // both should be right-handed coord system
     //Vector3 crs = Cross(x, y);
     //Vector3 diff = crs - z;
-    assert((Cross(x, y) - z).Abs() <= Vector3(0.1));
+    //assert((Cross(x, y) - z).Abs() <= Vector3(0.1));
 
     // Converting a Rotation Matrix to a Quaternion
     // Mike Day, Insomniac Games (2015)

@@ -21,6 +21,8 @@
 
 #include "ImageIO/EntryPoint.h"
 
+#include <random>
+
 // TODO: dont copy these
 template <int32_t N>
 class StaticGaussianFilter1D
@@ -63,12 +65,13 @@ float StaticGaussianFilter1D<N>::operator()(int32_t i) const
 }
 
 Vector3f DirIdToWorldDir(const Vector2ui& dirXY,
-                         const Vector2ui& dimensions)
+                         const Vector2ui& dimensions,
+                         float jitter)
 {
     assert(dirXY < dimensions);
     using namespace MathConstants;
     // Generate st coords [0, 1] from integer coords
-    Vector2f st = Vector2f(dirXY) + 0.5f;
+    Vector2f st = Vector2f(dirXY) + jitter;
     st /= Vector2f(dimensions);
 
     Vector3f result = Utility::CocentricOctohedralToDirection(st);
@@ -1062,81 +1065,158 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
     if(!found)
         METU_ERROR_LOG("Unable to locate a voxel! "
                        "Using direct world space for ray position!");
-    else
-        pos = svo.NodePosition(nodeIndex, isLeaf);
+    //else
+    //    pos = svo.NodePosition(nodeIndex, isLeaf);
 
     Vector3f normal = pixelNormals[pixelIndex[1] * normalTexSize[0] + pixelIndex[0]];
 
     // Now find out the node id and offset the tmin accordingly
     float voxSize = svo.NodeVoxelSize(nodeIndex, isLeaf);
-    //float tMin = voxSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
+    float tMin = voxSize * MathConstants::Sqrt3 + MathConstants::LargeEpsilon;
+    //float tMin = MathConstants::Epsilon;
 
-    float tMin = MathConstants::Epsilon;
 
     float coneAperture = ConeAperture(mapSize);
-    currentValues.resize(mapSize.Multiply());
+    currentValues.resize(mapSize.Multiply(), 0.0f);
     // Generate iota array for parallel process
     std::vector<uint32_t> indices(mapSize.Multiply());
     std::iota(indices.begin(), indices.end(), 0);
 
-    std::for_each(std::execution::par_unseq,
-                  indices.cbegin(), indices.cend(),
-                  [&](uint32_t index)
+    // TEST
+    Vector3f VERTEX[6] =
+    {
+        Vector3f(-0.5f, -0.5f, 0.0f),
+        Vector3f(0.5f, -0.5f, 0.0f),
+        Vector3f(0.5f, 0.5f, 0.0f),
+        //
+        Vector3f(-0.5f, -0.5f, 0.0f),
+        Vector3f(0.5f, 0.5f, 0.0f),
+        Vector3f(-0.5f, 0.5f, 0.0f)
+    };
+
+    Matrix4x4 translate = TransformGen::Translate(Vector3f(-0.005f, 1.98f, -0.03f));
+    Matrix4x4 rotate = TransformGen::Rotate(90.0f * MathConstants::DegToRadCoef, XAxis);
+    Matrix4x4 scale = TransformGen::Scale(0.47f, 1.0f, 0.38f);
+    Matrix4x4 transform = translate * scale * rotate;
+    for(int i = 0; i < 6; i++)
+    {
+        VERTEX[i] = transform * Vector4f(VERTEX[i], 1.0f);
+    }
+
+    float avg = worldPos[0] + worldPos[1] + worldPos[2];
+    avg *= 0.3333f;
+    uint32_t seed;
+    std::memcpy(&seed, &avg, sizeof(float));
+
+
+    auto ConeTrace = [&](uint32_t index)
     {
 
+        static constexpr int STRAT_X = 1;
+        static constexpr int STRAT_Y = 1;
+        static constexpr int MULTISAMPLE_COUNT = STRAT_X * STRAT_Y;
 
-        // Calculate Direction
-        Vector2ui pixelId = MortonCode::Decompose2D(index);
-        Vector3f direction = DirIdToWorldDir(pixelId, mapSize);
-        RayF ray(direction, pos);
+        std::mt19937 rng;
+        rng.seed(seed + index);
+        std::uniform_real_distribution<float> uniformDist(0.0f, 1.0f);
 
-        bool isLeaf;
-        uint32_t leafIndex;
-        float hitT = svo.ConeTraceRay(isLeaf, leafIndex, ray, tMin,
-                                      std::numeric_limits<float>::max(),
-                                      coneAperture);
+        //Vector2ui pixelId = MortonCode::Decompose2D(index);
+        Vector2ui pixelId = Vector2ui(index % mapSize[0],
+                                      index / mapSize[0]);
 
         float radiance = 0.0f;
-        if(readInterpolatedRadiance)
+        for(int i = 0; i < MULTISAMPLE_COUNT; i++)
         {
-            Vector3f hitPos = ray.AdvancedPos(hitT + voxSize * 0.5f);
-            radiance = ReadInterpolatedRadiance(hitPos, ray.getDirection(),
-                                                coneAperture, svo);
+            Vector2i innerStrat = Vector2i(i % STRAT_X,
+                                           i / STRAT_X);
+            Vector2ui innerMap = Vector2ui(STRAT_X, STRAT_Y);
+
+            Vector2ui stratPixId = pixelId * innerMap + Vector2ui(innerStrat);
+            Vector2ui mapExpanded = mapSize * innerMap;
+
+
+            float jitter = uniformDist(rng);
+            // Calculate Direction
+            //Vector3f direction = DirIdToWorldDir(pixelId, mapSize, jitter);
+            Vector3f direction = DirIdToWorldDir(stratPixId, mapExpanded, jitter);
+            RayF ray(direction, pos);
+
+            Vector2f st = (Vector2f(stratPixId) + Vector2f(jitter)) / Vector2f(mapExpanded);
+
+            //if(index == 32)
+            //{
+            //    METU_LOG("pixelId({}, {}), ST({}, {}) Dir({},{},{}) L {}",
+            //             stratPixId[0], stratPixId[1],
+            //             st[0], st[1],
+            //             direction[0], direction[1], direction[2],
+            //             direction.Length());
+            //}
+
+
+            bool isLeaf;
+            uint32_t leafIndex;
+            float hitT = svo.ConeTraceRay(isLeaf, leafIndex, ray, tMin,
+                                          std::numeric_limits<float>::max(),
+                                          coneAperture);
+
+            if(readInterpolatedRadiance)
+            {
+                Vector3f hitPos = ray.AdvancedPos(hitT + voxSize * 0.5f);
+                radiance += ReadInterpolatedRadiance(hitPos, ray.getDirection(),
+                                                     coneAperture, svo);
+            }
+            else
+                radiance += svo.ReadRadiance(ray.getDirection(), coneAperture,
+                                             leafIndex, isLeaf);
+
+            //bool intersects = false;
+            //for(int j = 0; j < 2; j++)
+            //{
+            //    float t;
+            //    Vector3f bary;
+            //    intersects |= ray.IntersectsTriangle(bary, t, VERTEX + j * 3, true);
+            //}
+            //if(intersects)
+            //{
+            //    //METU_LOG("Intersects Light!");
+            //    radiance += Utility::RGBToLuminance(Vector3f(136, 96, 32));
+            //}
+
+
+            // Fake the cos theta
+            if(multiplyCosTheta)
+            {
+                // Calculate the ST of the pixel
+                Vector2f sizeRecip = Vector2f(1.0f) / Vector2f(mapSize);
+                Vector2f st = (Vector2f(pixelId) + 0.5f) * sizeRecip;
+                // To world space
+                Vector3 result = Utility::CocentricOctohedralToDirection(st);
+                Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
+
+                // Skew the data towards the normal
+                // Always try to get positive values
+                // to prevent bias
+                // Move normal to projection sphere
+                // TODO: Probably less computational solution avail?
+                Vector3f right = Cross(dirYUp, normal).Normalize();
+                // TODO: this is projection dependent change this
+                // Co-octo solid angle approx of each cell
+                // assume it is normal angle in radians
+                float angle = 4.0f * MathConstants::Pi / Vector2f(mapSize).Multiply();
+                QuatF q(angle, right);
+                dirYUp = q.ApplyRotation(dirYUp);
+                float skewedCos = std::max(0.0f, dirYUp.Dot(normal));
+                radiance *= skewedCos;
+            }
+
         }
-        else
-            radiance = svo.ReadRadiance(ray.getDirection(), coneAperture,
-                                        leafIndex, isLeaf);
-
-        // Fake the cos theta
-        if(multiplyCosTheta)
-        {
-            // Calculate the ST of the pixel
-            Vector2f sizeRecip = Vector2f(1.0f) / Vector2f(mapSize);
-            Vector2f st = (Vector2f(pixelId) + 0.5f) * sizeRecip;
-            // To world space
-            Vector3 result = Utility::CocentricOctohedralToDirection(st);
-            Vector3 dirYUp = Vector3(result[1], result[2], result[0]);
-
-            // Skew the data towards the normal
-            // Always try to get positive values
-            // to prevent bias
-            // Move normal to projection sphere
-            // TODO: Probably less computational solution avail?
-            Vector3f right = Cross(dirYUp, normal).Normalize();
-            // TODO: this is projection dependent change this
-            // Co-octo solid angle approx of each cell
-            // assume it is normal angle in radians
-            float angle = 4.0f * MathConstants::Pi / Vector2f(mapSize).Multiply();
-            QuatF q(angle, right);
-            dirYUp = q.ApplyRotation(dirYUp);
-            float skewedCos = std::max(0.0f, dirYUp.Dot(normal));
-            radiance *= skewedCos;
-        }
-
-
         uint32_t writeIndex = pixelId[1] * mapSize[0] + pixelId[0];
-        currentValues[writeIndex] = radiance;
-    });
+        currentValues[writeIndex] = radiance / static_cast<float>(MULTISAMPLE_COUNT);
+    };
+
+    std::for_each(std::execution::par_unseq,
+                  indices.cbegin(), indices.cend(),
+                  ConeTrace);
 
     if(doGaussFilter)
     {

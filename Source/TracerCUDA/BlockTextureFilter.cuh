@@ -204,4 +204,5 @@ void BlockTextureFilter2D<TPB, X, Y, FilterF>::Filter(float(&dataOut)[DATA_PER_T
 //using GaussFilter = StaticGaussianFilter1D<3>;
 //using GaussFilter = StaticGaussianFilter1D<5>;
 using GaussFilter = StaticGaussianFilter1D<7>;
+//using GaussFilter = StaticGaussianFilter1D<11>;
 //using GaussFilter = StaticGaussianFilter1D<21>;

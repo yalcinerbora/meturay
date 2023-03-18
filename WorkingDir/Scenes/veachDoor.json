@@ -12,14 +12,14 @@
         // "position" : [-71.39, 71.49, 205.3],
         // "up"       : [0.013401, 0.99756, -0.0685194],
 
-        //DEBUG Wide
-        // "gaze"     : [-72.3155, 90.4654, 598.269],
-        // "position" : [-72.4422, 90.5253, 599.259],
-        // "up"       : [0, 1, 0],
-        // Corner
-        "gaze"     : [174.084, 144.475, 229.391],
-        "position" : [174.855, 144.688, 229.992],
+        //DEBUG Door In Frame
+        "gaze"     : [-197.501, 101.797, 222.18],
+        "position" : [-198.222, 101.912, 222.863],
         "up"       : [0, 1, 0],
+        // // Corner
+        // "gaze"     : [174.084, 144.475, 229.391],
+        // "position" : [174.855, 144.688, 229.992],
+        // "up"       : [0, 1, 0],
 
         "planes": [0.1, 2800]
     },
@@ -271,7 +271,8 @@
         "type": "Triangle",
         "name": "../Surfaces/Door/door.obj",
         "tag": "assimp_",
-        "innerIndex": 0
+        "innerIndex": 0,
+        "cullFace": false
     },
     {
         // Door Hinge
@@ -335,8 +336,8 @@
         "type": "Triangle",
         "name": "../Surfaces/Door/walls.obj",
         "tag": "assimp_",
-        "innerIndex": 0
-        //"cullFace": false
+        "innerIndex": 0,
+        "cullFace": false
     }],
 
     "Accelerators":[

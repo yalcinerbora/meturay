@@ -413,113 +413,6 @@ void WFPGTracerPathWork(// Output
             rayPath = RayF(direction, position);
             rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
         }
-
-
-        //float BxDF_GuideSampleRatio = (renderState.skipPG) ? 0.0f : 0.5f;
-        //BxDF_GuideSampleRatio = (renderState.purePG) ? 1.0f : BxDF_GuideSampleRatio;
-        //float xi = rng.Uniform();
-
-        //float misWeight;
-        //bool selectedPDFZero = false;
-        //float pdfBxDF, pdfGuide;
-        //bool BxDFSelected = (xi >= BxDF_GuideSampleRatio);
-        //if(BxDFSelected)
-        //{
-        //    // Sample using BxDF
-        //    reflectance = MGroup::Sample(// Outputs
-        //                                 rayPath, pdfBxDF, outM,
-        //                                 // Inputs
-        //                                 wi,
-        //                                 position,
-        //                                 m,
-        //                                 //
-        //                                 surface,
-        //                                 // I-O
-        //                                 rng,
-        //                                 // Constants
-        //                                 gMatData,
-        //                                 matIndex,
-        //                                 0);
-        //    pdfGuide = aux.guidePDF;
-        //    misWeight = TracerFunctions::BalanceHeuristic(1 - BxDF_GuideSampleRatio, pdfBxDF,
-        //                                                  BxDF_GuideSampleRatio, pdfGuide);
-        //    BxDF_GuideSampleRatio = 1.0f - BxDF_GuideSampleRatio;
-        //    selectedPDFZero = (pdfBxDF == 0.0f);
-        //    printf("noooo");
-        //}
-        //else
-        //{
-        //    // Sample a path from the pre-sampled UV
-        //    // uv coordinates to spherical coordinates
-        //    Vector2f uv = Vector2f(aux.guideDir[0], aux.guideDir[1]);
-        //    Vector3f dirZUp = Utility::CocentricOctohedralToDirection(uv);
-        //    Vector3f direction = Vector3f(dirZUp[1], dirZUp[2], dirZUp[0]);
-        //    pdfGuide = aux.guidePDF;
-
-        //    // Calculate BxDF
-        //    reflectance = MGroup::Evaluate(// Input
-        //                                   direction,
-        //                                   wi,
-        //                                   position,
-        //                                   m,
-        //                                   //
-        //                                   surface,
-        //                                   // Constants
-        //                                   gMatData,
-        //                                   matIndex);
-
-        //    pdfBxDF = MGroup::Pdf(direction,
-        //                          wi,
-        //                          position,
-        //                          m,
-        //                          //
-        //                          surface,
-        //                          gMatData,
-        //                          matIndex);
-
-        //    // Generate a ray using the values
-        //    rayPath = RayF(direction, position);
-        //    rayPath.NudgeSelf(surface.WorldGeoNormal(), surface.curvatureOffset);
-
-        //    misWeight = TracerFunctions::BalanceHeuristic(BxDF_GuideSampleRatio, pdfGuide,
-        //                                                  1 - BxDF_GuideSampleRatio, pdfBxDF);
-        //    selectedPDFZero = (pdfGuide == 0.0f);
-        //}
-        //// One-sample MIS Using Balance Heuristic
-        //if(!renderState.skipPG &&
-        //   !renderState.purePG)
-        //{
-        //    pdfPath = (BxDFSelected) ? pdfBxDF : pdfGuide;
-        //    pdfPath = BxDF_GuideSampleRatio * pdfPath / misWeight;
-        //    pdfPath = selectedPDFZero ? 0.0f : pdfPath;
-        //}
-        //else if(renderState.purePG)
-        //    pdfPath = pdfGuide;
-        //else
-        //    pdfPath = pdfBxDF;
-
-        // DEBUG
-        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
-        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide))
-        //    printf("[%s] NAN PDF = % f = w * %f + (1.0f - w) * %f, w: % f\n",
-        //           (BxDFSelected) ? "BxDF": "SVO",
-        //           pdfPath, pdfBxDF, pdfGuide, BxDF_GuideSampleRatio);
-        //if(pdfPath != 0.0f && rayPath.getDirection().HasNaN())
-        //    printf("[%s] NAN DIR %f, %f, %f\n",
-        //            (BxDFSelected) ? "BxDF" : "SVO",
-        //            rayPath.getDirection()[0],
-        //            rayPath.getDirection()[1],
-        //            rayPath.getDirection()[2]);
-        //if(reflectance.HasNaN())
-        //    printf("[%s] NAN REFL %f %f %f\n",
-        //           (BxDFSelected) ? "BxDF" : "SVO",
-        //           reflectance[0],
-        //           reflectance[1],
-        //           reflectance[2]);
-
-        //if(isnan(pdfPath) || isnan(pdfBxDF) || isnan(pdfGuide) ||
-        //   rayPath.getDirection().HasNaN() || reflectance.HasNaN())
-        //    return;
     }
     else
     {
@@ -1211,15 +1104,32 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     uint32_t rayCount = rayRange[1] - rayRange[0];
     uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
     uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
-    RayReg rayReg = metaSurfGenerator.Ray(rayId);
-    Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
+
+    // Utilize SVO data
+    //RayReg rayReg = metaSurfGenerator.Ray(rayId);
+    //normal = (rayReg.ray.getDirection().Dot(normal) >= 0.0f) ? (-normal) : normal;
+    //Vector3f position = rayReg.ray.AdvancedPos(rayReg.tMax);
+    //float stdDev;
+    //Vector3f normal = svo.DebugReadNormal(stdDev, nodeId, isLeaf);
+
+
+    // Utilize Exact Data
+    GPUMetaSurface surface = metaSurfGenerator.AcquireWork(rayId);
+    Vector3f normal = surface.WorldGeoNormal();
+    Vector3f position = surface.WorldPosition();
+
+
+    // Offset using the normal
+    // TODO: This routine should not be on ray
+    position = RayF(Vector3f(0.0f), position).Nudge(normal, 0.0f).getPosition();
+    //float tMin = 0.0f;
+
 
     // TODO: Better offset maybe?
     //float tMin = (binVoxelSize * MathConstants::Sqrt3 +
     //              MathConstants::LargeEpsilon);
     float tMin = svo.LeafVoxelSize() * 0.1f;
-    //float tMin = svo.LeafVoxelSize();
-    //float tMin = 0.0f;
+    //float tMin = MathConstants::Epsilon;
 
     // Out
     posTMin = Vector4f(position, tMin);
@@ -2007,10 +1917,14 @@ static void KCSampleDistributionOptiX(// Output
                                 rng);
                     sampledUV = InvProjectionFunc(wo.getDirection());
                     sampleRatio = 1.0f - sampleRatio;
-                    if(sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
-                       sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f)
+
+                    if(!isLight &&
+                       (sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
+                        sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f))
                     {
-                        printf("[PG]err on sample (%f, %f)\n", sampledUV[0], sampledUV[1]);
+                        printf("[BxDF]err on sample (%f, %f) T: %u\n",
+                               sampledUV[0], sampledUV[1],
+                               static_cast<uint32_t>(gRayAux[rayId].type));
                     }
                 }
                 else
@@ -2020,10 +1934,14 @@ static void KCSampleDistributionOptiX(// Output
                     // Sample Using Radiance Field
                     Vector2f index;
                     sampledUV = dist2D.Sample(index, rng);
-                    if(sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
-                       sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f)
+
+                    if(!isLight &&
+                       (sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
+                        sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f))
                     {
-                        printf("[PG]err on sample (%f, %f)\n", sampledUV[0], sampledUV[1]);
+                        printf("[PG]err on sample (%f, %f) T: %u\n",
+                               sampledUV[0], sampledUV[1],
+                               static_cast<uint32_t>(gRayAux[rayId].type));
                     }
 
                     Vector3f wo = NormProjectionFunc(sampledUV);
@@ -2331,6 +2249,8 @@ static void KCAdjustParallax(// I-O
                              // Buffer
                              SVOOptixRadianceBuffer::SegmentedField<const float*> radBuffer,
                              // Constants
+                             const AnisoSVOctreeGPU svo,
+                             float coneAperture,
                              uint32_t binCount)
 {
     const int32_t THREAD_ID = threadIdx.x;
@@ -2413,48 +2333,84 @@ static void KCAdjustParallax(// I-O
             // Maybe change the field to texture for HW acceleration
             Vector2i uvI = Vector2i(uvF * Vector2f(X, Y));
             float distance = sharedMem->sDistanceField[uvI[1]][uvI[0]];
+
             // If we missed the scene and sampled it
             // no parallax effect
-            if(distance < FLT_MAX)
+            if(distance >= FLT_MAX) continue;
+
+            // Find the hit position
+            Vector3f fieldWorldPos = sharedMem->sFieldOrigin + distance * dir.Normalize();
+            // Calculate parallax adjusted new dir and convert it to UV
+            Vector3f adjDir = (fieldWorldPos - rayPosition);
+            float distanceSqrAdj = adjDir.LengthSqr();
+            adjDir.NormalizeSelf();
+
+            // Compensate the PDF value as well
+            // Convert the angular pdf to geometric pdf
+            float pdfOmega = gRayAux[rayId].guidePDF;
+            // Get normal
+            // Determine the queryLevel from depth
+            using SVO = AnisoSVOctreeGPU;
+            float coneDiskDiamSqr = SVO::ConeDiameterSqr(distance, coneAperture);
+            float levelVoxelSize = svo.LeafVoxelSize();
+            float levelVoxelSizeSqr = levelVoxelSize * levelVoxelSize;
+            // Find the level
+            float dvRatio = max(0.0f, log2(coneDiskDiamSqr / levelVoxelSizeSqr) * 0.5f);
+            uint32_t requiredLevel = svo.LeafDepth() - static_cast<uint32_t>(floor(dvRatio));
+            bool isLeaf = (requiredLevel == svo.LeafDepth());
+            // Find the node
+            uint32_t nodeId;
+            bool found = svo.NearestNodeIndex(nodeId, fieldWorldPos,
+                                                requiredLevel,
+                                                isLeaf);
+
+
+
+            Vector3f hitNormal;
+            // Infinitely far away assume N is same as dir
+            // Skip Parallax here as well
+            if(!found)
             {
-                // Find the hit position
-                Vector3f fieldWorldPos = sharedMem->sFieldOrigin + distance * dir.Normalize();
+                //printf("notFound! [reqLevel:%u]\n", requiredLevel);
 
-                // Calculate parallax adjusted new dir and convert it to UV
-                Vector3f adjDir = (fieldWorldPos - rayPosition);
-                float distanceSqrAdj = adjDir.LengthSqr();
-                adjDir.NormalizeSelf();
+                hitNormal = (-dir);
+            }
+            else
+            {
+                //printf("found! [reqLevel:%u]\n", requiredLevel);
+                // Query the Normal
+                float stdDev;
+                hitNormal = svo.DebugReadNormal(stdDev, nodeId, isLeaf);
+                hitNormal = (dir.Dot(hitNormal) >= 0.0f) ? (-hitNormal) : hitNormal;
+            }
+            // Convert to geometric pdf
+            // Adjust then convert back
+            float cosTheta = max(0.0f, (-dir).Dot(hitNormal));
+            float cosThetaAdj = max(0.0f, (-adjDir).Dot(hitNormal));
+            //float cosTheta = 1.0f;
+            //float cosThetaAdj = 1.0f;
 
-                // Compansate the PDF value as well
-                // Convert the angular pdf to geometric pdf
-                float pdfOmega = gRayAux[rayId].guidePDF;
+            float distanceSqr = distance * distance;
+            float pdfGeo = pdfOmega * cosTheta / distanceSqr;
+            // Now convert back to adjusted
+            float pdfOmegaAdj = pdfGeo * distanceSqrAdj / cosThetaAdj;
 
-                // TODO: get normals?
-                // How to get normals
-                Vector3f hitNormal = Vector3f(0.0f, -1.0f, 0.0f);
-                //Vector3f FAKE_NORMAL_CHANGE_THIS = (-dir);
-
-                float cosTheta = (-dir).Dot(hitNormal);
-                float cosThetaAdj = (-adjDir).Dot(hitNormal);
-
-                float distanceSqr = distance * distance;
-                float pdfGeo = pdfOmega * cosTheta / distanceSqr;
-                // Now convert back to adjusted
-                float pdfOmegaAdj = pdfGeo * compDistSqr / cosThetaAdj;
-
-                //if(pdfOmegaAdj < 0.000001f)
-                //{
-                //    printf("Bad Adjustment oldOmega %f, newOmega %f, "
-                //           "oldDir(%f, %f, %f), newDir(%f, %f, %f), "
-                //           "distOld %f, distNew %f, "
-                //           "cosOld %f, cosNew %f\n",
-                //           pdfOmega, pdfOmegaAdj,
-                //           dir[0], dir[1], dir[2],
-                //           adjDir[0], adjDir[1], adjDir[2],
-                //           distanceSqr, compDistSqr,
-                //           (-dir).Dot(FAKE_NORMAL_CHANGE_THIS),
-                //           (-adjDir).Dot(FAKE_NORMAL_CHANGE_THIS));
-                //}
+            if(pdfOmegaAdj < 0.000001f ||
+               isnan(pdfOmegaAdj) || isinf(pdfOmegaAdj))
+            {
+            //    //printf("Bad Adjustment oldOmega %f, newOmega %f, "
+            //    //       "oldDir(%f, %f, %f), newDir(%f, %f, %f), "
+            //    //       "distOld %f, distNew %f, "
+            //    //       "cosOld %f, cosNew %f\n",
+            //    //       pdfOmega, pdfOmegaAdj,
+            //    //       dir[0], dir[1], dir[2],
+            //    //       adjDir[0], adjDir[1], adjDir[2],
+            //    //       distanceSqr, distanceSqrAdj,
+            //    //       cosTheta, cosThetaAdj);
+                pdfOmegaAdj = 0.0f;
+            }
+            else
+            {
 
                 // Zup to Yup
                 adjDir = Vector3(adjDir[2], adjDir[0], adjDir[1]);
@@ -2464,7 +2420,6 @@ static void KCAdjustParallax(// I-O
                 // And the adjusted PDF
                 gRayAux[rayId].guidePDF = pdfOmegaAdj;
             }
-
         }
     }
 }

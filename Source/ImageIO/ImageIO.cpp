@@ -505,6 +505,8 @@ void ImageIO::PackChannelBits(Byte* bits,
             uint64_t fromPixelChannel = 0;
             std::memcpy(&fromPixelChannel, fromPixelChannelPtr, fromChannelSize);
 
+            // TODO: this is not good bitmap
+            // Also change this to UNORM 8-bit and stochastic culling maybe
             if(fromPixelChannel)
             {
                 size_t pixelLinearIndex = (y * dimension[0] + x);

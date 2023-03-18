@@ -233,7 +233,8 @@ void GDebugRendererRef::RenderGUI(const ImVec2& windowSize)
     ImGui::SameLine(0.0f, (windowSize.x - remainingSize.x) * 0.5f - ImGui::GetStyle().WindowPadding.x);
     // Debug Reference Image
     if(currentTexture.Size() != Zero2ui)
-        GuideDebugGUIFuncs::RenderImageWithZoomTooltip(currentTexture, currentValues, remainingSize, true);
+        GuideDebugGUIFuncs::RenderImageWithZoomTooltip(currentTexture, currentValues,
+                                                       remainingSize, false);
     else
         ImGui::Dummy(remainingSize);
     ImGui::EndChild();
