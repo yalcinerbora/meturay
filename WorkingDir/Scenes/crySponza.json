@@ -1413,9 +1413,9 @@
     "CameraSurfaces":
 	[
 
-		//{"camera": 0}
+		{"camera": 0}
 		// ,
-		{"camera": 99}
+		//{"camera": 99}
 		//,
 		//{"camera": 5}
 

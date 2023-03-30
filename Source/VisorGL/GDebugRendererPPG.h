@@ -153,6 +153,9 @@ class GDebugRendererPPG : public GDebugRendererI
         bool                    renderPerimeter;
         bool                    renderSamples;
 
+        //
+        Vector3f                currentWorldPos;
+
         // OGL Related
         // FBO (Since we use raster pipeline to render)
         // VAO etc..

@@ -204,50 +204,50 @@ using ParallaxAdjustKernelFunction = void(*)(// I-O
 // 1st param is "Thread per block", 2nd and third params are X,Y resolution of the generated texture
 using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 
-//static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
-//{
-//    // Kernel is passed the register limit of the device,
-//    // compiling using 100s of registers :(.
-//    // Reduce the block size for at least on debug mode
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128), // First bounce good approximation
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // Second bounce as well
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Third bounce not so much
-//    std::make_tuple(256, 16, 16),                           // Fourth bounce not good
-//    std::make_tuple(128, 8, 8)                              // Fifth is bad
-//};
-
 static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128)
-
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
-
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32)
-
-    //std::make_tuple(256, 16, 16),
-    //std::make_tuple(256, 16, 16),
-    //std::make_tuple(256, 16, 16),
-    //std::make_tuple(256, 16, 16),
-    //std::make_tuple(256, 16, 16)
-
-    //std::make_tuple(256, 8, 8),
-    //std::make_tuple(256, 8, 8),
-    //std::make_tuple(256, 8, 8),
-    //std::make_tuple(256, 8, 8),
-    //std::make_tuple(256, 8, 8)
+    // Kernel is passed the register limit of the device,
+    // compiling using 100s of registers :(.
+    // Reduce the block size for at least on debug mode
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128), // First bounce good approximation
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // Second bounce as well
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Third bounce not so much
+    std::make_tuple(256, 16, 16),                           // Fourth bounce not good
+    std::make_tuple(128, 8, 8)                              // Fifth is bad
 };
+
+//static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
+//{
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128)
+//
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
+//
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32)
+//
+//    //std::make_tuple(256, 16, 16),
+//    //std::make_tuple(256, 16, 16),
+//    //std::make_tuple(256, 16, 16),
+//    //std::make_tuple(256, 16, 16),
+//    //std::make_tuple(256, 16, 16)
+//
+//    //std::make_tuple(256, 8, 8),
+//    //std::make_tuple(256, 8, 8),
+//    //std::make_tuple(256, 8, 8),
+//    //std::make_tuple(256, 8, 8),
+//    //std::make_tuple(256, 8, 8)
+//};
 
 static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),
                                                                          PG_KERNEL_PARAMS.cend(),
@@ -566,11 +566,18 @@ void WFPGTracer::AccumulateRayHitsToSVO()
 
 void WFPGTracer::GenerateGuidedDirections()
 {
+    // DEBUG TIMER
+    cudaEvent_t start, stop;
+    CUDA_CHECK(cudaEventCreate(&start));
+    CUDA_CHECK(cudaEventCreate(&stop));
+
     const CudaGPU& gpu = cudaSystem.BestGPU();
     // Cluster the rays according to their svo location
     const RayGMem* dRays = rayCaster->RaysIn();
     RayAuxWFPG* dRayAux = static_cast<RayAuxWFPG*>(*dAuxIn);
     uint32_t rayCount = rayCaster->CurrentRayCount();
+
+    CUDA_CHECK(cudaEventRecord(start));
 
     // Zero out the ray counts from the previous iteration
     svo.ClearRayCounts(cudaSystem);
@@ -627,14 +634,11 @@ void WFPGTracer::GenerateGuidedDirections()
     uint32_t kernelIndex = std::min(currentDepth, PG_KERNEL_TYPE_COUNT - 1);
     //uint32_t kernelIndex = 0;
 
-    // DEBUG TIMER
+    // Iteration of OptiX kernels (due to shared memory limitation)
     uint32_t iterCount = 1;
-    cudaEvent_t start, stop;
-    CUDA_CHECK(cudaEventCreate(&start));
-    CUDA_CHECK(cudaEventCreate(&stop));
 
     // Change code path (OptiX or CUDA)
-    CUDA_CHECK(cudaEventRecord(start));
+    //CUDA_CHECK(cudaEventRecord(start));
     if(!options.optiXTrace)
     {
         // Select product or non-product versions of the kernels
@@ -1616,10 +1620,24 @@ void WFPGTracer::Finalize()
     if(options.renderMode == WFPGRenderMode::RENDER ||
        options.renderMode == WFPGRenderMode::SVO_RADIANCE)
     {
+
+        cudaEvent_t start, stop;
+        CUDA_CHECK(cudaEventCreate(&start));
+        CUDA_CHECK(cudaEventCreate(&stop));
+        CUDA_CHECK(cudaEventRecord(start));
+
         uint32_t totalPathNodeCount = TotalPathNodeCount();
         svo.AccumulateRaidances(dPathNodes, totalPathNodeCount,
                                 MaximumPathNodePerPath(), cudaSystem);
         svo.NormalizeAndFilterRadiance(cudaSystem);
+
+        float milliseconds = 0;
+        CUDA_CHECK(cudaEventRecord(stop));
+        CUDA_CHECK(cudaEventSynchronize(stop));
+        CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
+        METU_LOG("Cache; -; {:f}", milliseconds);
+        CUDA_CHECK(cudaEventDestroy(start));
+        CUDA_CHECK(cudaEventDestroy(stop));
 
         // Dump the SVO tree if requested
         uint32_t dumpInterval = static_cast<uint32_t>(std::pow(options.pgDumpInterval, treeDumpCount));

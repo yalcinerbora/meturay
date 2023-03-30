@@ -5,9 +5,9 @@
 		"type": "Pinhole",
 
 		// 16:9 FoV
-		"fov": [97.777, 55.0],
+		//"fov": [97.777, 55.0],
 		// 1:1 FoV
-		//"fov": [55, 55],
+		"fov": [55, 55],
 
 		"planes": [0.01, 190.0],
 
@@ -269,7 +269,7 @@
                 [ 0.612066, 0.612066, 0.612066],
                 [0.9607, 0.9647, 0.9647]
             ],
-            "roughness" : [0.01, 0.1],
+            "roughness" : [0.1, 0.15],
             "specular": [1.0, 1.0],
             "metallic": [0.0, 1.0]
         },
@@ -363,7 +363,8 @@
             "type": "Triangle",
             "name": "../Surfaces/Bathroom/wall_picture.obj",
             "tag": "assimp_",
-            "innerIndex": [0, 1]
+            "innerIndex": [0, 1],
+            "cullFace": [false, false]
         },
         {
             "id": [43, 44],
@@ -392,7 +393,8 @@
             "type": "Triangle",
             "name": "../Surfaces/Bathroom/black_paintings.obj",
             "tag": "assimp_",
-            "innerIndex": [0, 1]
+            "innerIndex": [0, 1],
+            "cullFace": [false, false]
         },
         {
             "id": [51, 52, 53, 83],
@@ -488,7 +490,7 @@
         {"transform": 0, "accelerator": 0, "material": 5, "primitive": 6},
         {"transform": 0, "accelerator": 0, "material": 3, "primitive": 7},
         {"transform": 0, "accelerator": 0, "material": 1, "primitive": 8},
-        // Forgot These
+        // Forgot These (Window Ornamets)
         {"transform": 0, "accelerator": 0, "material": 5, "primitive": 81},
         {"transform": 0, "accelerator": 0, "material": 5, "primitive": 82},
         // Wall Mounted Sink Chiffonnier
@@ -509,6 +511,7 @@
         // Mirror
         {"transform": 0, "accelerator": 0, "material": 6, "primitive": 23},
         {"transform": 0, "accelerator": 0, "material": 7, "primitive": 24},
+        //{"transform": 0, "accelerator": 0, "material": 0, "primitive": 24},
         // Marble Sinks
         {"transform": 0, "accelerator": 0, "material": 8, "primitive": 25},
         {"transform": 0, "accelerator": 0, "material": 8, "primitive": 26},
@@ -539,6 +542,7 @@
         {"transform": 0, "accelerator": 0, "material": 10, "primitive": 46},
         // Shelf Mirror
         {"transform": 0, "accelerator": 0, "material": 7, "primitive": 47},
+        //{"transform": 0, "accelerator": 0, "material": 0, "primitive": 47},
         {"transform": 0, "accelerator": 0, "material": 15, "primitive": 48},
         // Black Paintings
         {"transform": 0, "accelerator": 0, "material": 16, "primitive": 49},
@@ -552,10 +556,10 @@
         {"transform": 0, "accelerator": 0, "material": 18, "primitive": 54},
         {"transform": 0, "accelerator": 0, "material": 18, "primitive": 55},
         // Bathtub
-        // {"transform": 0, "accelerator": 0, "material": 21, "primitive": 56},
-        // {"transform": 0, "accelerator": 0, "material": 21, "primitive": 57},
-        // {"transform": 0, "accelerator": 0, "material": 22, "primitive": 58},
-        // {"transform": 0, "accelerator": 0, "material": 22, "primitive": 59},
+        {"transform": 0, "accelerator": 0, "material": 21, "primitive": 56},
+        {"transform": 0, "accelerator": 0, "material": 21, "primitive": 57},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 58},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 59},
         // Rug
         {"transform": 0, "accelerator": 0, "material": 23, "primitive": 60},
         {"transform": 0, "accelerator": 0, "material": 24, "primitive": 61},

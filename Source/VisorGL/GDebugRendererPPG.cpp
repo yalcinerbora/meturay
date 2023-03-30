@@ -15,6 +15,8 @@
 #include "GuideDebugGUIFuncs.h"
 #include "GLConversionFunctions.h"
 
+#include "ImageIO/EntryPoint.h"
+
 
 static const uint8_t QUAD_INDICES[6] = { 0, 1, 2, 0, 2, 3};
 static const float QUAD_VERTEX_POS[4 * 3] =
@@ -257,6 +259,8 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
                                           uint32_t depth)
 {
     // Find DTree
+    currentWorldPos = worldPos;
+
     const SDTree& currentSDTree = sdTrees[depth];
     curDTreeIndex = currentSDTree.FindDTree(worldPos);
     const auto& dTreeNodes = currentSDTree.dTreeNodes[curDTreeIndex];
@@ -512,6 +516,25 @@ bool GDebugRendererPPG::RenderGUI(bool& overlayCheckboxChanged,
 
         ImGui::Text("Max Value: %f", maxValueDisplay);
         ImGui::Text("DTree Id : %u", curDTreeIndex);
+
+        if(ImGui::Button("Save Image"))
+        {
+            std::string wpAsString = fmt::format("[{}_{}_{}]",
+                                                 currentWorldPos[0],
+                                                 currentWorldPos[1],
+                                                 currentWorldPos[2]);
+            std::string fileName = wpAsString + "_ppg_radiance.exr";
+
+            ImageIOInstance()->WriteImage(currentValues,
+                                          currentTexture.Size(),
+                                          PixelFormat::R_FLOAT,
+                                          ImageType::EXR,
+                                          fileName);
+
+            METU_LOG("Saved Image {}", fileName);
+        }
+
+
         ImGui::EndPopup();
 
     }

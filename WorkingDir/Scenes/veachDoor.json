@@ -8,14 +8,14 @@
         "fov": [54.6003, 30.7127],
         // 1:1 FoV
         //"fov": [54.6003, 54.6003],
-        // "gaze"     : [-71.1997, 71.4202, 204.321],
-        // "position" : [-71.39, 71.49, 205.3],
-        // "up"       : [0.013401, 0.99756, -0.0685194],
+        "gaze"     : [-71.1997, 71.4202, 204.321],
+        "position" : [-71.39, 71.49, 205.3],
+        "up"       : [0.013401, 0.99756, -0.0685194],
 
         //DEBUG Door In Frame
-        "gaze"     : [-197.501, 101.797, 222.18],
-        "position" : [-198.222, 101.912, 222.863],
-        "up"       : [0, 1, 0],
+        // "gaze"     : [-197.501, 101.797, 222.18],
+        // "position" : [-198.222, 101.912, 222.863],
+        // "up"       : [0, 1, 0],
         // // Corner
         // "gaze"     : [174.084, 144.475, 229.391],
         // "position" : [174.855, 144.688, 229.992],
@@ -205,8 +205,8 @@
     {
         // Floor
         "id": 10,
-        "type": "Lambert",
-        //"type": "Unreal",
+        //"type": "Lambert",
+        "type": "Unreal",
         "albedo": {"texture": 1, "channels": "rgb"},
         "metallic" : 0.1,
         "specular" : 0.8,
@@ -360,13 +360,13 @@
             "material": [11, 3, 3, 3, 3],
             "primitive": [0, 1, 2, 3, 4]
         },
-        // // Teapots
-        // // Metal
-        // {"transform": 0, "accelerator":0, "material": 8, "primitive": 5},
-        // // Marble
-        // {"transform": 0, "accelerator":0, "material": 9, "primitive": 6},
-        // // Glass
-        // {"transform": 0, "accelerator":0, "material": 7, "primitive": 7},
+        // Teapots
+        // Metal
+        {"transform": 0, "accelerator":0, "material": 8, "primitive": 5},
+        // Marble
+        {"transform": 0, "accelerator":0, "material": 9, "primitive": 6},
+        // Glass
+        {"transform": 0, "accelerator":0, "material": 7, "primitive": 7},
         // Entire Door
         {
             // Door & Door Frame

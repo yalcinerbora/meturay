@@ -36,14 +36,14 @@
         // "up"       : [0, 1, 0]
 
         // Wide
-        "gaze"     : [1.36668, 3.05625, 5.56665],
-        "position" : [1.61535, 3.43875, 6.45652],
-        "up"       : [0, 1, 0]
+        // "gaze"     : [1.36668, 3.05625, 5.56665],
+        // "position" : [1.61535, 3.43875, 6.45652],
+        // "up"       : [0, 1, 0]
 
         // Original
-        // "gaze": [0.0, 1, 0.0],
-		// "position": [0, 1, 6.8],
-        //"up": [0.0, 1.0, 0.0]
+        "gaze": [0.0, 1, 0.0],
+		"position": [0, 1, 6.8],
+        "up": [0.0, 1.0, 0.0]
 
 
 	},
@@ -229,23 +229,23 @@
     [
         // Floor
         { "transform": 1, "accelerator": 0, "material": 2, "primitive": 0},
-        // // Ceiling
-        // { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
-        // // Back Wall
+        // Ceiling
+        { "transform": 2, "accelerator": 0, "material": 2, "primitive": 0},
+        // Back Wall
         { "transform": 5, "accelerator": 0, "material": 2, "primitive": 0},
         // Left Wall
         { "transform": 3, "accelerator": 0, "material": 0, "primitive": 0},
         // Right Wall
         { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
-        // // Front Wall
-        { "transform": 7, "accelerator": 0, "material": 2, "primitive": 0}
+        // Front Wall
+        { "transform": 7, "accelerator": 0, "material": 2, "primitive": 0},
         // // Tall Box
         // { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
         // // Short Box
         // { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
 
          // Occuluder Prism
-        //{ "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
+        { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
 	],
 
 	"LightSurfaces": [{"light": 1, "transform": 6}],
