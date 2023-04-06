@@ -41,4 +41,24 @@ struct LambertMatData
     const TextureRefI<2, Vector3f>** dNormal;
 };
 
+struct MetalMatData
+{
+    const TextureRefI<2, Vector3f>**    dEta;
+    const TextureRefI<2, Vector3f>**    dK;
+    const TextureRefI<2, float>**       dRoughness;
+};
+
+struct GlassMatData
+{
+    const TextureRefI<2, Vector3f>** dEta;
+    const TextureRefI<2, Vector3f>** dK;
+    const TextureRefI<2, float>** dRoughness;
+
+    const uint32_t* mediumIndices;
+
+    // Global Medium Array pointer
+    const GPUMediumI* const* dMediums;
+    uint32_t baseMediumIndex;
+};
+
 using EmissiveMatData = AlbedoMatData;

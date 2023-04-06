@@ -1,9 +1,5 @@
 #pragma once
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <type_traits>
-
 #include "Constants.h"
 #include "Vector.h"
 
@@ -13,6 +9,12 @@ namespace HemiDistribution
     HYBRD_FUNC HYBRID_INLINE
     Vector<3, T> HemiCosineCDF(const Vector<2, T>& xi, float& pdf)
     {
+        // Clang min definition is only on std namespace
+        // this is a crappy workaround
+        #ifndef __CUDA_ARCH__
+        using namespace std;
+        #endif
+
         T xi1Coeff = 2 * static_cast<T>(MathConstants::Pi_d) * xi[1];
         Vector<3, T> dir;
         dir[0] = sqrt(xi[0]) * cos(xi1Coeff);
@@ -31,6 +33,12 @@ namespace HemiDistribution
     HYBRD_FUNC HYBRID_INLINE
     Vector<3, T> HemiUniformCDF(const Vector<2, T>& xi, float& pdf)
     {
+        // Clang min definition is only on std namespace
+        // this is a crappy workaround
+        #ifndef __CUDA_ARCH__
+        using namespace std;
+        #endif
+
         T xi0Coeff = sqrt(max((T)0, 1 - xi[0] * xi[0]));
         T xi1Coeff = 2 * static_cast<T>(MathConstants::Pi_d) * xi[1];
         Vector<3, T> dir;

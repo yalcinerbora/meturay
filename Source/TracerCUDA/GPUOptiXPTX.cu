@@ -59,7 +59,7 @@ void ReportIntersection(float newT, unsigned int kind,
 
     // Pre-check the Empty (C++ sizeof empty struct is 1
     // so this should never be branched)
-    // But device maybe it is different ??
+    // But on device maybe it is different ??
     if constexpr(0 == HitStructRegSize)
     {
         optixReportIntersection(newT, kind);

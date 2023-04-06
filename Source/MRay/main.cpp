@@ -20,10 +20,53 @@
 
 #include <random>
 
+#include "RayLib/HemiDistribution.h"
+
+//Vector3 lambert(float& pdf,
+//                Vector3& wo,
+//                const Vector3f& wi,
+//                const Vector2f& xi)
+//{
+//    // Ray Selection
+//    Vector3 normal = ZAxis;
+//    // Generate New Ray Direction (This is in tangent space)
+//    wo = HemiDistribution::HemiCosineCDF(xi, pdf);
+//    wo.NormalizeSelf();
+//    // Cos Theta
+//    float nDotL = std::max(normal.Dot(wo), 0.0f);
+//    // Radiance Calculation
+//    const Vector3f albedo = Vector3f(1.0f);
+//    return nDotL * albedo * MathConstants::InvPi;
+//}
+
 int main(int argc, const char* argv[])
 {
     // Fancy CMD
     EnableVTMode();
+
+
+    //std::mt19937 rng;
+    //std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    //Vector3f val = Zero3f;
+    //Vector3f dir = Zero3f;
+    //for(int i = 0; i < 10'000; i++)
+    //{
+    //    float pdf;
+    //    Vector2f xi(dist(rng), dist(rng));
+    //    Vector3f wo;
+    //    Vector3f out = lambert(pdf, wo, Zero3f, xi);
+    //    float iF = static_cast<float>(i);
+
+    //    out /= pdf;
+
+    //    dir = (dir * iF + wo) / (iF + 1);
+    //    val = (val * iF + out) / (iF + 1);
+    //    METU_LOG("dir({}, {}, {}), val({},{},{})",
+    //             dir[0], dir[1], dir[2],
+    //             val[0], val[1], val[2]);
+    //}
+
 
     std::array<int, 2> resolution;
     std::string tracerConfigFileName;

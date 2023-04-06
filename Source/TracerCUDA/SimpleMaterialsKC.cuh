@@ -208,8 +208,8 @@ struct RefractMatFuncs
         // Surface is aligned with the ray (N dot Dir is always positive)
         Vector3 refNormal = normal;
         // Calculate Fresnel Term
-        float f = TracerFunctions::FrenelDielectric(fabs(wi.Dot(normal)),
-                                                    fromMedium, toMedium);
+        float f = TracerFunctions::FresnelDielectric(fabs(wi.Dot(normal)),
+                                                     fromMedium, toMedium);
 
         //printf("[%s] P:(%f, %f, %f) Wi:(%f, %f, %f) N:(%f, %f, %f) - F %f, From %f, To %f\n",
         //       entering ? "entering" : "exiting",

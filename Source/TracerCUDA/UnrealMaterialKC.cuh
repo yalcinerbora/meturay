@@ -60,8 +60,8 @@ struct UnrealDeviceFuncs
                                                       (1 - metallic) * sqrtAlpha);
 
         // Don't force full ratio to one of the sampling method
-        static constexpr float minRatio = 0.05f;
-        static constexpr float maxRatio = 0.95f;
+        static constexpr float minRatio = 0.25f;
+        static constexpr float maxRatio = 0.85f;
         return HybridFuncs::Lerp(minRatio, maxRatio, ratio);
     }
 

@@ -5,7 +5,7 @@
 namespace TracerFunctions
 {
     __device__ inline
-    float FrenelDielectric(float cosIn, float iorIn, float iorOut)
+    float FresnelDielectric(float cosIn, float iorIn, float iorOut)
     {
         // Calculate Sin from Snell's Law
         float sinIn = sqrt(max(0.0f, 1.0f - cosIn * cosIn));
@@ -28,8 +28,9 @@ namespace TracerFunctions
         return (parallel + perpendicular) * 0.5f;
     }
 
+    template <class T>
     __device__ inline
-    float FrenelConductor(float cosIn, float iorIn, float kIn)
+    T FresnelConductor(float cosIn, const T& iorIn, const T& kIn)
     {
         // https://pbr-book.org/3ed-2018/Reflection_Models/Specular_Reflection_and_Transmission#FrConductor
         //
@@ -37,24 +38,25 @@ namespace TracerFunctions
         // Find sin from trigonometry
         float cosInSqr = cosIn * cosIn;
         float sinInSqr = max(0.0f, 1.0f - cosInSqr);
-        float sinInSqr4 = sinInSqr * sinInSqr;
+        float sinInSqr2 = sinInSqr * sinInSqr;
+
         float sinIn = sqrt(max(sinInSqr, 0.0f));
 
-        float nSqr = iorIn * iorIn;
-        float kSqr = kIn * kIn;
+        T etaSqr = iorIn * iorIn;
+        T kSqr = kIn * kIn;
 
-        float a2b2 = (nSqr - kSqr - sinInSqr);
-        a2b2 *= a2b2;
+        T diffTerm = etaSqr - kSqr - T(sinInSqr);
+        T a2b2 = diffTerm * diffTerm;
         a2b2 += 4.0f * nSqr * kSqr;
         a2b2 = sqrt(max(a2b2, 0.0f)); // Complex Skip
         //
-        float a = 0.5f * (a2b2 + (nSqr - kSqr - sinInSqr));
+        T a = 0.5f * (a2b2 + diffTerm);
         a = sqrt(max(a, 0.0f));
 
-        float perpendicular = a2b2 - (2.0f * a * cosIn) + cosInSqr;
+        T perpendicular = a2b2 - (2.0f * a * cosIn) + cosInSqr;
         perpendicular /= (a2b2 + (2.0f * a * cosIn) + cosInSqr);
 
-        float parallel = cosInSqr * a2b2 - (2.0f * a * cosIn * sinInSqr) + sinInSqr4;
+        T parallel = cosInSqr * a2b2 - (2.0f * a * cosIn * sinInSqr) + sinInSqr4;
         parallel /= (cosInSqr * a2b2 + (2.0f * a * cosIn * sinInSqr) + sinInSqr4);
         parallel *= perpendicular;
         return (parallel + perpendicular) * 0.5f;

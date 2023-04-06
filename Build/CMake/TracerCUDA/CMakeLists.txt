@@ -178,6 +178,9 @@ set(SRC_MATERIALS
     ${CURRENT_SOURCE_DIR}/LambertMaterial.cu
     ${CURRENT_SOURCE_DIR}/LambertMaterial.cuh
     ${CURRENT_SOURCE_DIR}/LambertMaterialKC.cuh
+    ${CURRENT_SOURCE_DIR}/MetalGlassMaterials.cu
+    ${CURRENT_SOURCE_DIR}/MetalGlassMaterials.cuh
+    ${CURRENT_SOURCE_DIR}/MetalGlassMaterialsKC.cuh
     ${CURRENT_SOURCE_DIR}/UnrealMaterial.cu
     ${CURRENT_SOURCE_DIR}/UnrealMaterial.cuh
     ${CURRENT_SOURCE_DIR}/UnrealMaterialKC.cuh

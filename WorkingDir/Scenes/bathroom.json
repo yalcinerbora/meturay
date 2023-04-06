@@ -28,7 +28,7 @@
             "id": [1, 2],
 			"file":
 			[
-				"../Textures/Bathroom/floor_tiles.png",
+				"../Textures/Bathroom/floor_tiles_gamma.png",
 				"../Textures/Bathroom/floor_normal.png"
 			],
 			"signed": [false, true]
@@ -42,6 +42,8 @@
             // Wood Chiffon
             "id": 4,
 			"file": "../Textures/Bathroom/wood_gamma.jpg"
+            //"file": "../Textures/Bathroom/wood_gamma_test.png"
+            //"file": "../Textures/Bathroom/wood.jpg"
         },
         {
             // Marble
@@ -58,11 +60,11 @@
             ]
         },
         {
-            // Picture & Frame
+            // Rug
             "id": [8, 9],
 			"file":
             [
-                "../Textures/Bathroom/rug.png",
+                "../Textures/Bathroom/rug_gamma.png",
                 "../Textures/Bathroom/rug_mask.png"
             ]
         }
@@ -70,6 +72,11 @@
 
 	"Lights":
     [
+        {
+            // Null Light
+            "id": 999,
+            "type": "Null"
+        },
 		{
             // Night HDR Map
             "id": 0,
@@ -82,6 +89,8 @@
             "primitive": 67,
             "accelerator": 0,
 		  	"radiance": [1600.2, 1600.2, 1600.2]
+            //"radiance": [509.31, 509.31, 509.31]
+
 		},
         {
 			// Light Bulbs
@@ -89,6 +98,7 @@
             "primitive": 71,
             "accelerator": 0,
 		  	"radiance": [1600.2, 1600.2, 1600.2]
+            //"radiance": [509.31, 509.31, 509.31]
 		},
         {
 			// Light Bulbs
@@ -96,6 +106,7 @@
             "primitive": 75,
             "accelerator": 0,
 		  	"radiance": [1600.2, 1600.2, 1600.2]
+            //"radiance": [509.31, 509.31, 509.31]
 		},
         {
 			// Light Bulbs
@@ -103,13 +114,14 @@
             "primitive": 79,
             "accelerator": 0,
 		  	"radiance": [1600.2, 1600.2, 1600.2]
-		},
-		{
-			// Debug Point Light
-			"id" : 90, "type" : "Point",
-            "position": [0, 1.5, -1.5],
-		  	"radiance": [1600.2, 1600.2, 1600.2]
+            //"radiance": [509.31, 509.31, 509.31]
 		}
+		// {
+		// 	// Debug Point Light
+		// 	"id" : 90, "type" : "Point",
+        //     "position": [0, 1.5, -1.5],
+		//   	"radiance": [1600.2, 1600.2, 1600.2]
+		// }
 	],
 
 	"Mediums": [
@@ -156,8 +168,8 @@
             "type": "Unreal",
             "albedo" : {"texture": 1, "channels": "rgb"},
             "normal" : {"texture": 2, "channels": "rgb"},
-            "roughness" : 0.4,
-            "specular": 0.5,
+            "roughness" : 0.4472,
+            "specular": 1.0,
             "metallic": 0.0
         },
         {
@@ -175,12 +187,13 @@
             // Woods (White Wood & Chiffoniere wood)
             "id": [5, 6],
             "type": "Unreal",
+            //"type" : "Lambert",
             "albedo" :
             [
                 [0.893289, 0.893289, 0.893289],
                 {"texture": 4, "channels": "rgb"}
             ],
-            "roughness" : [0.3, 0.3872],
+            "roughness" : [0.316, 0.3873],
             "specular": [0.1, 0.15],
             "metallic": [0.0, 0.0]
         },
@@ -207,7 +220,7 @@
                 [1.0, 0.8862, 0.6078],
                 [0.76862, 0.7725, 0.7725]
             ],
-            "roughness" : [0.1, 0.1, 0.05],
+            "roughness" : [0.3162277, 0.3162277, 0.2236],
             "specular": [0.95, 0.95, 0.95],
             "metallic": [1.0, 1.0, 1.0]
         },
@@ -216,7 +229,7 @@
             "id": 12,
             "type": "Unreal",
             "albedo" : [ 0.00631, 0.00631, 0.00631],
-            "roughness" : 0.1,
+            "roughness" : 0.3162277,
             "specular": 0.5,
             "metallic": 0.0
         },
@@ -236,7 +249,7 @@
             "id": 15,
             "type": "Unreal",
             "albedo" : [ 0.00631, 0.00631, 0.00631],
-            "roughness" : 0.2,
+            "roughness" : 0.4472135,
             "specular": 0.5,
             "metallic": 0.0
         },
@@ -262,6 +275,7 @@
             ]
         },
         {
+            // Bathtub
             "id": [21, 22],
             "type": "Unreal",
             "albedo" :
@@ -269,7 +283,7 @@
                 [ 0.612066, 0.612066, 0.612066],
                 [0.9607, 0.9647, 0.9647]
             ],
-            "roughness" : [0.1, 0.15],
+            "roughness" : [0.0, 0.15],
             "specular": [1.0, 1.0],
             "metallic": [0.0, 1.0]
         },
@@ -283,6 +297,7 @@
             ]
         },
         {
+            // Flower Stems & Petals
             "id": [25, 26],
             "type": "Lambert",
             "albedo" :
@@ -292,10 +307,11 @@
             ]
         },
         {
+            // Flower Vase
             "id": 27,
             "type": "Unreal",
             "albedo" : [ 0.612066, 0.612066, 0.612066],
-            "roughness" : 0.001,
+            "roughness" : 0.000,
             "specular": 1.0,
             "metallic": 0.0
         },
@@ -325,7 +341,9 @@
             "type": "Triangle",
             "name": "../Surfaces/Bathroom/wall_mounted.obj",
             "tag": "assimp_",
-            "innerIndex": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+            "innerIndex": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            "cullFace": [false, false, false, false, false, false, false,
+                         false, false, false, false, false, false, false]
         },
         {
             // Mirror
@@ -404,11 +422,11 @@
             "innerIndex": [0, 1, 2, 3]
         },
         {
-            "id": [54, 55],
+            "id": [54, 55, 84],
             "type": "Triangle",
             "name": "../Surfaces/Bathroom/window_inner_frame.obj",
             "tag": "assimp_",
-            "innerIndex": [0, 1]
+            "innerIndex": [0, 1, 2]
         },
         {
             "id": [56, 57, 58, 59],
@@ -555,6 +573,7 @@
         // Window Inner Frame
         {"transform": 0, "accelerator": 0, "material": 18, "primitive": 54},
         {"transform": 0, "accelerator": 0, "material": 18, "primitive": 55},
+        {"transform": 0, "accelerator": 0, "material": 18, "primitive": 84},
         // Bathtub
         {"transform": 0, "accelerator": 0, "material": 21, "primitive": 56},
         {"transform": 0, "accelerator": 0, "material": 21, "primitive": 57},

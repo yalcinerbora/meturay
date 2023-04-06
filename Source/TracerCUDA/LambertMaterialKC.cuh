@@ -52,6 +52,7 @@ struct LambertMatFuncs
 
         // Radiance Calculation
         const Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
+        //printf("%f, %f, %f\n", albedo[0], albedo[1], albedo[2]);
         return nDotL * albedo * MathConstants::InvPi;
     }
 
