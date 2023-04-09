@@ -123,7 +123,7 @@ struct UnrealDeviceFuncs
             pdfOther = TracerFunctions::VNDFGGXSmithPDF(V, H, alpha);
             // VNDFGGXSmithSample returns sampling of H Vector
             // convert it to sampling probability of L Vector
-            pdfOther /= (4.0f * VdH);
+            pdfOther = (VdH == 0.0f) ? 0.0f : pdfOther / (4.0f * VdH);
         }
         else
         {
@@ -137,7 +137,7 @@ struct UnrealDeviceFuncs
             pdfOther = max(0.0f, GPUSurface::DotN(L)) * MathConstants::InvPi;
             // VNDFGGXSmithSample returns sampling of H Vector
             // convert it to sampling probability of L Vector
-            pdfSelected /= (4.0f * VdH);
+            pdfSelected = (VdH == 0.0f) ? 0.0f : pdfSelected / (4.0f * VdH);
 
             misRatio = 1.0f - misRatio;
         }
@@ -259,9 +259,11 @@ struct UnrealDeviceFuncs
         // Use optimized dot product between N here (which just does V[2])
         // but it is more verbose
         float NdH = max(0.0f, GPUSurface::DotN(H));
+        float VdH = max(0.0f, V.Dot(H));
         float pdfSpecular = TracerFunctions::VNDFGGXSmithPDF(V, H, alpha);
         float D = TracerFunctions::DGGX(NdH, alpha);
         pdfSpecular = (isnan(D) || isinf(D)) ? 0.0f : pdfSpecular;
+        pdfSpecular = (VdH == 0.0f) ? 0.0f : pdfSpecular / (4.0f * VdH);
 
         float pdfDiffuse = max(0.0f, GPUSurface::DotN(L)) * MathConstants::InvPi;
 

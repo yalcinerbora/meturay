@@ -6,6 +6,7 @@
 #include "UnrealMaterial.cuh"
 #include "LambertMaterial.cuh"
 #include "EmptyMaterial.cuh"
+#include "MetalGlassMaterials.cuh"
 // Primitives
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
@@ -231,6 +232,9 @@ extern template class WFPGWork<LambertMat, GPUPrimitiveSphere>;
 
 extern template class WFPGWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class WFPGWork<UnrealMat, GPUPrimitiveSphere>;
+
+extern template class WFPGWork<MetalMat, GPUPrimitiveTriangle>;
+extern template class WFPGWork<MetalMat, GPUPrimitiveSphere>;
 // Debug Path
 extern template class WFPGDebugWork<LambertCMat, GPUPrimitiveTriangle>;
 extern template class WFPGDebugWork<LambertCMat, GPUPrimitiveSphere>;
@@ -246,6 +250,9 @@ extern template class WFPGDebugWork<LambertMat, GPUPrimitiveSphere>;
 
 extern template class WFPGDebugWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class WFPGDebugWork<UnrealMat, GPUPrimitiveSphere>;
+
+extern template class WFPGDebugWork<MetalMat, GPUPrimitiveTriangle>;
+extern template class WFPGDebugWork<MetalMat, GPUPrimitiveSphere>;
 // ===================================================
 using WFPGBoundaryWorkerList = TypeList<WFPGBoundaryWork<CPULightGroupNull>,
                                         WFPGBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
@@ -277,7 +284,9 @@ using WFPGPathWorkerList = TypeList<WFPGWork<LambertCMat, GPUPrimitiveTriangle>,
                                     WFPGWork<LambertMat, GPUPrimitiveTriangle>,
                                     WFPGWork<LambertMat, GPUPrimitiveSphere>,
                                     WFPGWork<UnrealMat, GPUPrimitiveTriangle>,
-                                    WFPGWork<UnrealMat, GPUPrimitiveSphere>>;
+                                    WFPGWork<UnrealMat, GPUPrimitiveSphere>,
+                                    WFPGWork<MetalMat, GPUPrimitiveTriangle>,
+                                    WFPGWork<MetalMat, GPUPrimitiveSphere>>;
 // ===================================================
 using WFPGDebugPathWorkerList = TypeList<WFPGDebugWork<LambertCMat, GPUPrimitiveTriangle>,
                                          WFPGDebugWork<LambertCMat, GPUPrimitiveSphere>,
@@ -288,4 +297,6 @@ using WFPGDebugPathWorkerList = TypeList<WFPGDebugWork<LambertCMat, GPUPrimitive
                                          WFPGDebugWork<LambertMat, GPUPrimitiveTriangle>,
                                          WFPGDebugWork<LambertMat, GPUPrimitiveSphere>,
                                          WFPGDebugWork<UnrealMat, GPUPrimitiveTriangle>,
-                                         WFPGDebugWork<UnrealMat, GPUPrimitiveSphere>>;
+                                         WFPGDebugWork<UnrealMat, GPUPrimitiveSphere>,
+                                         WFPGDebugWork<MetalMat, GPUPrimitiveTriangle>,
+                                         WFPGDebugWork<MetalMat, GPUPrimitiveSphere>>;

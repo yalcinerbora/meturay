@@ -22,6 +22,7 @@
 #include "SimpleMaterials.cuh"
 #include "LambertMaterial.cuh"
 #include "UnrealMaterial.cuh"
+#include "MetalGlassMaterials.cuh"
 // Tracers
 #include "DirectTracer.h"
 #include "PathTracer.h"
@@ -168,6 +169,9 @@ TracerLogicGenerator::TracerLogicGenerator()
                                               DefaultDestruct<GPUMaterialGroupI>));
     matGroupGenerators.emplace(UnrealMat::TypeName(),
                                GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, UnrealMat>,
+                                              DefaultDestruct<GPUMaterialGroupI>));
+    matGroupGenerators.emplace(MetalMat::TypeName(),
+                               GPUMatGroupGen(MaterialGroupConstruct<GPUMaterialGroupI, MetalMat>,
                                               DefaultDestruct<GPUMaterialGroupI>));
 
     // Transform Types

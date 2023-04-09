@@ -618,14 +618,17 @@ constexpr Vector<N, T>& Vector<N, T>::ClampSelf(T minVal, T maxVal)
 }
 
 template <int N, class T>
+template <class Q>
 HYBRD_FUNC HYBRID_INLINE
-constexpr bool Vector<N, T>::HasNaN() const
+constexpr FloatEnable<Q, bool> Vector<N, T>::HasNaN() const
 {
     bool hasNan = false;
     UNROLL_LOOP
     for(int i = 0; i < N; i++)
     {
-        hasNan |= ((vector[i] != vector[i]) ||
+        hasNan |= (isnan(vector[i]) ||
+                   isinf(vector[i]) ||
+                   (vector[i] != vector[i]) ||
                    (vector[i] == INFINITY) ||
                    (vector[i] == -INFINITY));
     }
@@ -738,6 +741,26 @@ constexpr FloatEnable<Q, Vector<N, T>&> Vector<N, T>::CeilSelf()
         vector[i] = ceil(vector[i]);
     }
     return *this;
+}
+
+template <int N, class T>
+template <class Q>
+HYBRD_FUNC HYBRID_INLINE
+constexpr FloatEnable<Q, Vector<N, T>> Vector<N, T>::Sqrt(const Vector<N, T>& v0)
+{
+    // Clang sqrt definition is only on std namespace
+    // this is a crappy workaround
+    #ifndef __CUDA_ARCH__
+        using namespace std;
+    #endif
+
+    Vector v;
+    UNROLL_LOOP
+    for(int i = 0; i < N; i++)
+    {
+        v[i] = sqrt(v0[i]);
+    }
+    return v;
 }
 
 template <int N, class T>

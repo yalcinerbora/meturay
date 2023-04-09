@@ -27,3 +27,6 @@ template class PTPathWork<LambertMat, GPUPrimitiveSphere>;
 
 template class PTPathWork<UnrealMat, GPUPrimitiveTriangle>;
 template class PTPathWork<UnrealMat, GPUPrimitiveSphere>;
+
+template class PTPathWork<MetalMat, GPUPrimitiveTriangle>;
+template class PTPathWork<MetalMat, GPUPrimitiveSphere>;

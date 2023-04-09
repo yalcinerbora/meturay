@@ -27,3 +27,6 @@ template class PPGWork<LambertMat, GPUPrimitiveSphere>;
 
 template class PPGWork<UnrealMat, GPUPrimitiveTriangle>;
 template class PPGWork<UnrealMat, GPUPrimitiveSphere>;
+
+template class PPGWork<MetalMat, GPUPrimitiveTriangle>;
+template class PPGWork<MetalMat, GPUPrimitiveSphere>;

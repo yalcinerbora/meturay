@@ -20,44 +20,18 @@ class MetalMat final
                               MetalMatFuncs>
 {
     public:
-        static const char*      TypeName() { return "MTSPlastic"; }
-
-        using ConstantAlbedoRef = ConstantRef<2, Vector3>;
-        using Texture2DRef      = TextureRef<2, Vector3>;
-        using Texture2DRefI     = TextureRefI<2, Vector3>;
-        using Tex2DMap          = std::map<uint32_t, std::unique_ptr<TextureI<2>>>;
-
-        struct ConstructionInfo
-        {
-            bool                isConstantAlbedo = true;
-            bool                hasNormalMap = false;
-            Vector3f            constantAlbedo = Zero3;
-            cudaTextureObject_t albedoTexture = 0;
-            cudaTextureObject_t normalTexture = 0;
-        };
+        static const char*      TypeName() { return "Metal"; }
 
     private:
-        DeviceMemory                memory;
-        // Actual Allocation of Textures
-        Tex2DMap                    dTextureMemory;
-        // Device Allocations of Texture References
-        const ConstantAlbedoRef*    dConstDiffAlbedo;
-        const Texture2DRef*         dTextureDiffAlbedoRef;
-        // Aligned pointers for material access from kernel
-        const Texture2DRefI**       dDiffAlbedo;
-        const Texture2DRefI**       dNormal;
-
-        // CPU Construction Info
-        std::vector<ConstructionInfo> matConstructionInfo;
-        std::vector<Vector2ui>        matTextureIds;
+        DeviceMemory            memory;
 
     protected:
     public:
         // Constructors & Destructor
-                                MTSPlasticMat(const CudaGPU& gpu)
-                                    : GPUMaterialGroup<MTSPlasticMatData, UVSurface,
-                                                       MTSPlasticMatFuncs>(gpu) {}
-                                ~MTSPlasticMat() = default;
+                                MetalMat(const CudaGPU& gpu)
+                                    : GPUMaterialGroup<MetalMatData, UVSurface,
+                                                       MetalMatFuncs>(gpu) {}
+                                ~MetalMat() = default;
 
         // Interface
         // Type (as string) of the primitive group
@@ -84,5 +58,5 @@ class MetalMat final
         std::vector<uint32_t>   UsedTextureIds() const override;
 };
 
-static_assert(IsMaterialGroupClass<MTSPlasticMat>::value,
-              "MTSPlasticMat is not a GPU Material Group Class.");
+static_assert(IsMaterialGroupClass<MetalMat>::value,
+              "MetalMat is not a GPU Material Group Class.");

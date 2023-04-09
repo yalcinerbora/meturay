@@ -39,6 +39,7 @@ namespace TracerFunctions
         float cosInSqr = cosIn * cosIn;
         float sinInSqr = max(0.0f, 1.0f - cosInSqr);
         float sinInSqr2 = sinInSqr * sinInSqr;
+        float sinInSqr4 = sinInSqr2 * sinInSqr2;
 
         float sinIn = sqrt(max(sinInSqr, 0.0f));
 
@@ -47,19 +48,33 @@ namespace TracerFunctions
 
         T diffTerm = etaSqr - kSqr - T(sinInSqr);
         T a2b2 = diffTerm * diffTerm;
-        a2b2 += 4.0f * nSqr * kSqr;
-        a2b2 = sqrt(max(a2b2, 0.0f)); // Complex Skip
+        a2b2 += 4.0f * etaSqr * kSqr;
+        //a2b2 = sqrt(max(a2b2, 0.0f)); // Complex Skip
+        a2b2 = T::Sqrt(T::Max(a2b2, 0.0f));
         //
         T a = 0.5f * (a2b2 + diffTerm);
-        a = sqrt(max(a, 0.0f));
+        a = T::Sqrt(T::Max(a, 0.0f));
+        //a = sqrt(max(a, 0.0f));
 
-        T perpendicular = a2b2 - (2.0f * a * cosIn) + cosInSqr;
-        perpendicular /= (a2b2 + (2.0f * a * cosIn) + cosInSqr);
 
-        T parallel = cosInSqr * a2b2 - (2.0f * a * cosIn * sinInSqr) + sinInSqr4;
-        parallel /= (cosInSqr * a2b2 + (2.0f * a * cosIn * sinInSqr) + sinInSqr4);
-        parallel *= perpendicular;
-        return (parallel + perpendicular) * 0.5f;
+        T perpT1 = a2b2 + T(cosInSqr);
+        T perpT2 = a * (2 * cosIn);
+        T perp = (perpT1 - perpT2) / (perpT1 + perpT2);
+
+
+        T parT1 = a2b2 * cosInSqr + T(sinInSqr4);
+        T parT2 = perpT2 * sinInSqr2;
+
+        T par = perp * (parT1 - parT2) / (parT1 + parT2);
+
+
+        //T perpendicular = a2b2 - (2.0f * a * cosIn) + cosInSqr;
+        //perpendicular /= (a2b2 + (2.0f * a * cosIn) + cosInSqr);
+
+        //T parallel = cosInSqr * a2b2 - (2.0f * a * cosIn * sinInSqr) + sinInSqr4;
+        //parallel /= (cosInSqr * a2b2 + (2.0f * a * cosIn * sinInSqr) + sinInSqr4);
+        //parallel *= perpendicular;
+        return (par + perp) * 0.5f;
     }
 
     __device__ inline

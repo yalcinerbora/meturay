@@ -175,8 +175,9 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
     constexpr Vector&                               ClampSelf(const Vector&, const Vector&);
     HYBRD_FUNC
     constexpr Vector&                               ClampSelf(T min, T max);
+    template<class Q = T>
     HYBRD_FUNC
-    constexpr bool                                  HasNaN() const;
+    constexpr FloatEnable<Q, bool>                  HasNaN() const;
 
     template<class Q = T>
     HYBRD_FUNC [[nodiscard]] constexpr SignedEnable<Q, Vector>  Abs() const;
@@ -204,6 +205,8 @@ class alignas(ChooseVectorAlignment(N * sizeof(T))) Vector<N, T>
     static HYBRD_FUNC constexpr FloatEnable<Q, Vector>          Lerp(const Vector&,
                                                                      const Vector&,
                                                                      T);
+    template<class Q = T>
+    static HYBRD_FUNC constexpr FloatEnable<Q, Vector>         Sqrt(const Vector&);
 };
 
 // Left scalars

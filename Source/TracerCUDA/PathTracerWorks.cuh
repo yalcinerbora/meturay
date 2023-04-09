@@ -6,6 +6,7 @@
 #include "UnrealMaterial.cuh"
 #include "LambertMaterial.cuh"
 #include "EmptyMaterial.cuh"
+#include "MetalGlassMaterials.cuh"
 // Primitives
 #include "GPUPrimitiveTriangle.h"
 #include "GPUPrimitiveSphere.h"
@@ -160,6 +161,9 @@ extern template class PTPathWork<LambertMat, GPUPrimitiveSphere>;
 
 extern template class PTPathWork<UnrealMat, GPUPrimitiveTriangle>;
 extern template class PTPathWork<UnrealMat, GPUPrimitiveSphere>;
+
+extern template class PTPathWork<MetalMat, GPUPrimitiveTriangle>;
+extern template class PTPathWork<MetalMat, GPUPrimitiveSphere>;
 // ===================================================
 using PTBoundaryWorkerList = TypeList<PTBoundaryWork<CPULightGroupNull>,
                                       PTBoundaryWork<CPULightGroup<GPUPrimitiveTriangle>>,
@@ -180,4 +184,6 @@ using PTPathWorkerList = TypeList<PTPathWork<LambertCMat, GPUPrimitiveTriangle>,
                                   PTPathWork<LambertMat, GPUPrimitiveTriangle>,
                                   PTPathWork<LambertMat, GPUPrimitiveSphere>,
                                   PTPathWork<UnrealMat, GPUPrimitiveTriangle>,
-                                  PTPathWork<UnrealMat, GPUPrimitiveSphere>>;
+                                  PTPathWork<UnrealMat, GPUPrimitiveSphere>,
+                                  PTPathWork<MetalMat, GPUPrimitiveTriangle>,
+                                  PTPathWork<MetalMat, GPUPrimitiveSphere>>;

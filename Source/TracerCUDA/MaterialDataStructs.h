@@ -43,22 +43,30 @@ struct LambertMatData
 
 struct MetalMatData
 {
-    const TextureRefI<2, Vector3f>**    dEta;
-    const TextureRefI<2, Vector3f>**    dK;
-    const TextureRefI<2, float>**       dRoughness;
+    // TODO: Change to surface varying data
+    const Vector3f*     dEta;
+    const Vector3f*     dK;
+    const Vector3f*     dSpecular;
+    const float*        dRoughness;
+
+    //const TextureRefI<2, Vector3f>**    dNormal;
+
+    //const TextureRefI<2, Vector3f>**    dEta;
+    //const TextureRefI<2, Vector3f>**    dK;
+    //const TextureRefI<2, float>**       dRoughness;
 };
 
-struct GlassMatData
-{
-    const TextureRefI<2, Vector3f>** dEta;
-    const TextureRefI<2, Vector3f>** dK;
-    const TextureRefI<2, float>** dRoughness;
-
-    const uint32_t* mediumIndices;
-
-    // Global Medium Array pointer
-    const GPUMediumI* const* dMediums;
-    uint32_t baseMediumIndex;
-};
+//struct GlassMatData
+//{
+//    const TextureRefI<2, Vector3f>** dEta;
+//    const TextureRefI<2, Vector3f>** dK;
+//    const TextureRefI<2, float>** dRoughness;
+//
+//    const uint32_t* mediumIndices;
+//
+//    // Global Medium Array pointer
+//    const GPUMediumI* const* dMediums;
+//    uint32_t baseMediumIndex;
+//};
 
 using EmissiveMatData = AlbedoMatData;

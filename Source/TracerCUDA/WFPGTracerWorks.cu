@@ -37,6 +37,10 @@ template class WFPGWork<LambertMat, GPUPrimitiveSphere>;
 
 template class WFPGWork<UnrealMat, GPUPrimitiveTriangle>;
 template class WFPGWork<UnrealMat, GPUPrimitiveSphere>;
+
+template class WFPGWork<MetalMat, GPUPrimitiveTriangle>;
+template class WFPGWork<MetalMat, GPUPrimitiveSphere>;
+
 // Debug Path
 template class WFPGDebugWork<LambertCMat, GPUPrimitiveTriangle>;
 template class WFPGDebugWork<LambertCMat, GPUPrimitiveSphere>;
@@ -52,3 +56,6 @@ template class WFPGDebugWork<LambertMat, GPUPrimitiveSphere>;
 
 template class WFPGDebugWork<UnrealMat, GPUPrimitiveTriangle>;
 template class WFPGDebugWork<UnrealMat, GPUPrimitiveSphere>;
+
+template class WFPGDebugWork<MetalMat, GPUPrimitiveTriangle>;
+template class WFPGDebugWork<MetalMat, GPUPrimitiveSphere>;
