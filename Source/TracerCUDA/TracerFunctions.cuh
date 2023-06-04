@@ -237,7 +237,22 @@ namespace TracerFunctions
         Vector3f NHemi = t1 * T1 + t2 * T2 + sqrt(max(0.0f, val)) * VHemi;
         // Section 3.4: Finally back to Ellipsoid
         Vector3f NMicrofacet = Vector3f(a * NHemi[0], a * NHemi[1], max(0.0f, NHemi[2]));
-        NMicrofacet.NormalizeSelf();
+        float nLength2 = NMicrofacet.LengthSqr();
+        if(nLength2 < MathConstants::Epsilon)
+            NMicrofacet = ZAxis;
+        else
+            NMicrofacet *= (1.0f / sqrt(nLength2));
+
+        if(NMicrofacet.HasNaN() || NMicrofacet == Vector3f(0.0f))
+            printf("H(%f, %f, %f), V(%f, %f, %f), VHemiV(%f, %f, %f), T1(%f, %f, %f), T2(%f, %f, %f), t1 %f, t2 %f, val %f\n",
+                   NHemi[0], NHemi[1], NHemi[2],
+                   V[0], V[1], V[2],
+                   VHemi[0], VHemi[1], VHemi[2],
+                   T1[0], T1[1], T1[2],
+                   T2[0], T2[1], T2[2],
+                   t1, t2, val);
+
+        //NMicrofacet.NormalizeSelf();
 
         // To make it consistent between other functions,
         // we will return PDF of the value that is being returned (micro-facet normal)

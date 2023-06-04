@@ -11,6 +11,17 @@
 struct MetalMatFuncs
 {
     __device__ inline static
+    float Specularity(const UVSurface& surface,
+                      const MetalMatData& matData,
+                      const HitKey::Type& matId)
+    {
+        float roughness = matData.dRoughness[matId];
+        //float alpha = roughness * roughness;
+        //return 1.0f - alpha;
+        return 1.0f - roughness;
+    }
+
+    __device__ inline static
     Vector3 Sample(// Sampled Output
                    RayF& wo,
                    float& pdf,
@@ -76,6 +87,18 @@ struct MetalMatFuncs
         if(isinf(D) ||  // alpha is small
            isnan(D))    // alpha is zero
         {
+            // Due to precision issues
+            // sometimes VNDF sample assume Normal is -Z
+            // V vector is coming from highly grazing angle
+            // and it is below the hemisphere
+            // in this case reflect using Z
+            // TODO: change this to proper implementation later
+            if(roughness == 0.0f)
+            {
+                static constexpr Vector3f Z = ZAxis;
+                L = 2.0f * DotN(V) * Z - V;
+            }
+
             specularTerm = G * F;
             if(TracerFunctions::GSmithSingle(V, alpha) != 0.0f)
                 specularTerm /= TracerFunctions::GSmithSingle(V, alpha);
@@ -99,6 +122,15 @@ struct MetalMatFuncs
                    "GS: %f, pdf %f\n",
                    specularTerm[0], specularTerm[1], specularTerm[2],
                    D, G, F[0], F[1], F[2], TracerFunctions::GSmithSingle(V, alpha), pdf);
+
+        if(L.HasNaN() || H.HasNaN())
+        {
+            printf("L(%f, %f, %f), H(%f, %f, %f) alpha %f\n",
+                   L[0], L[1], L[2],
+                   H[0], H[1], H[2],
+                   alpha);
+        }
+
 
         // Ray out
         wo = RayF(GPUSurface::ToSpace(L, surface.worldToTangent), position);
@@ -181,12 +213,12 @@ struct MetalMatFuncs
         // Notice that NdL terms are canceled out
         Vector3f specularTerm = D * F * G * 0.25f / NdV;
         specularTerm = (NdV == 0.0f) ? Zero3 : specularTerm;
+        return specularTerm;
     }
 
     // Does not have emission
     static constexpr auto& IsEmissive   = IsEmissiveFalse<MetalMatData>;
     static constexpr auto& Emit         = EmitEmpty<MetalMatData, UVSurface>;
-    static constexpr auto& Specularity  = SpecularityDiffuse<MetalMatData, UVSurface>;
 };
 
 //class GlassMatFuncs

@@ -88,7 +88,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
                                inSize[0], inSize[1], 1,
                                GL_RED, GL_FLOAT, &clearDataInt);
             // Reset the sample count
-            ResetOutputSystem();
+            //ResetOutputSystem();
             break;
         }
         case VisorGLCommand::SET_PORTION:

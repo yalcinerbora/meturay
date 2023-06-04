@@ -48,6 +48,7 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    R_FIELD_GAUSS_ALPHA_NAME    = "RFieldFilterAlpha";
     static constexpr const char*    PARALLAX_NAME               = "AdjustParallax";
     static constexpr const char*    GUIDE_BOUNCE_COUNT_NAME     = "GuideBounceAmount";
+    static constexpr const char*    WEIGHTED_COMBINE_NAME       = "WeightedCombineSamples";
     static constexpr const char*    PG_DUMP_DEBUG_NAME          = "PGDumpDataStruct";
     static constexpr const char*    PG_DUMP_INTERVAL_NAME       = "PGDataStructDumpIntervalExp";
     static constexpr const char*    PG_DUMP_PATH_NAME           = "PGDataStructDumpName";
@@ -83,6 +84,7 @@ class WFPGTracer final : public RayTracer
         uint32_t            optiXBufferSize     = 16;
         bool                adjustParallax      = true;
         uint32_t            guideBounceCount    = 512;
+        bool                doWeightedCombine   = false;
         //
         bool                pgDumpDebugData     = false;
         uint32_t            pgDumpInterval      = 2;

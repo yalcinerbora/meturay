@@ -14,6 +14,7 @@
 #include "GPUWork.cuh"
 #include "GPUAcceleratorI.h"
 #include "ParallelReduction.cuh"
+#include "GPUReconFilterI.h"
 
 #include <array>
 #include <thread>
@@ -327,11 +328,11 @@ static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> FILTER_KERNEL_SHMEM_
 
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PARALLAX_KERNEL_SHMEM_SIZE =
 {
-    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>),
-    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>),
-    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>),
-    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>),
-    sizeof(KCParallaxShMem<std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>)
+    sizeof(KCParallaxShMem<std::get<0>(PG_KERNEL_PARAMS[0]), std::get<1>(PG_KERNEL_PARAMS[0]), std::get<2>(PG_KERNEL_PARAMS[0])>),
+    sizeof(KCParallaxShMem<std::get<0>(PG_KERNEL_PARAMS[1]), std::get<1>(PG_KERNEL_PARAMS[1]), std::get<2>(PG_KERNEL_PARAMS[1])>),
+    sizeof(KCParallaxShMem<std::get<0>(PG_KERNEL_PARAMS[2]), std::get<1>(PG_KERNEL_PARAMS[2]), std::get<2>(PG_KERNEL_PARAMS[2])>),
+    sizeof(KCParallaxShMem<std::get<0>(PG_KERNEL_PARAMS[3]), std::get<1>(PG_KERNEL_PARAMS[3]), std::get<2>(PG_KERNEL_PARAMS[3])>),
+    sizeof(KCParallaxShMem<std::get<0>(PG_KERNEL_PARAMS[4]), std::get<1>(PG_KERNEL_PARAMS[4]), std::get<2>(PG_KERNEL_PARAMS[4])>)
 };
 
 static constexpr std::array<uint32_t, PG_KERNEL_TYPE_COUNT> PG_KERNEL_SHMEM_SIZE =
@@ -1352,6 +1353,8 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
     if((err = opts.GetUInt(options.guideBounceCount, GUIDE_BOUNCE_COUNT_NAME)) != TracerError::OK)
         return err;
 
+    if((err = opts.GetBool(options.doWeightedCombine, WEIGHTED_COMBINE_NAME)) != TracerError::OK)
+        return err;
 
     if((err = opts.GetBool(options.pgDumpDebugData, PG_DUMP_DEBUG_NAME)) != TracerError::OK)
         return err;
@@ -1389,6 +1392,8 @@ void WFPGTracer::AskOptions()
     list.emplace(OPTIX_TRACE_NAME, OptionVariable(options.optiXTrace));
     list.emplace(OPTIX_USE_SCENE_NAME, OptionVariable(options.optiXUseSceneAcc));
     list.emplace(OPTIX_BUFFER_NAME, OptionVariable(static_cast<int64_t>(options.optiXBufferSize)));
+
+    list.emplace(WEIGHTED_COMBINE_NAME, OptionVariable(options.doWeightedCombine));
 
     list.emplace(PARALLAX_NAME, OptionVariable(options.adjustParallax));
     list.emplace(GUIDE_BOUNCE_COUNT_NAME, OptionVariable(static_cast<int64_t>(options.guideBounceCount)));
@@ -1653,12 +1658,6 @@ void WFPGTracer::Finalize()
             treeDumpCount++;
         }
 
-        //if(iterationCount == dumpInterval)
-        //{
-        //    ResetImage();
-        //    treeDumpCount++;
-        //}
-
     }
     // On SVO_Radiance mode clear the image memory
     // And trace the SVO from the camera and send the results
@@ -1686,8 +1685,47 @@ void WFPGTracer::Finalize()
     double ms = frameTimer.Elapsed<CPUTimeMillis>();
     METU_LOG("TOTAL:{}", ms);
 
+
+    //if(iterationCount == 2)
+    //ResetImage();
+
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
-    RayTracer::Finalize();
+
+
+    if(options.doWeightedCombine)
+    {
+        if(crashed) return;
+        const auto sampleGMem = std::as_const(sampleMemory).GMem<Vector4f>();
+
+        //
+        float scalarSampleMultiplier = (iterationCount == 1) ? 1.0f : 2.0f;
+
+
+        //    uint32_t multiplier = std::min(4u, iterationCount - 1);
+        ////uint32_t scalarWeightInt = (1 << multiplier);
+        //uint32_t scalarWeightInt = multiplier + 1;
+
+        //float scalarSampleMultiplier = static_cast<float>(scalarWeightInt);
+        METU_LOG("Scalar Weight: {}", scalarSampleMultiplier);
+
+        if(reconFilter != nullptr)
+            reconFilter->FilterToImg(imgMemory,
+                                     sampleGMem.gValues,
+                                     sampleGMem.gImgCoords,
+                                     sampleMemory.SampleCount(),
+                                     cudaSystem,
+                                     scalarSampleMultiplier);
+        else
+        {
+            METU_ERROR_LOG("Reconstruction Filter did not set!");
+            crashed = true;
+        }
+        GPUTracer::Finalize();
+    }
+    else
+    {
+        RayTracer::Finalize();
+    }
 
     using namespace std::chrono_literals;
     //std::this_thread::sleep_for(10s);

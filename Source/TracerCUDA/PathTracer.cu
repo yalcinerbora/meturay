@@ -297,6 +297,8 @@ void PathTracer::Finalize()
     cudaSystem.SyncAllGPUs();
     frameTimer.Split();
 
+    //ResetImage();
+
     double ms = frameTimer.Elapsed<CPUTimeMillis>();
     METU_LOG("{}", ms);
 

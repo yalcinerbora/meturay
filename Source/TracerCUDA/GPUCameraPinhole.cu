@@ -62,7 +62,11 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const EndpointGroupDataList& c
         data.up = up;
         data.gaze = gaze;
         data.nearFar = nearFar;
+
+        // Correct FoV using FovY
         data.fov = fov * MathConstants::DegToRadCoef;
+        float aspect = fov[0] / fov[1];
+        data.fov[0] = 2.0f * std::atan(std::tan(data.fov[1] * 0.5f) * aspect);
 
         hCameraData.push_back(data);
     }

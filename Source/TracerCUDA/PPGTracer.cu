@@ -404,6 +404,8 @@ void PPGTracer::Finalize()
     frameTimer.Split();
     UpdateFrameAnalytics("paths / sec", options.sampleCount * options.sampleCount);
 
+    //ResetImage();
+
     uint32_t prevTreeSwap = (nextTreeSwap >> 1);
     if(options.alwaysSendSamples ||
        // Do not send samples until we exceed prev iteration samples

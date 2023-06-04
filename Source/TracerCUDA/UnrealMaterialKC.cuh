@@ -4,6 +4,7 @@
 
 #include "RayLib/Constants.h"
 #include "RayLib/HemiDistribution.h"
+#include "RayLib/ColorConversion.h"
 
 #include "RNGenerator.h"
 #include "ImageFunctions.cuh"
@@ -12,6 +13,7 @@
 #include "GPUSurface.h"
 #include "TracerConstants.h"
 #include "MetaMaterialFunctions.cuh"
+
 
 __device__ inline
 Vector3 CalculateF0(const Vector3f& baseAlbedo, float metallic, float specular)
@@ -48,21 +50,21 @@ struct UnrealDeviceFuncs
     //}
 
     __device__ inline static
-    float MisRatio(float metallic, float roughness)
+    float MisRatio(float metallic, float specular, float luminance)
     {
         // Return Diffuse Ratio
         //return 0.5f;
         // Hand made MIS ratio
-        float alpha = roughness * roughness;
-        float sqrtAlpha = roughness;
-        float alphaSqr = alpha * alpha;
-        float ratio = (1.0f - metallic * metallic) * (metallic * alphaSqr +
-                                                      (1 - metallic) * sqrtAlpha);
 
-        // Don't force full ratio to one of the sampling method
-        static constexpr float minRatio = 0.25f;
-        static constexpr float maxRatio = 0.85f;
-        return HybridFuncs::Lerp(minRatio, maxRatio, ratio);
+        float integralDiffuse = 2.0f * MathConstants::Pi * luminance;
+        integralDiffuse *= (1.0f - metallic);
+
+        // Specular part
+        float specularRatio = (1.0f - metallic) * specular + metallic * luminance;
+
+        float total = specularRatio + integralDiffuse;
+        float misRatio = integralDiffuse / total;
+        return misRatio;
     }
 
     __device__ inline static
@@ -104,7 +106,7 @@ struct UnrealDeviceFuncs
         Vector3f V = GPUSurface::ToTangent(wi, toTangent);
 
         // Calculate the ratio between diffuse/specular
-        float misRatio = MisRatio(metallic, roughness);
+        float misRatio = MisRatio(metallic, specular, Utility::RGBToLuminance(albedo));
         float xi = rng.Uniform();
         bool isSampleDiffuse = (xi < misRatio);
 
@@ -209,9 +211,9 @@ struct UnrealDeviceFuncs
         }
         if(pdf < 0.0f)
         {
-            printf("[%s] pdf %f, pdfSelected %f, pdfOther %f\n",
+            printf("[%s] pdf %f, pdfSelected %f, pdfOther %f, misRatio %f\n",
                    (isSampleDiffuse) ? "Diffuse " : "Specular",
-                   pdf, pdfSelected, pdfOther);
+                   pdf, pdfSelected, pdfOther, misRatio);
         }
 
         //=======================//
@@ -243,6 +245,8 @@ struct UnrealDeviceFuncs
     {
         float metallic = (*matData.dMetallic[matId])(surface.uv);
         float roughness = (*matData.dRoughness[matId])(surface.uv);
+        float specular = (*matData.dSpecular[matId])(surface.uv);
+        Vector3f albedo = (*matData.dAlbedo[matId])(surface.uv);
         float alpha = roughness * roughness;
 
         // Convert to Tangent Space
@@ -267,7 +271,7 @@ struct UnrealDeviceFuncs
 
         float pdfDiffuse = max(0.0f, GPUSurface::DotN(L)) * MathConstants::InvPi;
 
-        float misRatio = MisRatio(metallic, roughness);
+        float misRatio = MisRatio(metallic, specular, Utility::RGBToLuminance(albedo));
         float pdf = (misRatio * pdfDiffuse +
                      (1.0f - misRatio) * pdfSpecular);
 

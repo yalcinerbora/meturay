@@ -28,3 +28,6 @@ template class RPGPathWork<LambertMat, GPUPrimitiveSphere>;
 
 template class RPGPathWork<UnrealMat, GPUPrimitiveTriangle>;
 template class RPGPathWork<UnrealMat, GPUPrimitiveSphere>;
+
+template class RPGPathWork<MetalMat, GPUPrimitiveTriangle>;
+template class RPGPathWork<MetalMat, GPUPrimitiveSphere>;

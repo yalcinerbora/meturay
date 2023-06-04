@@ -27,6 +27,7 @@ class GPUReconFilter : public GPUReconFilterI
                                                     const T* dValues,
                                                     const Vector2f* dImgCoords,
                                                     uint32_t sampleCount,
+                                                    float scalarMultiplier,
                                                     const GPUFilterFunctor& f,
                                                     const CudaSystem&) override;
         uint32_t                ConservativePixelPerSample() const;
@@ -59,6 +60,7 @@ inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
                                                 const T* dValues,
                                                 const Vector2f* dImgCoords,
                                                 uint32_t sampleCount,
+                                                float scalarMultiplier,
                                                 const GPUFilterFunctor& filterGPU,
                                                 const CudaSystem& system)
 {
@@ -204,6 +206,8 @@ inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
 
     static constexpr uint32_t REDUCE_LOGIC_CHANGE_THRESHOLD = 256;
 
+    METU_LOG("Multiplier {}", scalarMultiplier);
+
     if(spp > REDUCE_LOGIC_CHANGE_THRESHOLD)
     {
         // Each Block is responsible for one pixel
@@ -229,7 +233,7 @@ inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
                       img.SegmentSize(),
                       img.SegmentOffset(),
                       img.Resolution(),
-
+                      scalarMultiplier,
                       filterGPU,
                       segmentCount);
     }
@@ -258,7 +262,7 @@ inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
                       img.SegmentSize(),
                       img.SegmentOffset(),
                       img.Resolution(),
-
+                      scalarMultiplier,
                       filterGPU,
                       segmentCount);
     }

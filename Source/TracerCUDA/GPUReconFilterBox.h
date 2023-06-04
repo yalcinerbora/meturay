@@ -39,12 +39,14 @@ class GPUReconFilterBox : public GPUReconFilter
                                 const Vector4f* dValues,
                                 const Vector2f* dImgCoords,
                                 uint32_t sampleCount,
-                                const CudaSystem& system) override;
+                                const CudaSystem& system,
+                                float scalarMultiplier = 1.0f) override;
         void        FilterToImg(ImageMemory&,
                                 const float* dValues,
                                 const Vector2f* dImgCoords,
                                 uint32_t sampleCount,
-                                const CudaSystem& system) override;
+                                const CudaSystem& system,
+                                float scalarMultiplier = 1.0f) override;
 };
 
 inline GPUBoxFilterFunctor::GPUBoxFilterFunctor(float radius)
@@ -73,9 +75,10 @@ void GPUReconFilterBox::FilterToImg(ImageMemory& iMem,
                                     const Vector4f* dValues,
                                     const Vector2f* dImgCoords,
                                     uint32_t sampleCount,
-                                    const CudaSystem& system)
+                                    const CudaSystem& system,
+                                    float scalarMultiplier)
 {
-    FilterToImgInternal(iMem, dValues, dImgCoords, sampleCount,
+    FilterToImgInternal(iMem, dValues, dImgCoords, sampleCount, scalarMultiplier,
                         filter, system);
 }
 
@@ -84,9 +87,10 @@ void GPUReconFilterBox::FilterToImg(ImageMemory& iMem,
                                     const float* dValues,
                                     const Vector2f* dImgCoords,
                                     uint32_t sampleCount,
-                                    const CudaSystem& system)
+                                    const CudaSystem& system,
+                                    float scalarMultiplier)
 {
-    FilterToImgInternal(iMem, dValues, dImgCoords, sampleCount,
+    FilterToImgInternal(iMem, dValues, dImgCoords, sampleCount, scalarMultiplier,
                         filter, system);
 }
 

@@ -300,7 +300,7 @@ float GPUMaterialGroupT<D, S, DF, P>::GPUMaterial::Specularity(const UVSurface& 
                                                          std::is_same_v<S, BasicSurface> ||
                                                          std::is_same_v<S, EmptySurface>);
 
-        // Don't bother SNIFAE (there are enough templates on the signature)
+    // Don't bother SNIFAE (there are enough templates on the signature)
     // Delegate a runtime error
     if constexpr(CAN_CONVERT_FROM_UV_SURFACE)
     {

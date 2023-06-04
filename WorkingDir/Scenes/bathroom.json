@@ -166,6 +166,7 @@
             // Floor Mat
             "id": 1,
             "type": "Unreal",
+            //"type": "Lambert",
             "albedo" : {"texture": 1, "channels": "rgb"},
             "normal" : {"texture": 2, "channels": "rgb"},
             "roughness" : 0.4472,
@@ -214,6 +215,9 @@
             // Metals (Aliminium, Gold, SS)
             "id": [9, 10, 11],
             "type": "Metal",
+            //"type": "Lambert",
+            "albedo": [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+
             "eta" :
             [
                 [1.65746, 0.880369, 0.521229],
@@ -238,6 +242,7 @@
             // Black Vase
             "id": 12,
             "type": "Unreal",
+            //"type": "Lambert",
             "albedo" : [ 0.00631, 0.00631, 0.00631],
             "roughness" : 0.3162277,
             "specular": 0.5,
@@ -257,10 +262,11 @@
         {
             // Black Plastic
             "id": 15,
-            "type": "Unreal",
+            //"type": "Unreal",
+            "type": "Lambert",
             "albedo" : [ 0.00631, 0.00631, 0.00631],
             "roughness" : 0.4472135,
-            "specular": 0.5,
+            "specular": 1.0,
             "metallic": 0.0
         },
         {
@@ -288,6 +294,7 @@
             // Bathtub
             "id": [21, 22],
             "type": "Unreal",
+            //"type": "Lambert",
             "albedo" :
             [
                 [ 0.612066, 0.612066, 0.612066],
@@ -320,8 +327,9 @@
             // Flower Vase
             "id": 27,
             "type": "Unreal",
+            //"type": "Lambert",
             "albedo" : [ 0.612066, 0.612066, 0.612066],
-            "roughness" : 0.000,
+            "roughness" : 0.0,
             "specular": 1.0,
             "metallic": 0.0
         },

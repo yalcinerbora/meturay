@@ -75,7 +75,7 @@ void RayTracer::AttachReconFilter(GPUReconFilterI* f)
 
 void RayTracer::ResetImage()
 {
-    ResetSPP();
+    //ResetSPP();
     GPUTracer::ResetImage();
 }
 

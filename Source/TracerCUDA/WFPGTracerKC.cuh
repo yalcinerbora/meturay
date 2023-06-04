@@ -440,10 +440,13 @@ void WFPGTracerPathWork(// Output
     pathRadianceFactor = (pdfPath == 0.0f) ? Zero3 : (pathRadianceFactor / pdfPath);
 
     if(pathRadianceFactor.HasNaN())
+    {
         printf("NAN PATH R: %f %f %f = {%f %f %f} * {%f %f %f} / %f  \n",
                pathRadianceFactor[0], pathRadianceFactor[1], pathRadianceFactor[2],
                radianceFactor[0], radianceFactor[1], radianceFactor[2],
                reflectance[0], reflectance[1], reflectance[2], pdfPath);
+        pathRadianceFactor = Zero3f;
+    }
 
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));
@@ -1919,6 +1922,15 @@ static void KCSampleDistributionOptiX(// Output
                     sampleRatio = 1.0f - sampleRatio;
 
                     if(!isLight &&
+                       sampledUV.HasNaN())
+                    {
+                        printf("%s --- [NaN] index(%f, %f), wo (%f, %f, %f)\n",
+                               (isBxDFSampled) ? "BxDF" : "Guide",
+                               sampledUV[0], sampledUV[1],
+                               wo.getDirection()[0], wo.getDirection()[1], wo.getDirection()[2]);
+                    }
+
+                    if(!isLight &&
                        (sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
                         sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f))
                     {
@@ -1956,6 +1968,13 @@ static void KCSampleDistributionOptiX(// Output
             float pdfSampled, pdfOther;
             if(isValidIteration && !isLight)
             {
+                if(sampledUV.HasNaN())
+                {
+                    printf("%s --- [NaN] index(%f, %f)\n",
+                           (isBxDFSampled)? "BxDF" : "Guide",
+                           sampledUV[0], sampledUV[1]);
+                }
+
                 float pdfGuide = dist2D.Pdf(sampledUV * Vector2f(X, Y));
                 pdfGuide *= 0.25f * MathConstants::InvPi;
 
@@ -2221,11 +2240,15 @@ static void KCGenerateBinInfoOptiX(// Output
     }
 }
 
-template <int32_t X, int32_t Y>
+template <int32_t TPB, int32_t X, int32_t Y>
 struct KCParallaxShMem
 {
-    float       sDistanceField[Y][X];
+    using BlockReduceF = cub::BlockReduce<float, TPB>;
+    using ReduceMem = BlockReduceF::TempStorage;
+
+    ReduceMem   sReduceMem;
     // Bin parameters
+    float       sAvgDistance;
     uint32_t    sRayCount;
     uint32_t    sOffsetStart;
     uint32_t    sNodeId;
@@ -2267,7 +2290,8 @@ static void KCAdjustParallax(// I-O
     static constexpr int32_t RT_ITER_COUNT = ROW_ITER_COUNT;
 
     // PWC Distribution over the shared memory
-    using SharedMemType = KCParallaxShMem<X, Y>;
+    using SharedMemType = KCParallaxShMem<THREAD_PER_BLOCK, X, Y>;
+    using BlockReduceType = typename SharedMemType::BlockReduceF;
 
     // Change the type of the shared memory
     extern __shared__ Byte sharedMemRAW[];
@@ -2298,16 +2322,20 @@ static void KCAdjustParallax(// I-O
 
         // Load Distance Field &
         // Put it on Shared Memory
+        float distances[RT_ITER_COUNT];
         for(int i = 0; i < RT_ITER_COUNT; i++)
         {
             int32_t localId = i * THREAD_PER_BLOCK + THREAD_ID;
-            if(localId >= X * Y) continue;
-
-            int32_t y = localId / X;
-            int32_t x = localId % X;
-
-            sharedMem->sDistanceField[y][x] = radBuffer.FieldDistanceArray(binIndex)[localId];
+            if(localId >= X * Y)
+                distances[i] = 0.0f;
+            else
+                distances[i] = radBuffer.FieldDistanceArray(binIndex)[localId];
         }
+
+        float aggregate = BlockReduceType(sharedMem->sReduceMem).Sum(distances);
+        if(isMainThread)
+            sharedMem->sAvgDistance = aggregate / (X * Y);
+
         __syncthreads();
 
         // Iterate trough rays on the bin
@@ -2329,14 +2357,14 @@ static void KCAdjustParallax(// I-O
             Vector3f dir = Utility::CocentricOctohedralToDirection(uvF);
             dir = Vector3(dir[1], dir[2], dir[0]);
 
-            // TODO: Do linear filter here at least
+            // Do rotation wrt. the average distance
             // Maybe change the field to texture for HW acceleration
             Vector2i uvI = Vector2i(uvF * Vector2f(X, Y));
-            float distance = sharedMem->sDistanceField[uvI[1]][uvI[0]];
+            float distance = sharedMem->sAvgDistance;
 
-            // If we missed the scene and sampled it
-            // no parallax effect
-            if(distance >= FLT_MAX) continue;
+            //// If we missed the scene and sampled it
+            //// no parallax effect
+            //if(distance >= FLT_MAX) continue;
 
             // Find the hit position
             Vector3f fieldWorldPos = sharedMem->sFieldOrigin + distance * dir.Normalize();
@@ -2350,39 +2378,39 @@ static void KCAdjustParallax(// I-O
             float pdfOmega = gRayAux[rayId].guidePDF;
             // Get normal
             // Determine the queryLevel from depth
-            using SVO = AnisoSVOctreeGPU;
-            float coneDiskDiamSqr = SVO::ConeDiameterSqr(distance, coneAperture);
-            float levelVoxelSize = svo.LeafVoxelSize();
-            float levelVoxelSizeSqr = levelVoxelSize * levelVoxelSize;
-            // Find the level
-            float dvRatio = max(0.0f, log2(coneDiskDiamSqr / levelVoxelSizeSqr) * 0.5f);
-            uint32_t requiredLevel = svo.LeafDepth() - static_cast<uint32_t>(floor(dvRatio));
-            bool isLeaf = (requiredLevel == svo.LeafDepth());
-            // Find the node
-            uint32_t nodeId;
-            bool found = svo.NearestNodeIndex(nodeId, fieldWorldPos,
-                                                requiredLevel,
-                                                isLeaf);
+            //using SVO = AnisoSVOctreeGPU;
+            //float coneDiskDiamSqr = SVO::ConeDiameterSqr(distance, coneAperture);
+            //float levelVoxelSize = svo.LeafVoxelSize();
+            //float levelVoxelSizeSqr = levelVoxelSize * levelVoxelSize;
+            //// Find the level
+            //float dvRatio = max(0.0f, log2(coneDiskDiamSqr / levelVoxelSizeSqr) * 0.5f);
+            //uint32_t requiredLevel = svo.LeafDepth() - static_cast<uint32_t>(floor(dvRatio));
+            //bool isLeaf = (requiredLevel == svo.LeafDepth());
+            //// Find the node
+            //uint32_t nodeId;
+            //bool found = svo.NearestNodeIndex(nodeId, fieldWorldPos,
+            //                                    requiredLevel,
+            //                                    isLeaf);
 
 
 
-            Vector3f hitNormal;
-            // Infinitely far away assume N is same as dir
-            // Skip Parallax here as well
-            if(!found)
-            {
-                //printf("notFound! [reqLevel:%u]\n", requiredLevel);
+            Vector3f hitNormal = (-dir);
+            //// Infinitely far away assume N is same as dir
+            //// Skip Parallax here as well
+            //if(!found)
+            //{
+            //    //printf("notFound! [reqLevel:%u]\n", requiredLevel);
 
-                hitNormal = (-dir);
-            }
-            else
-            {
-                //printf("found! [reqLevel:%u]\n", requiredLevel);
-                // Query the Normal
-                float stdDev;
-                hitNormal = svo.DebugReadNormal(stdDev, nodeId, isLeaf);
-                hitNormal = (dir.Dot(hitNormal) >= 0.0f) ? (-hitNormal) : hitNormal;
-            }
+            //    hitNormal = (-dir);
+            //}
+            //else
+            //{
+            //    //printf("found! [reqLevel:%u]\n", requiredLevel);
+            //    // Query the Normal
+            //    float stdDev;
+            //    hitNormal = svo.DebugReadNormal(stdDev, nodeId, isLeaf);
+            //    hitNormal = (dir.Dot(hitNormal) >= 0.0f) ? (-hitNormal) : hitNormal;
+            //}
             // Convert to geometric pdf
             // Adjust then convert back
             float cosTheta = max(0.0f, (-dir).Dot(hitNormal));

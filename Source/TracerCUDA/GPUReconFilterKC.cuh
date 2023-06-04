@@ -156,6 +156,7 @@ static void KCFilterToImgBlock(ImageGMem<T> img,
                                Vector2i imgSegmentSize,
                                Vector2i imgSegmentOffset,
                                Vector2i imgResolution,
+                               float scalarMultiplier,
                                Filter filter,
                                uint32_t segmentCount)
 {
@@ -235,7 +236,7 @@ static void KCFilterToImgBlock(ImageGMem<T> img,
                 Vector2f sampleCoords = gImgCoords[sampleId];
                 // Do the filter operation here
                 // If this operator unavailable just do
-                filterWeight = filter(pixCoords, sampleCoords);
+                filterWeight = filter(pixCoords, sampleCoords) * scalarMultiplier;
             }
             T weightedVal = filterWeight * value;
 
@@ -271,6 +272,7 @@ static void KCFilterToImgWarp(ImageGMem<T> img,
                               Vector2i imgSegmentSize,
                               Vector2i imgSegmentOffset,
                               Vector2i imgResolution,
+                              float scalarMultiplier,
                               Filter filter,
                               uint32_t segmentCount)
 {
@@ -356,7 +358,7 @@ static void KCFilterToImgWarp(ImageGMem<T> img,
                 Vector2f sampleCoords = gImgCoords[sampleId];
                 // Do the filter operation here
                 // If this operator unavailable just do
-                filterWeight = filter(pixCoords, sampleCoords);
+                filterWeight = filter(pixCoords, sampleCoords) * scalarMultiplier;
             }
             T weightedVal = filterWeight * value;
 
