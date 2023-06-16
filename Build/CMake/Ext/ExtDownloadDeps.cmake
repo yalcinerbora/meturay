@@ -32,6 +32,7 @@ macro(mray_build_ext_dependency_git)
                 # DL Repo
                 GIT_REPOSITORY ${BUILD_SUBPROJECT_URL}
                 GIT_TAG ${BUILD_SUBPROJECT_TAG}
+                GIT_SHALLOW ON
 
                 # Common args (it will share the generator and compiler)
                 LIST_SEPARATOR | # Use the alternate list separator

@@ -83,11 +83,23 @@ mray_build_ext_dependency_git(
     URL "https://github.com/gabime/spdlog.git"
     TAG "e7fe4064814e1758e47cb4700e33ef930673a427" #v.2.4.12.0
     BUILD_ARGS
-        -DSPDLOG_BUILD_EXAMPLE=OFF
+        -DUSE_PYTHON=OFF
+        -DOIIO_BUILD_TESTS=OFF
+        -DOIIO_BUILD_TOOLS=OFF
+        -DOIIO_DISABLE_BOOST_STACKTRACE=ON
         -DSPDLOG_BUILD_PIC=ON
         -DSPDLOG_BUILD_SHARED=ON
-        # Our fmt is too up to date
-        -DSPDLOG_FMT_EXTERNAL=OFF
+        -DEMBED_PLUGINS=ON
+        -DCMAKE_DEBUG_POSTFIX:STRING=
+        -DENABLE_FAST_MATH=ON
+    DEPENDENCIES
+            zlib_ext
+            boost_ext
+            openexr_ext
+            libtiff_ext
+            libjpeg_ext
+            fmt_ext
+
 )
 
 
