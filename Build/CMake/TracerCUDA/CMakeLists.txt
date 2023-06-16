@@ -493,7 +493,7 @@ source_group("" FILES ${SRC_COMMON})
 
 if(USE_OPTIX)
     # Optix Compiles
-    NVCC_COMPILE_PTX(MAIN_TARGET TracerCUDA
+    nvcc_compile_ptx(MAIN_TARGET TracerCUDA
                      SOURCES ${OPTIX_PTX_SOURCES}
                      GENERATED_TARGET PTX_TARGET
                      EXTRA_OPTIONS "-I${CURRENT_SOURCE_DIR}"

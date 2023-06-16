@@ -61,10 +61,14 @@ project(METURay LANGUAGES CUDA CXX)
 # CMAKE Project Definitions and Source, Library Folders are separate
 # Directories
 set(MRAY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+cmake_path(NORMAL_PATH MRAY_DIRECTORY)
+
 set(MRAY_SOURCE_DIRECTORY ${MRAY_DIRECTORY}/Source)
 set(MRAY_LIB_DIRECTORY ${MRAY_DIRECTORY}/Lib)
 set(MRAY_LIB_INCLUDE_DIRECTORY ${MRAY_DIRECTORY}/Lib/Include)
+set(MRAY_CONFIG_LIB_DOC_DIRECTORY ${MRAY_DIRECTORY}/Lib/Docs)
 set(MRAY_BIN_DIRECTORY ${MRAY_DIRECTORY}/Bin)
+set(MRAY_EXT_DIRECTORY ${MRAY_DIRECTORY}/Ext)
 set(MRAY_RESOURCE_DIRECTORY ${MRAY_DIRECTORY}/Resources)
 # Build is probably not used but its here for convenience
 set(MRAY_BUILD_DIRECTORY ${MRAY_DIRECTORY}/Build)
@@ -166,9 +170,10 @@ add_link_options($<DEVICE_LINK:--nvlink-options=-suppress-stack-size-warning>)
 #add_link_options($<DEVICE_LINK:--nvlink-options=--verbose>)
 #add_link_options($<DEVICE_LINK:--resource-usage>)
 
-# Platform Specific Lib Bin Folders
+# Platform Specific Lib Bin Ext Folders
 set(MRAY_PLATFORM_LIB_DIRECTORY ${MRAY_LIB_DIRECTORY}/${MRAY_PLATFORM_NAME})
 set(MRAY_PLATFORM_BIN_DIRECTORY ${MRAY_BIN_DIRECTORY}/${MRAY_PLATFORM_NAME})
+set(MRAY_PLATFORM_EXT_DIRECTORY ${MRAY_EXT_DIRECTORY}/${MRAY_PLATFORM_NAME})
 # Platform & Configurations Related Lib Bin folders
 set(MRAY_CONFIG_LIB_DIRECTORY ${MRAY_PLATFORM_LIB_DIRECTORY}/$<CONFIG>)
 set(MRAY_CONFIG_BIN_DIRECTORY ${MRAY_PLATFORM_BIN_DIRECTORY}/$<CONFIG>)
@@ -197,9 +202,8 @@ set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
 # Include NVCC compile to ptx routine
 # Since Optix programs require precompiled *.ptx files
 if(USE_OPTIX)
-    include("NVCC_compile_ptx")
+    include("NVCCCompilePTX")
 endif()
-
 
 # Enable LTO / Device-LTO
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE FASLE)
@@ -207,7 +211,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE FASLE)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 
 # External Libs
-# add_subdirectory(Ext)
+add_subdirectory(Ext)
 
 # BUILDS
 # Libs

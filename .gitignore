@@ -343,20 +343,22 @@ __pycache__/
 .vscode
 *.code-workspace
 
-# Keep Provided Libraries
-!Lib/**/
-!Lib/**/*.out
-!Lib/**/*.exe
-!Lib/**/*.lai
-!Lib/**/*.la
-!Lib/**/*.a
-!Lib/**/*.lib
-!Lib/**/*.pdb
-!Lib/**/*.so
-!Lib/**/*.so*
-!Lib/**/*.dvlib
-!Lib/**/*.dll
-!Lib/**/*.pch
+# Exclude Provided Libraries
+Lib/**/
+Lib/**/*.out
+Lib/**/*.exe!
+Lib/**/*.lai
+Lib/**/*.la
+Lib/**/*.a
+Lib/**/*.lib
+Lib/**/*.pdb
+Lib/**/*.so
+Lib/**/*.so*
+Lib/**/*.dvlib
+Lib/**/*.dll
+Lib/**/*.pch
+# Except Licence files
+!Lib/*_LICENSE
 
 # Working Dir Except Shaders
 WorkingDir/*
@@ -377,6 +379,5 @@ WorkingDir/*
 
 # Nothing on ext is maintained
 Ext/**
-
 
 Build/CMake/cmake-build-debug/

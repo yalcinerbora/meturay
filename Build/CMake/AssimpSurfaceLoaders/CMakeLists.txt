@@ -22,6 +22,8 @@ set(PREPROCESSOR_GENERIC
 # DLL
 add_library(AssimpSurfaceLoaders SHARED ${SRC_ALL})
 
+add_dependencies(AssimpSurfaceLoaders assimp_ext)
+
 target_include_directories(AssimpSurfaceLoaders PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 

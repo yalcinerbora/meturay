@@ -26,8 +26,8 @@ set(SRC_FILE_IO
     ${CURRENT_SOURCE_DIR}/ConfigParsers.h
     ${CURRENT_SOURCE_DIR}/EnumStringConversions.cpp
     ${CURRENT_SOURCE_DIR}/EnumStringConversions.h
-    ${CURRENT_SOURCE_DIR}/MayaCacheIO.cpp
-    ${CURRENT_SOURCE_DIR}/MayaCacheIO.h
+    # ${CURRENT_SOURCE_DIR}/MayaCacheIO.cpp
+    # ${CURRENT_SOURCE_DIR}/MayaCacheIO.h
     ${CURRENT_SOURCE_DIR}/SceneIO.cpp
     ${CURRENT_SOURCE_DIR}/SceneIO.h
     ${CURRENT_SOURCE_DIR}/SceneNodeI.h
@@ -189,10 +189,11 @@ target_include_directories(RayLib PRIVATE
 target_include_directories(RayLib SYSTEM PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY})
 
+add_dependencies(RayLib fmt_ext json_ext spdlog_ext)
 
 target_link_libraries(RayLib
                       fmt
-                      spdlog
+                      $<IF:$<CONFIG:Debug>,spdlogd,spdlog>
                       cuda)
 
 target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
