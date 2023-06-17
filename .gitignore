@@ -344,6 +344,7 @@ __pycache__/
 *.code-workspace
 
 # Exclude Provided Libraries
+Lib/**
 Lib/**/
 Lib/**/*.out
 Lib/**/*.exe!

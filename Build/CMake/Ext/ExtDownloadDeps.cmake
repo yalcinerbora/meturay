@@ -10,20 +10,23 @@ include(ExternalProject)
 macro(mray_build_ext_dependency_git)
 
     # Parse Args
-    set(oneValueArgs NAME URL TAG)
+    set(oneValueArgs NAME URL TAG SOURCE_SUBDIR)
     set(multiValueArgs BUILD_ARGS DEPENDENCIES)
     cmake_parse_arguments(BUILD_SUBPROJECT "" "${oneValueArgs}"
                           "${multiValueArgs}" ${ARGN})
 
     set(SUBPROJECT_EXT_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/${BUILD_SUBPROJECT_NAME})
-    #set(SUBPROJECT_INSTALL_PATH ${SUBPROJECT_EXT_DIR}/install/$<CONFIG>)
-
     set(SUBPROJECT_INSTALL_PATH ${MRAY_PLATFORM_LIB_DIRECTORY})
-
-    #${SUBPROJECT_EXT_DIR}/install/$<CONFIG>
-
     set(SUBPROJECT_BUILD_PATH ${SUBPROJECT_EXT_DIR}/build)
-    #
+
+    # if(NOT ${BUILD_SUBPROJECT_BUILD_ROOT} STREQUAL "")
+    #     message(STATUS ${BUILD_SUBPROJECT_BUILD_ROOT})
+    #     list(APPEND SUBPROJECT_CUSTOM_BUILD_STEP
+    #             "${CMAKE_COMMAND} --build ./${BUILD_SUBPROJECT_BUILD_ROOT}")
+    #     message(STATUS ${SUBPROJECT_CUSTOM_BUILD_STEP})
+    # endif()
+
+    # Actual Call
     ExternalProject_Add(${BUILD_SUBPROJECT_NAME}
                 PREFIX ${SUBPROJECT_EXT_DIR}
                 BINARY_DIR ${SUBPROJECT_BUILD_PATH}
@@ -34,6 +37,9 @@ macro(mray_build_ext_dependency_git)
                 GIT_TAG ${BUILD_SUBPROJECT_TAG}
                 GIT_SHALLOW ON
 
+                # Custom build root location if required
+                SOURCE_SUBDIR ${BUILD_SUBPROJECT_SOURCE_SUBDIR}
+
                 # Common args (it will share the generator and compiler)
                 LIST_SEPARATOR | # Use the alternate list separator
                 CMAKE_ARGS
@@ -42,6 +48,8 @@ macro(mray_build_ext_dependency_git)
                     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
                     -DCMAKE_GENERATOR_TOOLSET= ${CMAKE_GENERATOR_TOOLSET}
+
+                    ${SUBPROJECT_CUSTOM_BUILD_STEP}
 
                     # Install Stuff
                     -DCMAKE_INSTALL_PREFIX:PATH=${MRAY_LIB_DIRECTORY}/

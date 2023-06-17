@@ -22,6 +22,8 @@ set(PREPROCESSOR_GENERIC
 # DLL
 add_library(GFGSurfaceLoader SHARED ${SRC_ALL})
 
+add_dependencies(GFGSurfaceLoader gfg_ext)
+
 target_include_directories(GFGSurfaceLoader PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 target_include_directories(GFGSurfaceLoader SYSTEM PRIVATE

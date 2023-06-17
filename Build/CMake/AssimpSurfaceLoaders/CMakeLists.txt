@@ -41,6 +41,9 @@ if(MSVC)
     add_custom_command(TARGET AssimpSurfaceLoaders POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
                        "${MRAY_CONFIG_LIB_DIRECTORY}/assimp.dll"
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/assimp.pdb">
+                       # TODO: There is a bug on assimp isntall (o I am using it wrong)
+                       # It does generate pdb, but install copy path is wrong
+                       # comment it for now, (hopefully we would not need to step in to assimp while debugging)
+                       #$<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/assimp.pdb">
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()
