@@ -12,7 +12,7 @@
 #include "RayLib/VisorError.h"
 
 // Args Parser
-#include <CLI11.hpp>
+#include <CLI/CLI.hpp>
 
 #include <array>
 
