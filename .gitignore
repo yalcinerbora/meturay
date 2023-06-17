@@ -381,4 +381,8 @@ WorkingDir/*
 # Nothing on ext is maintained
 Ext/**
 
-Build/CMake/cmake-build-debug/
+# Nothing on build folder
+[Bb]uild/
+[Bb]uild/**
+[Bb]uild/**/
+[Bb]uild/CMake/cmake-build-debug/
