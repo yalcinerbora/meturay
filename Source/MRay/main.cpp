@@ -15,7 +15,7 @@
 // Node
 #include "RayLib/SelfNode.h"
 // Args Parser
-#include <CLI11.hpp>
+#include <CLI/CLI.hpp>
 #include <array>
 
 #include <random>

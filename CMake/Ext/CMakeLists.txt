@@ -144,7 +144,7 @@ mray_build_ext_dependency_git(
         -DCLI11_BUILD_EXAMPLES=OFF
         -DCLI11_BUILD_EXAMPLES_JSON=OFF
         -DCLI11_BUILD_TESTS=OFF
-        -DCLI11_SINGLE_FILE=ON
+        -DCLI11_SINGLE_FILE=OFF
 )
 
 # Get ImGUI

@@ -33,7 +33,7 @@ function(mray_build_ext_dependency_git)
         # Could not make the empty string work, so printing a message
         # as a "install" command
         set(SUBPROJECT_INSTALL_COMMAND
-            ${CMAKE_COMMAND} -E echo "\"Skipping default install for ${BUILD_SUBPROJECT_NAME}\"")
+            ${CMAKE_COMMAND} -E echo "Skipping default install for ${BUILD_SUBPROJECT_NAME}")
     endif()
 
     # Override install prefix if requested
