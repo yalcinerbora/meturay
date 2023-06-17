@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 #include <glfw/glfw3.h>
 
 #include "RayLib/VisorI.h"
@@ -36,11 +36,11 @@ class GuideDebugGL : public VisorI
         std::vector<DebugRendererPtr>           debugRenderers;
         std::unique_ptr<GuideDebugGUI>          gui;
 
-        static void             OGLCallbackRender(GLenum source,
-                                                  GLenum type,
-                                                  GLuint id,
-                                                  GLenum severity,
-                                                  GLsizei length,
+        static void             OGLCallbackRender(gl::GLenum source,
+                                                  gl::GLenum type,
+                                                  gl::GLuint id,
+                                                  gl::GLenum severity,
+                                                  gl::GLsizei length,
                                                   const char* message,
                                                   const void* userParam);
         // Hidden Interface

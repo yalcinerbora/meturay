@@ -16,7 +16,7 @@ set(SRC_ACCELS_LINEAR
 set(SRC_ACCELS_COMMON
     ${CURRENT_SOURCE_DIR}/GPUAcceleratorCommonKC.cuh)
 
-if(USE_OPTIX)
+if(MRAY_USE_OPTIX)
     set(SRC_ACCELS_OPTIX
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cu
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.hpp
@@ -464,7 +464,7 @@ source_group("Structs" FILES ${SRC_STRUCTS})
 source_group("Textures" FILES ${SRC_TEXTURES})
 source_group("RayCasters" FILES ${SRC_RC})
 
-if(USE_OPTIX)
+if(MRAY_USE_OPTIX)
     source_group("OptiX/RayCaster" FILES ${SRC_RC_OPTIX})
     source_group("OptiX/Accelerator" FILES ${SRC_ACCELS_OPTIX})
     source_group("OptiX" FILES ${SRC_OPTIX_SYSTEM})
@@ -491,7 +491,7 @@ source_group("Work" FILES ${SRC_WORK})
 
 source_group("" FILES ${SRC_COMMON})
 
-if(USE_OPTIX)
+if(MRAY_USE_OPTIX)
     # Optix Compiles
     nvcc_compile_ptx(MAIN_TARGET TracerCUDA
                      SOURCES ${OPTIX_PTX_SOURCES}
@@ -518,7 +518,7 @@ add_library(TracerCUDA SHARED)
 
 target_sources(TracerCUDA PUBLIC ${SRC_ALL})
 
-if(USE_OPTIX)
+if(MRAY_USE_OPTIX)
     add_dependencies(TracerCUDA ${PTX_TARGET})
 endif()
 
@@ -545,31 +545,32 @@ target_link_libraries(TracerCUDA
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Object Group for testing
-#add_library(TracerCUDA_Static STATIC ${SRC_ALL})
-add_library(TracerCUDA_Static STATIC $<TARGET_OBJECTS:TracerCUDA>)
+if(MRAY_BUILD_TESTS)
+    add_library(TracerCUDA_Static STATIC $<TARGET_OBJECTS:TracerCUDA>)
 
-if(USE_OPTIX)
-    add_dependencies(TracerCUDA_Static ${PTX_TARGET})
+    if(MRAY_USE_OPTIX)
+        add_dependencies(TracerCUDA_Static ${PTX_TARGET})
+    endif()
+
+    target_include_directories(TracerCUDA_Static PRIVATE
+                            ${MRAY_SOURCE_DIRECTORY})
+
+    target_include_directories(TracerCUDA_Static SYSTEM PRIVATE
+                            ${OPTIX_INCLUDE_DIR}
+                            ${MRAY_LIB_INCLUDE_DIRECTORY})
+
+    target_compile_definitions(TracerCUDA_Static PRIVATE ${PREPROCESSOR_GENERIC})
+
+    target_compile_options(TracerCUDA_Static PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
+
+    set_target_properties(TracerCUDA_Static PROPERTIES
+                        POSITION_INDEPENDENT_CODE ON
+                        CUDA_SEPARABLE_COMPILATION ON
+                        CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+    target_link_libraries(TracerCUDA_Static
+                        RayLib
+                        ImageIO
+                        curand
+                        ${PLATFORM_SPEC_LIBRARIES})
 endif()
-
-target_include_directories(TracerCUDA_Static PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(TracerCUDA_Static SYSTEM PRIVATE
-                           ${OPTIX_INCLUDE_DIR}
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(TracerCUDA_Static PRIVATE ${PREPROCESSOR_GENERIC})
-
-target_compile_options(TracerCUDA_Static PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
-
-set_target_properties(TracerCUDA_Static PROPERTIES
-                      POSITION_INDEPENDENT_CODE ON
-                      CUDA_SEPARABLE_COMPILATION ON
-                      CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-
-target_link_libraries(TracerCUDA_Static
-                      RayLib
-                      ImageIO
-                      curand
-                      ${PLATFORM_SPEC_LIBRARIES})

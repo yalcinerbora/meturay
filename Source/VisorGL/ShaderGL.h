@@ -5,7 +5,7 @@ Shader Class that Compiles and Binds Shaders
 
 */
 
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 #include <string>
 
 enum class ShaderType
@@ -22,16 +22,16 @@ class ShaderGL
 {
     private:
         // Global Variables
-        static GLuint       shaderPipelineID;
+        static gl::GLuint   shaderPipelineID;
         static int          shaderCount;
 
         // Properties
-        GLuint              shaderID;
+        gl::GLuint          shaderID;
         ShaderType          shaderType;
         bool                valid;
 
-        static GLenum       ShaderTypeToGL(ShaderType);
-        static GLenum       ShaderTypeToGLBit(ShaderType);
+        static gl::GLenum               ShaderTypeToGL(ShaderType);
+        static gl::UseProgramStageMask  ShaderTypeToGLBit(ShaderType);
 
     protected:
 

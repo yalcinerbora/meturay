@@ -13,7 +13,7 @@
         "binaryDir": "${sourceDir}/../../Bin/Build",
         "installDir": "${sourceDir}/../../Bin/Install",
         "cacheVariables": {
-            "USE_OPTIX": false
+            "MRAY_USE_OPTIX": false
         }
     },
     {
@@ -38,7 +38,7 @@
         "description": "Windows Visual Studio 2022 x64 with OptiX",
         "inherits": "Win-VS-2022",
         "cacheVariables": {
-            "USE_OPTIX": true
+            "MRAY_USE_OPTIX": true
         }
     },
     {
@@ -62,7 +62,7 @@
         "description": "Linux Clang-14 using ninja multi config and using OptiX",
         "inherits": "Linux-Clang-14",
         "cacheVariables": {
-            "USE_OPTIX": true
+            "MRAY_USE_OPTIX": true
         }
     },
     {
@@ -86,7 +86,7 @@
         "description": "Linux GCC-11 using ninja multi config and using OptiX",
         "inherits": "Linux-GCC-11",
         "cacheVariables": {
-            "USE_OPTIX": true
+            "MRAY_USE_OPTIX": true
         }
     }
     ],

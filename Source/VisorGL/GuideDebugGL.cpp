@@ -14,12 +14,15 @@
 #include "GDebugRendererSVO.h"
 
 #include <filesystem>
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+#include <glbinding/glbinding-version.h>
 
-void GuideDebugGL::OGLCallbackRender(GLenum,
-                                     GLenum type,
-                                     GLuint id,
-                                     GLenum severity,
-                                     GLsizei,
+void GuideDebugGL::OGLCallbackRender(gl::GLenum,
+                                     gl::GLenum type,
+                                     gl::GLuint id,
+                                     gl::GLenum severity,
+                                     gl::GLsizei,
                                      const char* message,
                                      const void*)
 {
@@ -67,8 +70,8 @@ VisorError GuideDebugGL::Initialize(VisorCallbacksI& callbacks,
     GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
 
     // Common Window Hints
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
     // This was buggy on nvidia cards couple of years ago
     // So instead manually convert image using
@@ -138,38 +141,40 @@ VisorError GuideDebugGL::Initialize(VisorCallbacksI& callbacks,
     int scaledH = mode->height * 3 / 4;
     glfwSetWindowSize(glfwWindow, scaledW, scaledH);
 
-    // Now Init GLEW
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if(err != GLEW_OK)
-    {
-        METU_ERROR_LOG("{:s}", glewGetErrorString(err));
-        return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
-    }
+    // Now Init gl binding
+    glbinding::initialize(glfwGetProcAddress);
+
+    //glewExperimental = GL_TRUE;
+    //GLenum err = glewInit();
+    //if(err != GLEW_OK)
+    //{
+    //    METU_ERROR_LOG("{:s}", glewGetErrorString(err));
+    //    return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
+    //}
 
     // Print Stuff Now
     // Window Done
     METU_LOG("Window Initialized.");
-    METU_LOG("GLEW\t: {:s}", glewGetString(GLEW_VERSION));
+    METU_LOG("GLBinding\t: {:s}", GLBINDING_VERSION);
     METU_LOG("GLFW\t: {:s}", glfwGetVersionString());
     METU_LOG("");
     METU_LOG("Renderer Information...");
-    METU_LOG("OpenGL\t: {:s}", glGetString(GL_VERSION));
-    METU_LOG("GLSL\t: {:s}", glGetString(GL_SHADING_LANGUAGE_VERSION));
-    METU_LOG("Device\t: {:s}", glGetString(GL_RENDERER));
+    METU_LOG("OpenGL\t: {:s}", reinterpret_cast<const char*>(gl::glGetString(gl::GL_VERSION)));
+    METU_LOG("GLSL\t: {:s}", reinterpret_cast<const char*>(gl::glGetString(gl::GL_SHADING_LANGUAGE_VERSION)));
+    METU_LOG("Device\t: {:s}", reinterpret_cast<const char*>(gl::glGetString(gl::GL_RENDERER)));
     METU_LOG("");
 
     if constexpr(IS_DEBUG_MODE)
     {
         // Add Callback
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GuideDebugGL::OGLCallbackRender, nullptr);
-        glDebugMessageControl(GL_DONT_CARE,
-                              GL_DONT_CARE,
-                              GL_DONT_CARE,
-                              0,
-                              nullptr,
-                              GL_TRUE);
+        glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        gl::glDebugMessageCallback(GuideDebugGL::OGLCallbackRender, nullptr);
+        gl::glDebugMessageControl(gl::GL_DONT_CARE,
+                                  gl::GL_DONT_CARE,
+                                  gl::GL_DONT_CARE,
+                                  0,
+                                  nullptr,
+                                  gl::GL_TRUE);
     }
 
     // Limit Aspect Ratio (GUI is adjusted for only 1)
@@ -177,9 +182,9 @@ VisorError GuideDebugGL::Initialize(VisorCallbacksI& callbacks,
 
     // Pre-Bind Everything
     // States
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    gl::glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    gl::glDisable(gl::GL_DEPTH_TEST);
+    gl::glDisable(gl::GL_CULL_FACE);
 
     // Generate Gradient Texture
     Vector2ui gradientDimensions = Vector2ui(config.gradientValues.size(), 1);
@@ -243,9 +248,9 @@ void GuideDebugGL::Render()
 {
     //glfwMakeContextCurrent(glfwWindow);
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glViewport(0, 0, viewportSize[0], viewportSize[1]);
+    gl::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+    gl::glViewport(0, 0, viewportSize[0], viewportSize[1]);
 
     gui->Render();
 

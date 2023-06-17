@@ -4,7 +4,7 @@
 #include "GDebugRendererI.h"
 
 #include <nlohmann/json_fwd.hpp>
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 
 #include "RayLib/AABB.h"
 #include "ShaderGL.h"
@@ -105,33 +105,33 @@ class GDebugRendererPPG : public GDebugRendererI
 
         // Shader Binding Locations
         // Vertex In (Per Vertex)
-        static constexpr GLenum     IN_POS = 0;
+        static constexpr gl::GLuint     IN_POS = 0;
         // Vertex In  (Per Instance)
-        static constexpr GLenum     IN_OFFSET = 1;
-        static constexpr GLenum     IN_DEPTH = 2;
-        static constexpr GLenum     IN_RADIANCE = 3;
+        static constexpr gl::GLuint     IN_OFFSET = 1;
+        static constexpr gl::GLuint     IN_DEPTH = 2;
+        static constexpr gl::GLuint     IN_RADIANCE = 3;
         // Uniforms
-        static constexpr GLenum     U_MAX_RADIANCE = 0;
-        static constexpr GLenum     U_PERIMIETER_ON = 1;
-        static constexpr GLenum     U_PERIMIETER_COLOR = 2;
-        static constexpr GLenum     U_MAX_DEPTH = 3;
-        static constexpr GLenum     U_LOG_ON = 4;
+        static constexpr gl::GLuint     U_MAX_RADIANCE = 0;
+        static constexpr gl::GLuint     U_PERIMIETER_ON = 1;
+        static constexpr gl::GLuint     U_PERIMIETER_COLOR = 2;
+        static constexpr gl::GLuint     U_MAX_DEPTH = 3;
+        static constexpr gl::GLuint     U_LOG_ON = 4;
 
-        static constexpr GLenum     U_RES = 0;
-        static constexpr GLenum     U_AABB_MIN = 1;
-        static constexpr GLenum     U_AABB_MAX = 2;
-        static constexpr GLenum     U_NODE_COUNT = 3;
+        static constexpr gl::GLuint     U_RES = 0;
+        static constexpr gl::GLuint     U_AABB_MIN = 1;
+        static constexpr gl::GLuint     U_AABB_MAX = 2;
+        static constexpr gl::GLuint     U_NODE_COUNT = 3;
         // Shader Storage Buffers
-        static constexpr GLenum     SSB_STREE = 0;
-        static constexpr GLenum     SSB_LEAF_COL = 1;
-        static constexpr GLenum     SSB_WORLD_POS = 2;
+        static constexpr gl::GLuint     SSB_STREE = 0;
+        static constexpr gl::GLuint     SSB_LEAF_COL = 1;
+        static constexpr gl::GLuint     SSB_WORLD_POS = 2;
         // Images
-        static constexpr GLenum     I_OUT_IMAGE = 0;
+        static constexpr gl::GLuint     I_OUT_IMAGE = 0;
         // Textures
-        static constexpr GLenum     T_IN_GRADIENT = 0;
+        static constexpr gl::GLuint     T_IN_GRADIENT = 0;
         // FBO Outputs
-        static constexpr GLenum     OUT_COLOR = 0;
-        static constexpr GLenum     OUT_VALUE = 1;
+        static constexpr gl::GLuint     OUT_COLOR = 0;
+        static constexpr gl::GLuint     OUT_VALUE = 1;
 
     private:
         static constexpr const char* SD_TREE_NAME = "sdTrees";
@@ -159,11 +159,11 @@ class GDebugRendererPPG : public GDebugRendererI
         // OGL Related
         // FBO (Since we use raster pipeline to render)
         // VAO etc..
-        GLuint                  fbo;
-        GLuint                  vao;
-        GLuint                  indexBuffer;
-        GLuint                  vPosBuffer;
-        GLuint                  treeBuffer;
+        gl::GLuint              fbo;
+        gl::GLuint              vao;
+        gl::GLuint              indexBuffer;
+        gl::GLuint              vPosBuffer;
+        gl::GLuint              treeBuffer;
         size_t                  treeBufferSize;
 
         ShaderGL                vertDTreeRender;

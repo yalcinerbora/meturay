@@ -10,33 +10,33 @@
 
 #include <filesystem>
 
-GLuint ShaderGL::shaderPipelineID = 0;
+gl::GLuint ShaderGL::shaderPipelineID = 0;
 int ShaderGL::shaderCount = 0;
 
-GLenum ShaderGL::ShaderTypeToGL(ShaderType t)
+gl::GLenum ShaderGL::ShaderTypeToGL(ShaderType t)
 {
-    static GLenum values[] =
+    static gl::GLenum values[] =
     {
-        GL_VERTEX_SHADER,
-        GL_TESS_CONTROL_SHADER,
-        GL_TESS_EVALUATION_SHADER,
-        GL_GEOMETRY_SHADER,
-        GL_FRAGMENT_SHADER,
-        GL_COMPUTE_SHADER
+        gl::GL_VERTEX_SHADER,
+        gl::GL_TESS_CONTROL_SHADER,
+        gl::GL_TESS_EVALUATION_SHADER,
+        gl::GL_GEOMETRY_SHADER,
+        gl::GL_FRAGMENT_SHADER,
+        gl::GL_COMPUTE_SHADER
     };
     return values[static_cast<int>(t)];
 }
 
-GLenum ShaderGL::ShaderTypeToGLBit(ShaderType t)
+gl::UseProgramStageMask ShaderGL::ShaderTypeToGLBit(ShaderType t)
 {
-    static GLenum values[] =
+    static gl::UseProgramStageMask values[] =
     {
-        GL_VERTEX_SHADER_BIT,
-        GL_TESS_CONTROL_SHADER_BIT,
-        GL_TESS_EVALUATION_SHADER_BIT,
-        GL_GEOMETRY_SHADER_BIT,
-        GL_FRAGMENT_SHADER_BIT,
-        GL_COMPUTE_SHADER_BIT
+        gl::GL_VERTEX_SHADER_BIT,
+        gl::GL_TESS_CONTROL_SHADER_BIT,
+        gl::GL_TESS_EVALUATION_SHADER_BIT,
+        gl::GL_GEOMETRY_SHADER_BIT,
+        gl::GL_FRAGMENT_SHADER_BIT,
+        gl::GL_COMPUTE_SHADER_BIT
     };
     return values[static_cast<int>(t)];
 }
@@ -69,26 +69,26 @@ ShaderGL::ShaderGL(ShaderType t, const std::u8string& path)
     // Create Pipeline If not Avail
     if(shaderPipelineID == 0)
     {
-        glGenProgramPipelines(1, &shaderPipelineID);
-        glBindProgramPipeline(shaderPipelineID);
+        gl::glGenProgramPipelines(1, &shaderPipelineID);
+        gl::glBindProgramPipeline(shaderPipelineID);
     }
 
     // Compile
     const char* sourcePtr = source.data();
-    shaderID = glCreateShaderProgramv(ShaderTypeToGL(shaderType), 1, (const GLchar**) &sourcePtr);
+    shaderID = glCreateShaderProgramv(ShaderTypeToGL(shaderType), 1, (const gl::GLchar**) &sourcePtr);
 
-    GLint result;
-    glGetProgramiv(shaderID, GL_LINK_STATUS, &result);
+    gl::GLint result;
+    gl::glGetProgramiv(shaderID, gl::GL_LINK_STATUS, &result);
     // Check Errors
-    if(result == GL_FALSE)
+    if(result == gl::GL_FALSE)
     {
-        GLint blen = 0;
-        glGetProgramiv(shaderID, GL_INFO_LOG_LENGTH, &blen);
+        gl::GLint blen = 0;
+        gl::glGetProgramiv(shaderID, gl::GL_INFO_LOG_LENGTH, &blen);
         if(blen > 1)
         {
-            static_assert(std::is_same_v<char, GLchar>, "TypeMismatch: GLchar != char");
+            static_assert(std::is_same_v<char, gl::GLchar>, "TypeMismatch: GLchar != char");
             std::string log(blen + 1, '\0');
-            glGetProgramInfoLog(shaderID, blen, &blen, log.data());
+            gl::glGetProgramInfoLog(shaderID, blen, &blen, log.data());
             METU_ERROR_LOG("Shader Compilation Error on File {:s} :\n{:s}", Utility::CopyU8ToString(onlyFileName), log);
         }
     }
@@ -111,7 +111,7 @@ ShaderGL::ShaderGL(ShaderGL&& other) noexcept
 ShaderGL& ShaderGL::operator=(ShaderGL&& other) noexcept
 {
     assert(this != &other);
-    glDeleteProgram(shaderID);
+    gl::glDeleteProgram(shaderID);
     if(shaderID != 0)
     {
         METU_LOG("Shader Deleted. Shader ID: {:d}", shaderID);
@@ -119,8 +119,8 @@ ShaderGL& ShaderGL::operator=(ShaderGL&& other) noexcept
         shaderCount--;
         if(shaderCount == 0)
         {
-            glBindProgramPipeline(0);
-            glDeleteProgramPipelines(1, &shaderPipelineID);
+            gl::glBindProgramPipeline(0);
+            gl::glDeleteProgramPipelines(1, &shaderPipelineID);
             shaderPipelineID = 0;
         }
     }
@@ -135,15 +135,15 @@ ShaderGL::~ShaderGL()
 {
     if(shaderID)
     {
-        glDeleteProgram(shaderID);
+        gl::glDeleteProgram(shaderID);
         METU_LOG("Shader Deleted. Shader ID: {:d}", shaderID);
 
         // Deleting shader pipeline if no shader is left
         shaderCount--;
         if(shaderCount == 0)
         {
-            glBindProgramPipeline(0);
-            glDeleteProgramPipelines(1, &shaderPipelineID);
+            gl::glBindProgramPipeline(0);
+            gl::glDeleteProgramPipelines(1, &shaderPipelineID);
             shaderPipelineID = 0;
         }
     }
@@ -152,8 +152,8 @@ ShaderGL::~ShaderGL()
 
 void ShaderGL::Bind() const
 {
-    glUseProgramStages(shaderPipelineID, ShaderTypeToGLBit(shaderType), shaderID);
-    glActiveShaderProgram(shaderPipelineID, shaderID);
+    gl::glUseProgramStages(shaderPipelineID, ShaderTypeToGLBit(shaderType), shaderID);
+    gl::glActiveShaderProgram(shaderPipelineID, shaderID);
 }
 
 bool ShaderGL::IsValid() const
@@ -163,6 +163,6 @@ bool ShaderGL::IsValid() const
 
 void ShaderGL::Unbind(ShaderType shaderType)
 {
-    glUseProgramStages(shaderPipelineID, ShaderTypeToGLBit(shaderType), 0);
-    glActiveShaderProgram(shaderPipelineID, 0);
+    gl::glUseProgramStages(shaderPipelineID, ShaderTypeToGLBit(shaderType), 0);
+    gl::glActiveShaderProgram(shaderPipelineID, 0);
 }

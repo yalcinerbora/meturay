@@ -6,6 +6,8 @@ source_group("" FILES ${CURRENT_SOURCE_DIR}/main.cpp)
 
 add_executable(MVisor ${CURRENT_SOURCE_DIR}/main.cpp)
 
+add_dependencies(MVisor cl11_ext)
+
 target_include_directories(MVisor PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 

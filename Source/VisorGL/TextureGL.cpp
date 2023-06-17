@@ -19,11 +19,11 @@ TextureGL::TextureGL(const Vector2ui& dim,
     , dimensions(dim)
     , pixFormat(fmt)
 {
-    glGenTextures(1, &texId);
-    glBindTexture(GL_TEXTURE_2D, texId);
-    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(pixFormat),
-                   static_cast<GLsizei>(dimensions[0]),
-                   static_cast<GLsizei>(dimensions[1]));
+    gl::glGenTextures(1, &texId);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, texId);
+    gl::glTexStorage2D(gl::GL_TEXTURE_2D, 1, PixelFormatToSizedGL(pixFormat),
+                   static_cast<gl::GLsizei>(dimensions[0]),
+                   static_cast<gl::GLsizei>(dimensions[1]));
 }
 
 TextureGL::TextureGL(const std::string& filePath)
@@ -41,25 +41,24 @@ TextureGL::TextureGL(const std::string& filePath)
         throw ImageIOException(ImageIOError(e, filePath));
     }
 
-    glGenTextures(1, &texId);
-    glBindTexture(GL_TEXTURE_2D, texId);
-    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(pixFormat),
-                   static_cast<GLsizei>(dimensions[0]),
-                   static_cast<GLsizei>(dimensions[1]));
+    gl::glGenTextures(1, &texId);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, texId);
+    gl::glTexStorage2D(gl::GL_TEXTURE_2D, 1, PixelFormatToSizedGL(pixFormat),
+                       static_cast<gl::GLsizei>(dimensions[0]),
+                       static_cast<gl::GLsizei>(dimensions[1]));
 
     // Copy the data to GPU
-    //glTexIm
-    glTexSubImage2D(GL_TEXTURE_2D, 0,
-                    0, 0,
-                    dimensions[0], dimensions[1],
-                    PixelFormatToGL(pixFormat),
-                    PixelFormatToTypeGL(pixFormat),
-                    pixels.data());
+    gl::glTexSubImage2D(gl::GL_TEXTURE_2D, 0,
+                        0, 0,
+                        dimensions[0], dimensions[1],
+                        PixelFormatToGL(pixFormat),
+                        PixelFormatToTypeGL(pixFormat),
+                        pixels.data());
 
     // Override Filtering to Nearest
     // Useful for imgui etc.
-    glTextureParameteri(texId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(texId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl::glTextureParameteri(texId, gl::GL_TEXTURE_MAG_FILTER, gl::GL_NEAREST);
+    gl::glTextureParameteri(texId, gl::GL_TEXTURE_MIN_FILTER, gl::GL_NEAREST);
 }
 
 TextureGL::TextureGL(TextureGL&& other)
@@ -74,7 +73,7 @@ TextureGL& TextureGL::operator=(TextureGL&& other)
 {
     assert(this != &other);
 
-    if(texId) glDeleteTextures(1, &texId);
+    if(texId) gl::glDeleteTextures(1, &texId);
     texId = other.texId;
     dimensions = other.dimensions;
     pixFormat = other.pixFormat;
@@ -85,7 +84,7 @@ TextureGL& TextureGL::operator=(TextureGL&& other)
 
 TextureGL::~TextureGL()
 {
-    glDeleteTextures(1, &texId);
+    gl::glDeleteTextures(1, &texId);
 }
 
 void TextureGL::CopyToImage(const std::vector<Byte>& pixels,
@@ -95,25 +94,25 @@ void TextureGL::CopyToImage(const std::vector<Byte>& pixels,
 {
     const Vector2ui subSize = end - start;
 
-    glBindTexture(GL_TEXTURE_2D, texId);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, texId);
 
     // If formats ad compatible between these
     // OGL will do the conversion automatically
-    glTexSubImage2D(GL_TEXTURE_2D, 0,
-                    start[0], start[1],
-                    subSize[0], subSize[1],
-                    PixelFormatToGL(format),
-                    PixelFormatToTypeGL(format),
-                    pixels.data());
+    gl::glTexSubImage2D(gl::GL_TEXTURE_2D, 0,
+                        start[0], start[1],
+                        subSize[0], subSize[1],
+                        PixelFormatToGL(format),
+                        PixelFormatToTypeGL(format),
+                        pixels.data());
 }
 
-void TextureGL::Bind(GLuint bindingIndex) const
+void TextureGL::Bind(gl::GLuint bindingIndex) const
 {
-    glActiveTexture(GL_TEXTURE0 + bindingIndex);
-    glBindTexture(GL_TEXTURE_2D, texId);
+    gl::glActiveTexture(gl::GL_TEXTURE0 + bindingIndex);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, texId);
 }
 
-void SamplerGL::Bind(GLuint bindingIndex) const
+void SamplerGL::Bind(gl::GLuint bindingIndex) const
 {
-    glBindSampler(bindingIndex, samplerId);
+    gl::glBindSampler(bindingIndex, samplerId);
 }

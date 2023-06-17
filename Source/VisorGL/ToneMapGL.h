@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 
 #include "RayLib/Types.h"
 #include "RayLib/Vector.h"
@@ -12,25 +12,25 @@ enum class PixelFormat;
 class ToneMapGL
 {
     private:
-        ShaderGL                    compLumReduce;
-        ShaderGL                    compToneMap;
-        ShaderGL                    compAvgDivisor;
+        ShaderGL                        compLumReduce;
+        ShaderGL                        compToneMap;
+        ShaderGL                        compAvgDivisor;
 
-        GLuint                      tmOptionBuffer;
-        GLuint                      luminanceBuffer;
+        gl::GLuint                      tmOptionBuffer;
+        gl::GLuint                      luminanceBuffer;
 
         // Uniforms
-        static constexpr GLenum     U_RES = 0;
+        static constexpr gl::GLuint     U_RES = 0;
 
         // Uniform Buffers
-        static constexpr GLenum     UB_LUM_DATA = 0;
-        static constexpr GLenum     UB_TM_PARAMS = 1;
+        static constexpr gl::GLuint     UB_LUM_DATA = 0;
+        static constexpr gl::GLuint     UB_TM_PARAMS = 1;
         // Shader Storage Buffers
-        static constexpr GLenum     SSB_OUTPUT = 0;
+        static constexpr gl::GLuint     SSB_OUTPUT = 0;
         // Textures
-        static constexpr GLenum     T_IN_HDR_IMAGE = 0;
+        static constexpr gl::GLuint     T_IN_HDR_IMAGE = 0;
         // Images
-        static constexpr GLenum     I_OUT_SDR_IMAGE = 0;
+        static constexpr gl::GLuint     I_OUT_SDR_IMAGE = 0;
 
         // GL Image of the luminance buffer
         #pragma pack(push, 1)
@@ -62,9 +62,9 @@ class ToneMapGL
         ToneMapGL&              operator=(ToneMapGL&&);
                                 ~ToneMapGL();
 
-        void                    ToneMap(GLuint sdrTexture,
+        void                    ToneMap(gl::GLuint sdrTexture,
                                         const PixelFormat sdrPixelFormat,
-                                        const GLuint hdrTexture,
+                                        const gl::GLuint hdrTexture,
                                         const ToneMapOptions& options,
                                         const Vector2i& resolution);
 };
@@ -82,27 +82,27 @@ inline ToneMapGL::ToneMapGL(bool isOGLContextActive)
 
     //size_t lumBufferSizeDebug = sizeof(LumBufferGL) + sizeof(float) * 64;
     // Allocate Buffers
-    glGenBuffers(1, &luminanceBuffer);
-    glBindBuffer(GL_COPY_WRITE_BUFFER, luminanceBuffer);
+    gl::glGenBuffers(1, &luminanceBuffer);
+    gl::glBindBuffer(gl::GL_COPY_WRITE_BUFFER, luminanceBuffer);
 
     //glBufferData(GL_COPY_WRITE_BUFFER,
     //             sizeof(LumBufferGL), nullptr,
     //             GL_DYNAMIC_DRAW);
 
-    glBufferStorage(GL_COPY_WRITE_BUFFER,
-                    sizeof(LumBufferGL), nullptr,
-                    // This buffer is GPU only so no flags required
-                    // Intel UHD Graphics does not call
-                    // "glClearBufferData" over non-dynamic
-                    // storages so I've set the bit
-                    GL_DYNAMIC_STORAGE_BIT);
+    gl::glBufferStorage(gl::GL_COPY_WRITE_BUFFER,
+                        sizeof(LumBufferGL), nullptr,
+                        // This buffer is GPU only so no flags required
+                        // Intel UHD Graphics does not call
+                        // "glClearBufferData" over non-dynamic
+                        // storages so I've set the bit
+                        gl::GL_DYNAMIC_STORAGE_BIT);
 
-    glGenBuffers(1, &tmOptionBuffer);
-    glBindBuffer(GL_COPY_WRITE_BUFFER, tmOptionBuffer);
-    glBufferStorage(GL_COPY_WRITE_BUFFER,
-                    sizeof(TMOBufferGL), nullptr,
-                    GL_MAP_WRITE_BIT |
-                    GL_DYNAMIC_STORAGE_BIT);
+    gl::glGenBuffers(1, &tmOptionBuffer);
+    gl::glBindBuffer(gl::GL_COPY_WRITE_BUFFER, tmOptionBuffer);
+    gl::glBufferStorage(gl::GL_COPY_WRITE_BUFFER,
+                        sizeof(TMOBufferGL), nullptr,
+                        gl::GL_MAP_WRITE_BIT |
+                        gl::GL_DYNAMIC_STORAGE_BIT);
 }
 
 inline ToneMapGL::~ToneMapGL()
@@ -111,8 +111,8 @@ inline ToneMapGL::~ToneMapGL()
     compToneMap = ShaderGL();
     compAvgDivisor = ShaderGL();
 
-    glDeleteBuffers(1, &luminanceBuffer);
-    glDeleteBuffers(1, &tmOptionBuffer);
+    gl::glDeleteBuffers(1, &luminanceBuffer);
+    gl::glDeleteBuffers(1, &tmOptionBuffer);
 }
 
 inline ToneMapGL& ToneMapGL::operator=(ToneMapGL&& other)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 #include <glfw/glfw3.h>
 #include <vector>
 
@@ -25,13 +25,13 @@ class GuideDebugGUI
 
         // GLSL Bindings
         // Textures
-        static constexpr GLenum         T_IN_0 = 0;
-        static constexpr GLenum         T_IN_1 = 1;
+        static constexpr gl::GLuint     T_IN_0 = 0;
+        static constexpr gl::GLuint     T_IN_1 = 1;
         // Images
-        static constexpr GLenum         I_OUT = 0;
+        static constexpr gl::GLuint     I_OUT = 0;
         // Uniforms
-        static constexpr GLenum         U_RES = 0;
-        static constexpr GLenum         U_BLEND = 1;
+        static constexpr gl::GLuint     U_RES = 0;
+        static constexpr gl::GLuint     U_BLEND = 1;
 
     private:
         // Main Window

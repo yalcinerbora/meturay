@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 #include <glfw/glfw3.h>
 
 #include "RayLib/VisorInputStructs.h"
@@ -53,8 +53,8 @@ class GLFWCallbackDelegator
         void                                    DetachWindow(GLFWwindow* window);
 
         // OGL Debug write
-        static void                             OGLDebugLog(GLenum type,
-                                                            GLuint id,
-                                                            GLenum severity,
+        static void                             OGLDebugLog(gl::GLenum type,
+                                                            gl::GLuint id,
+                                                            gl::GLenum severity,
                                                             const char* message);
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 #include <vector>
 
 #include "RayLib/Vector.h"
@@ -24,7 +24,7 @@ enum class SamplerGLInterpType
 class TextureGL
 {
     private:
-        GLuint          texId;
+        gl::GLuint      texId;
         Vector2ui       dimensions;
         PixelFormat     pixFormat;
 
@@ -41,9 +41,9 @@ class TextureGL
         TextureGL&      operator=(TextureGL&&);
                         ~TextureGL();
 
-        void            Bind(GLuint bindingIndex) const;
+        void            Bind(gl::GLuint bindingIndex) const;
 
-        GLuint          TexId();
+        gl::GLuint      TexId();
         uint32_t        Width() const;
         uint32_t        Height() const;
         Vector2ui       Size() const;
@@ -59,7 +59,7 @@ class TextureGL
 class SamplerGL
 {
     private:
-        GLuint          samplerId;
+        gl::GLuint      samplerId;
 
     protected:
     public:
@@ -72,11 +72,11 @@ class SamplerGL
         SamplerGL&      operator=(SamplerGL&&) = default;
                         ~SamplerGL();
 
-        GLuint          SamplerId();
-        void            Bind(GLuint bindingIndex) const;
+        gl::GLuint      SamplerId();
+        void            Bind(gl::GLuint bindingIndex) const;
 };
 
-inline GLuint TextureGL::TexId()
+inline gl::GLuint TextureGL::TexId()
 {
     return texId;
 }
@@ -104,40 +104,40 @@ inline PixelFormat TextureGL::Format() const
 inline SamplerGL::SamplerGL(SamplerGLEdgeResolveType edgeResolve,
                             SamplerGLInterpType interp)
 {
-    glGenSamplers(1, &samplerId);
+    gl::glGenSamplers(1, &samplerId);
 
     if(interp == SamplerGLInterpType::NEAREST)
     {
-        glSamplerParameteri(samplerId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glSamplerParameteri(samplerId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_MAG_FILTER, gl::GL_NEAREST);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_MIN_FILTER, gl::GL_NEAREST);
     }
     else if(interp == SamplerGLInterpType::LINEAR)
     {
-        glSamplerParameteri(samplerId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glSamplerParameteri(samplerId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_MAG_FILTER, gl::GL_LINEAR);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_MIN_FILTER, gl::GL_LINEAR);
     }
 
     if(edgeResolve == SamplerGLEdgeResolveType::CLAMP)
     {
-        glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_WRAP_S, gl::GL_CLAMP_TO_EDGE);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_WRAP_T, gl::GL_CLAMP_TO_EDGE);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_WRAP_R, gl::GL_CLAMP_TO_EDGE);
     }
     else if(edgeResolve == SamplerGLEdgeResolveType::REPEAT)
     {
-        glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glSamplerParameteri(samplerId, GL_TEXTURE_WRAP_R, GL_REPEAT);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_WRAP_S, gl::GL_REPEAT);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_WRAP_T, gl::GL_REPEAT);
+        gl::glSamplerParameteri(samplerId, gl::GL_TEXTURE_WRAP_R, gl::GL_REPEAT);
     }
 
 }
 
 inline SamplerGL::~SamplerGL()
 {
-    glDeleteSamplers(1, &samplerId);
+    gl::glDeleteSamplers(1, &samplerId);
 }
 
-inline GLuint SamplerGL::SamplerId()
+inline gl::GLuint SamplerGL::SamplerId()
 {
     return samplerId;
 }

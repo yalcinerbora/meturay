@@ -1,137 +1,138 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 #include "RayLib/Types.h"
 
-inline GLenum PixelFormatToGL(PixelFormat f)
+inline gl::GLenum PixelFormatToGL(PixelFormat f)
 {
-    static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
+    static constexpr gl::GLenum TypeList[static_cast<int>(PixelFormat::END)] =
     {
-        GL_RED,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
+        gl::GL_RED,
+        gl::GL_RG,
+        gl::GL_RGB,
+        gl::GL_RGBA,
 
-        GL_RED,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
+        gl::GL_RED,
+        gl::GL_RG,
+        gl::GL_RGB,
+        gl::GL_RGBA,
 
-        GL_RED,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
+        gl::GL_RED,
+        gl::GL_RG,
+        gl::GL_RGB,
+        gl::GL_RGBA,
 
-        GL_RED,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
+        gl::GL_RED,
+        gl::GL_RG,
+        gl::GL_RGB,
+        gl::GL_RGBA,
 
-        GL_RED,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
+        gl::GL_RED,
+        gl::GL_RG,
+        gl::GL_RGB,
+        gl::GL_RGBA,
 
-        GL_RED,
-        GL_RG,
-        GL_RGB,
-        GL_RGBA,
+        gl::GL_RED,
+        gl::GL_RG,
+        gl::GL_RGB,
+        gl::GL_RGBA,
 
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
+        // TODO: Change These
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE
     };
     return TypeList[static_cast<int>(f)];
 }
 
-inline GLenum PixelFormatToSizedGL(PixelFormat f)
+inline gl::GLenum PixelFormatToSizedGL(PixelFormat f)
 {
-    static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
+    static constexpr gl::GLenum TypeList[static_cast<int>(PixelFormat::END)] =
     {
-        GL_R8,
-        GL_RG8,
-        GL_RGB8,
-        GL_RGBA8,
+        gl::GL_R8,
+        gl::GL_RG8,
+        gl::GL_RGB8,
+        gl::GL_RGBA8,
 
-        GL_R16,
-        GL_RG16,
-        GL_RGB16,
-        GL_RGBA16,
+        gl::GL_R16,
+        gl::GL_RG16,
+        gl::GL_RGB16,
+        gl::GL_RGBA16,
 
-        GL_R8,
-        GL_RG8,
-        GL_RGB8,
-        GL_RGBA8,
+        gl::GL_R8,
+        gl::GL_RG8,
+        gl::GL_RGB8,
+        gl::GL_RGBA8,
 
-        GL_R16,
-        GL_RG16,
-        GL_RGB16,
-        GL_RGBA16,
+        gl::GL_R16,
+        gl::GL_RG16,
+        gl::GL_RGB16,
+        gl::GL_RGBA16,
 
-        GL_R16F,
-        GL_RG16F,
-        GL_RGB16F,
-        GL_RGBA16F,
+        gl::GL_R16F,
+        gl::GL_RG16F,
+        gl::GL_RGB16F,
+        gl::GL_RGBA16F,
 
-        GL_R32F,
-        GL_RG32F,
-        GL_RGB32F,
-        GL_RGBA32F,
+        gl::GL_R32F,
+        gl::GL_RG32F,
+        gl::GL_RGB32F,
+        gl::GL_RGBA32F,
 
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE,
+        gl::GL_NONE
     };
     return TypeList[static_cast<int>(f)];
 }
 
-inline GLenum PixelFormatToTypeGL(PixelFormat f)
+inline gl::GLenum PixelFormatToTypeGL(PixelFormat f)
 {
-    static constexpr GLenum TypeList[static_cast<int>(PixelFormat::END)] =
+    static constexpr gl::GLenum TypeList[static_cast<int>(PixelFormat::END)] =
     {
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
-        GL_UNSIGNED_BYTE,
+        gl::GL_UNSIGNED_BYTE,
+        gl::GL_UNSIGNED_BYTE,
+        gl::GL_UNSIGNED_BYTE,
+        gl::GL_UNSIGNED_BYTE,
 
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
-        GL_UNSIGNED_SHORT,
+        gl::GL_UNSIGNED_SHORT,
+        gl::GL_UNSIGNED_SHORT,
+        gl::GL_UNSIGNED_SHORT,
+        gl::GL_UNSIGNED_SHORT,
 
-        GL_BYTE,
-        GL_BYTE,
-        GL_BYTE,
-        GL_BYTE,
+        gl::GL_BYTE,
+        gl::GL_BYTE,
+        gl::GL_BYTE,
+        gl::GL_BYTE,
 
-        GL_SHORT,
-        GL_SHORT,
-        GL_SHORT,
-        GL_SHORT,
+        gl::GL_SHORT,
+        gl::GL_SHORT,
+        gl::GL_SHORT,
+        gl::GL_SHORT,
 
-        GL_HALF_FLOAT,  // TODO: Wrong
-        GL_HALF_FLOAT,  // TODO: Wrong
-        GL_HALF_FLOAT,  // TODO: Wrong
-        GL_HALF_FLOAT,  // TODO: Wrong
+        gl::GL_HALF_FLOAT,  // TODO: Wrong
+        gl::GL_HALF_FLOAT,  // TODO: Wrong
+        gl::GL_HALF_FLOAT,  // TODO: Wrong
+        gl::GL_HALF_FLOAT,  // TODO: Wrong
 
-        GL_FLOAT,
-        GL_FLOAT,
-        GL_FLOAT,
-        GL_FLOAT
+        gl::GL_FLOAT,
+        gl::GL_FLOAT,
+        gl::GL_FLOAT,
+        gl::GL_FLOAT
     };
     return TypeList[static_cast<int>(f)];
 }

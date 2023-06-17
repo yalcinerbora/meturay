@@ -8,8 +8,9 @@ the VisorGL singleton.
 
 */
 
-#include <GL/glew.h>
-#include <glfw/glfw3.h>
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+#include <GLFW/glfw3.h>
 #include <memory>
 #include <mutex>
 
@@ -72,18 +73,18 @@ class VisorGL : public VisorI
         // IN: Shader Inputs
         // OUT: Shader Outputs
         // U: Uniforms
-        static constexpr GLenum     T_IN_COLOR = 0;
-        static constexpr GLenum     T_IN_BUFFER = 1;
-        static constexpr GLenum     T_IN_SAMPLE = 2;
+        static constexpr gl::GLuint T_IN_COLOR = 0;
+        static constexpr gl::GLuint T_IN_BUFFER = 1;
+        static constexpr gl::GLuint T_IN_SAMPLE = 2;
 
-        static constexpr GLenum     I_OUT_COLOR = 0;
-        static constexpr GLenum     I_SAMPLE = 1;
+        static constexpr gl::GLuint I_OUT_COLOR = 0;
+        static constexpr gl::GLuint I_SAMPLE = 1;
 
-        static constexpr GLenum     IN_POS = 0;
+        static constexpr gl::GLuint IN_POS = 0;
 
-        static constexpr GLenum     U_RES = 0;
-        static constexpr GLenum     U_START = 1;
-        static constexpr GLenum     U_END = 2;
+        static constexpr gl::GLuint U_RES = 0;
+        static constexpr gl::GLuint U_START = 1;
+        static constexpr gl::GLuint U_END = 2;
 
     private:
         GLFWwindow*                 window;
@@ -101,17 +102,17 @@ class VisorGL : public VisorI
         Vector2i                    viewportSize;
 
         // Texture Related
-        GLuint                      outputTextures[2];
-        GLuint                      sampleCountTexture;
-        GLuint                      bufferTexture;
-        GLuint                      sampleTexture;
-        GLuint                      linearSampler;
-        GLuint                      nearestSampler;
-        GLuint                      sdrTexture;
+        gl::GLuint                  outputTextures[2];
+        gl::GLuint                  sampleCountTexture;
+        gl::GLuint                  bufferTexture;
+        gl::GLuint                  sampleTexture;
+        gl::GLuint                  linearSampler;
+        gl::GLuint                  nearestSampler;
+        gl::GLuint                  sdrTexture;
         int                         currentIndex;
 
         // Updated GUI Data that is used by Visor
-        ToneMapOptions              tmOptions;
+        ToneMapOptions                  tmOptions;
 
         // Shader
         ShaderGL                        vertPP;
@@ -119,8 +120,8 @@ class VisorGL : public VisorI
         ShaderGL                        compAccum;
 
         // Vertex
-        GLuint                          vao;
-        GLuint                          vBuffer;
+        gl::GLuint                      vao;
+        gl::GLuint                      vBuffer;
 
         // GUI / Input
         std::unique_ptr<VisorInputI>    visorInput;
@@ -132,11 +133,11 @@ class VisorGL : public VisorI
         uint32_t                        outputWRTSampleCount;
 
         // OGL Debug Context Callback
-        static void             OGLCallbackRender(GLenum source,
-                                                  GLenum type,
-                                                  GLuint id,
-                                                  GLenum severity,
-                                                  GLsizei length,
+        static void             OGLCallbackRender(gl::GLenum source,
+                                                  gl::GLenum type,
+                                                  gl::GLuint id,
+                                                  gl::GLenum severity,
+                                                  gl::GLsizei length,
                                                   const char* message,
                                                   const void* userParam);
 

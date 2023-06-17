@@ -6,6 +6,8 @@ source_group("" FILES ${CURRENT_SOURCE_DIR}/main.cpp)
 
 add_executable(MRay ${CURRENT_SOURCE_DIR}/main.cpp)
 
+add_dependencies(MRay cl11_ext)
+
 target_include_directories(MRay PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 

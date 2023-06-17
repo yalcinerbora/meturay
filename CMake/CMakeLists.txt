@@ -21,7 +21,8 @@ endif()
 set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "Architecture chosen by the user at CMake configure time")
 set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS native 52 60 61 70 72 75 86 89 90 all all-major)
 
-option(USE_OPTIX "Try to find and use OptiX" OFF)
+option(MRAY_USE_OPTIX "Try to find and use OptiX" OFF)
+option(MRAY_BUILD_TESTS "Build Tests" ON)
 
 # Globals Common for All Projects
 # TODO: Align CUDA Standard with CXX Standard
@@ -32,13 +33,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CUDA_RUNTIME_LIBRARY Shared)
 
 # Find Optix If Available
-if(USE_OPTIX)
+if(MRAY_USE_OPTIX)
     find_package(OPTIX 7)
     if(NOT OPTIX_FOUND)
         # Maybe we could not able to find the optix
         # expose the OPTIX_DIR (in cmake-GUI) so user can manually set it
-        message(FATAL_ERROR "Optix Not Found, either set OPTIX_INSTALL_DIR or disable USE_OPTIX")
-        set(USE_OPTIX CACHE BOOL OFF)
+        message(FATAL_ERROR "Optix Not Found, either set OPTIX_INSTALL_DIR or disable MRAY_USE_OPTIX")
+        set(MRAY_USE_OPTIX CACHE BOOL OFF)
     else()
         set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC} -DMRAY_OPTIX)
 
@@ -60,16 +61,16 @@ project(METURay LANGUAGES CUDA CXX)
 
 # CMAKE Project Definitions and Source, Library Folders are separate
 # Directories
-set(MRAY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set(MRAY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..)
 cmake_path(NORMAL_PATH MRAY_DIRECTORY)
 
-set(MRAY_SOURCE_DIRECTORY ${MRAY_DIRECTORY}/Source)
-set(MRAY_LIB_DIRECTORY ${MRAY_DIRECTORY}/Lib)
-set(MRAY_LIB_INCLUDE_DIRECTORY ${MRAY_DIRECTORY}/Lib/Include)
-set(MRAY_CONFIG_LIB_DOC_DIRECTORY ${MRAY_DIRECTORY}/Lib/Docs)
-set(MRAY_BIN_DIRECTORY ${MRAY_DIRECTORY}/Bin)
-set(MRAY_EXT_DIRECTORY ${MRAY_DIRECTORY}/Ext)
-set(MRAY_RESOURCE_DIRECTORY ${MRAY_DIRECTORY}/Resources)
+set(MRAY_SOURCE_DIRECTORY ${MRAY_DIRECTORY}Source)
+set(MRAY_LIB_DIRECTORY ${MRAY_DIRECTORY}Lib)
+set(MRAY_LIB_INCLUDE_DIRECTORY ${MRAY_DIRECTORY}Lib/Include)
+set(MRAY_CONFIG_LIB_DOC_DIRECTORY ${MRAY_DIRECTORY}Lib/Docs)
+set(MRAY_BIN_DIRECTORY ${MRAY_DIRECTORY}Bin)
+set(MRAY_EXT_DIRECTORY ${MRAY_DIRECTORY}Ext)
+set(MRAY_RESOURCE_DIRECTORY ${MRAY_DIRECTORY}Resources)
 # Build is probably not used but its here for convenience
 set(MRAY_BUILD_DIRECTORY ${MRAY_DIRECTORY}/Build)
 # Working Dir is used for debugging (currently shaders are here so...)
@@ -86,8 +87,6 @@ if(MSVC)
     # Filter ALL_BUILD and ZERO_CHECK projects
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
     set(PREDEFINED_TARGETS_FOLDER "CustomTargets")
-elseif(APPLE)
-    set(MRAY_PLATFORM_NAME Mac)
 elseif(UNIX)
     set(MRAY_PLATFORM_NAME Linux)
     include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
@@ -201,7 +200,7 @@ set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
 # After Everything is set
 # Include NVCC compile to ptx routine
 # Since Optix programs require precompiled *.ptx files
-if(USE_OPTIX)
+if(MRAY_USE_OPTIX)
     include("NVCCCompilePTX")
 endif()
 
@@ -230,5 +229,7 @@ add_subdirectory(MVisor)
 #add_subdirectory(MTracer)
 
 # Tests
-add_subdirectory(Test_TracerCUDA)
-add_subdirectory(Test_Misc)
+if(MRAY_BUILD_TESTS)
+    add_subdirectory(Test_TracerCUDA)
+    add_subdirectory(Test_Misc)
+endif()

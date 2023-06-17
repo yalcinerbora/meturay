@@ -3,7 +3,7 @@
 #include "GDebugRendererI.h"
 
 #include <nlohmann/json_fwd.hpp>
-#include <GL/glew.h>
+#include <glbinding/gl/gl.h>
 
 #include "RayLib/AABB.h"
 #include "RayLib/Ray.h"
@@ -141,17 +141,17 @@ class GDebugRendererSVO : public GDebugRendererI
 
         // Shader Bind Points
         // SSBOs
-        static constexpr GLuint     SSB_MAX_LUM = 0;
+        static constexpr gl::GLuint SSB_MAX_LUM = 0;
         // UBOs
-        static constexpr GLuint     UB_MAX_LUM = 0;
+        static constexpr gl::GLuint UB_MAX_LUM = 0;
         // Uniforms
-        static constexpr GLuint     U_RES = 0;
-        static constexpr GLuint     U_LOG_ON = 1;
+        static constexpr gl::GLuint U_RES = 0;
+        static constexpr gl::GLuint U_LOG_ON = 1;
         // Textures
-        static constexpr GLuint     T_IN_LUM_TEX = 0;
-        static constexpr GLuint     T_IN_GRAD_TEX = 1;
+        static constexpr gl::GLuint T_IN_LUM_TEX = 0;
+        static constexpr gl::GLuint T_IN_GRAD_TEX = 1;
         // Images
-        static constexpr GLuint     I_OUT_REF_IMAGE = 0;
+        static constexpr gl::GLuint I_OUT_REF_IMAGE = 0;
 
     private:
         static constexpr const char* SVO_TREE_NAME = "svoTrees";

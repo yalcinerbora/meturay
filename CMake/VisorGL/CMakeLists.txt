@@ -92,12 +92,14 @@ source_group("" FILES ${SRC_COMMON})
 # Preprocessor Defs
 set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    METU_SHARED_VISORGL)
+    METU_SHARED_VISORGL
+    GLFW_INCLUDE_NONE)
 
 # Platform Specific Libraries
 # TBB for std::execution (clang & GCC)
 if(MSVC)
-    set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3dll)
+    #set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3dll)
+    set(PLATFORM_SPEC_LIBRARIES glfw3dll)
 elseif(UNIX)
     set(PLATFORM_SPEC_LIBRARIES GL GLU GLEW glfw tbb)
 endif()
@@ -108,15 +110,25 @@ add_library(VisorGL SHARED ${SRC_ALL})
 target_include_directories(VisorGL PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 target_include_directories(VisorGL SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
+                           ${MRAY_LIB_INCLUDE_DIRECTORY}
+                           # KHR Header is included on the internal files differently
+                           # TODO: This is not a good fix but w/e
+                           ${MRAY_LIB_INCLUDE_DIRECTORY}/glbinding/3rdparty
+                           )
+
+add_dependencies(VisorGL glbinding_ext glfw_ext imgui_ext)
 
 target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
+
+
 
 target_link_libraries(VisorGL
                       RayLib
                       ImageIO
-                      Imgui
-                      Imgui_tex_inspect
+                      imgui
+                      #Imgui
+                      #Imgui_tex_inspect
+                      glbinding
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Copy Shaders to DLL Loc

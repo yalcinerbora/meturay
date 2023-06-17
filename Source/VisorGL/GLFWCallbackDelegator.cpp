@@ -180,9 +180,9 @@ KeyboardKeyType GLFWCallbackDelegator::DetermineKey(int key)
     return keyMap[key];
 }
 
-void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
-                                        GLuint id,
-                                        GLenum severity,
+void GLFWCallbackDelegator::OGLDebugLog(gl::GLenum type,
+                                        gl::GLuint id,
+                                        gl::GLenum severity,
                                         const char* message)
 {
     #ifdef METURAY_LINUX
@@ -192,9 +192,9 @@ void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
     #endif
 
     // Don't Show Others For Now
-    if(type == GL_DEBUG_TYPE_OTHER ||   //
-       id == 131186                ||   // Buffer Copy warning omit
-       id == 131218)                    // Shader recompile because of state mismatch omit
+    if(type == gl::GL_DEBUG_TYPE_OTHER  ||  //
+       id == 131186                     ||  // Buffer Copy warning omit
+       id == 131218)                        // Shader recompile because of state mismatch omit
         return;
 
     std::stringstream sStream;
@@ -204,22 +204,22 @@ void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
     sStream << "Type     : ";
     switch(type)
     {
-        case GL_DEBUG_TYPE_ERROR:
+        case gl::GL_DEBUG_TYPE_ERROR:
             sStream << "ERROR";
             break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        case gl::GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
             sStream << "DEPRECATED_BEHAVIOR";
             break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        case gl::GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
             sStream << "UNDEFINED_BEHAVIOR";
             break;
-        case GL_DEBUG_TYPE_PORTABILITY:
+        case gl::GL_DEBUG_TYPE_PORTABILITY:
             sStream << "PORTABILITY";
             break;
-        case GL_DEBUG_TYPE_PERFORMANCE:
+        case gl::GL_DEBUG_TYPE_PERFORMANCE:
             sStream << "PERFORMANCE";
             break;
-        case GL_DEBUG_TYPE_OTHER:
+        case gl::GL_DEBUG_TYPE_OTHER:
             sStream << "OTHER";
             break;
     }
@@ -228,13 +228,13 @@ void GLFWCallbackDelegator::OGLDebugLog(GLenum type,
     sStream << "Severity : ";
     switch(severity)
     {
-        case GL_DEBUG_SEVERITY_LOW:
+        case gl::GL_DEBUG_SEVERITY_LOW:
             sStream << "LOW";
             break;
-        case GL_DEBUG_SEVERITY_MEDIUM:
+        case gl::GL_DEBUG_SEVERITY_MEDIUM:
             sStream << "MEDIUM";
             break;
-        case GL_DEBUG_SEVERITY_HIGH:
+        case gl::GL_DEBUG_SEVERITY_HIGH:
             sStream << "HIGH";
             break;
         default:

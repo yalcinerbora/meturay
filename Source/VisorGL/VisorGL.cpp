@@ -14,12 +14,13 @@
 #include <map>
 #include <cassert>
 #include <thread>
+#include <glbinding/glbinding-version.h>
 
-void VisorGL::OGLCallbackRender(GLenum,
-                                GLenum type,
-                                GLuint id,
-                                GLenum severity,
-                                GLsizei,
+void VisorGL::OGLCallbackRender(gl::GLenum,
+                                gl::GLenum type,
+                                gl::GLuint id,
+                                gl::GLenum severity,
+                                gl::GLsizei,
                                 const char* message,
                                 const void*)
 {
@@ -30,38 +31,38 @@ void VisorGL::ReallocImages()
 {
     // Textures
     // Buffered output textures
-    glDeleteTextures(2, outputTextures);
-    glGenTextures(2, outputTextures);
+    gl::glDeleteTextures(2, outputTextures);
+    gl::glGenTextures(2, outputTextures);
     for(int i = 0; i < 2; i++)
     {
-        glBindTexture(GL_TEXTURE_2D, outputTextures[i]);
-        glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(imagePixFormat),
-                       imageSize[0], imageSize[1]);
+        gl::glBindTexture(gl::GL_TEXTURE_2D, outputTextures[i]);
+        gl::glTexStorage2D(gl::GL_TEXTURE_2D, 1, PixelFormatToSizedGL(imagePixFormat),
+                           imageSize[0], imageSize[1]);
     }
     // Sample count texture
-    glDeleteTextures(1, &sampleCountTexture);
-    glGenTextures(1, &sampleCountTexture);
-    glBindTexture(GL_TEXTURE_2D, sampleCountTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F,
-                   imageSize[0], imageSize[1]);
+    gl::glDeleteTextures(1, &sampleCountTexture);
+    gl::glGenTextures(1, &sampleCountTexture);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, sampleCountTexture);
+    gl::glTexStorage2D(gl::GL_TEXTURE_2D, 1, gl::GL_R32F,
+                       imageSize[0], imageSize[1]);
     // Buffer input texture
-    glDeleteTextures(1, &bufferTexture);
-    glGenTextures(1, &bufferTexture);
-    glBindTexture(GL_TEXTURE_2D, bufferTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(imagePixFormat),
-                   imageSize[0], imageSize[1]);
+    gl::glDeleteTextures(1, &bufferTexture);
+    gl::glGenTextures(1, &bufferTexture);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, bufferTexture);
+    gl::glTexStorage2D(gl::GL_TEXTURE_2D, 1, PixelFormatToSizedGL(imagePixFormat),
+                       imageSize[0], imageSize[1]);
     // Sample input texture
-    glDeleteTextures(1, &sampleTexture);
-    glGenTextures(1, &sampleTexture);
-    glBindTexture(GL_TEXTURE_2D, sampleTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F,
-                   imageSize[0], imageSize[1]);
+    gl::glDeleteTextures(1, &sampleTexture);
+    gl::glGenTextures(1, &sampleTexture);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, sampleTexture);
+    gl::glTexStorage2D(gl::GL_TEXTURE_2D, 1, gl::GL_R32F,
+                       imageSize[0], imageSize[1]);
     // SDR Texture
-    glDeleteTextures(1, &sdrTexture);
-    glGenTextures(1, &sdrTexture);
-    glBindTexture(GL_TEXTURE_2D, sdrTexture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, PixelFormatToSizedGL(PixelFormat::RGBA8_UNORM),
-                   imageSize[0], imageSize[1]);
+    gl::glDeleteTextures(1, &sdrTexture);
+    gl::glGenTextures(1, &sdrTexture);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, sdrTexture);
+    gl::glTexStorage2D(gl::GL_TEXTURE_2D, 1, PixelFormatToSizedGL(PixelFormat::RGBA8_UNORM),
+                       imageSize[0], imageSize[1]);
 }
 
 void VisorGL::ProcessCommand(const VisorGLCommand& c)
@@ -83,10 +84,10 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         {
             // Just clear the sample count to zero
             const float clearDataInt = 0.0f;
-            glClearTexSubImage(sampleCountTexture, 0,
-                               c.start[0], c.start[1], 0,
-                               inSize[0], inSize[1], 1,
-                               GL_RED, GL_FLOAT, &clearDataInt);
+            gl::glClearTexSubImage(sampleCountTexture, 0,
+                                   c.start[0], c.start[1], 0,
+                                   inSize[0], inSize[1], 1,
+                                   gl::GL_RED, gl::GL_FLOAT, &clearDataInt);
             // Reset the sample count
             //ResetOutputSystem();
             break;
@@ -94,55 +95,55 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
         case VisorGLCommand::SET_PORTION:
         {
             // Copy (Let OGL do the conversion)
-            glBindTexture(GL_TEXTURE_2D, sampleTexture);
-            glTexSubImage2D(GL_TEXTURE_2D, 0,
-                            0, 0,
-                            inSize[0], inSize[1],
-                            GL_RED,
-                            GL_FLOAT,
-                            c.data.data() + c.offset);
-            glBindTexture(GL_TEXTURE_2D, bufferTexture);
-            glTexSubImage2D(GL_TEXTURE_2D, 0,
-                            0, 0,
-                            inSize[0], inSize[1],
-                            PixelFormatToGL(c.format),
-                            PixelFormatToTypeGL(c.format),
-                            c.data.data());
+            gl::glBindTexture(gl::GL_TEXTURE_2D, sampleTexture);
+            gl::glTexSubImage2D(gl::GL_TEXTURE_2D, 0,
+                                0, 0,
+                                inSize[0], inSize[1],
+                                gl::GL_RED,
+                                gl::GL_FLOAT,
+                                c.data.data() + c.offset);
+            gl::glBindTexture(gl::GL_TEXTURE_2D, bufferTexture);
+            gl::glTexSubImage2D(gl::GL_TEXTURE_2D, 0,
+                                0, 0,
+                                inSize[0], inSize[1],
+                                PixelFormatToGL(c.format),
+                                PixelFormatToTypeGL(c.format),
+                                c.data.data());
 
             // After Copy
             // Accumulate data
             int nextIndex = (currentIndex + 1) % 2;
-            GLuint outTexture = outputTextures[nextIndex];
-            GLuint inTexture = outputTextures[currentIndex];
+            gl::GLuint outTexture = outputTextures[nextIndex];
+            gl::GLuint inTexture = outputTextures[currentIndex];
             // Shader
             compAccum.Bind();
             // Textures
-            glActiveTexture(GL_TEXTURE0 + T_IN_BUFFER);
-            glBindTexture(GL_TEXTURE_2D, bufferTexture);
-            glActiveTexture(GL_TEXTURE0 + T_IN_SAMPLE);
-            glBindTexture(GL_TEXTURE_2D, sampleTexture);
-            glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
-            glBindTexture(GL_TEXTURE_2D, inTexture);
+            gl::glActiveTexture(gl::GL_TEXTURE0 + T_IN_BUFFER);
+            gl::glBindTexture(gl::GL_TEXTURE_2D, bufferTexture);
+            gl::glActiveTexture(gl::GL_TEXTURE0 + T_IN_SAMPLE);
+            gl::glBindTexture(gl::GL_TEXTURE_2D, sampleTexture);
+            gl::glActiveTexture(gl::GL_TEXTURE0 + T_IN_COLOR);
+            gl::glBindTexture(gl::GL_TEXTURE_2D, inTexture);
 
             // Images
-            glBindImageTexture(I_SAMPLE, sampleCountTexture,
-                               0, false, 0, GL_READ_WRITE, GL_R32F);
-            glBindImageTexture(I_OUT_COLOR, outTexture,
-                               0, false, 0, GL_WRITE_ONLY,
-                               PixelFormatToSizedGL(imagePixFormat));
+            gl::glBindImageTexture(I_SAMPLE, sampleCountTexture,
+                                   0, false, 0, gl::GL_READ_WRITE, gl::GL_R32F);
+            gl::glBindImageTexture(I_OUT_COLOR, outTexture,
+                                   0, false, 0, gl::GL_WRITE_ONLY,
+                                   PixelFormatToSizedGL(imagePixFormat));
 
             // Uniforms
-            glUniform2iv(U_RES, 1, static_cast<const int*>(imageSize));
-            glUniform2iv(U_START, 1, static_cast<const int*>(c.start));
-            glUniform2iv(U_END, 1, static_cast<const int*>(c.end));
+            gl::glUniform2iv(U_RES, 1, static_cast<const int*>(imageSize));
+            gl::glUniform2iv(U_START, 1, static_cast<const int*>(c.start));
+            gl::glUniform2iv(U_END, 1, static_cast<const int*>(c.end));
 
             // Call for entire image (we also copy image)
             //
-            GLuint gridX = (imageSize[0] + 16 - 1) / 16;
-            GLuint gridY = (imageSize[1] + 16 - 1) / 16;
-            glDispatchCompute(gridX, gridY, 1);
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
-                            GL_TEXTURE_FETCH_BARRIER_BIT);
+            gl::GLuint gridX = (imageSize[0] + 16 - 1) / 16;
+            gl::GLuint gridY = (imageSize[1] + 16 - 1) / 16;
+            gl::glDispatchCompute(gridX, gridY, 1);
+            gl::glMemoryBarrier(gl::GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
+                                gl::GL_TEXTURE_FETCH_BARRIER_BIT);
 
             // Set the received sample count
             receivedSampleCount += c.spp;
@@ -173,23 +174,23 @@ void VisorGL::RenderImage()
     Vector2i vpSize;
     GenAspectCorrectVP(vpOffset, vpSize,
                        viewportSize);
-    glViewport(vpOffset[0], vpOffset[1],
-               vpSize[0], vpSize[1]);
+    gl::glViewport(vpOffset[0], vpOffset[1],
+                   vpSize[0], vpSize[1]);
 
     // Clear Buffer
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    gl::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
     // Bind Shaders
     vertPP.Bind();
     fragPP.Bind();
 
     // Bind Texture
-    glActiveTexture(GL_TEXTURE0 + T_IN_COLOR);
-    glBindTexture(GL_TEXTURE_2D, sdrTexture);
+    gl::glActiveTexture(gl::GL_TEXTURE0 + T_IN_COLOR);
+    gl::glBindTexture(gl::GL_TEXTURE_2D, sdrTexture);
 
     // Draw
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    gl::glDrawArrays(gl::GL_TRIANGLES, 0, 3);
 }
 
 void VisorGL::SaveImageInternal(bool isHDR,
@@ -198,12 +199,12 @@ void VisorGL::SaveImageInternal(bool isHDR,
     if(isHDR)
     {
         std::vector<Vector3f> pixels(imageSize[0] * imageSize[1]);
-        GLuint readTexture = outputTextures[currentIndex];
-        glBindTexture(GL_TEXTURE_2D, readTexture);
+        gl::GLuint readTexture = outputTextures[currentIndex];
+        gl::glBindTexture(gl::GL_TEXTURE_2D, readTexture);
         // Tightly pack pixels for reading
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT,
-                      pixels.data());
+        gl::glPixelStorei(gl::GL_PACK_ALIGNMENT, 1);
+        gl::glGetTexImage(gl::GL_TEXTURE_2D, 0, gl::GL_RGB, gl::GL_FLOAT,
+                          pixels.data());
 
         ImageIOError e = ImageIOError::OK;
         const ImageIOI& io = *ImageIOInstance();
@@ -224,12 +225,12 @@ void VisorGL::SaveImageInternal(bool isHDR,
         // properly holds the format (PixelFormat type) contiguously
         struct alignas(1) RGBData { unsigned char c[3]; };
         std::vector<RGBData> pixels(imageSize[0] * imageSize[1]);
-        GLuint readTexture = sdrTexture;
+        gl::GLuint readTexture = sdrTexture;
         // Tightly pack pixels for reading
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        glBindTexture(GL_TEXTURE_2D, readTexture);
+        gl::glPixelStorei(gl::GL_PACK_ALIGNMENT, 1);
+        gl::glBindTexture(gl::GL_TEXTURE_2D, readTexture);
         // [n] version does not work on mesa OGL
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
+        glGetTexImage(gl::GL_TEXTURE_2D, 0, gl::GL_RGB, gl::GL_UNSIGNED_BYTE,
                       static_cast<void*>(pixels.data()));
         // GLsizei pixelBufferSize = static_cast<GLsizei>(pixels.size() * sizeof(RGBData));
         // glGetnTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE,
@@ -322,8 +323,8 @@ VisorGL::~VisorGL()
     toneMapGL = ToneMapGL();
 
     // Delete Vertex Arrays & Buffers
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vBuffer);
+    gl::glDeleteVertexArrays(1, &vao);
+    gl::glDeleteBuffers(1, &vBuffer);
 
     // Delete Shaders
     vertPP = ShaderGL();
@@ -331,15 +332,15 @@ VisorGL::~VisorGL()
     compAccum = ShaderGL();
 
     // Delete Samplers
-    glDeleteSamplers(1, &linearSampler);
-    glDeleteSamplers(1, &nearestSampler);
+    gl::glDeleteSamplers(1, &linearSampler);
+    gl::glDeleteSamplers(1, &nearestSampler);
 
     // Delete Textures
-    glDeleteTextures(1, &bufferTexture);
-    glDeleteTextures(1, &sampleTexture);
-    glDeleteTextures(1, &sampleCountTexture);
-    glDeleteTextures(2, outputTextures);
-    glDeleteTextures(2, &sdrTexture);
+    gl::glDeleteTextures(1, &bufferTexture);
+    gl::glDeleteTextures(1, &sampleTexture);
+    gl::glDeleteTextures(1, &sampleCountTexture);
+    gl::glDeleteTextures(2, outputTextures);
+    gl::glDeleteTextures(2, &sdrTexture);
 
     visorInput = nullptr;
 
@@ -592,12 +593,14 @@ void VisorGL::SetRenderingContextCurrent()
     // Program should not reload entire gl functions
     // on every context set
     // Threaded visor programs should set this once anyway
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if(err != GLEW_OK)
-    {
-        METU_ERROR_LOG("{:s}", glewGetErrorString(err));
-    }
+
+    glbinding::initialize(glfwGetProcAddress);
+    //glewExperimental = GL_TRUE;
+    //GLenum err = glewInit();
+    //if(err != GLEW_OK)
+    //{
+    //    METU_ERROR_LOG("{:s}", glewGetErrorString(err));
+    //}
 }
 
 void VisorGL::ReleaseRenderingContext()
@@ -613,8 +616,8 @@ VisorError VisorGL::Initialize(VisorCallbacksI& callbacks,
     GLFWCallbackDelegator& glfwCallback = GLFWCallbackDelegator::Instance();
 
     // Common Window Hints
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
     // This was buggy on nvidia cards couple of years ago
     // So instead manually convert image using
@@ -717,38 +720,40 @@ VisorError VisorGL::Initialize(VisorCallbacksI& callbacks,
     // Initial Option set
     glfwSwapInterval((vOpts.vSyncOn) ? 1 : 0);
 
-    // Now Init GLEW
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if(err != GLEW_OK)
-    {
-        METU_ERROR_LOG("{:s}", glewGetErrorString(err));
-        return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
-    }
+    // Now Init gl binding
+    glbinding::initialize(glfwGetProcAddress);
+
+    //glewExperimental = GL_TRUE;
+    //GLenum err = glewInit();
+    //if(err != GLEW_OK)
+    //{
+    //    METU_ERROR_LOG("{:s}", glewGetErrorString(err));
+    //    return VisorError::RENDER_FUCTION_GENERATOR_ERROR;
+    //}
 
     // Print Stuff Now
     // Window Done
     METU_LOG("Window Initialized.");
-    METU_LOG("GLEW\t: {:s}", glewGetString(GLEW_VERSION));
+    METU_LOG("GLBinding\t: {:s}", GLBINDING_VERSION);
     METU_LOG("GLFW\t: {:s}", glfwGetVersionString());
     METU_LOG("");
     METU_LOG("Renderer Information...");
-    METU_LOG("OpenGL\t: {:s}", glGetString(GL_VERSION));
-    METU_LOG("GLSL\t: {:s}", glGetString(GL_SHADING_LANGUAGE_VERSION));
-    METU_LOG("Device\t: {:s}", glGetString(GL_RENDERER));
+    METU_LOG("OpenGL\t: {:s}", reinterpret_cast<const char*>(gl::glGetString(gl::GL_VERSION)));
+    METU_LOG("GLSL\t: {:s}", reinterpret_cast<const char*>(gl::glGetString(gl::GL_SHADING_LANGUAGE_VERSION)));
+    METU_LOG("Device\t: {:s}", reinterpret_cast<const char*>(gl::glGetString(gl::GL_RENDERER)));
     METU_LOG("");
 
     if constexpr(IS_DEBUG_MODE)
     {
         // Add Callback
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(VisorGL::OGLCallbackRender, nullptr);
-        glDebugMessageControl(GL_DONT_CARE,
-                              GL_DONT_CARE,
-                              GL_DONT_CARE,
-                              0,
-                              nullptr,
-                              GL_TRUE);
+        glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        gl::glDebugMessageCallback(VisorGL::OGLCallbackRender, nullptr);
+        gl::glDebugMessageControl(gl::GL_DONT_CARE,
+                                  gl::GL_DONT_CARE,
+                                  gl::GL_DONT_CARE,
+                                  0,
+                                  nullptr,
+                                  gl::GL_TRUE);
     }
 
     // Shaders
@@ -762,52 +767,52 @@ VisorError VisorGL::Initialize(VisorCallbacksI& callbacks,
     toneMapGL = ToneMapGL(true);
 
     // Sampler
-    glGenSamplers(1, &linearSampler);
-    glSamplerParameteri(linearSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(linearSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(linearSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(linearSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(linearSampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glGenSamplers(1, &nearestSampler);
-    glSamplerParameteri(nearestSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glSamplerParameteri(nearestSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glSamplerParameteri(nearestSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(nearestSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(nearestSampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    gl::glGenSamplers(1, &linearSampler);
+    gl::glSamplerParameteri(linearSampler, gl::GL_TEXTURE_MAG_FILTER, gl::GL_LINEAR);
+    gl::glSamplerParameteri(linearSampler, gl::GL_TEXTURE_MIN_FILTER, gl::GL_LINEAR);
+    gl::glSamplerParameteri(linearSampler, gl::GL_TEXTURE_WRAP_S, gl::GL_CLAMP_TO_EDGE);
+    gl::glSamplerParameteri(linearSampler, gl::GL_TEXTURE_WRAP_T, gl::GL_CLAMP_TO_EDGE);
+    gl::glSamplerParameteri(linearSampler, gl::GL_TEXTURE_WRAP_R, gl::GL_CLAMP_TO_EDGE);
+    gl::glGenSamplers(1, &nearestSampler);
+    gl::glSamplerParameteri(nearestSampler, gl::GL_TEXTURE_MAG_FILTER, gl::GL_NEAREST);
+    gl::glSamplerParameteri(nearestSampler, gl::GL_TEXTURE_MIN_FILTER, gl::GL_NEAREST);
+    gl::glSamplerParameteri(nearestSampler, gl::GL_TEXTURE_WRAP_S, gl::GL_CLAMP_TO_EDGE);
+    gl::glSamplerParameteri(nearestSampler, gl::GL_TEXTURE_WRAP_T, gl::GL_CLAMP_TO_EDGE);
+    gl::glSamplerParameteri(nearestSampler, gl::GL_TEXTURE_WRAP_R, gl::GL_CLAMP_TO_EDGE);
 
     // Buffer
-    glGenBuffers(1, &vBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, PostProcessTriData, GL_STATIC_DRAW);
+    gl::glGenBuffers(1, &vBuffer);
+    gl::glBindBuffer(gl::GL_ARRAY_BUFFER, vBuffer);
+    gl::glBufferData(gl::GL_ARRAY_BUFFER, sizeof(float) * 6, PostProcessTriData, gl::GL_STATIC_DRAW);
 
     // Vertex Buffer
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glBindVertexBuffer(0, vBuffer, 0, sizeof(float) * 2);
-    glEnableVertexAttribArray(IN_POS);
-    glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
-    glVertexAttribBinding(IN_POS, IN_POS);
+    gl::glGenVertexArrays(1, &vao);
+    gl::glBindVertexArray(vao);
+    gl::glBindVertexBuffer(0, vBuffer, 0, sizeof(float) * 2);
+    gl::glEnableVertexAttribArray(IN_POS);
+    gl::glVertexAttribFormat(IN_POS, 2, gl::GL_FLOAT, false, 0);
+    gl::glVertexAttribBinding(IN_POS, IN_POS);
 
     // Pre-Bind Everything
     // States
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    gl::glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    gl::glDisable(gl::GL_DEPTH_TEST);
+    gl::glDisable(gl::GL_CULL_FACE);
 
     // Intel OGL complaints about this as redundant call?
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // FBO
-    glColorMask(true, true, true, true);
-    glDepthMask(false);
-    glStencilMask(false);
+    gl::glColorMask(true, true, true, true);
+    gl::glDepthMask(false);
+    gl::glStencilMask(false);
 
     // Sampler
-    glBindSampler(T_IN_COLOR, linearSampler);
-    glBindSampler(T_IN_BUFFER, linearSampler);
-    glBindSampler(T_IN_SAMPLE, nearestSampler);
+    gl::glBindSampler(T_IN_COLOR, linearSampler);
+    gl::glBindSampler(T_IN_BUFFER, linearSampler);
+    gl::glBindSampler(T_IN_SAMPLE, nearestSampler);
 
     // Bind VAO
-    glBindVertexArray(vao);
+    gl::glBindVertexArray(vao);
 
     // Finally Show Window
     glfwShowWindow(window);

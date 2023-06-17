@@ -4,6 +4,12 @@ include(ExtDownloadDeps.cmake)
 # Comparably Large dependencies would have option to use
 # a the system available version
 
+# Meta add the folder
+set(META_MRAY_CMAKE_PREFIX_PATH ${MRAY_CONFIG_LIB_DIRECTORY}/cmake)
+set(META_MRAY_PKGCONFIG_PREFIX_PATH ${MRAY_CONFIG_LIB_DIRECTORY}/pkgconfig)
+append_cmake_prefix_path(${META_MRAY_CMAKE_PREFIX_PATH})
+append_cmake_prefix_path(${META_MRAY_PKGCONFIG_PREFIX_PATH})
+
 # Get ZLib
 mray_build_ext_dependency_git(
         NAME zlib_ext
@@ -45,6 +51,8 @@ mray_build_ext_dependency_git(
             -DNLOHMANN_JSON_CONFIG_INSTALL_DIR=${MRAY_CONFIG_LIB_DIRECTORY}/cmake/json
             -DNLOHMANN_JSON_INCLUDE_INSTALL_DIR=${MRAY_LIB_INCLUDE_DIRECTORY}
             -DNLOHMANN_JSON_PKGCONFIG_INSTALL_DIR=${MRAY_CONFIG_LIB_DIRECTORY}/pkgconfig
+            # This is not cached and it install to a wrong folder :(
+            -DNLOHMANN_ADD_NATVIS=OFF
 )
 
 # Get assimp
@@ -61,6 +69,7 @@ mray_build_ext_dependency_git(
         -DASSIMP_INJECT_DEBUG_POSTFIX=OFF
         -DASSIMP_INSTALL=ON
         -DBUILD_SHARED_LIBS=ON
+        -DASSIMP_HUNTER_ENABLED=OFF
         # Non-unix related
         -DASSIMP_LIB_INSTALL_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
         -DASSIMP_INCLUDE_INSTALL_DIR=Include
@@ -95,32 +104,74 @@ mray_build_ext_dependency_git(
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_PIC=ON
         -DSPDLOG_BUILD_SHARED=ON
-        # Our fmt is too up to date
+        # fmt release and spdlog release does not match
+        # due to iterator debug level (MSVC)
         -DSPDLOG_FMT_EXTERNAL=OFF
 )
 
-# Image Libraries
-mray_build_ext_dependency_git(
-    NAME oiio_ext
-    URL "https://github.com/OpenImageIO/oiio.git"
-    TAG "cfaccc1609266c91aabb03470287a3ada7178cfc" # v.2.5.2.0-dev
-    BUILD_ARGS
-        -DUSE_PYTHON=OFF
-        -DOIIO_BUILD_TESTS=OFF
-        -DOIIO_BUILD_TOOLS=OFF
-        -DOIIO_DISABLE_BOOST_STACKTRACE=ON
-        -DEMBED_PLUGINS=ON
-        -DCMAKE_DEBUG_POSTFIX:STRING=
-        -DENABLE_FAST_MATH=ON
-    DEPENDENCIES
-            zlib_ext
-            boost_ext
-            openexr_ext
-            libtiff_ext
-            libjpeg_ext
-            fmt_ext
+# Get glbinding
+include(DownloadGLBindings.cmake)
 
+# Get glfw
+mray_build_ext_dependency_git(
+    NAME glfw_ext
+    URL "https://github.com/glfw/glfw.git"
+    TAG "3fa2360720eeba1964df3c0ecf4b5df8648a8e52" # 17.06.2023 Latest Commit
+    BUILD_ARGS
+        -DBUILD_SHARED_LIBS=ON
+        -DGLFW_BUILD_DOCS=OFF
+        -DGLFW_BUILD_EXAMPLES=OFF
+        -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_INSTALL=ON
+        -DGLFW_USE_HYBRID_HPG=OFF
+        # Windows Related
+        -DGLFW_BUILD_WIN32=ON
+        -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
 )
+
+# Get gtest
+if(MRAY_BUILD_TESTS)
+
+endif()
+
+# Get CLI11
+mray_build_ext_dependency_git(
+    NAME cl11_ext
+    URL "https://github.com/CLIUtils/CLI11.git"
+    TAG "291c58789c031208f08f4f261a858b5b7083e8e2" # v2.3.2
+    BUILD_ARGS
+        -DBUILD_TESTING=OFF
+        -DCLI11_BUILD_EXAMPLES=OFF
+        -DCLI11_BUILD_EXAMPLES_JSON=OFF
+        -DCLI11_BUILD_TESTS=OFF
+        -DCLI11_SINGLE_FILE=ON
+)
+
+# Get ImGUI
+include(DownloadDearImGUI.cmake)
+
+# # Image Libraries
+# mray_build_ext_dependency_git(
+#     NAME oiio_ext
+#     URL "https://github.com/OpenImageIO/oiio.git"
+#     TAG "cfaccc1609266c91aabb03470287a3ada7178cfc" # v.2.5.2.0-dev
+#     BUILD_ARGS
+#         -DUSE_PYTHON=OFF
+#         -DOIIO_BUILD_TESTS=OFF
+#         -DOIIO_BUILD_TOOLS=OFF
+#         -DOIIO_DISABLE_BOOST_STACKTRACE=ON
+#         -DEMBED_PLUGINS=ON
+#         -DCMAKE_DEBUG_POSTFIX:STRING=
+#         -DENABLE_FAST_MATH=ON
+#     DEPENDENCIES
+#             zlib_ext
+#             boost_ext
+#             openexr_ext
+#             libtiff_ext
+#             libjpeg_ext
+#             fmt_ext
+
+# )
 
 
 
