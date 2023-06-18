@@ -19,7 +19,7 @@ function(mray_build_ext_dependency_git)
 
     # Parse Args
     set(options SKIP_INSTALL)
-    set(oneValueArgs NAME URL TAG SOURCE_SUBDIR OVERRIDE_INSTALL_PREFIX)
+    set(oneValueArgs NAME URL TAG SOURCE_SUBDIR OVERRIDE_INSTALL_PREFIX LICENSE_NAME)
     set(multiValueArgs BUILD_ARGS DEPENDENCIES)
 
     cmake_parse_arguments(BUILD_SUBPROJECT "${options}" "${oneValueArgs}"
@@ -27,6 +27,7 @@ function(mray_build_ext_dependency_git)
 
     set(SUBPROJECT_EXT_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/${BUILD_SUBPROJECT_NAME})
     set(SUBPROJECT_BUILD_PATH ${SUBPROJECT_EXT_DIR}/build)
+    set(SUBPROJECT_SRC_PATH ${SUBPROJECT_EXT_DIR}/src/${BUILD_SUBPROJECT_NAME})
 
     if(BUILD_SUBPROJECT_SKIP_INSTALL)
         set(SUBPROJECT_INSTALL_COMMAND_ARG "INSTALL_COMMAND")
@@ -70,7 +71,7 @@ function(mray_build_ext_dependency_git)
                 LOG_PATCH ON
                 LOG_CONFIGURE ON
                 LOG_BUILD ON
-                LOG_INSTALL OFF
+                LOG_INSTALL ON
                 LOG_OUTPUT_ON_FAILURE ON
 
                 # Common args (it will share the generator and compiler)
@@ -80,7 +81,7 @@ function(mray_build_ext_dependency_git)
                     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
-                    -DCMAKE_GENERATOR_TOOLSET= ${CMAKE_GENERATOR_TOOLSET}
+                    -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
 
                     # Install Stuff
                     -DCMAKE_INSTALL_PREFIX:PATH=${SUBPROJECT_INSTALL_PREFIX}
@@ -94,6 +95,17 @@ function(mray_build_ext_dependency_git)
                 ${BUILD_SUBPROJECT_BUILD_ARGS}
                 BUILD_ALWAYS OFF
     )
+
+    # Copy license file if available to the main Lib directory
+    string(REPLACE "_ext" "" BUILD_SUBPROJECT_NAME_NO_EXT ${BUILD_SUBPROJECT_NAME})
+
+    if(NOT ${BUILD_SUBPROJECT_LICENSE_NAME} STREQUAL "")
+        ExternalProject_Add_Step(${BUILD_SUBPROJECT_NAME} copy_license
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${SUBPROJECT_SRC_PATH}/${BUILD_SUBPROJECT_LICENSE_NAME}
+                ${MRAY_LIB_DIRECTORY}/${BUILD_SUBPROJECT_NAME_NO_EXT}_LICENSE
+                DEPENDEES DOWNLOAD UPDATE PATCH)
+    endif()
 
     if(BUILD_SUBPROJECT_DEPENDENCIES)
         ExternalProject_Add_StepDependencies(${BUILD_SUBPROJECT_NAME}

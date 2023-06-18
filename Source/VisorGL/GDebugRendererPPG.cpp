@@ -50,45 +50,45 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     , fragDTreeRender(ShaderType::FRAGMENT, u8"Shaders/DTreeRender.frag")
     , compSTreeRender(ShaderType::COMPUTE, u8"Shaders/STreeRender.comp")
 {
-    glGenFramebuffers(1, &fbo);
+    gl::glGenFramebuffers(1, &fbo);
 
     // Create Static Buffers
-    glGenBuffers(1, &vPosBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vPosBuffer);
-    glBufferStorage(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), QUAD_VERTEX_POS, 0);
+    gl::glGenBuffers(1, &vPosBuffer);
+    gl::glBindBuffer(gl::GL_ARRAY_BUFFER, vPosBuffer);
+    gl::glBufferStorage(gl::GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), QUAD_VERTEX_POS, gl::GL_NONE_BIT);
 
-    glGenBuffers(1, &indexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
-    glBufferStorage(GL_ARRAY_BUFFER, 6 * sizeof(uint8_t), QUAD_INDICES, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl::glGenBuffers(1, &indexBuffer);
+    gl::glBindBuffer(gl::GL_ARRAY_BUFFER, indexBuffer);
+    gl::glBufferStorage(gl::GL_ARRAY_BUFFER, 6 * sizeof(uint8_t), QUAD_INDICES, gl::GL_NONE_BIT);
+    gl::glBindBuffer(gl::GL_ARRAY_BUFFER, 0);
 
     // Create your VAO
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    gl::glGenVertexArrays(1, &vao);
+    gl::glBindVertexArray(vao);
     // Vertex Position
-    glEnableVertexAttribArray(IN_POS);
-    glVertexAttribFormat(IN_POS, 2, GL_FLOAT, false, 0);
-    glVertexAttribBinding(IN_POS, IN_POS);
-    glBindVertexBuffer(IN_POS, vPosBuffer, 0, sizeof(float) * 2);
+    gl::glEnableVertexAttribArray(IN_POS);
+    gl::glVertexAttribFormat(IN_POS, 2, gl::GL_FLOAT, false, 0);
+    gl::glVertexAttribBinding(IN_POS, IN_POS);
+    gl::glBindVertexBuffer(IN_POS, vPosBuffer, 0, sizeof(float) * 2);
     // Vertex Indices
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl::glBindBuffer(gl::GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     // Per-Instance Related
-    glEnableVertexAttribArray(IN_OFFSET);
-    glVertexAttribFormat(IN_OFFSET, 2, GL_FLOAT, false, 0);
-    glVertexAttribBinding(IN_OFFSET, IN_OFFSET);
-    glVertexAttribDivisor(IN_OFFSET, 1);
+    gl::glEnableVertexAttribArray(IN_OFFSET);
+    gl::glVertexAttribFormat(IN_OFFSET, 2, gl::GL_FLOAT, false, 0);
+    gl::glVertexAttribBinding(IN_OFFSET, IN_OFFSET);
+    gl::glVertexAttribDivisor(IN_OFFSET, 1);
 
-    glEnableVertexAttribArray(IN_DEPTH);
-    glVertexAttribIFormat(IN_DEPTH, 1, GL_UNSIGNED_INT, 0);
-    glVertexAttribBinding(IN_DEPTH, IN_DEPTH);
-    glVertexAttribDivisor(IN_DEPTH, 1);
+    gl::glEnableVertexAttribArray(IN_DEPTH);
+    gl::glVertexAttribIFormat(IN_DEPTH, 1, gl::GL_UNSIGNED_INT, 0);
+    gl::glVertexAttribBinding(IN_DEPTH, IN_DEPTH);
+    gl::glVertexAttribDivisor(IN_DEPTH, 1);
 
-    glEnableVertexAttribArray(IN_RADIANCE);
-    glVertexAttribFormat(IN_RADIANCE, 1, GL_FLOAT, false, 0);
-    glVertexAttribBinding(IN_RADIANCE, IN_RADIANCE);
-    glVertexAttribDivisor(IN_RADIANCE, 1);
+    gl::glEnableVertexAttribArray(IN_RADIANCE);
+    gl::glVertexAttribFormat(IN_RADIANCE, 1, gl::GL_FLOAT, false, 0);
+    gl::glVertexAttribBinding(IN_RADIANCE, IN_RADIANCE);
+    gl::glVertexAttribDivisor(IN_RADIANCE, 1);
 
-    glBindVertexArray(0);
+    gl::glBindVertexArray(0);
 
     // Load the Name
     name = config[GuideDebug::NAME];
@@ -103,7 +103,7 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
 
 GDebugRendererPPG::~GDebugRendererPPG()
 {
-    glDeleteFramebuffers(1, &fbo);
+    gl::glDeleteFramebuffers(1, &fbo);
 }
 
 bool GDebugRendererPPG::LoadSDTree(SDTree& sdTree,
@@ -203,54 +203,54 @@ void GDebugRendererPPG::RenderSpatial(TextureGL& overlayTex, uint32_t depth,
         }
     }
     // Allocate buffers & send to GPU
-    GLuint buffers[3];
-    glGenBuffers(3, buffers);
-    GLuint colorBuffer = buffers[0];
-    glBindBuffer(GL_COPY_WRITE_BUFFER, colorBuffer);
-    glBufferStorage(GL_COPY_WRITE_BUFFER,
-                    sizeof(Vector4f) * colors.size(),
-                    colors.data(), 0);
-    GLuint nodeBuffer = buffers[1];
-    glBindBuffer(GL_COPY_WRITE_BUFFER, nodeBuffer);
-    glBufferStorage(GL_COPY_WRITE_BUFFER,
-                    sizeof(STreeNodeSSBO)* sTreeNodesGL.size(),
-                    sTreeNodesGL.data(), 0);
-    GLuint worldPosBuffer = buffers[2];
-    glBindBuffer(GL_COPY_WRITE_BUFFER, worldPosBuffer);
-    glBufferStorage(GL_COPY_WRITE_BUFFER,
-                    sizeof(Vector4f)* expWorldPositions.size(),
-                    expWorldPositions.data(), 0);
+    gl::GLuint buffers[3];
+    gl::glGenBuffers(3, buffers);
+    gl::GLuint colorBuffer = buffers[0];
+    gl::glBindBuffer(gl::GL_COPY_WRITE_BUFFER, colorBuffer);
+    gl::glBufferStorage(gl::GL_COPY_WRITE_BUFFER,
+                        sizeof(Vector4f)* colors.size(),
+                        colors.data(), gl::GL_NONE_BIT);
+    gl::GLuint nodeBuffer = buffers[1];
+    gl::glBindBuffer(gl::GL_COPY_WRITE_BUFFER, nodeBuffer);
+    gl::glBufferStorage(gl::GL_COPY_WRITE_BUFFER,
+                        sizeof(STreeNodeSSBO)* sTreeNodesGL.size(),
+                        sTreeNodesGL.data(), gl::GL_NONE_BIT);
+    gl::GLuint worldPosBuffer = buffers[2];
+    gl::glBindBuffer(gl::GL_COPY_WRITE_BUFFER, worldPosBuffer);
+    gl::glBufferStorage(gl::GL_COPY_WRITE_BUFFER,
+                        sizeof(Vector4f)* expWorldPositions.size(),
+                        expWorldPositions.data(), gl::GL_NONE_BIT);
 
     compSTreeRender.Bind();
     // Get Ready to call shader
     // Bindings
     // SSBOs
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_LEAF_COL,
-                     colorBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_STREE,
-                     nodeBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_WORLD_POS,
-                     worldPosBuffer);
+    gl::glBindBufferBase(gl::GL_SHADER_STORAGE_BUFFER, SSB_LEAF_COL,
+                         colorBuffer);
+    gl::glBindBufferBase(gl::GL_SHADER_STORAGE_BUFFER, SSB_STREE,
+                         nodeBuffer);
+    gl::glBindBufferBase(gl::GL_SHADER_STORAGE_BUFFER, SSB_WORLD_POS,
+                         worldPosBuffer);
     // Uniforms
-    glUniform2i(U_RES, static_cast<int>(resolution[0]),
+    gl::glUniform2i(U_RES, static_cast<int>(resolution[0]),
                        static_cast<int>(resolution[1]));
-    glUniform3f(U_AABB_MIN, sdTree.extents.Min()[0],
-                sdTree.extents.Min()[1], sdTree.extents.Min()[2]);
-    glUniform3f(U_AABB_MAX, sdTree.extents.Max()[0],
-                sdTree.extents.Max()[1], sdTree.extents.Max()[2]);
-    glUniform1ui(U_NODE_COUNT,
-                 static_cast<uint32_t>(sdTree.sTreeNodes.size()));
+    gl::glUniform3f(U_AABB_MIN, sdTree.extents.Min()[0],
+                    sdTree.extents.Min()[1], sdTree.extents.Min()[2]);
+    gl::glUniform3f(U_AABB_MAX, sdTree.extents.Max()[0],
+                    sdTree.extents.Max()[1], sdTree.extents.Max()[2]);
+    gl::glUniform1ui(U_NODE_COUNT,
+                     static_cast<uint32_t>(sdTree.sTreeNodes.size()));
     // Images
-    glBindImageTexture(I_OUT_IMAGE, overlayTex.TexId(),
-                       0, false, 0, GL_WRITE_ONLY,
-                       PixelFormatToSizedGL(overlayTex.Format()));
+    gl::glBindImageTexture(I_OUT_IMAGE, overlayTex.TexId(),
+                           0, false, 0, gl::GL_WRITE_ONLY,
+                           PixelFormatToSizedGL(overlayTex.Format()));
 
     // Call the Kernel
-    GLuint gridX = (resolution[0] + 16 - 1) / 16;
-    GLuint gridY = (resolution[1] + 16 - 1) / 16;
-    glDispatchCompute(gridX, gridY, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
-                    GL_TEXTURE_FETCH_BARRIER_BIT);
+    gl::GLuint gridX = (resolution[0] + 16 - 1) / 16;
+    gl::GLuint gridY = (resolution[1] + 16 - 1) / 16;
+    gl::glDispatchCompute(gridX, gridY, 1);
+    gl::glMemoryBarrier(gl::GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
+                        gl::GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
 void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
@@ -403,47 +403,47 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     // Generate/Resize Buffer
     if(treeBufferSize < newTreeSize)
     {
-        glDeleteBuffers(1, &treeBuffer);
-        glGenBuffers(1, &treeBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, treeBuffer);
-        glBufferStorage(GL_ARRAY_BUFFER, newTreeSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+        gl::glDeleteBuffers(1, &treeBuffer);
+        gl::glGenBuffers(1, &treeBuffer);
+        gl::glBindBuffer(gl::GL_ARRAY_BUFFER, treeBuffer);
+        gl::glBufferStorage(gl::GL_ARRAY_BUFFER, newTreeSize, nullptr, gl::GL_DYNAMIC_STORAGE_BIT);
         treeBufferSize = newTreeSize;
     }
     // Load Buffers
-    glBindBuffer(GL_ARRAY_BUFFER, treeBuffer);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, newTreeSize, treeBufferCPU.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl::glBindBuffer(gl::GL_ARRAY_BUFFER, treeBuffer);
+    gl::glBufferSubData(gl::GL_ARRAY_BUFFER, 0, newTreeSize, treeBufferCPU.data());
+    gl::glBindBuffer(gl::GL_ARRAY_BUFFER, 0);
 
     // Bind Buffers
     size_t depthOffset = squareCount * sizeof(float) * 2;
     size_t radianceOffset = squareCount * (sizeof(float) * 2 + sizeof(uint32_t));
-    glBindVertexArray(vao);
-    glBindVertexBuffer(IN_OFFSET, treeBuffer, 0, sizeof(float) * 2);
-    glBindVertexBuffer(IN_DEPTH, treeBuffer, depthOffset, sizeof(uint32_t));
-    glBindVertexBuffer(IN_RADIANCE, treeBuffer, radianceOffset, sizeof(float));
+    gl::glBindVertexArray(vao);
+    gl::glBindVertexBuffer(IN_OFFSET, treeBuffer, 0, sizeof(float) * 2);
+    gl::glBindVertexBuffer(IN_DEPTH, treeBuffer, depthOffset, sizeof(uint32_t));
+    gl::glBindVertexBuffer(IN_RADIANCE, treeBuffer, radianceOffset, sizeof(float));
 
     // Bind FBO
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER,
-                           GL_COLOR_ATTACHMENT0 + OUT_COLOR,
-                           GL_TEXTURE_2D, currentTexture.TexId(), 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER,
-                           GL_COLOR_ATTACHMENT0 + OUT_VALUE,
-                           GL_TEXTURE_2D, valueTex.TexId(), 0);
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, fbo);
+    gl::glFramebufferTexture2D(gl::GL_FRAMEBUFFER,
+                               gl::GL_COLOR_ATTACHMENT0 + OUT_COLOR,
+                               gl::GL_TEXTURE_2D, currentTexture.TexId(), 0);
+    glFramebufferTexture2D(gl::GL_FRAMEBUFFER,
+                           gl::GL_COLOR_ATTACHMENT0 + OUT_VALUE,
+                           gl::GL_TEXTURE_2D, valueTex.TexId(), 0);
+    assert(glCheckFramebufferStatus(gl::GL_FRAMEBUFFER) == gl::GL_FRAMEBUFFER_COMPLETE);
 
     // Enable 2 Color Channels
-    const GLenum Attachments[2] = {GL_COLOR_ATTACHMENT0 + OUT_COLOR,
-                                   GL_COLOR_ATTACHMENT0 + OUT_VALUE};
-    glDrawBuffers(2, Attachments);
+    const gl::GLenum Attachments[2] = {gl::GL_COLOR_ATTACHMENT0 + OUT_COLOR,
+                                       gl::GL_COLOR_ATTACHMENT0 + OUT_VALUE};
+    gl::glDrawBuffers(2, Attachments);
 
     // Change View-port
-    glViewport(0, 0, currentTexture.Width(), currentTexture.Height());
+    gl::glViewport(0, 0, currentTexture.Width(), currentTexture.Height());
 
     // Global States
-    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    gl::glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
     //glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT);
+    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
     // ==========================//
     //   Render Filled Squares   //
@@ -454,16 +454,16 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     // Bind V Shader
     vertDTreeRender.Bind();
     // Uniforms
-    glUniform1f(U_MAX_RADIANCE, maxValue);
-    glUniform1ui(U_MAX_DEPTH, maxDepth);
-    glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
+    gl::glUniform1f(U_MAX_RADIANCE, maxValue);
+    gl::glUniform1ui(U_MAX_DEPTH, maxDepth);
+    gl::glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
     // Bind F Shader
     fragDTreeRender.Bind();
     // Uniforms
-    glUniform1i(U_PERIMIETER_ON, 0);
+    gl::glUniform1i(U_PERIMIETER_ON, 0);
     // Draw Call
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr,
-                            static_cast<GLsizei>(squareCount));
+    gl::glDrawElementsInstanced(gl::GL_TRIANGLES, 6, gl::GL_UNSIGNED_BYTE, nullptr,
+                                static_cast<gl::GLsizei>(squareCount));
     //=================//
     //   Render Lines  //
     //=================//
@@ -471,22 +471,22 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     // Bind Uniforms (Frag Shader is Already Bound)
     if(renderPerimeter)
     {
-        glUniform1i(U_PERIMIETER_ON, 1);
-        glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
+        gl::glUniform1i(U_PERIMIETER_ON, 1);
+        gl::glUniform3f(U_PERIMIETER_COLOR, perimeterColor[0], perimeterColor[1], perimeterColor[2]);
         // Set Line Width
-        glEnable(GL_LINE_SMOOTH);
+        gl::glEnable(gl::GL_LINE_SMOOTH);
         //glLineWidth(3.0f);
         // Draw Call
-        glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, static_cast<GLsizei>(squareCount));
+        gl::glDrawArraysInstanced(gl::GL_LINE_LOOP, 0, 4, static_cast<gl::GLsizei>(squareCount));
     }
     // Rebind the window framebuffer etc..
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0);
 
     // Get Value Buffer to CPU
     currentValues.resize(currentTexture.Size()[0] * currentTexture.Size()[1]);
-    glBindTexture(GL_TEXTURE_2D, valueTex.TexId());
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT,
-                  currentValues.data());
+    gl::glBindTexture(gl::GL_TEXTURE_2D, valueTex.TexId());
+    gl::glGetTexImage(gl::GL_TEXTURE_2D, 0, gl::GL_RED, gl::GL_FLOAT,
+                      currentValues.data());
 
     // All Done!
 }

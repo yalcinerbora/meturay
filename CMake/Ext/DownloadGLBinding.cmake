@@ -3,6 +3,7 @@ mray_build_ext_dependency_git(
     URL "https://github.com/cginternals/glbinding.git"
     TAG "aedb549941537a53c6ce2fed6848f6f27e7d42ad" # v.3.3.0
     SKIP_INSTALL
+    LICENSE_NAME "LICENSE"
     BUILD_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DOPTION_BUILD_EXAMPLES=OFF
@@ -48,7 +49,7 @@ endif()
 # KHR Header
 set(GLBINDING_KHR_FILE ${GLBINDING_DIR_KHR}/khrplatform.h)
 
-# TODO: Add cmake-export files of glbinding
+# CMake exports
 
 ExternalProject_Add_Step(glbinding_ext custom_install
                         COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different

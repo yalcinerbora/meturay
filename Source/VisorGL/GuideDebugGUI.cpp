@@ -56,24 +56,24 @@ void GuideDebugGUI::AlphaBlendRefWithOverlay()
     compAlphaBlend.Bind();
     // Get ready for shader call
     // Uniforms
-    glUniform2i(U_RES, static_cast<int>(refTexture.Size()[0]),
+    gl::glUniform2i(U_RES, static_cast<int>(refTexture.Size()[0]),
                        static_cast<int>(refTexture.Size()[1]));
-    glUniform1f(U_BLEND, spatialBlendRatio);
+    gl::glUniform1f(U_BLEND, spatialBlendRatio);
     // Textures
     refTexture.Bind(T_IN_1);
     overlayTex.Bind(T_IN_0);
     // Images
-    glBindImageTexture(I_OUT, refOutTex.TexId(),
-                        0, false, 0,
-                        GL_WRITE_ONLY,
-                        PixelFormatToSizedGL(refOutTex.Format()));
+    gl::glBindImageTexture(I_OUT, refOutTex.TexId(),
+                           0, false, 0,
+                           gl::GL_WRITE_ONLY,
+                           PixelFormatToSizedGL(refOutTex.Format()));
 
     // Call the Kernel (Shader)
-    GLuint gridX = (refTexture.Size()[0] + 16 - 1) / 16;
-    GLuint gridY = (refTexture.Size()[1] + 16 - 1) / 16;
-    glDispatchCompute(gridX, gridY, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
-                    GL_TEXTURE_FETCH_BARRIER_BIT);
+    gl::GLuint gridX = (refTexture.Size()[0] + 16 - 1) / 16;
+    gl::GLuint gridY = (refTexture.Size()[1] + 16 - 1) / 16;
+    gl::glDispatchCompute(gridX, gridY, 1);
+    gl::glMemoryBarrier(gl::GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
+                        gl::GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
 bool GuideDebugGUI::IncrementDepth()

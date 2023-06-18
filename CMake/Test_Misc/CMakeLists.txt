@@ -39,6 +39,8 @@ source_group("" FILES ${SRC_COMMON})
 
 add_executable(Test_Misc ${SRC_ALL})
 
+add_dependencies(Test_Misc googletest_ext)
+
 target_include_directories(Test_Misc PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 

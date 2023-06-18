@@ -48,9 +48,28 @@ set(IMGUI_BACKEND_HEADERS
 target_link_libraries(imgui glfw)
 
 install(TARGETS imgui
+        EXPORT imguiTargets
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
         FILE_SET HEADERS
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Imgui)
 
 install(FILES  ${IMGUI_BACKEND_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Imgui)
+
+# From the cmake docs tutorial
+include(CMakePackageConfigHelpers)
+
+set(IMGUI_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/imgui)
+# generate the config file that includes the exports
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/imguiConfig.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/imguiConfig.cmake"
+        INSTALL_DESTINATION ${IMGUI_CONFIG_DIR}
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/imguiConfig.cmake"
+        DESTINATION ${IMGUI_CONFIG_DIR})
+
+install(EXPORT imguiTargets
+        FILE imguiTargets.cmake
+        DESTINATION ${IMGUI_CONFIG_DIR})

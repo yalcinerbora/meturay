@@ -262,64 +262,64 @@ void GDebugRendererRL::UpdateDirectional(const Vector3f& worldPos,
     // ============================= //
     // Get a max luminance buffer;
     float initalMaxData = 0.0f;
-    GLuint maxBuffer;
-    glGenBuffers(1, &maxBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBuffer);
-    glBufferStorage(GL_SHADER_STORAGE_BUFFER, 1 * sizeof(float), &initalMaxData, 0);
+    gl::GLuint maxBuffer;
+    gl::glGenBuffers(1, &maxBuffer);
+    gl::glBindBuffer(gl::GL_SHADER_STORAGE_BUFFER, maxBuffer);
+    gl::glBufferStorage(gl::GL_SHADER_STORAGE_BUFFER, 1 * sizeof(float), &initalMaxData, gl::GL_NONE_BIT);
 
     // Both of these compute shaders total work count is same
-    const GLuint workCount = qTexture.Size()[1] * qTexture.Size()[0];
+    const gl::GLuint workCount = qTexture.Size()[1] * qTexture.Size()[0];
     // Some WG Definitions (statically defined in shader)
-    static constexpr GLuint WORK_GROUP_1D_X = 256;
-    static constexpr GLuint WORK_GROUP_2D_X = 16;
-    static constexpr GLuint WORK_GROUP_2D_Y = 16;
+    static constexpr gl::GLuint WORK_GROUP_1D_X = 256;
+    static constexpr gl::GLuint WORK_GROUP_2D_X = 16;
+    static constexpr gl::GLuint WORK_GROUP_2D_Y = 16;
     // =======================================================
     // Set Max Shader
     compReduction.Bind();
     // Bind Uniforms
-    glUniform2ui(U_RES, qTexture.Size()[0], qTexture.Size()[1]);
+    gl::glUniform2ui(U_RES, qTexture.Size()[0], qTexture.Size()[1]);
     // Bind SSBO
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, maxBuffer);
+    gl::glBindBufferBase(gl::GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, maxBuffer);
     // Textures
     qTexture.Bind(T_IN_LUM_TEX);
     // Dispatch Max Shader
     // Max shader is 1D shader set data accordingly
-    GLuint gridX_1D = (workCount + WORK_GROUP_1D_X - 1) / WORK_GROUP_1D_X;
-    glDispatchCompute(gridX_1D, 1, 1);
-    glMemoryBarrier(GL_UNIFORM_BARRIER_BIT |
-                    GL_SHADER_STORAGE_BARRIER_BIT);
+    gl::GLuint gridX_1D = (workCount + WORK_GROUP_1D_X - 1) / WORK_GROUP_1D_X;
+    gl::glDispatchCompute(gridX_1D, 1, 1);
+    gl::glMemoryBarrier(gl::GL_UNIFORM_BARRIER_BIT |
+                        gl::GL_SHADER_STORAGE_BARRIER_BIT);
     // =======================================================
     // Unbind SSBO just to be sure
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, 0);
+    gl::glBindBufferBase(gl::GL_SHADER_STORAGE_BUFFER, SSB_MAX_LUM, 0);
     // ============================= //
     //     Call Reduction Shader     //
     // ============================= //
      // Set Render Shader
     compRefRender.Bind();
     // Bind Uniforms
-    glUniform2ui(U_RES, qTexture.Size()[0], qTexture.Size()[1]);
-    glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
+    gl::glUniform2ui(U_RES, qTexture.Size()[0], qTexture.Size()[1]);
+    gl::glUniform1i(U_LOG_ON, doLogScale ? 1 : 0);
     //
     // UBOs
-    glBindBufferBase(GL_UNIFORM_BUFFER, UB_MAX_LUM, maxBuffer);
+    gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, UB_MAX_LUM, maxBuffer);
     // Textures
     qTexture.Bind(T_IN_LUM_TEX);
     gradientTexture.Bind(T_IN_GRAD_TEX);  linearSampler.Bind(T_IN_GRAD_TEX);
     // Images
     glBindImageTexture(I_OUT_REF_IMAGE, currentTexture.TexId(),
-                       0, false, 0, GL_WRITE_ONLY,
+                       0, false, 0, gl::GL_WRITE_ONLY,
                        PixelFormatToSizedGL(currentTexture.Format()));
     // Dispatch Render Shader
     // Max shader is 2D shader set data accordingly
-    GLuint gridX_2D = (qTexture.Size()[0] + WORK_GROUP_2D_X - 1) / WORK_GROUP_2D_X;
-    GLuint gridY_2D = (qTexture.Size()[1] + WORK_GROUP_2D_Y - 1) / WORK_GROUP_2D_Y;
-    glDispatchCompute(gridX_2D, gridY_2D, 1);
+    gl::GLuint gridX_2D = (qTexture.Size()[0] + WORK_GROUP_2D_X - 1) / WORK_GROUP_2D_X;
+    gl::GLuint gridY_2D = (qTexture.Size()[1] + WORK_GROUP_2D_Y - 1) / WORK_GROUP_2D_Y;
+    gl::glDispatchCompute(gridX_2D, gridY_2D, 1);
     // =======================================================
     // All done!!!
 
     // Delete Temp Max Buffer
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glDeleteBuffers(1, &maxBuffer);
+    gl::glBindBuffer(gl::GL_SHADER_STORAGE_BUFFER, 0);
+    gl::glDeleteBuffers(1, &maxBuffer);
 }
 
 bool GDebugRendererRL::RenderGUI(bool& overlayCheckboxChanged,

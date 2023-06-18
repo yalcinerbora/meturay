@@ -15,6 +15,7 @@ mray_build_ext_dependency_git(
         NAME zlib_ext
         URL "https://github.com/madler/zlib.git"
         TAG "04f42ceca40f73e2978b50e93806c2a18c1281fc" # v1.2.13
+        LICENSE_NAME "LICENSE"
         BUILD_ARGS
             -DINSTALL_BIN_DIR=${MRAY_CONFIG_LIB_DIRECTORY}
             -DINSTALL_INC_DIR=${MRAY_LIB_INCLUDE_DIRECTORY}
@@ -28,6 +29,7 @@ mray_build_ext_dependency_git(
         NAME fmt_ext
         URL "https://github.com/fmtlib/fmt.git"
         TAG "a33701196adfad74917046096bf5a2aa0ab0bb50" # v9.1.0
+        LICENSE_NAME "LICENSE.rst"
         BUILD_ARGS
             -DFMT_DEBUG_POSTFIX:STRING=
             -DFMT_DOC=OFF
@@ -45,6 +47,7 @@ mray_build_ext_dependency_git(
         NAME json_ext
         URL "https://github.com/nlohmann/json.git"
         TAG "5d2754306d67d1e654a1a34e1d2e74439a9d53b3" # 16.06.2023 Latest Commit
+        LICENSE_NAME "LICENSE.MIT"
         BUILD_ARGS
             -DJSON_BuildTests=OFF
             -DBUILD_TESTING=OFF
@@ -61,6 +64,7 @@ mray_build_ext_dependency_git(
     URL "https://github.com/assimp/assimp.git"
     #TAG "9c54540a1915bbb9fa2f719124d501791c8d69d7" # 16.06.2023 Latest Commit
     TAG "9519a62dd20799c5493c638d1ef5a6f484e5faf1" # v.5.2.5
+    LICENSE_NAME "LICENSE"
     BUILD_ARGS
         -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT=OFF
         -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=ON
@@ -89,6 +93,7 @@ mray_build_ext_dependency_git(
     NAME gfg_ext
     URL "https://github.com/yalcinerbora/GFGFileFormat.git"
     TAG "ae5fd9bee60d70f6a7221c689653a4d00a2bd8cf" # 17.06.2023 Latest Commit
+    LICENSE_NAME "LICENSE"
     SOURCE_SUBDIR "Build/CMake"
     BUILD_ARGS
         -DGFG_INSTALL=ON
@@ -100,6 +105,7 @@ mray_build_ext_dependency_git(
     NAME spdlog_ext
     URL "https://github.com/gabime/spdlog.git"
     TAG "ad0e89cbfb4d0c1ce4d097e134eb7be67baebb36" # v.1.11.0
+    LICENSE_NAME "LICENSE"
     BUILD_ARGS
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_PIC=ON
@@ -110,13 +116,14 @@ mray_build_ext_dependency_git(
 )
 
 # Get glbinding
-include(DownloadGLBindings.cmake)
+include(DownloadGLBinding.cmake)
 
 # Get glfw
 mray_build_ext_dependency_git(
     NAME glfw_ext
     URL "https://github.com/glfw/glfw.git"
     TAG "3fa2360720eeba1964df3c0ecf4b5df8648a8e52" # 17.06.2023 Latest Commit
+    LICENSE_NAME "LICENSE.md"
     BUILD_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_DOCS=OFF
@@ -129,16 +136,12 @@ mray_build_ext_dependency_git(
         -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
 )
 
-# Get gtest
-if(MRAY_BUILD_TESTS)
-
-endif()
-
 # Get CLI11
 mray_build_ext_dependency_git(
-    NAME cl11_ext
+    NAME cli11_ext
     URL "https://github.com/CLIUtils/CLI11.git"
     TAG "291c58789c031208f08f4f261a858b5b7083e8e2" # v2.3.2
+    LICENSE_NAME "LICENSE"
     BUILD_ARGS
         -DBUILD_TESTING=OFF
         -DCLI11_BUILD_EXAMPLES=OFF
@@ -149,6 +152,21 @@ mray_build_ext_dependency_git(
 
 # Get ImGUI
 include(DownloadDearImGUI.cmake)
+# Get ImGUI Tex Inspect
+include(DownloadImGUITexInspect.cmake)
+
+# Get gtest
+if(MRAY_BUILD_TESTS)
+    mray_build_ext_dependency_git(
+        NAME googletest_ext
+        URL "https://github.com/google/googletest.git"
+        TAG "b796f7d44681514f58a683a3a71ff17c94edb0c1" # v1.13.0
+        LICENSE_NAME "LICENSE"
+        BUILD_ARGS
+            -DBUILD_GMOCK=ON
+            -DBUILD_SHARED_LIBS=ON
+    )
+endif()
 
 # # Image Libraries
 # mray_build_ext_dependency_git(

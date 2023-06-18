@@ -29,6 +29,8 @@ endif()
 # Exe
 add_executable(Test_TracerCUDA ${SRC_COMMON})
 
+add_dependencies(Test_TracerCUDA googletest_ext)
+
 target_include_directories(Test_TracerCUDA PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 
