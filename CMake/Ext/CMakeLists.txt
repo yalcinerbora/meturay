@@ -116,7 +116,23 @@ mray_build_ext_dependency_git(
 )
 
 # Get glbinding
-include(DownloadGLBinding.cmake)
+mray_build_ext_dependency_git(
+    NAME glbinding_ext
+    URL "https://github.com/yalcinerbora/glbinding.git"
+    TAG "c55d9fa6e3a140dc38af476703becc888ac6d63b" # Custom slightly modified version
+    LICENSE_NAME "LICENSE"
+    BUILD_ARGS
+        -DBUILD_SHARED_LIBS=ON
+        -DOPTION_BUILD_EXAMPLES=OFF
+        -DOPTION_BUILD_OWN_KHR_HEADERS=ON
+        -DOPTION_BUILD_TOOLS=OFF
+        # These are the added options
+        -DOPTION_SKIP_GLBINDING_AUX=ON
+        -DOPTION_ONLY_INSTALL_LARGE_HEADER=ON
+        # I am speculating this will be specifically usefull
+        # since the functions are actual gl functions instead of func. ptrs
+        -DOPTION_BUILD_WITH_LTO=ON
+)
 
 # Get glfw
 mray_build_ext_dependency_git(

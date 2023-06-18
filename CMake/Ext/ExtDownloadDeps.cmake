@@ -74,6 +74,8 @@ function(mray_build_ext_dependency_git)
                 LOG_INSTALL ON
                 LOG_OUTPUT_ON_FAILURE ON
 
+                # DEPENDS ${BUILD_SUBPROJECT_DEPENDENCIES}
+
                 # Common args (it will share the generator and compiler)
                 LIST_SEPARATOR | # Use the alternate list separator
                 CMAKE_ARGS
@@ -99,17 +101,17 @@ function(mray_build_ext_dependency_git)
     # Copy license file if available to the main Lib directory
     string(REPLACE "_ext" "" BUILD_SUBPROJECT_NAME_NO_EXT ${BUILD_SUBPROJECT_NAME})
 
-    if(NOT ${BUILD_SUBPROJECT_LICENSE_NAME} STREQUAL "")
-        ExternalProject_Add_Step(${BUILD_SUBPROJECT_NAME} copy_license
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${SUBPROJECT_SRC_PATH}/${BUILD_SUBPROJECT_LICENSE_NAME}
-                ${MRAY_LIB_DIRECTORY}/${BUILD_SUBPROJECT_NAME_NO_EXT}_LICENSE
-                DEPENDEES DOWNLOAD UPDATE PATCH)
-    endif()
+    # if(NOT ${BUILD_SUBPROJECT_LICENSE_NAME} STREQUAL "")
+    #     ExternalProject_Add_Step(${BUILD_SUBPROJECT_NAME} copy_license
+    #     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    #             ${SUBPROJECT_SRC_PATH}/${BUILD_SUBPROJECT_LICENSE_NAME}
+    #             ${MRAY_LIB_DIRECTORY}/${BUILD_SUBPROJECT_NAME_NO_EXT}_LICENSE
+    #             DEPENDEES DOWNLOAD UPDATE PATCH)
+    # endif()
 
     if(BUILD_SUBPROJECT_DEPENDENCIES)
         ExternalProject_Add_StepDependencies(${BUILD_SUBPROJECT_NAME}
-                                             configure ${BUILD_SUBPROJECT_DEPENDENCIES})
+                                             "install" ${BUILD_SUBPROJECT_DEPENDENCIES})
     endif()
 
 endfunction()
