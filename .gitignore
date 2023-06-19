@@ -358,8 +358,6 @@ Lib/**/*.so*
 Lib/**/*.dvlib
 Lib/**/*.dll
 Lib/**/*.pch
-# Except Licence files
-!Lib/*_LICENSE
 
 # Working Dir Except Shaders
 WorkingDir/*

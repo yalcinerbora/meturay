@@ -212,6 +212,8 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # External Libs
 add_subdirectory(Ext)
 
+return()
+
 # BUILDS
 # Libs
 add_subdirectory(RayLib)
