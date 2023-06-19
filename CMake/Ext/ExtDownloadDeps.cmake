@@ -20,7 +20,7 @@ function(mray_build_ext_dependency_git)
     # Parse Args
     set(options SKIP_INSTALL)
     set(oneValueArgs NAME URL TAG SOURCE_SUBDIR OVERRIDE_INSTALL_PREFIX LICENSE_NAME)
-    set(multiValueArgs BUILD_ARGS DEPENDENCIES)
+    set(multiValueArgs BUILD_ARGS DEPENDENCIES SPECIFIC_SUBMODULES)
 
     cmake_parse_arguments(BUILD_SUBPROJECT "${options}" "${oneValueArgs}"
                           "${multiValueArgs}" ${ARGN})
@@ -46,6 +46,12 @@ function(mray_build_ext_dependency_git)
     else()
         set(SUBPROJECT_INSTALL_PREFIX ${MRAY_LIB_DIRECTORY}/)
     endif()
+
+    # Check if specific submodules are requested
+    if(BUILD_SUBPROJECT_SPECIFIC_SUBMODULES)
+        list(PREPEND BUILD_SUBPROJECT_SPECIFIC_SUBMODULES "GIT_SUBMODULES")
+    endif()
+
     # Actual Call
     ExternalProject_Add(${BUILD_SUBPROJECT_NAME}
                 PREFIX ${SUBPROJECT_EXT_DIR}
@@ -56,6 +62,9 @@ function(mray_build_ext_dependency_git)
                 GIT_REPOSITORY ${BUILD_SUBPROJECT_URL}
                 GIT_TAG ${BUILD_SUBPROJECT_TAG}
                 GIT_SHALLOW ON
+                # with specific submodules if requested
+                ${BUILD_SUBPROJECT_SPECIFIC_SUBMODULES}
+
                 # Custom build root location if required
                 SOURCE_SUBDIR ${BUILD_SUBPROJECT_SOURCE_SUBDIR}
 
@@ -66,15 +75,22 @@ function(mray_build_ext_dependency_git)
 
                 # Log the outputs instead of printing
                 # except when there is an error
-                LOG_DOWNLOAD OFF
-                LOG_UPDATE ON
-                LOG_PATCH ON
-                LOG_CONFIGURE ON
-                LOG_BUILD ON
-                LOG_INSTALL ON
-                LOG_OUTPUT_ON_FAILURE ON
+                # LOG_DOWNLOAD OFF
+                # LOG_UPDATE ON
+                # LOG_PATCH ON
+                # LOG_CONFIGURE ON
+                # LOG_BUILD ON
+                # LOG_INSTALL ON
+                # LOG_OUTPUT_ON_FAILURE ON
 
-                # DEPENDS ${BUILD_SUBPROJECT_DEPENDENCIES}
+                LOG_DOWNLOAD OFF
+                LOG_UPDATE OFF
+                LOG_PATCH OFF
+                LOG_CONFIGURE OFF
+                LOG_BUILD OFF
+                LOG_INSTALL OFF
+                LOG_OUTPUT_ON_FAILURE OFF
+
 
                 # Common args (it will share the generator and compiler)
                 LIST_SEPARATOR | # Use the alternate list separator
@@ -87,14 +103,17 @@ function(mray_build_ext_dependency_git)
 
                     # Install Stuff
                     -DCMAKE_INSTALL_PREFIX:PATH=${SUBPROJECT_INSTALL_PREFIX}
-                    -DCMAKE_INSTALL_INCLUDEDIR=Include
-                    -DCMAKE_INSTALL_DOCDIR=Docs/${BUILD_SUBPROJECT_NAME}
-                    -DCMAKE_INSTALL_DATADIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
-                    -DCMAKE_INSTALL_LIBDIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
-                    -DCMAKE_INSTALL_BINDIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
+                    -DCMAKE_INSTALL_INCLUDEDIR:PATH=Include
+                    -DCMAKE_INSTALL_DOCDIR:PATH=Docs/${BUILD_SUBPROJECT_NAME}
+                    -DCMAKE_INSTALL_DATADIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+                    -DCMAKE_INSTALL_LIBDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+                    -DCMAKE_INSTALL_BINDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+                    -DCMAKE_INSTALL_DATAROOTDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
 
                     -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
-                ${BUILD_SUBPROJECT_BUILD_ARGS}
+
+                    ${BUILD_SUBPROJECT_BUILD_ARGS}
+
                 BUILD_ALWAYS OFF
     )
 

@@ -13,34 +13,32 @@ append_cmake_prefix_path(${META_MRAY_PKGCONFIG_PREFIX_PATH})
 # Get ZLib
 mray_build_ext_dependency_git(
         NAME zlib_ext
-        URL "https://github.com/madler/zlib.git"
-        TAG "04f42ceca40f73e2978b50e93806c2a18c1281fc" # v1.2.13
+        URL "https://github.com/yalcinerbora/zlib.git"
+        TAG "4ad44edbed65e9e659180e71119cb94d2537fd1c" # v1.2.13 (Modern CMAKE)
         LICENSE_NAME "LICENSE"
         BUILD_ARGS
-            -DINSTALL_BIN_DIR=${MRAY_CONFIG_LIB_DIRECTORY}
-            -DINSTALL_INC_DIR=${MRAY_LIB_INCLUDE_DIRECTORY}
-            -DINSTALL_LIB_DIR=${MRAY_CONFIG_LIB_DIRECTORY}
-            -DINSTALL_MAN_DIR=${MRAY_LIB_DIRECTORY}/Docs/zlib
-            -DINSTALL_PKGCONFIG_DIR=${MRAY_CONFIG_LIB_DIRECTORY}/pkgconfig
+            -DZLIB_BUILD_SHARED=OFF
+            -DZLIB_BUILD_EXAMPLES=OFF
+            -DZLIB_INSTALL=ON
 )
 
-# # Get FMT
-# mray_build_ext_dependency_git(
-#         NAME fmt_ext
-#         URL "https://github.com/fmtlib/fmt.git"
-#         TAG "a33701196adfad74917046096bf5a2aa0ab0bb50" # v9.1.0
-#         LICENSE_NAME "LICENSE.rst"
-#         BUILD_ARGS
-#             -DFMT_DEBUG_POSTFIX:STRING=
-#             -DFMT_DOC=OFF
-#             -DFMT_TEST=OFF
-#             # FMT has specific install variables for various stuff
-#             # set them specifically
-#             -DFMT_INC_DIR=Include
-#             -DFMT_LIB_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
-#             -DFMT_CMAKE_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>/cmake/fmt
-#             -DFMT_PKGCONFIG_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>/pkgconfig
-# )
+# Get FMT
+mray_build_ext_dependency_git(
+        NAME fmt_ext
+        URL "https://github.com/fmtlib/fmt.git"
+        TAG "a33701196adfad74917046096bf5a2aa0ab0bb50" # v9.1.0
+        LICENSE_NAME "LICENSE.rst"
+        BUILD_ARGS
+            -DFMT_DEBUG_POSTFIX:STRING=
+            -DFMT_DOC=OFF
+            -DFMT_TEST=OFF
+            # FMT has specific install variables for various stuff
+            # set them specifically
+            -DFMT_INC_DIR=Include
+            -DFMT_LIB_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
+            -DFMT_CMAKE_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>/cmake/fmt
+            -DFMT_PKGCONFIG_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>/pkgconfig
+)
 
 # # Get nlohmann-json
 # mray_build_ext_dependency_git(
@@ -184,40 +182,10 @@ mray_build_ext_dependency_git(
 #     )
 # endif()
 
-# Image Libraries
-include(DownloadOpenImageIO.cmake)
-
-mray_build_ext_dependency_git(
-        NAME imath_ext
-        URL "https://github.com/AcademySoftwareFoundation/Imath.git"
-        TAG "d690a3fcff4e877ead5ae56c7e964595ade8a35e" # v3.1.9
-        LICENSE_NAME "LICENSE.md"
-        BUILD_ARGS
-            -DBUILD_SHARED_LIBS=ON
-            -DCMAKE_DEBUG_POSTFIX:STRING=""
-)
-
-mray_build_ext_dependency_git(
-        NAME openexr_ext
-        URL "https://github.com/AcademySoftwareFoundation/openexr.git"
-        TAG "68d9e1e17620cef00e59b43fa42c97fbcf90e72b" # v3.1.8
-        LICENSE_NAME "LICENSE.md"
-        BUILD_ARGS
-            -DBUILD_SHARED_LIBS=ON
-            -DCMAKE_DEBUG_POSTFIX:STRING=""
-            -DOPENEXR_BUILD_TOOLS=OFF
-            -DOPENEXR_FORCE_INTERNAL_IMATH=OFF
-            -DOPENEXR_INSTALL=ON
-            -DOPENEXR_INSTALL_EXAMPLES=OFF
-            -DOPENEXR_INSTALL_PKG_CONFIG=OFF
-            -DOPENEXR_INSTALL_TOOLS=OFF
+# Image Libraries compiled into oiio
+add_subdirectory(oiio)
 
 
-
-        DEPENDENCIES
-            imath_ext
-            zlib_ext
-)
 
 
 
