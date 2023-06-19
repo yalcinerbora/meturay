@@ -108,7 +108,7 @@ mray_build_ext_dependency_git(
 mray_build_ext_dependency_git(
         NAME libtiff_ext
         URL "https://gitlab.com/libtiff/libtiff.git"
-        TAG "38eb7b00cb5767770017fb91743a960ffd96d774" # v4.5.0
+        TAG "7f7258f25bf7ef852c8698f283976706ec19a75e" # v4.5.1
 
         LICENSE_NAME "LICENSE.md"
         OVERRIDE_INSTALL_PREFIX ${OIIO_LIB_DIR}
@@ -118,6 +118,8 @@ mray_build_ext_dependency_git(
             -Dtiff-tests=OFF
             -Dtiff-docs=OFF
 
+        DEPENDENCIES
+            zlib_ext
 )
 
 # Lib JPEG-turbo
@@ -130,6 +132,9 @@ mray_build_ext_dependency_git(
         OVERRIDE_INSTALL_PREFIX ${OIIO_LIB_DIR}
         BUILD_ARGS
             -DENABLE_SHARED=OFF
+
+        DEPENDENCIES
+            zlib_ext
 )
 
 # Lib PNG
