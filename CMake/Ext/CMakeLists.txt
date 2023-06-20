@@ -12,16 +12,16 @@ append_cmake_prefix_path(${META_MRAY_PKGCONFIG_PREFIX_PATH})
 append_cmake_prefix_path(${MRAY_LIB_DIRECTORY})
 
 # Get ZLib
-# mray_build_ext_dependency_git(
-#         NAME zlib_ext
-#         URL "https://github.com/yalcinerbora/zlib.git"
-#         TAG "2c5d30e5e35153b1314cd6700d1b6d1a3a2c0cd6" # v1.2.13 (Modern CMAKE)
-#         LICENSE_NAME "LICENSE"
-#         BUILD_ARGS
-#             -DZLIB_BUILD_SHARED=ON
-#             -DZLIB_BUILD_EXAMPLES=OFF
-#             -DZLIB_INSTALL=ON
-# )
+mray_build_ext_dependency_git(
+        NAME zlib_ext
+        URL "https://github.com/yalcinerbora/zlib.git"
+        TAG "2c5d30e5e35153b1314cd6700d1b6d1a3a2c0cd6" # v1.2.13 (Modern CMAKE)
+        LICENSE_NAME "LICENSE"
+        BUILD_ARGS
+            -DZLIB_BUILD_SHARED=ON
+            -DZLIB_BUILD_EXAMPLES=OFF
+            -DZLIB_INSTALL=ON
+)
 
 # Get FMT
 mray_build_ext_dependency_git(

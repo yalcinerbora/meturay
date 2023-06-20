@@ -18,7 +18,7 @@ endmacro()
 function(mray_build_ext_dependency_git)
 
     # Parse Args
-    set(options SKIP_INSTALL)
+    set(options SKIP_INSTALL DONT_OVERRIDE_INSTALL_SUFFIXES)
     set(oneValueArgs NAME URL TAG SOURCE_SUBDIR OVERRIDE_INSTALL_PREFIX LICENSE_NAME)
     set(multiValueArgs BUILD_ARGS DEPENDENCIES SPECIFIC_SUBMODULES)
 
@@ -50,6 +50,20 @@ function(mray_build_ext_dependency_git)
     # Check if specific submodules are requested
     if(BUILD_SUBPROJECT_SPECIFIC_SUBMODULES)
         list(PREPEND BUILD_SUBPROJECT_SPECIFIC_SUBMODULES "GIT_SUBMODULES")
+    endif()
+
+    # Principled install locations
+    set(SUBPROJECT_INSTALL_SUFFIXES
+        -DCMAKE_INSTALL_INCLUDEDIR:PATH=Include
+        -DCMAKE_INSTALL_DOCDIR:PATH=Docs/${BUILD_SUBPROJECT_NAME}
+        -DCMAKE_INSTALL_DATADIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+        -DCMAKE_INSTALL_LIBDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+        -DCMAKE_INSTALL_BINDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+        -DCMAKE_INSTALL_DATAROOTDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+    )
+    #string(REPLACE ";" "|" SUBPROJECT_INSTALL_SUFFIXES "${SUBPROJECT_INSTALL_SUFFIXES}")
+    if(BUILD_SUBPROJECT_DONT_OVERRIDE_INSTALL_SUFFIXES)
+        set(SUBPROJECT_INSTALL_SUFFIXES)
     endif()
 
     # Actual Call
@@ -101,17 +115,12 @@ function(mray_build_ext_dependency_git)
                     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
                     -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
 
+                    -DCMAKE_PREFIX_PATH:PATH=${CMAKE_PREFIX_PATH}
                     # Install Stuff
                     -DCMAKE_INSTALL_PREFIX:PATH=${SUBPROJECT_INSTALL_PREFIX}
-                    -DCMAKE_INSTALL_INCLUDEDIR:PATH=Include
-                    -DCMAKE_INSTALL_DOCDIR:PATH=Docs/${BUILD_SUBPROJECT_NAME}
-                    -DCMAKE_INSTALL_DATADIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
-                    -DCMAKE_INSTALL_LIBDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
-                    -DCMAKE_INSTALL_BINDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
-                    -DCMAKE_INSTALL_DATAROOTDIR:PATH=${MRAY_PLATFORM_NAME}/$<CONFIG>
+                    ${SUBPROJECT_INSTALL_SUFFIXES}
 
-                    -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
-
+                    # Extra args from user to pass CMake
                     ${BUILD_SUBPROJECT_BUILD_ARGS}
 
                 BUILD_ALWAYS OFF
