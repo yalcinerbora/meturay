@@ -20,7 +20,7 @@ ExternalProject_Add_Step(imgui_tex_inspect_ext inject_cmake
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists-ImGUITexInspect.cmake
                         ${MRAY_IMGUITI_SRC_LOCATION}/CMakeLists.txt
-                DEPENDEES DOWNLOAD UPDATE PATCH
-                DEPENDERS CONFIGURE
+                DEPENDEES download update patch
+                DEPENDERS configure
                 COMMENT "Injecting a cmake lists to imgui_tex_inspect"
 )

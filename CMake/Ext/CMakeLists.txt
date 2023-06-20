@@ -15,7 +15,7 @@ append_cmake_prefix_path(${MRAY_LIB_DIRECTORY})
 mray_build_ext_dependency_git(
         NAME zlib_ext
         URL "https://github.com/yalcinerbora/zlib.git"
-        TAG "2c5d30e5e35153b1314cd6700d1b6d1a3a2c0cd6" # v1.2.13 (Modern CMAKE)
+        TAG "ed47d72d2053d7bb526080e6841e340183428322" # v1.2.13 (Modern CMAKE)
         LICENSE_NAME "LICENSE"
         BUILD_ARGS
             -DZLIB_BUILD_SHARED=ON
@@ -41,147 +41,147 @@ mray_build_ext_dependency_git(
             -DFMT_PKGCONFIG_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>/pkgconfig
 )
 
-# # Get nlohmann-json
-# mray_build_ext_dependency_git(
-#         NAME json_ext
-#         URL "https://github.com/nlohmann/json.git"
-#         TAG "5d2754306d67d1e654a1a34e1d2e74439a9d53b3" # 16.06.2023 Latest Commit
-#         LICENSE_NAME "LICENSE.MIT"
-#         BUILD_ARGS
-#             -DJSON_BuildTests=OFF
-#             -DBUILD_TESTING=OFF
-#             -DNLOHMANN_JSON_CONFIG_INSTALL_DIR=${MRAY_CONFIG_LIB_DIRECTORY}/cmake/json
-#             -DNLOHMANN_JSON_INCLUDE_INSTALL_DIR=${MRAY_LIB_INCLUDE_DIRECTORY}
-#             -DNLOHMANN_JSON_PKGCONFIG_INSTALL_DIR=${MRAY_CONFIG_LIB_DIRECTORY}/pkgconfig
-#             # This is not cached and it install to a wrong folder :(
-#             -DNLOHMANN_ADD_NATVIS=OFF
-# )
+# Get nlohmann-json
+mray_build_ext_dependency_git(
+        NAME json_ext
+        URL "https://github.com/nlohmann/json.git"
+        TAG "5d2754306d67d1e654a1a34e1d2e74439a9d53b3" # 16.06.2023 Latest Commit
+        LICENSE_NAME "LICENSE.MIT"
+        BUILD_ARGS
+            -DJSON_BuildTests=OFF
+            -DBUILD_TESTING=OFF
+            -DNLOHMANN_JSON_CONFIG_INSTALL_DIR=${MRAY_CONFIG_LIB_DIRECTORY}/cmake/json
+            -DNLOHMANN_JSON_INCLUDE_INSTALL_DIR=${MRAY_LIB_INCLUDE_DIRECTORY}
+            -DNLOHMANN_JSON_PKGCONFIG_INSTALL_DIR=${MRAY_CONFIG_LIB_DIRECTORY}/pkgconfig
+            # This is not cached and it install to a wrong folder :(
+            -DNLOHMANN_ADD_NATVIS=OFF
+)
 
-# # Get assimp
-# mray_build_ext_dependency_git(
-#     NAME assimp_ext
-#     URL "https://github.com/assimp/assimp.git"
-#     #TAG "9c54540a1915bbb9fa2f719124d501791c8d69d7" # 16.06.2023 Latest Commit
-#     TAG "9519a62dd20799c5493c638d1ef5a6f484e5faf1" # v.5.2.5
-#     LICENSE_NAME "LICENSE"
-#     BUILD_ARGS
-#         -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT=OFF
-#         -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=ON
-#         -DASSIMP_BUILD_TESTS=OFF
-#         -DASSIMP_BUILD_ZLIB=OFF
-#         -DASSIMP_INJECT_DEBUG_POSTFIX=OFF
-#         -DASSIMP_INSTALL=ON
-#         -DBUILD_SHARED_LIBS=ON
-#         -DASSIMP_HUNTER_ENABLED=OFF
-#         # Non-unix related
-#         -DASSIMP_LIB_INSTALL_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
-#         -DASSIMP_INCLUDE_INSTALL_DIR=Include
-#         -DASSIMP_BIN_INSTALL_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
-#         # Windows related
-#         -DLIBRARY_SUFFIX:STRING=
-#         -DUSE_STATIC_CRT=OFF
-#         # There is a bug on this one maybe?
-#         -DASSIMP_INSTALL_PDB=OFF
+# Get assimp
+mray_build_ext_dependency_git(
+    NAME assimp_ext
+    URL "https://github.com/assimp/assimp.git"
+    #TAG "9c54540a1915bbb9fa2f719124d501791c8d69d7" # 16.06.2023 Latest Commit
+    TAG "9519a62dd20799c5493c638d1ef5a6f484e5faf1" # v.5.2.5
+    LICENSE_NAME "LICENSE"
+    BUILD_ARGS
+        -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT=OFF
+        -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=ON
+        -DASSIMP_BUILD_TESTS=OFF
+        -DASSIMP_BUILD_ZLIB=OFF
+        -DASSIMP_INJECT_DEBUG_POSTFIX=OFF
+        -DASSIMP_INSTALL=ON
+        -DBUILD_SHARED_LIBS=ON
+        -DASSIMP_HUNTER_ENABLED=OFF
+        # Non-unix related
+        -DASSIMP_LIB_INSTALL_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
+        -DASSIMP_INCLUDE_INSTALL_DIR=Include
+        -DASSIMP_BIN_INSTALL_DIR=${MRAY_PLATFORM_NAME}/$<CONFIG>
+        # Windows related
+        -DLIBRARY_SUFFIX:STRING=
+        -DUSE_STATIC_CRT=OFF
+        # There is a bug on this one maybe?
+        -DASSIMP_INSTALL_PDB=OFF
 
-#         DEPENDENCIES
-#             zlib_ext
-# )
+        DEPENDENCIES
+            zlib_ext
+)
 
-# # Get GFG
-# mray_build_ext_dependency_git(
-#     NAME gfg_ext
-#     URL "https://github.com/yalcinerbora/GFGFileFormat.git"
-#     TAG "ae5fd9bee60d70f6a7221c689653a4d00a2bd8cf" # 17.06.2023 Latest Commit
-#     LICENSE_NAME "LICENSE"
-#     SOURCE_SUBDIR "Build/CMake"
-#     BUILD_ARGS
-#         -DGFG_INSTALL=ON
-#         -DGFG_BUILD_MAYA_PLUG_IN=OFF
-# )
+# Get GFG
+mray_build_ext_dependency_git(
+    NAME gfg_ext
+    URL "https://github.com/yalcinerbora/GFGFileFormat.git"
+    TAG "a1b4dc570c1370cbdc8fa7d155864948680596a1" # 21.06.2023 Latest Commit
+    LICENSE_NAME "LICENSE"
+    SOURCE_SUBDIR "Build/CMake"
+    BUILD_ARGS
+        -DGFG_INSTALL=ON
+        -DGFG_BUILD_MAYA_PLUG_IN=OFF
+)
 
-# # Get spdlog
-# mray_build_ext_dependency_git(
-#     NAME spdlog_ext
-#     URL "https://github.com/gabime/spdlog.git"
-#     TAG "ad0e89cbfb4d0c1ce4d097e134eb7be67baebb36" # v.1.11.0
-#     LICENSE_NAME "LICENSE"
-#     BUILD_ARGS
-#         -DSPDLOG_BUILD_EXAMPLE=OFF
-#         -DSPDLOG_BUILD_PIC=ON
-#         -DSPDLOG_BUILD_SHARED=ON
-#         # fmt release and spdlog release does not match
-#         # due to iterator debug level (MSVC)
-#         -DSPDLOG_FMT_EXTERNAL=OFF
-# )
+# Get spdlog
+mray_build_ext_dependency_git(
+    NAME spdlog_ext
+    URL "https://github.com/gabime/spdlog.git"
+    TAG "ad0e89cbfb4d0c1ce4d097e134eb7be67baebb36" # v.1.11.0
+    LICENSE_NAME "LICENSE"
+    BUILD_ARGS
+        -DSPDLOG_BUILD_EXAMPLE=OFF
+        -DSPDLOG_BUILD_PIC=ON
+        -DSPDLOG_BUILD_SHARED=ON
+        # fmt release and spdlog release does not match
+        # due to iterator debug level (MSVC)
+        -DSPDLOG_FMT_EXTERNAL=OFF
+)
 
-# # Get glbinding
-# mray_build_ext_dependency_git(
-#     NAME glbinding_ext
-#     URL "https://github.com/yalcinerbora/glbinding.git"
-#     TAG "c55d9fa6e3a140dc38af476703becc888ac6d63b" # Custom slightly modified version
-#     LICENSE_NAME "LICENSE"
-#     BUILD_ARGS
-#         -DBUILD_SHARED_LIBS=ON
-#         -DOPTION_BUILD_EXAMPLES=OFF
-#         -DOPTION_BUILD_OWN_KHR_HEADERS=ON
-#         -DOPTION_BUILD_TOOLS=OFF
-#         # These are the added options
-#         -DOPTION_SKIP_GLBINDING_AUX=ON
-#         -DOPTION_ONLY_INSTALL_LARGE_HEADER=ON
-#         # I am speculating this will be specifically usefull
-#         # since the functions are actual gl functions instead of func. ptrs
-#         -DOPTION_BUILD_WITH_LTO=ON
-# )
+# Get glbinding
+mray_build_ext_dependency_git(
+    NAME glbinding_ext
+    URL "https://github.com/yalcinerbora/glbinding.git"
+    TAG "c55d9fa6e3a140dc38af476703becc888ac6d63b" # Custom slightly modified version
+    LICENSE_NAME "LICENSE"
+    BUILD_ARGS
+        -DBUILD_SHARED_LIBS=ON
+        -DOPTION_BUILD_EXAMPLES=OFF
+        -DOPTION_BUILD_OWN_KHR_HEADERS=ON
+        -DOPTION_BUILD_TOOLS=OFF
+        # These are the added options
+        -DOPTION_SKIP_GLBINDING_AUX=ON
+        -DOPTION_ONLY_INSTALL_LARGE_HEADER=ON
+        # I am speculating this will be specifically usefull
+        # since the functions are actual gl functions instead of func. ptrs
+        -DOPTION_BUILD_WITH_LTO=ON
+)
 
-# # Get glfw
-# mray_build_ext_dependency_git(
-#     NAME glfw_ext
-#     URL "https://github.com/glfw/glfw.git"
-#     TAG "3fa2360720eeba1964df3c0ecf4b5df8648a8e52" # 17.06.2023 Latest Commit
-#     LICENSE_NAME "LICENSE.md"
-#     BUILD_ARGS
-#         -DBUILD_SHARED_LIBS=ON
-#         -DGLFW_BUILD_DOCS=OFF
-#         -DGLFW_BUILD_EXAMPLES=OFF
-#         -DGLFW_BUILD_TESTS=OFF
-#         -DGLFW_INSTALL=ON
-#         -DGLFW_USE_HYBRID_HPG=OFF
-#         # Windows Related
-#         -DGLFW_BUILD_WIN32=ON
-#         -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
-# )
+# Get glfw
+mray_build_ext_dependency_git(
+    NAME glfw_ext
+    URL "https://github.com/glfw/glfw.git"
+    TAG "3fa2360720eeba1964df3c0ecf4b5df8648a8e52" # 17.06.2023 Latest Commit
+    LICENSE_NAME "LICENSE.md"
+    BUILD_ARGS
+        -DBUILD_SHARED_LIBS=ON
+        -DGLFW_BUILD_DOCS=OFF
+        -DGLFW_BUILD_EXAMPLES=OFF
+        -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_INSTALL=ON
+        -DGLFW_USE_HYBRID_HPG=OFF
+        # Windows Related
+        -DGLFW_BUILD_WIN32=ON
+        -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
+)
 
-# # Get CLI11
-# mray_build_ext_dependency_git(
-#     NAME cli11_ext
-#     URL "https://github.com/CLIUtils/CLI11.git"
-#     TAG "291c58789c031208f08f4f261a858b5b7083e8e2" # v2.3.2
-#     LICENSE_NAME "LICENSE"
-#     BUILD_ARGS
-#         -DBUILD_TESTING=OFF
-#         -DCLI11_BUILD_EXAMPLES=OFF
-#         -DCLI11_BUILD_EXAMPLES_JSON=OFF
-#         -DCLI11_BUILD_TESTS=OFF
-#         -DCLI11_SINGLE_FILE=OFF
-# )
+# Get CLI11
+mray_build_ext_dependency_git(
+    NAME cli11_ext
+    URL "https://github.com/CLIUtils/CLI11.git"
+    TAG "291c58789c031208f08f4f261a858b5b7083e8e2" # v2.3.2
+    LICENSE_NAME "LICENSE"
+    BUILD_ARGS
+        -DBUILD_TESTING=OFF
+        -DCLI11_BUILD_EXAMPLES=OFF
+        -DCLI11_BUILD_EXAMPLES_JSON=OFF
+        -DCLI11_BUILD_TESTS=OFF
+        -DCLI11_SINGLE_FILE=OFF
+)
 
-# # Get ImGUI
-# include(DownloadDearImGUI.cmake)
-# # Get ImGUI Tex Inspect
-# include(DownloadImGUITexInspect.cmake)
+# Get ImGUI
+include(DownloadDearImGUI.cmake)
+# Get ImGUI Tex Inspect
+include(DownloadImGUITexInspect.cmake)
 
-# # Get gtest
-# if(MRAY_BUILD_TESTS)
-#     mray_build_ext_dependency_git(
-#         NAME googletest_ext
-#         URL "https://github.com/google/googletest.git"
-#         TAG "b796f7d44681514f58a683a3a71ff17c94edb0c1" # v1.13.0
-#         LICENSE_NAME "LICENSE"
-#         BUILD_ARGS
-#             -DBUILD_GMOCK=ON
-#             -DBUILD_SHARED_LIBS=ON
-#     )
-# endif()
+# Get gtest
+if(MRAY_BUILD_TESTS)
+    mray_build_ext_dependency_git(
+        NAME googletest_ext
+        URL "https://github.com/google/googletest.git"
+        TAG "b796f7d44681514f58a683a3a71ff17c94edb0c1" # v1.13.0
+        LICENSE_NAME "LICENSE"
+        BUILD_ARGS
+            -DBUILD_GMOCK=ON
+            -DBUILD_SHARED_LIBS=ON
+    )
+endif()
 
 # Image Libraries compiled into oiio
 add_subdirectory(oiio)

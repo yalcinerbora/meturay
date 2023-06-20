@@ -46,14 +46,11 @@ set(OIIO_BOOST_SUBMODULE_LIST
     libs/array libs/lexical_cast libs/regex
     libs/range libs/unordered libs/numeric/conversion
     libs/tokenizer
-
     #
     libs/headers
+    # I thought this was only for windows but ubuntu compile also required it
+    libs/winapi
 )
-# Platform specific
-if(WIN32)
-  list(APPEND OIIO_BOOST_SUBMODULE_LIST libs/winapi)
-endif()
 
 # Normally MRay uses structure of arrays style library directory structure
 # which is easy for the consumer libraries to find the actual lib/dlls
@@ -228,21 +225,29 @@ mray_build_ext_dependency_git(
             -DUSE_QT=OFF
             -DBUILD_SHARED_LIBS=ON
             -DLINKSTATIC=ON
-            -DBUILD_MISSING_FMT=OFF # We have a fmt
-            -DALWAYS_PREFER_CONFIG=ON
             -DOIIO_BUILD_TESTS=OFF
             -DOIIO_BUILD_TOOLS=OFF
             -DBUILD_DOCS=OFF
             -DBUILD_TESTING=OFF
             -DINSTALL_DOCS=OFF
             -DOIIO_DISABLE_BOOST_STACKTRACE=ON
+
+            -DBUILD_MISSING_FMT=OFF # We have a fmt
+            -DINTERNALIZE_FMT=OFF # On Linux this was required
+
+            -DALWAYS_PREFER_CONFIG=ON
+
+            # Do not use system
+            -DCMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH=OFF
+            -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
             # Dep Root Files
             # SoA
             -DImath_DIR:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/Imath
             #-DOpenEXR_ROOT:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/OpenEXR
             # AoS
-            -DBOOST_ROOT:PATH=${BOOST_INSTALL_LOC}
+            -DBoost_ROOT:PATH=${BOOST_INSTALL_LOC}
             -DZLIB_ROOT:PATH=${ZLIB_INSTALL_LOC}
+            -DJPEGTurbo_ROOT:PATH=${JPEGTURBO_INSTALL_LOC}
             -DJPEG_ROOT:PATH=${JPEGTURBO_INSTALL_LOC}
             -DTIFF_ROOT:PATH=${LIBTIFF_INSTALL_LOC}
             -DPNG_ROOT:PATH=${LIBPNG_INSTALL_LOC}
@@ -282,8 +287,8 @@ ExternalProject_Add_Step(oiio_ext patch_extra
                 # This is also not good, it will move head back and forth but this tecnhically
                 # will run only initially so it is kinda fine.
                 COMMAND git am 3862.patch
-                DEPENDEES DOWNLOAD UPDATE
-                DEPENDERS PATCH CONFIGURE
+                DEPENDEES download update
+                DEPENDERS configure
                 COMMENT "Applying a patch to oiio"
 )
 

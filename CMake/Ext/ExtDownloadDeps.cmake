@@ -89,22 +89,13 @@ function(mray_build_ext_dependency_git)
 
                 # Log the outputs instead of printing
                 # except when there is an error
-                # LOG_DOWNLOAD OFF
-                # LOG_UPDATE ON
-                # LOG_PATCH ON
-                # LOG_CONFIGURE ON
-                # LOG_BUILD ON
-                # LOG_INSTALL ON
-                # LOG_OUTPUT_ON_FAILURE ON
-
                 LOG_DOWNLOAD OFF
-                LOG_UPDATE OFF
-                LOG_PATCH OFF
-                LOG_CONFIGURE OFF
-                LOG_BUILD OFF
-                LOG_INSTALL OFF
-                LOG_OUTPUT_ON_FAILURE OFF
-
+                LOG_UPDATE ON
+                LOG_PATCH ON
+                LOG_CONFIGURE ON
+                LOG_BUILD ON
+                LOG_INSTALL ON
+                LOG_OUTPUT_ON_FAILURE ON
 
                 # Common args (it will share the generator and compiler)
                 LIST_SEPARATOR | # Use the alternate list separator
@@ -134,7 +125,7 @@ function(mray_build_ext_dependency_git)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${SUBPROJECT_SRC_PATH}/${BUILD_SUBPROJECT_LICENSE_NAME}
                 ${MRAY_LIB_DIRECTORY}/${BUILD_SUBPROJECT_NAME_NO_EXT}_LICENSE
-                DEPENDEES DOWNLOAD UPDATE PATCH)
+                DEPENDEES download update patch)
     endif()
 
     if(BUILD_SUBPROJECT_DEPENDENCIES)
