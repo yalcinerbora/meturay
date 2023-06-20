@@ -91,7 +91,7 @@ mray_build_ext_dependency_git(
 mray_build_ext_dependency_git(
     NAME gfg_ext
     URL "https://github.com/yalcinerbora/GFGFileFormat.git"
-    TAG "a1b4dc570c1370cbdc8fa7d155864948680596a1" # 21.06.2023 Latest Commit
+    TAG "cada665ed0ea83dcb9c99d37bafd69e9ffa18f61" # 21.06.2023 Latest Commit
     LICENSE_NAME "LICENSE"
     SOURCE_SUBDIR "Build/CMake"
     BUILD_ARGS
