@@ -61,7 +61,7 @@ function(mray_build_ext_dependency_git)
                 # DL Repo
                 GIT_REPOSITORY ${BUILD_SUBPROJECT_URL}
                 GIT_TAG ${BUILD_SUBPROJECT_TAG}
-                GIT_SHALLOW ON
+                #GIT_SHALLOW ON
                 # with specific submodules if requested
                 ${BUILD_SUBPROJECT_SPECIFIC_SUBMODULES}
 

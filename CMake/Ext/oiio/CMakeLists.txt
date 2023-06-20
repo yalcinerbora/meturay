@@ -10,6 +10,7 @@
 # Install only OIIO related libraries to a different folder
 # this folder will be deleted after everything is installed
 # Thus, all of these libraries should be static library
+set(OIIO_TMP_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/tmp)
 set(OIIO_LIB_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/tmp/lib)
 
 # Append to prefix path here for lib finding
@@ -54,6 +55,28 @@ if(WIN32)
   list(APPEND OIIO_BOOST_SUBMODULE_LIST libs/winapi)
 endif()
 
+set(ZLIB_INSTALL_LOC ${OIIO_TMP_DIR}/zlib-$<CONFIG>)
+
+mray_build_ext_dependency_git(
+        NAME oiio_zlib_ext
+        URL "https://github.com/madler/zlib.git"
+        TAG "04f42ceca40f73e2978b50e93806c2a18c1281fc" # v1.2.13
+        LICENSE_NAME "LICENSE"
+
+        OVERRIDE_INSTALL_PREFIX ${ZLIB_INSTALL_LOC}
+        BUILD_ARGS
+        #     -DZLIB_BUILD_SHARED=ON
+        #     -DZLIB_BUILD_EXAMPLES=OFF
+        #     -DZLIB_INSTALL=ON
+
+        -DINSTALL_BIN_DIR=${ZLIB_INSTALL_LOC}
+        -DINSTALL_INC_DIR=${ZLIB_INSTALL_LOC}
+        -DINSTALL_LIB_DIR=${ZLIB_INSTALL_LOC}
+        -DINSTALL_MAN_DIR=${ZLIB_INSTALL_LOC}
+        -DINSTALL_PKGCONFIG_DIR=${ZLIB_INSTALL_LOC}
+
+)
+
 mray_build_ext_dependency_git(
         NAME boost_fs_thrd_ext
         URL "https://github.com/boostorg/boost.git"
@@ -97,11 +120,12 @@ mray_build_ext_dependency_git(
             -DOPENEXR_INSTALL_EXAMPLES=OFF
             -DOPENEXR_INSTALL_PKG_CONFIG=OFF
             -DOPENEXR_INSTALL_TOOLS=OFF
-            -DZLIB_USE_STATIC_LIBS=ON
+            -DZLIB_ROOT=${ZLIB_INSTALL_LOC}
+            -DImath_DIR:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/Imath
 
         DEPENDENCIES
             imath_ext
-            zlib_ext
+            oiio_zlib_ext
 )
 
 # Lib TIFF
@@ -117,9 +141,10 @@ mray_build_ext_dependency_git(
             -Dtiff-tools=OFF
             -Dtiff-tests=OFF
             -Dtiff-docs=OFF
-
+            -Dzlib=ON
+            -DZLIB_ROOT=${ZLIB_INSTALL_LOC}
         DEPENDENCIES
-            zlib_ext
+            oiio_zlib_ext
 )
 
 # Lib JPEG-turbo
@@ -132,9 +157,9 @@ mray_build_ext_dependency_git(
         OVERRIDE_INSTALL_PREFIX ${OIIO_LIB_DIR}
         BUILD_ARGS
             -DENABLE_SHARED=OFF
-
-        DEPENDENCIES
-            zlib_ext
+        #     -DZLIB_ROOT=${ZLIB_INSTALL_LOC}
+        # DEPENDENCIES
+        #     oiio_zlib_ext
 )
 
 # Lib PNG
@@ -165,15 +190,17 @@ mray_build_ext_dependency_git(
             -DINSTALL_DOCS=OFF
             #-DOIIO_LOCAL_DEPS_PATH=${CMAKE_PREFIX_PATH}
             -DOIIO_DISABLE_BOOST_STACKTRACE=ON
-
             -DImath_ROOT:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/Imath
+            -DZLIB_ROOT=${ZLIB_INSTALL_LOC}
+
+            -DJPEGTurbo_ROOT=${OIIO_LIB_CONFIG_DIR}/cmake/libjpeg-turbo
 
             -DVERBOSE=ON
 
         DEPENDENCIES
             boost_fs_thrd_ext
             zlib_ext
-            openxr_ext
+            openexr_ext
             libtiff_ext
             libjpeg_turbo_ext
             fmt_ext
