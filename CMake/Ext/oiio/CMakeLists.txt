@@ -1,6 +1,3 @@
-
-
-
 # For OIIO, we embed everything to its dll so we do not need these files to
 # be present after the mega lib generation. So override install directory
 # of these modules (even do not do install at all)
@@ -141,7 +138,6 @@ mray_build_ext_dependency_git(
             -DBUILD_TESTING=OFF
             -DZLIB_ROOT=${ZLIB_INSTALL_LOC}
             -DImath_DIR:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/Imath
-
         DEPENDENCIES
             imath_ext
             oiio_zlib_ext
@@ -163,8 +159,16 @@ mray_build_ext_dependency_git(
             -Dtiff-tests=OFF
             -Dtiff-docs=OFF
             -Dzlib=ON
+            -DZLIB_ROOT:PATH=${ZLIB_INSTALL_LOC}
+            -DJPEG_ROOT:PATH=${JPEGTURBO_INSTALL_LOC}
+            # Finds stuff from miniconda since it is on path
+            # It may be on path like in my system
+            -DCMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH=OFF
+            -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
         DEPENDENCIES
             oiio_zlib_ext
+            libjpeg_turbo_ext
+            libpng_ext
 )
 
 # Lib JPEG-turbo
@@ -231,12 +235,9 @@ mray_build_ext_dependency_git(
             -DBUILD_TESTING=OFF
             -DINSTALL_DOCS=OFF
             -DOIIO_DISABLE_BOOST_STACKTRACE=ON
-
             -DBUILD_MISSING_FMT=OFF # We have a fmt
             -DINTERNALIZE_FMT=OFF # On Linux this was required
-
             -DALWAYS_PREFER_CONFIG=ON
-
             # Do not use system
             -DCMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH=OFF
             -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
@@ -251,12 +252,13 @@ mray_build_ext_dependency_git(
             -DJPEG_ROOT:PATH=${JPEGTURBO_INSTALL_LOC}
             -DTIFF_ROOT:PATH=${LIBTIFF_INSTALL_LOC}
             -DPNG_ROOT:PATH=${LIBPNG_INSTALL_LOC}
-
             -DVERBOSE=ON
+
+            # Do not install these
+            -DCMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP=OFF
 
         DEPENDENCIES
             boost_fs_thrd_ext
-            zlib_ext
             openexr_ext
             libtiff_ext
             libjpeg_turbo_ext
@@ -292,3 +294,6 @@ ExternalProject_Add_Step(oiio_ext patch_extra
                 COMMENT "Applying a patch to oiio"
 )
 
+# Get the name of the deps outside
+set(MRAY_ALL_EXT_DEP_TARGETS
+    ${MRAY_ALL_EXT_DEP_TARGETS} PARENT_SCOPE)

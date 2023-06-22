@@ -39,37 +39,25 @@ source_group("" FILES ${SRC_COMMON})
 
 add_executable(Test_Misc ${SRC_ALL})
 
-add_dependencies(Test_Misc googletest_ext)
-
-target_include_directories(Test_Misc PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(Test_Misc SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(Test_Misc PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
-
-target_compile_options(Test_Misc PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
+target_link_libraries(Test_Misc PRIVATE
+                      RayLib
+                      VisorGL
+                      $<IF:$<CONFIG:Debug>,gtestd,gtest>
+                      $<IF:$<CONFIG:Debug>,gmockd,gmock>
+                      mray::meta_compile_opts
+                      mray::cuda_extra_compile_opts)
 
 set_target_properties(Test_Misc PROPERTIES
                       POSITION_INDEPENDENT_CODE ON
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
-target_link_libraries(Test_Misc PRIVATE
-                      RayLib
-                      VisorGL
-                      $<$<CONFIG:Debug>:gtestd>
-                      $<$<CONFIG:Debug>:gmockd>
-                      $<$<CONFIG:Release>:gtest>
-                      $<$<CONFIG:Release>:gmock>)
-
 # Not-linked but dependent targets
-add_dependencies(Test_Misc TracerCUDA)
-
+add_dependencies(Test_Misc
+                 TracerCUDA
+                 googletest_ext)
 
 if(MSVC)
-
     set(DEBUG_ARGS "--gtest_filter=*.* --gtest_catch_exceptions=0 --gtest_repeat=1 --gtest_shuffle=0")
 
     set_target_properties(Test_Misc PROPERTIES

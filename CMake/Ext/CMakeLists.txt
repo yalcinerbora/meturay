@@ -1,4 +1,25 @@
-include(ExtDownloadDeps.cmake)
+cmake_minimum_required(VERSION 3.26)
+
+# CMAKE Project Definitions and Source, Library Folders are separate
+# Directories
+set(MRAY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+cmake_path(NORMAL_PATH MRAY_DIRECTORY)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${MRAY_DIRECTORY}CMake")
+
+
+include(ExtDownloadDeps)
+
+# Create a project..
+project(METURayDeps DESCRIPTION "MRay dependency downloader/compiler")
+
+option(MRAY_BUILD_TESTS "Build Tests" ON)
+
+# Populate the meta directories for this project hierarchy
+include(Macros)
+generate_platform_name()
+populate_mray_directory_variables(${MRAY_DIRECTORY})
 
 # External Dependencies
 # Comparably Large dependencies would have option to use
@@ -10,6 +31,26 @@ set(META_MRAY_PKGCONFIG_PREFIX_PATH ${MRAY_CONFIG_LIB_DIRECTORY}/pkgconfig)
 append_cmake_prefix_path(${META_MRAY_CMAKE_PREFIX_PATH})
 append_cmake_prefix_path(${META_MRAY_PKGCONFIG_PREFIX_PATH})
 append_cmake_prefix_path(${MRAY_LIB_DIRECTORY})
+
+message(STATUS "${CMAKE_PREFIX_PATH}")
+message(STATUS ${MRAY_SOURCE_DIRECTORY})
+message(STATUS ${MRAY_LIB_DIRECTORY})
+message(STATUS ${MRAY_LIB_INCLUDE_DIRECTORY})
+message(STATUS ${MRAY_CONFIG_LIB_DOC_DIRECTORY})
+message(STATUS ${MRAY_BIN_DIRECTORY})
+message(STATUS ${MRAY_EXT_DIRECTORY})
+message(STATUS ${MRAY_RESOURCE_DIRECTORY})
+message(STATUS ${MRAY_WORKING_DIRECTORY})
+message(STATUS ${MRAY_PLATFORM_LIB_DIRECTORY})
+message(STATUS ${MRAY_PLATFORM_BIN_DIRECTORY})
+message(STATUS ${MRAY_PLATFORM_EXT_DIRECTORY})
+# Platform & Configurations Related Lib Bin folders
+message(STATUS ${MRAY_CONFIG_LIB_DIRECTORY})
+message(STATUS ${MRAY_CONFIG_BIN_DIRECTORY})
+# Set cmake vars for output
+message(STATUS ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+message(STATUS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # Get ZLib
 mray_build_ext_dependency_git(
@@ -112,6 +153,7 @@ mray_build_ext_dependency_git(
         # fmt release and spdlog release does not match
         # due to iterator debug level (MSVC)
         -DSPDLOG_FMT_EXTERNAL=OFF
+        -DCMAKE_DEBUG_POSTFIX=
 )
 
 # Get glbinding
@@ -180,17 +222,22 @@ if(MRAY_BUILD_TESTS)
         BUILD_ARGS
             -DBUILD_GMOCK=ON
             -DBUILD_SHARED_LIBS=ON
+            -DCMAKE_DEBUG_POSTFIX=
     )
 endif()
 
 # Image Libraries compiled into oiio
-add_subdirectory(oiio)
+#add_subdirectory(oiio)
 
+set(MRAY_ALL_EXT_DEP_TARGETS ${MRAY_ALL_EXT_DEP_TARGETS}
+    ${MRAY_OIIO_EXT_DEP_TARGETS})
 
+# Finally create a timestamp
+set(MRAY_EXT_LIBS_STAMP_FILE ${MRAY_CONFIG_LIB_DIRECTORY}/lib.stamp)
 
-
-
-
-
-
-
+add_custom_target(finalize_ext_libs ALL
+    COMMAND ${CMAKE_COMMAND} -E touch ${MRAY_EXT_LIBS_STAMP_FILE}
+    DEPENDS
+        ${MRAY_ALL_EXT_DEP_TARGETS}
+    COMMENT "Finalizing $<CONFIG> ext libraries with a ${MRAY_CONFIG_LIB_DIRECTORY}/lib.stamp"
+)

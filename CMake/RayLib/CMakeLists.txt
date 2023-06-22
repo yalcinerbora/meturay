@@ -183,20 +183,16 @@ source_group("" FILES ${SRC_COMMON})
 # DLL File
 add_library(RayLib STATIC ${SRC_ALL})
 
-target_include_directories(RayLib PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(RayLib SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-add_dependencies(RayLib fmt_ext json_ext spdlog_ext)
+add_dependencies(RayLib
+                 fmt_ext
+                 json_ext
+                 spdlog_ext)
 
 target_link_libraries(RayLib
                       fmt
-                      $<IF:$<CONFIG:Debug>,spdlogd,spdlog>
-                      cuda)
-
-target_compile_definitions(RayLib PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
+                      cuda
+                      mray::meta_compile_opts
+                      mray::cuda_extra_compile_opts)
 
 set_target_properties(RayLib PROPERTIES
                       POSITION_INDEPENDENT_CODE ON

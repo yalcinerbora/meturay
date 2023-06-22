@@ -51,7 +51,6 @@ FUNCTION(NVCC_COMPILE_PTX)
         # Include Directories
         "-I${OPTIX_INCLUDE_DIR}"
         "-I${MRAY_SOURCE_DIRECTORY}"
-        #"-I${MRAY_SOURCE_DIRECTORY}/${NVCC_COMPILE_PTX_MAIN_TARGET}"
         "-I${MRAY_LIB_INCLUDE_DIRECTORY}"
         --optix-ir
         --machine=64
@@ -66,8 +65,6 @@ FUNCTION(NVCC_COMPILE_PTX)
         $<$<CONFIG:Debug>:-DMETU_DEBUG>
         $<$<CONFIG:Release>:-DNDEBUG>
         -DMETU_CUDA
-        $<$<CONFIG:Release>:-DNDEBUG>
-
      )
 
     # Custom Target Name
@@ -118,7 +115,7 @@ FUNCTION(NVCC_COMPILE_PTX)
             add_custom_command(
                 OUTPUT  "${OUTPUT}"
                 COMMENT "Builidng PTX File (CC_${COMPUTE_CAPABILITY}) ${INPUT}"
-                DEPENDS "${INPUT}"
+                MAIN_DEPENDENCY "${INPUT}"
                 DEPFILE "${DEP_PATH}"
                 COMMAND ${CMAKE_CUDA_COMPILER} ${NVCC_COMPILE_OPTIONS}
                          -MD

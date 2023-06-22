@@ -111,23 +111,20 @@ target_include_directories(VisorGL PRIVATE
                            ${MRAY_SOURCE_DIRECTORY})
 target_include_directories(VisorGL SYSTEM PRIVATE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
+
                            # KHR Header is included on the internal files differently
                            # TODO: This is not a good fix but w/e
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}/glbinding/3rdparty
-                           )
+                           ${MRAY_LIB_INCLUDE_DIRECTORY}/glbinding/3rdparty)
 
 add_dependencies(VisorGL glbinding_ext glfw_ext imgui_ext)
 
 target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
 
-
-
 target_link_libraries(VisorGL
                       RayLib
                       ImageIO
                       imgui
-                      #Imgui
-                      #Imgui_tex_inspect
+                      imgui_tex_inspect
                       glbinding
                       ${PLATFORM_SPEC_LIBRARIES})
 

@@ -1,5 +1,3 @@
-
-
 set(CURRENT_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/ImageIO)
 
 # SOURCES
@@ -13,30 +11,18 @@ set(SRC_ALL
 
 source_group("" FILES ${SRC_ALL})
 
-# Preprocessor Defs
-set(PREPROCESSOR_GENERIC
-    ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    METU_SHARED_IMAGE_IO)
-
-# OpenEXR Library Header Inclusion (Imath)
-set(MRAY_OPENEXR_INCLUDE_DIRECTORY ${MRAY_LIB_INCLUDE_DIRECTORY}/Imath)
-
 # DLL
 add_library(ImageIO SHARED ${SRC_ALL})
+add_dependencies(ImageIO oiio_ext)
 
-target_include_directories(ImageIO PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(ImageIO SYSTEM PRIVATE
-                           ${MRAY_OPENEXR_INCLUDE_DIRECTORY}
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(ImageIO PRIVATE ${PREPROCESSOR_GENERIC})
+target_compile_definitions(ImageIO PRIVATE
+                           METU_SHARED_IMAGE_IO)
 
 target_link_libraries(ImageIO PRIVATE
                       RayLib
                       OpenEXR
-                      freeimage)
+                      oiio
+                      mray::meta_compile_opts)
 
 # Copy DLLS
 if(MSVC)

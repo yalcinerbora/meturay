@@ -6,21 +6,12 @@ source_group("" FILES ${CURRENT_SOURCE_DIR}/main.cpp)
 
 add_executable(MVisor ${CURRENT_SOURCE_DIR}/main.cpp)
 
-add_dependencies(MVisor cli11_ext)
-
-target_include_directories(MVisor PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(MVisor SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(MVisor PRIVATE ${MRAY_PREPROCESSOR_DEFS_GENERIC})
-
 target_link_libraries(MVisor PRIVATE
-                      RayLib)
+                      RayLib
+                      mray::meta_compile_opts)
 
 # Not-linked but dependent targets
-add_dependencies(MVisor VisorGL)
+add_dependencies(MVisor VisorGL cli11_ext)
 
 # Debug Parameters
 if(MSVC)

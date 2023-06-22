@@ -9,17 +9,17 @@ set(CMAKE_CONFIGURATION_TYPES Debug;Release CACHE STRING "Selected by user")
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Selected by user")
 
 # On Linux I don't know why but this is needs to be defined
-# TODO: Maybe CUDA did not installed to default directory?
+# Maybe CUDA did not installed to default directory?
 if(UNIX)
     set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 endif()
 
 # Architecture
 # Use a drop-down menu for selecting Compute Capability
-# TODO: Add a "ReleaseAllCC" Configuration for final release compilation
-# including all compute capabilities etc.
-set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "Architecture chosen by the user at CMake configure time")
-set_property(CACHE CMAKE_CUDA_ARCHITECTURES PROPERTY STRINGS native 52 60 61 70 72 75 86 89 90 all all-major)
+set(CMAKE_CUDA_ARCHITECTURES "native"
+    CACHE STRING "Architecture chosen by the user at CMake configure time")
+set_property(CACHE CMAKE_CUDA_ARCHITECTURES
+             PROPERTY STRINGS native 52 60 61 70 72 75 86 89 90 all all-major)
 
 option(MRAY_USE_OPTIX "Try to find and use OptiX" OFF)
 option(MRAY_BUILD_TESTS "Build Tests" ON)
@@ -40,163 +40,58 @@ if(MRAY_USE_OPTIX)
         # expose the OPTIX_DIR (in cmake-GUI) so user can manually set it
         message(FATAL_ERROR "Optix Not Found, either set OPTIX_INSTALL_DIR or disable MRAY_USE_OPTIX")
         set(MRAY_USE_OPTIX CACHE BOOL OFF)
-    else()
-        set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC} -DMRAY_OPTIX)
-
-        # There is not a easiy way to convert "native" to actual cc number
-        # so that the optix can load the actual cc version so we add preporcessor directive
-        # so that the module loader select native
-        # TODO: Change this to environment variable or something better
-        # maybe query the native CC from nvcc ? if that is something.
-        if(${CMAKE_CUDA_ARCHITECTURES} STREQUAL "native")
-            set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-                MRAY_OPTIX_USE_NATIVE_CC)
-        endif()
-
-
     endif()
 endif()
 
-project(METURay LANGUAGES CUDA CXX)
+# Project Name etc..
+project(METURay
+        LANGUAGES CUDA CXX
+        VERSION 0.1.0
+        DESCRIPTION "Research oriented renderer."
+)
 
+include(Macros)
 # CMAKE Project Definitions and Source, Library Folders are separate
 # Directories
 set(MRAY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..)
 cmake_path(NORMAL_PATH MRAY_DIRECTORY)
+# Populate the meta directories for this project hierarchy
+generate_platform_name()
+populate_mray_directory_variables(${MRAY_DIRECTORY})
 
-set(MRAY_SOURCE_DIRECTORY ${MRAY_DIRECTORY}Source)
-set(MRAY_LIB_DIRECTORY ${MRAY_DIRECTORY}Lib)
-set(MRAY_LIB_INCLUDE_DIRECTORY ${MRAY_DIRECTORY}Lib/Include)
-set(MRAY_CONFIG_LIB_DOC_DIRECTORY ${MRAY_DIRECTORY}Lib/Docs)
-set(MRAY_BIN_DIRECTORY ${MRAY_DIRECTORY}Bin)
-set(MRAY_EXT_DIRECTORY ${MRAY_DIRECTORY}Ext)
-set(MRAY_RESOURCE_DIRECTORY ${MRAY_DIRECTORY}Resources)
-# Build is probably not used but its here for convenience
-set(MRAY_BUILD_DIRECTORY ${MRAY_DIRECTORY}/Build)
-# Working Dir is used for debugging (currently shaders are here so...)
-# For Visual Studio Projects this is copied to WorkingDir property for executables
-set(MRAY_WORKING_DIRECTORY ${MRAY_DIRECTORY}/WorkingDir)
+# Do not use in source builds
+include(cmake/PreventInSourceBuilds.cmake)
 
 # Determine Platform and Config
+# Cosmetic stuff
 if(MSVC)
-    set(MRAY_PLATFORM_NAME Win)
-    set(MRAY_PREPROCESSOR_DEFS_GENERIC ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-        -D_UNICODE
-        -DUNICODE
-        -DNOMINMAX)
     # Filter ALL_BUILD and ZERO_CHECK projects
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
     set(PREDEFINED_TARGETS_FOLDER "CustomTargets")
-elseif(UNIX)
+elseif(UNIX AND NOT APPLE)
     set(MRAY_PLATFORM_NAME Linux)
-    include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 else()
     message(FATAL_ERROR "Unknown platform... Terminating CMake.")
+    return()
 endif()
 
-# Use currently selected compiler
+# Use currently selected compiler for cude
+# This is not set?
 if(MSVC)
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 else()
     # This should be set automatically I think...
     add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${CMAKE_CXX_COMPILER}>)
 endif()
+
 # Force Colored Output on Ninja
 set(CMAKE_COLOR_DIAGNOSTICS ON)
-# if ((CMAKE_GENERATOR MATCHES "Ninja") AND UNIX)
-#     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-#         add_compile_options(-fcolor-diagnostics)
-#     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-#         add_compile_options(-fdiagnostics-color=always)
-#     endif()
-# endif()
 
-# Generic Compile Options
-if(MSVC)
-    # Warnings
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3>
-                        $<$<COMPILE_LANGUAGE:CXX>:/Zi>
-                        $<$<COMPILE_LANGUAGE:CXX>:/external:W0>
-                        # Ignore inline functions are not defined warning
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4984>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4506>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zi>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/external:W0>
-                        # Test
-                        # DROPPED W4 On MSVC it shows many unnecessary info
-                        # These Flags for W4 however /external does not work properly i think
-                        # it still returns warnings and clutters the code extensively
-                        # Thus these are commented out
-                        # Disable "Padding Added" warning
-                        # $<$<COMPILE_LANGUAGE:CXX>:/wd4324>
-                        # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4324>
-                        # # '__cudaUnregisterBinaryUtil': unreferenced function with internal linkage has been removed
-                        # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/wd4505>)
-                        )
-    add_link_options($<$<COMPILE_LANGUAGE:CXX>:/DEBUG>)
-else()
-    # Clang / GCC both use same syntax
-    # Warnings
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall>
-                        $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
-                        $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
-                        $<$<COMPILE_LANGUAGE:CXX>:-g3>
-                        # Directly passing Wall etc. causes many warnings
-                        # $<$<COMPILE_LANGUAGE:CUDA>:-Wreorder>
-                        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-g3>)
-endif()
-
-# Cuda Compile Options
-add_compile_options($<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>
-                    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:CUDA>>:-lineinfo>
-                    # Extended Lambdas (__device__ tagged lambdas)
-                    $<$<COMPILE_LANGUAGE:CUDA>:-extended-lambda>
-                    # Use fast math creates self intersection issues on
-                    # some scenes. Thus, we only selectively enable
-                    # some fp optimizations (culprit was prec-sqrt on some Unreal Materials)
-                    $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
-                    #
-                    #$<$<COMPILE_LANGUAGE:CUDA>:--fmad=true>
-                    #$<$<COMPILE_LANGUAGE:CUDA>:--ftz=true>
-                    #$<$<COMPILE_LANGUAGE:CUDA>:--prec-sqrt=false>
-                    #$<$<COMPILE_LANGUAGE:CUDA>:--prec-div=false>
-                    #
-                    $<$<COMPILE_LANGUAGE:CUDA>:-restrict>
-                    $<$<COMPILE_LANGUAGE:CUDA>:-extra-device-vectorization>)
-# All kernels started to show this warning (when a kernel uses a virtual function)
-# Suppress that warning
-add_link_options($<DEVICE_LINK:--nvlink-options=-suppress-stack-size-warning>)
-#add_link_options($<DEVICE_LINK:--nvlink-options=--verbose>)
-#add_link_options($<DEVICE_LINK:--resource-usage>)
-
-# Platform Specific Lib Bin Ext Folders
-set(MRAY_PLATFORM_LIB_DIRECTORY ${MRAY_LIB_DIRECTORY}/${MRAY_PLATFORM_NAME})
-set(MRAY_PLATFORM_BIN_DIRECTORY ${MRAY_BIN_DIRECTORY}/${MRAY_PLATFORM_NAME})
-set(MRAY_PLATFORM_EXT_DIRECTORY ${MRAY_EXT_DIRECTORY}/${MRAY_PLATFORM_NAME})
-# Platform & Configurations Related Lib Bin folders
-set(MRAY_CONFIG_LIB_DIRECTORY ${MRAY_PLATFORM_LIB_DIRECTORY}/$<CONFIG>)
-set(MRAY_CONFIG_BIN_DIRECTORY ${MRAY_PLATFORM_BIN_DIRECTORY}/$<CONFIG>)
-# Set cmake vars for output
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MRAY_CONFIG_BIN_DIRECTORY})
-# Meta library directory
-# All precompiled libraries are resides here
-link_directories(${MRAY_CONFIG_LIB_DIRECTORY}
-                 ${MRAY_PLATFORM_LIB_DIRECTORY})
-
-# Generic Preprocessor Definitions
-set(MRAY_PREPROCESSOR_DEFS_GENERIC
-    ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    $<$<CONFIG:Debug>:METU_DEBUG>
-    $<$<CONFIG:Release>:NDEBUG>)
-
-set(MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC
-    ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    METU_CUDA
-    # Suppress Dynamic Parallelism cudaDeviceSyncWarning
-    -D__CDPRT_SUPPRESS_SYNC_DEPRECATION_WARNING)
+# Compile Option Targets
+# Generates
+#   mray::meta_compile_opts
+#   mray::cuda_extra_compile_opts
+include(CompilerOptions.cmake)
 
 # After Everything is set
 # Include NVCC compile to ptx routine
@@ -211,9 +106,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE FASLE)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 
 # External Libs
-add_subdirectory(Ext)
-
-return()
+add_subdirectory(Lib)
 
 # BUILDS
 # Libs

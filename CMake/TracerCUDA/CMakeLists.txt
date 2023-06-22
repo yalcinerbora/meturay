@@ -504,45 +504,37 @@ endif()
 # Preprocessor Defs
 set(PREPROCESSOR_GENERIC
     ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC}
-    METU_SHARED_TRACER_CUDA)
+    )
 
 # TBB for std::execution (clang & GCC)
 if(MSVC)
     set(PLATFORM_SPEC_LIBRARIES)
-elseif(UNIX)
+elseif(UNIX NOT APPLE)
     set(PLATFORM_SPEC_LIBRARIES tbb)
 endif()
 
 # DLL File
 add_library(TracerCUDA SHARED)
 
-target_sources(TracerCUDA PUBLIC ${SRC_ALL})
+target_sources(TracerCUDA PRIVATE ${SRC_ALL})
 
 if(MRAY_USE_OPTIX)
     add_dependencies(TracerCUDA ${PTX_TARGET})
 endif()
 
-target_include_directories(TracerCUDA PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
+target_link_libraries(TracerCUDA
+                      RayLib
+                      ImageIO
+                      curand
+                      mray::meta_compile_opts
+                      mray::cuda_extra_compile_opts)
 
-target_include_directories(TracerCUDA SYSTEM PRIVATE
-                           ${OPTIX_INCLUDE_DIR}
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(TracerCUDA PRIVATE ${PREPROCESSOR_GENERIC})
-
-target_compile_options(TracerCUDA PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
+target_compile_definitions(TracerCUDA PRIVATE METU_SHARED_TRACER_CUDA)
 
 set_target_properties(TracerCUDA PROPERTIES
                       POSITION_INDEPENDENT_CODE ON
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-
-target_link_libraries(TracerCUDA
-                      RayLib
-                      ImageIO
-                      curand
-                      ${PLATFORM_SPEC_LIBRARIES})
 
 # Object Group for testing
 if(MRAY_BUILD_TESTS)
@@ -552,25 +544,15 @@ if(MRAY_BUILD_TESTS)
         add_dependencies(TracerCUDA_Static ${PTX_TARGET})
     endif()
 
-    target_include_directories(TracerCUDA_Static PRIVATE
-                            ${MRAY_SOURCE_DIRECTORY})
-
-    target_include_directories(TracerCUDA_Static SYSTEM PRIVATE
-                            ${OPTIX_INCLUDE_DIR}
-                            ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-    target_compile_definitions(TracerCUDA_Static PRIVATE ${PREPROCESSOR_GENERIC})
-
-    target_compile_options(TracerCUDA_Static PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
+    target_link_libraries(TracerCUDA_Static PRIVATE
+                        RayLib
+                        ImageIO
+                        curand
+                        mray::meta_compile_opts
+                        mray::cuda_extra_compile_opts)
 
     set_target_properties(TracerCUDA_Static PROPERTIES
                         POSITION_INDEPENDENT_CODE ON
                         CUDA_SEPARABLE_COMPILATION ON
                         CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-
-    target_link_libraries(TracerCUDA_Static
-                        RayLib
-                        ImageIO
-                        curand
-                        ${PLATFORM_SPEC_LIBRARIES})
 endif()

@@ -19,43 +19,26 @@ set(SRC_COMMON
 
 source_group("" FILES ${SRC_COMMON})
 
-# Platform Specific Libraries
-if(MSVC)
-    set(PLATFORM_SPEC_LIBRARIES)
-elseif(UNIX)
-    set(PLATFORM_SPEC_LIBRARIES tbb)
-endif()
-
 # Exe
 add_executable(Test_TracerCUDA ${SRC_COMMON})
-
-add_dependencies(Test_TracerCUDA googletest_ext)
-
-target_include_directories(Test_TracerCUDA PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(Test_TracerCUDA SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(Test_TracerCUDA PRIVATE ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC})
-
-target_compile_options(Test_TracerCUDA PRIVATE ${MRAY_COMPILER_FLAGS_GENERIC})
-
-set_target_properties(Test_TracerCUDA PROPERTIES
-                      POSITION_INDEPENDENT_CODE ON
-                      CUDA_SEPARABLE_COMPILATION ON
-                      CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 target_link_libraries(Test_TracerCUDA PRIVATE
                       RayLib
                       VisorGL
                       ImageIO
                       TracerCUDA_Static
-                      $<$<CONFIG:Debug>:gtestd>
-                      $<$<CONFIG:Debug>:gmockd>
-                      $<$<CONFIG:Release>:gtest>
-                      $<$<CONFIG:Release>:gmock>
-                      ${PLATFORM_SPEC_LIBRARIES})
+                      $<IF:$<CONFIG:Debug>,gtestd,gtest>
+                      $<IF:$<CONFIG:Debug>,gmockd,gmock>
+                      mray::meta_compile_opts
+                      mray::cuda_extra_compile_opts)
+
+
+set_target_properties(Test_TracerCUDA PROPERTIES
+                      POSITION_INDEPENDENT_CODE ON
+                      CUDA_SEPARABLE_COMPILATION ON
+                      CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+
+add_dependencies(Test_TracerCUDA googletest_ext)
 
 if(MSVC)
 

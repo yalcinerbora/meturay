@@ -14,23 +14,15 @@ set(SRC_ALL
 
 source_group("" FILES ${SRC_COMMON})
 
-# Preprocessor Defs
-set(PREPROCESSOR_GENERIC
-    ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    METU_SHARED_GFG_LOADER)
-
 # DLL
 add_library(GFGSurfaceLoader SHARED ${SRC_ALL})
-
 add_dependencies(GFGSurfaceLoader gfg_ext)
 
-target_include_directories(GFGSurfaceLoader PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-target_include_directories(GFGSurfaceLoader SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
+# Preprocessor Defs
+target_compile_definitions(GFGSurfaceLoader PRIVATE
+                           METU_SHARED_GFG_LOADER)
 
-target_compile_definitions(GFGSurfaceLoader PRIVATE ${PREPROCESSOR_GENERIC})
-
-target_link_libraries(GFGSurfaceLoader
+target_link_libraries(GFGSurfaceLoader PRIVATE
                       RayLib
-                      GFGFileIO)
+                      GFGFileIO
+                      mray::meta_compile_opts)

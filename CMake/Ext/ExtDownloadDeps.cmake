@@ -110,7 +110,6 @@ function(mray_build_ext_dependency_git)
                     # Install Stuff
                     -DCMAKE_INSTALL_PREFIX:PATH=${SUBPROJECT_INSTALL_PREFIX}
                     ${SUBPROJECT_INSTALL_SUFFIXES}
-
                     # Extra args from user to pass CMake
                     ${BUILD_SUBPROJECT_BUILD_ARGS}
 
@@ -132,5 +131,9 @@ function(mray_build_ext_dependency_git)
         ExternalProject_Add_StepDependencies(${BUILD_SUBPROJECT_NAME}
                                              "install" ${BUILD_SUBPROJECT_DEPENDENCIES})
     endif()
+
+# Get the name of the deps outside
+set(MRAY_ALL_EXT_DEP_TARGETS ${MRAY_ALL_EXT_DEP_TARGETS}
+    ${BUILD_SUBPROJECT_NAME} PARENT_SCOPE)
 
 endfunction()

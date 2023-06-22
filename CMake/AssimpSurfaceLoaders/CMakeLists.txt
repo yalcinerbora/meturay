@@ -14,27 +14,18 @@ set(SRC_ALL
 
 source_group("" FILES ${SRC_ALL})
 
-# Preprocessor Defs
-set(PREPROCESSOR_GENERIC
-    ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    METU_SHARED_ASSIMP_LOADER)
-
 # DLL
 add_library(AssimpSurfaceLoaders SHARED ${SRC_ALL})
-
 add_dependencies(AssimpSurfaceLoaders assimp_ext)
-
-target_include_directories(AssimpSurfaceLoaders PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(AssimpSurfaceLoaders SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(AssimpSurfaceLoaders PRIVATE ${PREPROCESSOR_GENERIC})
+# Preprocessor Defs extra
+target_compile_definitions(AssimpSurfaceLoaders PRIVATE
+                           METU_SHARED_ASSIMP_LOADER)
 
 target_link_libraries(AssimpSurfaceLoaders PRIVATE
                       RayLib
-                      assimp)
+                      assimp
+                      mray::meta_compile_opts
+)
 
 # Copy DLLS
 if(MSVC)

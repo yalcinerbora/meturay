@@ -1,30 +1,20 @@
-
-
 set(CURRENT_SOURCE_DIR ${MRAY_SOURCE_DIRECTORY}/MRay)
 
 source_group("" FILES ${CURRENT_SOURCE_DIR}/main.cpp)
 
 add_executable(MRay ${CURRENT_SOURCE_DIR}/main.cpp)
 
-add_dependencies(MRay cli11_ext)
-
-target_include_directories(MRay PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-
-target_include_directories(MRay SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY})
-
-target_compile_definitions(MRay PRIVATE ${MRAY_PREPROCESSOR_DEFS_GENERIC})
-
 target_link_libraries(MRay PRIVATE
-                      RayLib)
+                      RayLib
+                      mray::meta_compile_opts)
 
 # Not-linked but dependent targets
 add_dependencies(MRay
                  TracerCUDA
-                 VisorGL)
+                 VisorGL
+                 cli11_ext)
 
-# Debug Parameters
+# Debug Parameters (For my own use case)
 if(MSVC)
 
     set(DEBUG_ARGS
