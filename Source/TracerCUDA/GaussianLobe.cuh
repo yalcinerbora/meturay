@@ -99,7 +99,7 @@ inline GaussianLobe GaussianLobe::Convolve(const GaussianLobe& right) const
     float amp = 4.0f * MathConstants::Pi * amplitude * right.amplitude;
     amp *= exp(-(sharpness + right.sharpness));
 
-    float length = (direction * sharpness + right.direction * sharpness).Length();
+    //float length = (direction * sharpness + right.direction * sharpness).Length();
 
 
 
@@ -134,13 +134,13 @@ inline void GaussianLobe::Sample(Vector3f& dir,
 }
 
 __host__ __device__
-inline float GaussianLobe::Eval(const Vector3f& dir) const
+inline float GaussianLobe::Eval(const Vector3f&) const
 {
     return NAN;
 }
 
 __host__ __device__
-inline float GaussianLobe::PDF(const Vector3f& dir) const
+inline float GaussianLobe::PDF(const Vector3f&) const
 {
     return NAN;
 }

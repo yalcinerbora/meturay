@@ -27,8 +27,8 @@ target_link_libraries(Test_TracerCUDA PRIVATE
                       VisorGL
                       ImageIO
                       TracerCUDA_Static
-                      $<IF:$<CONFIG:Debug>,gtestd,gtest>
-                      $<IF:$<CONFIG:Debug>,gmockd,gmock>
+                      gtest::gtest
+                      gtest::gmock
                       mray::meta_compile_opts
                       mray::cuda_extra_compile_opts)
 
@@ -37,8 +37,6 @@ set_target_properties(Test_TracerCUDA PROPERTIES
                       POSITION_INDEPENDENT_CODE ON
                       CUDA_SEPARABLE_COMPILATION ON
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-
-add_dependencies(Test_TracerCUDA googletest_ext)
 
 if(MSVC)
 

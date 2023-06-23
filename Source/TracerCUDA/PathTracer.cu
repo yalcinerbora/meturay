@@ -177,7 +177,6 @@ bool PathTracer::Render()
 
     if(options.runAsMegaKernel)
     {
-        const auto& gpu = cudaSystem.BestGPU();
         // Get Pointers
         // Input
         const RayId* dIdsIn                 = rayCaster->SortedRayIds();

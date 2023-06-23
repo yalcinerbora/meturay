@@ -227,17 +227,17 @@ void GPUMaterialGroupT<D, S, DF, P>::GeneratePerMaterialInterfaces()
 
     // Allocate the materials
     GPUMaterial*            dMaterials;
-    const GPUMaterialI**    dMaterialInterfaces;
+    const GPUMaterialI**    dMaterialInterfacesGen;
     Data*                   dData;
     GPUMemFuncs::AllocateMultiData(std::tie(dMaterials,
-                                            dMaterialInterfaces,
+                                            dMaterialInterfacesGen,
                                             dData),
                                    interfaceMemory,
                                    {totalMatCount, totalMatCount, 1});
 
     CUDA_CHECK(cudaMemcpy(dData, &this->hData, sizeof(Data), cudaMemcpyHostToDevice));
     // Set the pointer
-    this->dMaterialInterfaces = dMaterialInterfaces;
+    this->dMaterialInterfaces = dMaterialInterfacesGen;
     // Do actual object construction (virtual pointer set etc.)
     gpu.KC_X(0,(cudaStream_t)0, totalMatCount,
              //

@@ -27,7 +27,7 @@ void OptiXSystem::OptixLOG(unsigned int level,
 }
 
 TracerError OptiXSystem::LoadPTXFile(std::vector<Byte>& ptxSource,
-                                     const CudaGPU& gpu,
+                                     const CudaGPU&,
                                      const std::string& baseName)
 {
     std::string fileName = baseName;

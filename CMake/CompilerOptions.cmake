@@ -43,6 +43,9 @@ set(MRAY_MSVC_OPTIONS
     /w14928         # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
     /permissive-    # standards conformance mode for MSVC compiler.
 
+    /wd4324         # Disable type alignment padding warnings
+    /wd4505         # Diable "unreferenced function with internal linkage has been removed"
+
     /external:W0    # Minimize warnings on external stuff
                     # i.e. it is included with the <...> syntax.
 
@@ -70,7 +73,7 @@ set(MRAY_CLANG_OPTIONS
 )
 
 set(MRAY_GCC_OPTIONS
-    ${CLANG_WARNINGS}
+    ${MRAY_CLANG_OPTIONS}
     -Wmisleading-indentation    # warn if indentation implies blocks where blocks do not exist
     -Wduplicated-cond           # warn if if / else chain has duplicated conditions
     -Wduplicated-branches       # warn if if / else branches have duplicated code
@@ -79,19 +82,14 @@ set(MRAY_GCC_OPTIONS
 )
 
 set(MRAY_CUDA_OPTIONS
-    # From Jason Turner
-    -Wall
-    -Wextra
-    -Wunused
-    -Wconversion
-    -Wshadow
+    # Too many warnings on system libraries
+    # i.e. cub
+    #-Wreorder
     # Debug Related
-    $<$<CONFIG:Debug>:-G
-    $<$<CONFIG:Release>:-lineinfo
-
+    $<$<CONFIG:Debug>:-G>
+    $<$<CONFIG:Release>:-lineinfo>
     # Extended Lambdas (__device__ tagged lambdas)
     -extended-lambda
-
     # Use fast math creates self intersection issues on
     # some scenes. Thus, we only selectively enable
     # some fp optimizations (culprit was prec-sqrt on some Unreal Materials)
@@ -103,19 +101,23 @@ set(MRAY_CUDA_OPTIONS
     #--prec-sqrt=false
     #--prec-div=false
 
-    # Misc.
+    # ALL pointers are restric
     -restrict
+    # Misc.
     -extra-device-vectorization
 )
 
 # Platform Specific CUDA Options
 if(MSVC)
-    set(CUDA_WARNINGS ${CUDA_WARNINGS}
+    set(MRAY_CUDA_OPTIONS ${MRAY_CUDA_OPTIONS}
         # Ignore inline functions are not defined warning
         -Xcompiler=/wd4984
+        -Xcompiler=/wd4324
         -Xcompiler=/wd4506
-        -Xcompiler=/W3
-        -Xcompiler=/Zi
+        -Xcompiler=/wd4505
+
+        # -Xcompiler=/W3
+        # -Xcompiler=/Zi
         -Xcompiler=/external:W0
         # Test
         # DROPPED W4 On MSVC it shows many unnecessary info
@@ -124,7 +126,7 @@ if(MSVC)
         # Thus these are commented out
     )
 else()
-    set(CUDA_WARNINGS ${CUDA_WARNINGS}
+    set(MRAY_CUDA_OPTIONS ${MRAY_CUDA_OPTIONS}
         -Xcompiler=-g3)
 endif()
 
@@ -175,18 +177,17 @@ if(MRAY_USE_OPTIX)
 endif()
 
 
-
-
-add_library(mray::meta_compile_opts INTERFACE ALIAS meta_compile_opts)
-add_library(mray::cuda_extra_compile_opts INTERFACE ALIAS cuda_extra_compile_opts)
+add_library(meta_compile_opts INTERFACE)
+add_library(cuda_extra_compile_opts INTERFACE)
 
 # Compile Options
 target_compile_options(meta_compile_opts INTERFACE
-        $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_WARNINGS_CXX}>
+        # Cpp warnings
+        $<$<COMPILE_LANGUAGE:CXX>:${MRAY_CXX_OPTIONS}>
         # C warnings
-        $<$<COMPILE_LANGUAGE:C>:${PROJECT_WARNINGS_CXX}>
+        $<$<COMPILE_LANGUAGE:C>:${MRAY_CXX_OPTIONS}>
         # Cuda warnings
-        $<$<COMPILE_LANGUAGE:CUDA>:${PROJECT_WARNINGS_CUDA}>
+        $<$<COMPILE_LANGUAGE:CUDA>:${MRAY_CUDA_OPTIONS}>
 )
 
 # Link Options
@@ -220,13 +221,16 @@ target_compile_definitions(cuda_extra_compile_opts
 target_include_directories(meta_compile_opts
                            INTERFACE
                            ${MRAY_SOURCE_DIRECTORY}
+)
+
+target_include_directories(meta_compile_opts
                            SYSTEM INTERFACE
                            ${MRAY_LIB_INCLUDE_DIRECTORY}
 )
 
 # Cmake auto includes this on MSVC but not on Linux?
 # Probably cuda installer adds it to path or w/e
-if(UNIX NOT APPLE)
+if(UNIX AND NOT APPLE)
 
     target_include_directories(meta_compile_opts
                                 INTERFACE
@@ -239,7 +243,7 @@ if(MSVC)
     # Currently no platform specific libraries for windows
     # Besides the cmake finds defualt
     # Probably Windows SDK etc..
-elseif(UNIX NOT APPLE)
+elseif(UNIX AND NOT APPLE)
     # MRay utilizes std::execution c++ features
     # throughout its targets
     # on clang/gcc (at least on linux)
@@ -255,3 +259,7 @@ target_link_libraries(meta_compile_opts INTERFACE
                         ${MRAY_PLATFORM_SPEC_LIBRARIES})
 
 endblock()
+
+
+add_library(mray::meta_compile_opts ALIAS meta_compile_opts)
+add_library(mray::cuda_extra_compile_opts ALIAS cuda_extra_compile_opts)

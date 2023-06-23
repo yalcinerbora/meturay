@@ -127,7 +127,7 @@ TYPED_TEST(BlockSegReduceTest, FloatSumStress)
     rng.seed(0);
     std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
 
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(float& d : hData)
@@ -226,19 +226,19 @@ TYPED_TEST(BlockSegReduceTest, IntSumStress)
                               cudaMemcpyDeviceToHost));
 
         // Generate results by hand to check
-        for(uint32_t i = 0; i < SEGMENT_COUNT; i++)
+        for(uint32_t j = 0; j < SEGMENT_COUNT; j++)
         {
-            uint32_t segmentStart = i * SEGMENT_SIZE;
-            uint32_t nextSegmentStart = (i + 1) * SEGMENT_SIZE;
+            uint32_t segmentStart = j * SEGMENT_SIZE;
+            uint32_t nextSegmentStart = (j + 1) * SEGMENT_SIZE;
 
-            hReduceResultsExpected[i] = std::reduce(hData.begin() + segmentStart,
+            hReduceResultsExpected[j] = std::reduce(hData.begin() + segmentStart,
                                                     hData.begin() + nextSegmentStart);
         }
         // Checks
-        for(uint32_t i = 0; i < SEGMENT_COUNT; i++)
+        for(uint32_t j = 0; j < SEGMENT_COUNT; j++)
         {
-            uint32_t result = hReduceResults[i];
-            uint32_t expected = hReduceResultsExpected[i];
+            uint32_t result = hReduceResults[j];
+            uint32_t expected = hReduceResultsExpected[j];
             EXPECT_EQ(result, expected);
         }
     }

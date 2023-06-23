@@ -478,7 +478,7 @@ void GPUTracer::Finalize()
     // Flush Devices and Get the Image
     cudaSystem.SyncAllGPUs();
     std::vector<Byte> imageData = imgMemory.GetImageToCPU(cudaSystem);
-    size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
+    //size_t pixelCount1D = static_cast<size_t>(pixelCount[0]) * pixelCount[1];
 
     //Debug::DumpMemToFile("OutPixels",
     //                     reinterpret_cast<Vector4*>(imageData.data()),

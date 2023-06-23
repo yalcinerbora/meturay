@@ -234,11 +234,11 @@ TYPED_TEST(ProductSamplerTest, SamplePWCZeroVariance)
     std::vector<Vector2f> hUVResults(SAMPLE_PER_KERNEL);
 
     static constexpr int32_t KERNEL_CALL_COUNT = 128;
-    for(int i = 0; i < KERNEL_CALL_COUNT; i++)
+    for(int ik = 0; ik < KERNEL_CALL_COUNT; ik++)
     {
         // Populate the region (do uniform test for the first time)
         std::vector<float> hTexture(X * Y, 10.0f);
-        if(i != 0)
+        if(ik != 0)
         {
             std::for_each(hTexture.begin(), hTexture.end(),
                           [&uniformDist, &rng](float& f) { f = uniformDist(rng); });

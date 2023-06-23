@@ -27,9 +27,9 @@ struct OctreeAccelParams
 
     union
     {
-    //===================//
-    // Cam Trace Related //
-    //===================//
+        //===================//
+        // Cam Trace Related //
+        //===================//
         struct
         {
             const RayGMem*          gRays;          // Generated rays from separate kernel
@@ -39,10 +39,10 @@ struct OctreeAccelParams
             // Constants
             WFPGRenderMode          renderMode;     // What to output? (False_color, normal, radiance, etc)
             uint32_t                maxQueryOffset; // Do not query below this level
-        };
-    //======================//
-    // Radiance Gen Related //
-    //======================//
+        } ct;
+        //======================//
+        // Radiance Gen Related //
+        //======================//
         struct
         {
             SegmentedField<float*>  fieldSegments;
@@ -50,7 +50,7 @@ struct OctreeAccelParams
             const Vector4f*         dRadianceFieldRayOrigins;
             const Vector2f*         dProjJitters;
             int32_t                 binOffset;
-        };
+        } rg;
     };
     //....
 };

@@ -295,7 +295,6 @@ inline void CudaSystem::SyncAllGPUs() const
     for(const auto& gpu : systemGPUs)
     {
         gpu.WaitAllStreams();
-        break;
     }
     CUDA_CHECK(cudaSetDevice(currentDevice));
 }

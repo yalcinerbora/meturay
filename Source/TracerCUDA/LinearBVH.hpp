@@ -600,7 +600,7 @@ template <class Leaf, class DF,
 TracerError LinearBVHCPU<Leaf, DF, AF>::ConstructNonLinear(const Leaf* dLeafList,
                                                            uint32_t leafCount,
                                                            DF df,
-                                                           const CudaSystem& system)
+                                                           const CudaSystem&)
 {
     static constexpr uint32_t MAX_BASE_DEPTH = 64;
     enum SplitAxis

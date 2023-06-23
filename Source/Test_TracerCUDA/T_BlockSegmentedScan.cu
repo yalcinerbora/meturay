@@ -166,7 +166,7 @@ TYPED_TEST(BlockSegScanTest, FloatInclusiveSumStress)
     rng.seed(0);
     std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
 
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(float& d : hData)
@@ -262,7 +262,7 @@ TYPED_TEST(BlockSegScanTest, IntInclusiveSumStress)
     rng.seed(0);
     std::uniform_int_distribution<uint32_t> uniformDist(0u, 10u);
 
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(uint32_t& d : hData)
@@ -418,7 +418,7 @@ TYPED_TEST(BlockSegScanTest, FloatExclusiveSumStress)
     rng.seed(0);
     std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
 
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(float& d : hData)
@@ -514,7 +514,7 @@ TYPED_TEST(BlockSegScanTest, IntExclusiveSumStress)
     rng.seed(0);
     std::uniform_int_distribution<uint32_t> uniformDist(0u, 10u);
 
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(uint32_t& d : hData)

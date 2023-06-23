@@ -333,12 +333,12 @@ void GuideDebugGUI::Render()
     if(updateSpatialTexture)
     {
         bool allFalse = true;
-        for(size_t i = 0; i < overlayCheckboxValues.size(); i++)
+        for(size_t j = 0; j < overlayCheckboxValues.size(); j++)
         {
-            if(!overlayCheckboxValues[i]) continue;
+            if(!overlayCheckboxValues[j]) continue;
 
             allFalse = false;
-            debugRenderers[i]->RenderSpatial(overlayTex, currentDepth,
+            debugRenderers[j]->RenderSpatial(overlayTex, currentDepth,
                                              worldPositions);
             AlphaBlendRefWithOverlay();
         }

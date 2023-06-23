@@ -13,7 +13,6 @@ source_group("" FILES ${SRC_ALL})
 
 # DLL
 add_library(ImageIO SHARED ${SRC_ALL})
-add_dependencies(ImageIO oiio_ext)
 
 target_compile_definitions(ImageIO PRIVATE
                            METU_SHARED_IMAGE_IO)
@@ -21,7 +20,7 @@ target_compile_definitions(ImageIO PRIVATE
 target_link_libraries(ImageIO PRIVATE
                       RayLib
                       OpenEXR
-                      oiio
+                      #oiio
                       mray::meta_compile_opts)
 
 # Copy DLLS

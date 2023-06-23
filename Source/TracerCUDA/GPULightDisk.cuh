@@ -206,7 +206,7 @@ inline float GPULightDisk::Pdf(float distance,
 __device__
 inline Vector3f GPULightDisk::GeneratePhoton(// Output
                                              RayReg& rayOut,
-                                             Vector3f& normal,
+                                             Vector3f&,
                                              float& posPDF,
                                              float& dirPDF,
                                              // I-O

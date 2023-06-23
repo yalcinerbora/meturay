@@ -97,8 +97,8 @@ GPUMetaSurface::GPUMetaSurface(const GPUTransformI* t,
                                const GPULightI* gLight)
     : t(t)
     , uvSurf(uvSurface)
-    , gLight(gLight)
     , isLight(true)
+    , gLight(gLight)
 {}
 
 __device__ __forceinline__

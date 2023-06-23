@@ -293,7 +293,6 @@ void SVOOptixConeCaster::GenerateSVOTraversable()
     std::vector<uint64_t*> dMortonPtrs64(svo.LeafDepth() + 1, nullptr);
     for(uint32_t i = 1; i <= svo.LeafDepth(); i++)
     {
-        uint32_t localPrimCount = levelNodeOffsets[i + 1] - levelNodeOffsets[i];
         Byte* dMortonStart = static_cast<Byte*>(mortonMemory) + mortonByteOffsets[i];
         if(i <= VOXEL_MORTON3D_FIT_THRESHOLD)
             dMortonPtrs32[i] = reinterpret_cast<uint32_t*>(dMortonStart);
@@ -605,11 +604,11 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
     params.svo = svoCPU.TreeGPU();
     params.pixelOrConeAperture = pixelAperture;
     // Mode Related
-    params.gRays = gRays;
-    params.gRayAux = gRayAux;
-    params.renderMode = mode;
-    params.maxQueryOffset = maxQueryLevelOffset;
-    params.gSamples = gSamples;
+    params.ct.gRays = gRays;
+    params.ct.gRayAux = gRayAux;
+    params.ct.renderMode = mode;
+    params.ct.maxQueryOffset = maxQueryLevelOffset;
+    params.ct.gSamples = gSamples;
 
     //// test large apertures
     //params.pixelOrConeAperture = 4.0f * MathConstants::Pi / 64.0f / 64.0f;
@@ -666,10 +665,10 @@ void SVOOptixConeCaster::CopyRadianceMapGenParams(const Vector4f* dRadianceField
     params.svo = svoCPU.TreeGPU();
     params.pixelOrConeAperture = coneAperture;
     // Mode Related
-    params.fieldSegments = fieldSegments;
-    params.dRadianceFieldRayOrigins = dRadianceFieldRayOrigins;
-    params.dProjJitters = dProjJitters;
-    params.binOffset = 0;
+    params.rg.fieldSegments = fieldSegments;
+    params.rg.dRadianceFieldRayOrigins = dRadianceFieldRayOrigins;
+    params.rg.dProjJitters = dProjJitters;
+    params.rg.binOffset = 0;
 
     CUDA_CHECK(cudaMemcpyAsync(dOptixLaunchParams,
                                &params,
@@ -683,7 +682,7 @@ void SVOOptixConeCaster::RadianceMapGen(// Range over this id/offsets
                                         uint32_t totalRayCount)
 {
     // Going full C here
-    size_t innerOffset = offsetof(OctreeAccelParams, binOffset);
+    size_t innerOffset = offsetof(OctreeAccelParams, rg.binOffset);
     Byte* dBinOffsetLoc = (reinterpret_cast<Byte*>(dOptixLaunchParams) +
                            innerOffset);
     CUDA_CHECK(cudaMemcpyAsync(dBinOffsetLoc,

@@ -11,7 +11,7 @@ target_link_libraries(MVisor PRIVATE
                       mray::meta_compile_opts)
 
 # Not-linked but dependent targets
-add_dependencies(MVisor VisorGL cli11_ext)
+add_dependencies(MVisor VisorGL)
 
 # Debug Parameters
 if(MSVC)

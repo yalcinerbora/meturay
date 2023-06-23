@@ -82,7 +82,7 @@ TEST(PPG_STree, Empty)
 
     for(uint32_t index : indicesCPU)
     {
-        EXPECT_EQ(0, index);
+        EXPECT_EQ(0u, index);
     }
 }
 

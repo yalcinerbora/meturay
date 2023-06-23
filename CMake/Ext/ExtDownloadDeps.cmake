@@ -105,13 +105,19 @@ function(mray_build_ext_dependency_git)
                     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
                     -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
-
                     -DCMAKE_PREFIX_PATH:PATH=${CMAKE_PREFIX_PATH}
+                    # Do not use system libraries
+                    -DCMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH=OFF
+                    # Mandate a debug postfix
+                    -DCMAKE_DEBUG_POSTFIX=d
+
                     # Install Stuff
                     -DCMAKE_INSTALL_PREFIX:PATH=${SUBPROJECT_INSTALL_PREFIX}
                     ${SUBPROJECT_INSTALL_SUFFIXES}
                     # Extra args from user to pass CMake
                     ${BUILD_SUBPROJECT_BUILD_ARGS}
+
+
 
                 BUILD_ALWAYS OFF
     )

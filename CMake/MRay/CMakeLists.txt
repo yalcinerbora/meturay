@@ -11,8 +11,7 @@ target_link_libraries(MRay PRIVATE
 # Not-linked but dependent targets
 add_dependencies(MRay
                  TracerCUDA
-                 VisorGL
-                 cli11_ext)
+                 VisorGL)
 
 # Debug Parameters (For my own use case)
 if(MSVC)

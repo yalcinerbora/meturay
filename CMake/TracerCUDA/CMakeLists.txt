@@ -520,6 +520,8 @@ target_sources(TracerCUDA PRIVATE ${SRC_ALL})
 
 if(MRAY_USE_OPTIX)
     add_dependencies(TracerCUDA ${PTX_TARGET})
+    target_include_directories(TracerCUDA SYSTEM PRIVATE
+                               ${OPTIX_INCLUDE_DIR})
 endif()
 
 target_link_libraries(TracerCUDA
@@ -542,6 +544,8 @@ if(MRAY_BUILD_TESTS)
 
     if(MRAY_USE_OPTIX)
         add_dependencies(TracerCUDA_Static ${PTX_TARGET})
+        target_include_directories(TracerCUDA_Static SYSTEM PRIVATE
+                                   ${OPTIX_INCLUDE_DIR})
     endif()
 
     target_link_libraries(TracerCUDA_Static PRIVATE

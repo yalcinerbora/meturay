@@ -908,7 +908,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     std::vector<uint32_t> levelNodeCounts(levelCount + 1, 0);
     // Root node is always available
     levelNodeCounts[0] = 1;
-    for(uint32_t i = 1; i <= levelCount; i++)
+    for(uint32_t j = 1; j <= levelCount; j++)
     {
         // Mark the differences between neighbors
         gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount - 1,
@@ -918,20 +918,20 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                            dDiffBitBuffer,
                            dSortedUniqueVoxels,
                            hUniqueVoxelCount - 1,
-                           i,
+                           j,
                            levelCount);
 
         // Reduce the marks to find level node count
         ReduceArrayGPU<uint32_t, ReduceAdd<uint32_t>, cudaMemcpyDeviceToHost>
         (
-            levelNodeCounts[i],
+            levelNodeCounts[j],
             dDiffBitBuffer,
             hUniqueVoxelCount - 1,
             0u
         );
         gpu.WaitMainStream();
         // n different slices means n+1 segments
-        levelNodeCounts[i] += 1;
+        levelNodeCounts[j] += 1;
     }
     assert(levelNodeCounts.back() == hUniqueVoxelCount);
 
@@ -1009,7 +1009,7 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // For each level save the node range for
     // efficient kernel calls later (level by level kernel calls)
     // Now start voxel generation level by level
-    for(uint32_t i = 0; i < levelCount; i++)
+    for(uint32_t j = 0; j < levelCount; j++)
     {
         gpu.GridStrideKC_X(0, (cudaStream_t)0, hUniqueVoxelCount,
                            //
@@ -1020,63 +1020,63 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                            dSortedUniqueVoxels,
                            // Constants
                            hUniqueVoxelCount,
-                           i,
+                           j,
                            levelCount);
 
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[j],
                            //
                            KCExtractChildrenCounts,
                            //
                            dDiffBitBuffer,
-                           treeGPU.dNodes + levelNodeOffsets[i],
-                           levelNodeCounts[i]);
+                           treeGPU.dNodes + levelNodeOffsets[j],
+                           levelNodeCounts[j]);
 
         CUDA_CHECK(cub::DeviceScan::ExclusiveSum(dScanMemory, scanTempMemSize,
                                                  dDiffBitBuffer, dChildOffsetBuffer,
-                                                 levelNodeCounts[i] + 1));
+                                                 levelNodeCounts[j] + 1));
 
         // Check
         uint32_t hReducedSum;
-        CUDA_CHECK(cudaMemcpy(&hReducedSum, dChildOffsetBuffer + levelNodeCounts[i],
+        CUDA_CHECK(cudaMemcpy(&hReducedSum, dChildOffsetBuffer + levelNodeCounts[j],
                               sizeof(uint32_t), cudaMemcpyDeviceToHost));
-        if(hReducedSum != levelNodeCounts[i + 1])
+        if(hReducedSum != levelNodeCounts[j + 1])
         {
-            METU_ERROR_LOG("SVO children count allocation mismatch (Level {:d}.", i);
+            METU_ERROR_LOG("SVO children count allocation mismatch (Level {:d}.", j);
             return TracerError::TRACER_INTERNAL_ERROR;
         }
 
-        bool lastNonLeafLevel = (i == (levelCount - 1));
-        uint32_t nextLevelOffset = (lastNonLeafLevel) ? 0 : levelNodeOffsets[i + 1];
-        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+        bool lastNonLeafLevel = (j == (levelCount - 1));
+        uint32_t nextLevelOffset = (lastNonLeafLevel) ? 0 : levelNodeOffsets[j + 1];
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[j],
                            //
                            KCSetChildrenPtrs,
                            //
-                           treeGPU.dNodes + levelNodeOffsets[i],
+                           treeGPU.dNodes + levelNodeOffsets[j],
                            dChildOffsetBuffer,
                            nextLevelOffset,
-                           levelNodeCounts[i],
+                           levelNodeCounts[j],
                            lastNonLeafLevel);
 
         if(!lastNonLeafLevel)
         {
-            gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+            gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[j],
                                //
                                KCSetParentOfChildren,
                                //
                                treeGPU.dNodes,
-                               treeGPU.dNodes + levelNodeOffsets[i],
-                               levelNodeCounts[i]);
+                               treeGPU.dNodes + levelNodeOffsets[j],
+                               levelNodeCounts[j]);
         }
         else
         {
-            gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[i],
+            gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[j],
                                //
                                KCSetParentOfLeafChildren,
                                //
                                treeGPU.dLeafParents,
                                treeGPU.dNodes,
-                               treeGPU.dNodes + levelNodeOffsets[i],
-                               levelNodeCounts[i]);
+                               treeGPU.dNodes + levelNodeOffsets[j],
+                               levelNodeCounts[j]);
         }
     }
     // Only Direct light information deposition and normal generation are left
@@ -1106,9 +1106,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
 
     // Average Normals for each level
     // Bottom-up
-    for(uint32_t i = 0; i < levelCount; i++)
+    for(uint32_t j = 0; j < levelCount; j++)
     {
-        uint32_t levelIndex = levelCount - i - 1;
+        uint32_t levelIndex = levelCount - j - 1;
         bool lastNonLeafLevel = (levelIndex == (levelCount - 1));
 
         gpu.GridStrideKC_X(0, (cudaStream_t)0, levelNodeCounts[levelIndex],

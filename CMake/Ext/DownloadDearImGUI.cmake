@@ -19,9 +19,6 @@ ExternalProject_Add_Step(imgui_ext inject_cmake
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists-DearImGUI.cmake
                         ${MRAY_IMGUI_SRC_LOCATION}/CMakeLists.txt
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        ${CMAKE_CURRENT_SOURCE_DIR}/imguiConfig.cmake.in
-                        ${MRAY_IMGUI_SRC_LOCATION}/imguiConfig.cmake.in
                 DEPENDEES download update patch
                 DEPENDERS configure
                 COMMENT "Injecting a cmake lists to dearimgui"

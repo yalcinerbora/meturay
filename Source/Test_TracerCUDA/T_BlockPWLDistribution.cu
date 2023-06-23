@@ -115,21 +115,21 @@ TYPED_TEST_SUITE(BlockPWL2DTest, Implementations);
 
 TYPED_TEST(BlockPWL2DTest, BasicInit)
 {
-    float angle = 45.0f * MathConstants::DegToRadCoef;
+    float angle45 = 45.0f * MathConstants::DegToRadCoef;
     GaussianLobe lobe0(YAxis, 1, 4);
-    Vector3f newDir = QuatF(-angle, ZAxis).ApplyRotation(YAxis);
+    Vector3f newDir = QuatF(-angle45, ZAxis).ApplyRotation(YAxis);
     GaussianLobe lobe1(newDir, 1, 4);
     GaussianLobe l = lobe0.Mult(lobe1);
 
-    float angleTest = acos(l.direction.Dot(XAxis));
+    //float angleTest = acos(l.direction.Dot(XAxis));
 
-    for (float angle = 0; angle < 2 * MathConstants::Pi; angle += 0.05f)
+    for(float angle = 0; angle < 2 * MathConstants::Pi; angle += 0.05f)
     {
         Vector3f test = QuatF(angle, ZAxis).ApplyRotation(YAxis);
 
-        GaussianLobe lobe1(test, 1, 4);
-        float asd = lobe0.Dot(lobe1);
-        lobe1.NormalizeSelf();
+        GaussianLobe lobe2(test, 1, 4);
+        float asd = lobe0.Dot(lobe2);
+        lobe2.NormalizeSelf();
         METU_LOG("Angle {}=> {}, {}",
                  angle * MathConstants::RadToDegCoef,
                  asd, asd / MathConstants::Pi);
@@ -278,7 +278,7 @@ TYPED_TEST(BlockPWL2DTest, Stress)
     std::mt19937 rng;
     rng.seed(0);
     std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(float& d : hData)
@@ -441,7 +441,7 @@ TYPED_TEST(BlockPWL2DTest, Sample)
     std::mt19937 rng;
     rng.seed(0);
     std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(float& d : hData)
@@ -505,11 +505,11 @@ TYPED_TEST(BlockPWL2DTest, Sample)
                               sizeof(float) * SAMPLE_COUNT,
                               cudaMemcpyDeviceToHost));
 
-        for(int i = 0; i < SAMPLE_COUNT; i++)
+        for(int j = 0; j < SAMPLE_COUNT; j++)
         {
             // Calculate interp values
-            Vector2f index = hSamples[i].Floor();
-            Vector2f interp = hSamples[i] - index;
+            Vector2f index = hSamples[j].Floor();
+            Vector2f interp = hSamples[j] - index;
             Vector2i intexInt = Vector2i(index);
 
             Vector2i x00 = intexInt + Vector2i(0, 0);
@@ -524,7 +524,7 @@ TYPED_TEST(BlockPWL2DTest, Sample)
                                                 hData[LinearizeXY(x11, X)], interp[0]);
             float funcVal = HybridFuncs::Lerp(funcValX0, funcValX1, interp[1]);
 
-            float foundIntegral = funcVal / hPDFs[i];
+            float foundIntegral = funcVal / hPDFs[j];
 
             EXPECT_NEAR(expectedIntegral, foundIntegral, MathConstants::VeryLargeEpsilon);
         }

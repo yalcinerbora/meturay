@@ -45,9 +45,33 @@ target_include_directories(imgui_tex_inspect PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Lib/Include/glbinding/3rdparty)
 
 install(TARGETS imgui_tex_inspect
+        EXPORT imgui_tex_inspectTargets
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
         FILE_SET HEADERS
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Imgui)
 
 install(FILES  ${IMGUITI_BACKEND_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Imgui)
+
+# From the cmake docs tutorial
+include(CMakePackageConfigHelpers)
+
+set(IMGUITI_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/imgui_tex_inspect)
+
+file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/imgui_tex_inspectConfig.cmake.in
+     " @PACKAGE_INIT@
+include (\"\$\{CMAKE_CURRENT_LIST_DIR\}/imgui_tex_inspectTargets.cmake\")")
+
+# generate the config file that includes the exports
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/imgui_tex_inspectConfig.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/imgui_tex_inspectConfig.cmake"
+        INSTALL_DESTINATION ${IMGUITI_CONFIG_DIR}
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/imgui_tex_inspectConfig.cmake"
+        DESTINATION ${IMGUITI_CONFIG_DIR})
+
+install(EXPORT imgui_tex_inspectTargets
+        FILE imgui_tex_inspectTargets.cmake
+        DESTINATION ${IMGUITI_CONFIG_DIR})

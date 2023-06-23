@@ -293,7 +293,7 @@ bool RayMemory::PartitionRaysCustom(// Outputs
                                     const FetchType* dFetchData,
                                     FetchFunction FetchFunc,
                                     uint32_t rayCount,
-                                    const CudaSystem& system)
+                                    const CudaSystem&)
 {
     hPartitionCount = 0;
     dPartitionOffsets = nullptr;

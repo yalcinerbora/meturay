@@ -201,7 +201,7 @@ TYPED_TEST(BlockPWC2DTest, Stress)
     rng.seed(0);
     std::uniform_real_distribution<float> uniformDist(0.0f, 10.0f);
 
-    for(uint32_t i = 0; i < ITERATION_COUNT; i++)
+    for(uint32_t ik = 0; ik < ITERATION_COUNT; ik++)
     {
         // Generate new batch of random numbers
         for(float& d : hData)

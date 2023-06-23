@@ -4,9 +4,9 @@
 #include "CudaSystem.hpp"
 
 SceneError MetalMat::InitializeGroup(const NodeListing& materialNodes,
-                                     const TextureNodeMap& textureNodes,
+                                     const TextureNodeMap&,
                                      const std::map<uint32_t, uint32_t>&,
-                                     double time, const std::string& scenePath)
+                                     double time, const std::string&)
 {
     constexpr const char* ETA = "eta";
     constexpr const char* K = "k";
@@ -90,7 +90,7 @@ size_t MetalMat::UsedCPUMemory() const
     return 0;
 }
 
-size_t MetalMat::UsedGPUMemory(uint32_t materialId) const
+size_t MetalMat::UsedGPUMemory(uint32_t) const
 {
     return 2 * sizeof(Vector3f) + sizeof(float);
 }

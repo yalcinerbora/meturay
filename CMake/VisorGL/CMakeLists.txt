@@ -89,43 +89,33 @@ source_group("GuideDebug/Debug Renderers" FILES ${GUIDE_DEBUG_RENDERERS})
 source_group("Shaders" FILES ${SRC_SHADERS})
 source_group("" FILES ${SRC_COMMON})
 
-# Preprocessor Defs
-set(PREPROCESSOR_GENERIC
-    ${MRAY_PREPROCESSOR_DEFS_GENERIC}
-    METU_SHARED_VISORGL
-    GLFW_INCLUDE_NONE)
 
 # Platform Specific Libraries
 # TBB for std::execution (clang & GCC)
 if(MSVC)
     #set(PLATFORM_SPEC_LIBRARIES opengl32 glew32 glfw3dll)
-    set(PLATFORM_SPEC_LIBRARIES glfw3dll)
-elseif(UNIX)
-    set(PLATFORM_SPEC_LIBRARIES GL GLU GLEW glfw tbb)
+elseif(UNIX AND NOT APPLE)
+    set(PLATFORM_SPEC_LIBRARIES GL GLU GLEW)
 endif()
 
 # DLL
 add_library(VisorGL SHARED ${SRC_ALL})
 
-target_include_directories(VisorGL PRIVATE
-                           ${MRAY_SOURCE_DIRECTORY})
-target_include_directories(VisorGL SYSTEM PRIVATE
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}
+#add_dependencies(VisorGL glbinding_ext glfw_ext imgui_ext)
+target_compile_definitions(VisorGL PRIVATE
+                           METU_SHARED_VISORGL
+                           GLFW_INCLUDE_NONE)
 
-                           # KHR Header is included on the internal files differently
-                           # TODO: This is not a good fix but w/e
-                           ${MRAY_LIB_INCLUDE_DIRECTORY}/glbinding/3rdparty)
-
-add_dependencies(VisorGL glbinding_ext glfw_ext imgui_ext)
-
-target_compile_definitions(VisorGL PRIVATE ${PREPROCESSOR_GENERIC})
 
 target_link_libraries(VisorGL
                       RayLib
                       ImageIO
-                      imgui
-                      imgui_tex_inspect
-                      glbinding
+                      imgui::imgui
+                      imgui::imgui_ti
+                      glbinding::glbinding
+                      glfw3::glfw3
+                      mray::meta_compile_opts
+                      mray::cuda_extra_compile_opts
                       ${PLATFORM_SPEC_LIBRARIES})
 
 # Copy Shaders to DLL Loc
@@ -154,6 +144,7 @@ add_custom_target(VisorGL_Shaders ALL
                   COMMAND ${CMAKE_COMMAND} -E copy_if_different
                   ${SRC_SHADERS}
                   "${MRAY_CONFIG_BIN_DIRECTORY}/Shaders")
+
 add_dependencies(VisorGL_Shaders VisorGL)
 
 # Copy DLLS

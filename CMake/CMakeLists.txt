@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.26)
 # All CMake Related files is in the current folder
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
 
+# Do not use in source builds
+include(PreventInSourceBuilds)
+
 # Only Debug and Release
 set(CMAKE_CONFIGURATION_TYPES Debug;Release CACHE STRING "Selected by user")
 #set(CMAKE_DEFAULT_BUILD_TYPE Release CACHE STRING "Selected by user")
@@ -58,9 +61,6 @@ cmake_path(NORMAL_PATH MRAY_DIRECTORY)
 # Populate the meta directories for this project hierarchy
 generate_platform_name()
 populate_mray_directory_variables(${MRAY_DIRECTORY})
-
-# Do not use in source builds
-include(cmake/PreventInSourceBuilds.cmake)
 
 # Determine Platform and Config
 # Cosmetic stuff

@@ -42,8 +42,8 @@ add_executable(Test_Misc ${SRC_ALL})
 target_link_libraries(Test_Misc PRIVATE
                       RayLib
                       VisorGL
-                      $<IF:$<CONFIG:Debug>,gtestd,gtest>
-                      $<IF:$<CONFIG:Debug>,gmockd,gmock>
+                      gtest::gtest
+                      gtest::gmock
                       mray::meta_compile_opts
                       mray::cuda_extra_compile_opts)
 
@@ -53,9 +53,7 @@ set_target_properties(Test_Misc PROPERTIES
                       CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 # Not-linked but dependent targets
-add_dependencies(Test_Misc
-                 TracerCUDA
-                 googletest_ext)
+add_dependencies(Test_Misc TracerCUDA)
 
 if(MSVC)
     set(DEBUG_ARGS "--gtest_filter=*.* --gtest_catch_exceptions=0 --gtest_repeat=1 --gtest_shuffle=0")

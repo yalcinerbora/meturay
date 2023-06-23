@@ -406,7 +406,7 @@ void DTreeGroup::DTreeBuffer::AllocateExtra(const std::vector<uint32_t>& oldTree
 {
     // Determine new size of the Dtree buffer
     std::vector<uint32_t> newOffsets;
-    const uint32_t extraTreeCount = static_cast<uint32_t>(oldTreeIds.size());
+    //const uint32_t extraTreeCount = static_cast<uint32_t>(oldTreeIds.size());
     const uint32_t oldTreeCount = static_cast<uint32_t>(hDTreeNodeOffsets.size()) - 1;
     const uint32_t oldNodeCount = hDTreeNodeOffsets.back();
     uint32_t extraNodeCount = 0;

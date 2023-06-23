@@ -220,7 +220,7 @@ inline float GPULightRectangular::Pdf(float distance,
 __device__
 inline Vector3f GPULightRectangular::GeneratePhoton(// Output
                                                     RayReg& rayOut,
-                                                    Vector3f& normal,
+                                                    Vector3f&,
                                                     float& posPDF,
                                                     float& dirPDF,
                                                     // I-O

@@ -132,7 +132,7 @@ void KCCamPixelApertureFromObjectCam(float& gOutPixAperture,
 static constexpr uint32_t PG_KERNEL_TYPE_COUNT = 5;
 
 constexpr float OctohedralConeAperture(uint32_t pixelCountX,
-                                       uint32_t pixelCountY)
+                                       uint32_t)
 {
     constexpr float MAX_SOLID_ANGLE = 4.0f * MathConstants::Pi;
     float totalPixCount = (static_cast<float>(pixelCountX) *
@@ -574,7 +574,6 @@ void WFPGTracer::GenerateGuidedDirections()
 
     const CudaGPU& gpu = cudaSystem.BestGPU();
     // Cluster the rays according to their svo location
-    const RayGMem* dRays = rayCaster->RaysIn();
     RayAuxWFPG* dRayAux = static_cast<RayAuxWFPG*>(*dAuxIn);
     uint32_t rayCount = rayCaster->CurrentRayCount();
 
@@ -608,10 +607,10 @@ void WFPGTracer::GenerateGuidedDirections()
     uint32_t hPartitionCount;
     uint32_t* dPartitionOffsets;
     uint32_t* dPartitionBinIds;
-    DeviceMemory partitionMemory;
+    DeviceMemory partitionMem;
     // Custom Ray Partition
     rayCaster->PartitionRaysWRTCustomData(hPartitionCount,
-                                          partitionMemory,
+                                          partitionMem,
                                           dPartitionOffsets,
                                           dPartitionBinIds,
                                           dRayAux,
@@ -911,7 +910,7 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
     CUDA_CHECK(cudaEventCreate(&stop));
 
     DeviceMemory mem;
-    float* dPixelAperture;
+    float* dPixelAperture = nullptr;
     if(options.optiXTrace)
     {
         mem = DeviceMemory(sizeof(float));

@@ -298,7 +298,7 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
 
         // Check early pop
         Vector3f tMaxXYZ = (voxTopRight * dirCoeff - posBias);
-        float tMax = std::min(std::min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
+        float tMaxLocal = std::min(std::min(tMaxXYZ[0], tMaxXYZ[1]), tMaxXYZ[2]);
 
         // We will "fake" traverse this empty node by just advancing
         // the tMin
@@ -306,7 +306,7 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
         {
             // Find the smallest non-negative tValue
             // Advance the tMin accordingly
-            tMin = tMax;
+            tMin = tMaxLocal;
             // Nudge the tMin here
             tMin = nextafter(tMin, INFINITY);
             uint32_t mortonBits = ReadMortonCode();
@@ -323,7 +323,7 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
 
         // Actual Traversal code
         // If out of bounds directly pop to parent
-        if(tMax < tMin)
+        if(tMaxLocal < tMin)
         {
             // Update the corner back according to the stack
             uint32_t mortonBits = ReadMortonCode();
@@ -342,10 +342,10 @@ float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
             uint8_t mirChildId = 0;
             // Find the t values of the voxel center
             // Find out the childId using that
-            Vector3f tMinXYZ = (voxCenter * dirCoeff - posBias);
-            if(tMinXYZ[0] < tMin) childId |= 0b001;
-            if(tMinXYZ[1] < tMin) childId |= 0b010;
-            if(tMinXYZ[2] < tMin) childId |= 0b100;
+            Vector3f tMinXYZLocal = (voxCenter * dirCoeff - posBias);
+            if(tMinXYZLocal[0] < tMin) childId |= 0b001;
+            if(tMinXYZLocal[1] < tMin) childId |= 0b010;
+            if(tMinXYZLocal[2] < tMin) childId |= 0b100;
             // Check if this childId has actually have a child
             // Don't forget to mirror the SVO
             mirChildId = childId ^ mirrorMask;
@@ -535,7 +535,7 @@ Vector3ui SVOctree::NodeVoxelId(uint32_t& depth,
             return 0;
         }
 
-        uint32_t index;
+        uint32_t index = std::numeric_limits<uint32_t>::max();
         for(uint32_t i = 1; i <= n; i++)
         {
             index = Utility::FindFirstSet(input);
@@ -556,7 +556,7 @@ Vector3ui SVOctree::NodeVoxelId(uint32_t& depth,
 
     auto PushMortonToStack = [&](uint64_t node,
                                  uint32_t nodeId,
-                                 uint32_t parentId)
+                                 uint32_t)
     {
         uint32_t childrenStart = ChildrenIndex(node);
         uint32_t bitIndex = nodeId - childrenStart;
@@ -1141,8 +1141,7 @@ void GDebugRendererSVO::UpdateDirectional(const Vector3f& worldPos,
             Vector3f direction = DirIdToWorldDir(stratPixId, mapExpanded, jitter);
             RayF ray(direction, pos);
 
-            Vector2f st = (Vector2f(stratPixId) + Vector2f(jitter)) / Vector2f(mapExpanded);
-
+            //Vector2f st = (Vector2f(stratPixId) + Vector2f(jitter)) / Vector2f(mapExpanded);
             //if(index == 32)
             //{
             //    METU_LOG("pixelId({}, {}), ST({}, {}) Dir({},{},{}) L {}",

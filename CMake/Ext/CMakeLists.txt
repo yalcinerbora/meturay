@@ -8,7 +8,15 @@ cmake_path(NORMAL_PATH MRAY_DIRECTORY)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${MRAY_DIRECTORY}CMake")
 
+# Do not use in source builds
+include(PreventInSourceBuilds)
 
+# Only Debug and Release
+set(CMAKE_CONFIGURATION_TYPES Debug;Release CACHE STRING "Configuration types, for multi-config generators (MRay supports only Debug and Release)")
+#set(CMAKE_DEFAULT_BUILD_TYPE Release CACHE STRING "Selected by user")
+set(CMAKE_BUILD_TYPE Release CACHE STRING "Configuration type for single-config generators. (MRay supports only Debug and Release)")
+
+# ExternalProject_Add warpper
 include(ExtDownloadDeps)
 
 # Create a project..
@@ -84,7 +92,7 @@ mray_build_ext_dependency_git(
 
 # Get nlohmann-json
 mray_build_ext_dependency_git(
-        NAME json_ext
+        NAME nlohmann_json_ext
         URL "https://github.com/nlohmann/json.git"
         TAG "5d2754306d67d1e654a1a34e1d2e74439a9d53b3" # 16.06.2023 Latest Commit
         LICENSE_NAME "LICENSE.MIT"
@@ -102,14 +110,13 @@ mray_build_ext_dependency_git(
 mray_build_ext_dependency_git(
     NAME assimp_ext
     URL "https://github.com/assimp/assimp.git"
-    #TAG "9c54540a1915bbb9fa2f719124d501791c8d69d7" # 16.06.2023 Latest Commit
     TAG "9519a62dd20799c5493c638d1ef5a6f484e5faf1" # v.5.2.5
     LICENSE_NAME "LICENSE"
     BUILD_ARGS
         -DASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT=OFF
         -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=ON
         -DASSIMP_BUILD_TESTS=OFF
-        -DASSIMP_BUILD_ZLIB=OFF
+        -DASSIMP_BUILD_ZLIB=ON
         -DASSIMP_INJECT_DEBUG_POSTFIX=OFF
         -DASSIMP_INSTALL=ON
         -DBUILD_SHARED_LIBS=ON
@@ -124,15 +131,16 @@ mray_build_ext_dependency_git(
         # There is a bug on this one maybe?
         -DASSIMP_INSTALL_PDB=OFF
 
-        DEPENDENCIES
-            zlib_ext
+    DEPENDENCIES
+        zlib_ext
+
 )
 
 # Get GFG
 mray_build_ext_dependency_git(
     NAME gfg_ext
     URL "https://github.com/yalcinerbora/GFGFileFormat.git"
-    TAG "cada665ed0ea83dcb9c99d37bafd69e9ffa18f61" # 21.06.2023 Latest Commit
+    TAG "4a0b800f3af9db101364958b856a00a4f80c8839" # 23.06.2023 Latest Commit
     LICENSE_NAME "LICENSE"
     SOURCE_SUBDIR "Build/CMake"
     BUILD_ARGS
@@ -160,7 +168,7 @@ mray_build_ext_dependency_git(
 mray_build_ext_dependency_git(
     NAME glbinding_ext
     URL "https://github.com/yalcinerbora/glbinding.git"
-    TAG "c55d9fa6e3a140dc38af476703becc888ac6d63b" # Custom slightly modified version
+    TAG "10be400cdc5eba35c39a06cd6ca51f2b76d496ea" # Custom slightly modified version
     LICENSE_NAME "LICENSE"
     BUILD_ARGS
         -DBUILD_SHARED_LIBS=ON

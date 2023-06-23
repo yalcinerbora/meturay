@@ -105,7 +105,6 @@ void RayCasterCUDA::HitRays()
 
         // TODO: Reorder partitions for efficient calls
         // (group partitions into gpus and order for better async access)
-        const int totalGPU = static_cast<int>(cudaSystem.SystemGPUs().size());
         const auto& gpus = cudaSystem.SystemGPUs();
         auto currentGPU = gpus.begin();
         // For each partition

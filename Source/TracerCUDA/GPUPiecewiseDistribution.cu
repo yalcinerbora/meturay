@@ -357,9 +357,9 @@ const PWCDistributionGroupCPU1D::GPUDistList& PWCDistributionGroupCPU1D::Distrib
     return gpuDistributions;
 }
 
-void PWCDistributionGroupCPU2D::Allocate(const std::vector<Vector2ui>& dimensions)
+void PWCDistributionGroupCPU2D::Allocate(const std::vector<Vector2ui>& dimensionsIn)
 {
-    this->dimensions = dimensions;
+    this->dimensions = dimensionsIn;
     std::vector<std::array<size_t, 5>> alignedSizes(dimensions.size());
     std::transform(dimensions.cbegin(), dimensions.cend(),
                    alignedSizes.begin(),

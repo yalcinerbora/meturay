@@ -361,14 +361,14 @@ inline void GPUCameraSpherical::SwapTransform(const VisorTransform& t)
 
 __device__
 inline GPUCameraI* GPUCameraSpherical::GenerateSubCamera(Byte* memoryRegion, size_t memSize,
-                                                         const Vector2i& regionId,
+                                                         const Vector2i& regionIdIn,
                                                          const Vector2i& regionCount) const
 {
     if(sizeof(GPUCameraSpherical) > memSize) return nullptr;
 
     //Vector3f gaze = position + dirYUp;
     Vector2f subRegionCount = Vector2f(regionCount) * totalRegions;
-    Vector2f subRegionId = this->regionId * Vector2f(regionCount) + Vector2f(regionId);
+    Vector2f subRegionId = this->regionId * Vector2f(regionCount) + Vector2f(regionIdIn);
 
     GPUCameraSpherical* p = new (memoryRegion) GPUCameraSpherical(pixelRatio,
                                                                   gTransform.WorldToLocal(position),

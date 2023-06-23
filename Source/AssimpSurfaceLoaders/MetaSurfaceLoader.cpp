@@ -21,6 +21,7 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
     , innerIds(node.AccessUIntRanged(InnerIdJSON))
 {
     scene = importer.ReadFile(filePath,
+                              static_cast<unsigned int>(
                               // Generate Bounding Boxes
                               aiProcess_GenBoundingBoxes |
                               // Generate Normals if not avail
@@ -37,7 +38,7 @@ AssimpMetaSurfaceLoader::AssimpMetaSurfaceLoader(Assimp::Importer& i,
                               aiProcess_FindDegenerates |
                               aiProcess_SortByPType |
                               //
-                              aiProcess_RemoveRedundantMaterials);
+                              aiProcess_RemoveRedundantMaterials));
 
     // Report Failed Import
     if(!scene) throw SceneException(SceneError::SURFACE_DATA_INVALID_READ,

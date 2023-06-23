@@ -11,15 +11,15 @@ KDTreeCPU<V>::KDTreeCPU()
 
 template <class V>
 TracerError KDTreeCPU<V>::Construct(const V* dPositionList,
-                                    uint32_t leafCount,
-                                    const CudaSystem& system)
+                                    uint32_t leafCountIn,
+                                    const CudaSystem&)
 {
     static constexpr uint32_t MAX_BASE_DEPTH = 64;
     // Partition Function
     V pointMin;
     V pointMax;
 
-    auto GenKdTreeNode = [&pointMin, &pointMax, leafCount]
+    auto GenKdTreeNode = [&pointMin, &pointMax, leafCountIn, this]
     (
         // Output
         uint64_t& packedInfo,
@@ -119,9 +119,9 @@ TracerError KDTreeCPU<V>::Construct(const V* dPositionList,
     };
 
     // Load Leafs to Memory
-    std::vector<V> hPositions(leafCount);
+    std::vector<V> hPositions(leafCountIn);
     CUDA_CHECK(cudaMemcpy(hPositions.data(), dPositionList,
-                          sizeof(V) * leafCount,
+                          sizeof(V) * leafCountIn,
                           cudaMemcpyDeviceToHost));
     // CPU Memory
     std::vector<uint64_t> hPackInfo;
@@ -141,7 +141,7 @@ TracerError KDTreeCPU<V>::Construct(const V* dPositionList,
     partitionQueue.emplace(SplitWork
                            {
                                false,
-                               0, leafCount,
+                               0, leafCountIn,
                                std::numeric_limits<uint32_t>::max(),
                                0
                            });
@@ -220,7 +220,7 @@ TracerError KDTreeCPU<V>::Construct(const V* dPositionList,
                           sizeof(V) * hPositions.size(),
                           cudaMemcpyHostToDevice));
 
-    this->leafCount = leafCount;
+    this->leafCount = leafCountIn;
     nodeCount = static_cast<uint32_t>(hPackInfo.size());
 
     treeGPU.voronoiCenterSize = CalculateVoronoiCenterSize(AABB3f(pointMin, pointMax));
@@ -331,7 +331,7 @@ inline void KDTreeCPU<V>::DumpTreeToStream(std::ostream& s) const
 }
 
 template <class V>
-inline void KDTreeCPU<V>::DumpTreeAsBinary(std::vector<Byte>& data) const
+inline void KDTreeCPU<V>::DumpTreeAsBinary(std::vector<Byte>&) const
 {
 
 }

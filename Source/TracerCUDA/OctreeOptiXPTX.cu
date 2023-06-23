@@ -97,14 +97,14 @@ void KCCamTraceSVO()
     // Should we check this ??
     if(launchIndex >= launchDim) return;
     // Camera Rays are generated from other kernel
-    RayReg ray = RayReg(params.gRays, launchIndex);
+    RayReg ray = RayReg(params.ct.gRays, launchIndex);
     // Actual SVO structure will be used to expand the hit location wrt.
     // query level
     const AnisoSVOctreeGPU& svo = params.svo;
 
     // Start level is leaf or the offseted leaf
     // (query offset is used  for debugging only)
-    int startLevel = static_cast<int>(svo.LeafDepth() - params.maxQueryOffset);
+    int startLevel = static_cast<int>(svo.LeafDepth() - params.ct.maxQueryOffset);
     startLevel = max(1, startLevel);
     int accIndex = (startLevel - 1);
     // Ray Payload
@@ -196,7 +196,7 @@ void KCCamTraceSVO()
         requiredLevel = currentLevel - static_cast<uint32_t>(floor(dvRatio));
 
         // Clamp the required level according to the "params.maxQueryOffset"
-        requiredLevel = min(requiredLevel, svo.LeafDepth() - params.maxQueryOffset);
+        requiredLevel = min(requiredLevel, svo.LeafDepth() - params.ct.maxQueryOffset);
         // Required level is above and found queried level is leaf
         // Ascend to level
         globalNodeId = svo.Ascend(requiredLevel, leafNodeIdOut, currentLevel);
@@ -204,14 +204,14 @@ void KCCamTraceSVO()
 
     // Finally Query the result
     Vector3f hitPos = ray.ray.AdvancedPos(tMaxOut);
-    Vector4f locColor = CalcColorSVO(params.renderMode, svo,
+    Vector4f locColor = CalcColorSVO(params.ct.renderMode, svo,
                                      ray.ray.getDirection(),
                                      hitPos,
                                      params.pixelOrConeAperture,
                                      globalNodeId, requiredLevel);
     // Actual Write
-    uint32_t sampleIndex = params.gRayAux[launchIndex].sampleIndex;
-    params.gSamples.gValues[sampleIndex] = locColor;
+    uint32_t sampleIndex = params.ct.gRayAux[launchIndex].sampleIndex;
+    params.ct.gSamples.gValues[sampleIndex] = locColor;
 }
 
 __device__ __forceinline__
@@ -235,15 +235,15 @@ void KCRadGenSVO()
     const uint32_t launchDim = optixGetLaunchDimensions().x;
     const uint32_t launchIndex = optixGetLaunchIndex().x;
     //
-    const Vector2i fieldDim = params.fieldSegments.FieldDim();
+    const Vector2i fieldDim = params.rg.fieldSegments.FieldDim();
     int32_t threadPerField = fieldDim.Multiply();
     const uint32_t fieldWriteIndex = launchIndex / threadPerField;
-    const uint32_t binIndex = fieldWriteIndex + params.binOffset;
+    const uint32_t binIndex = fieldWriteIndex + params.rg.binOffset;
     const uint32_t binThreadIndex = launchIndex % threadPerField;
     // Should we check this ??
     if(launchIndex >= launchDim) return;
     // Generate the ray using field information
-    Vector4f originAndTmin = params.dRadianceFieldRayOrigins[binIndex];
+    Vector4f originAndTmin = params.rg.dRadianceFieldRayOrigins[binIndex];
     Vector3f rayOrigin = Vector3f(originAndTmin);
     Vector2f tMinMax = Vector2f(originAndTmin[3], FLT_MAX);
 
@@ -258,7 +258,7 @@ void KCRadGenSVO()
     // Project using co-centric octohedral projection (mapping)
     // Globally jitter the field (entire field is offseted by this
     // value)
-    Vector2f projJitter = params.dProjJitters[binIndex];
+    Vector2f projJitter = params.rg.dProjJitters[binIndex];
     Vector3f rayDir = ProjectionFunc(rayId, fieldDim, projJitter);
 
     //if(fieldWriteIndex == 1)
@@ -365,10 +365,10 @@ void KCRadGenSVO()
         radiance = MathConstants::VeryLargeEpsilon;
 
     // Now write
-    float* dataRange = params.fieldSegments.FieldRadianceArray(fieldWriteIndex);
+    float* dataRange = params.rg.fieldSegments.FieldRadianceArray(fieldWriteIndex);
     dataRange[binThreadIndex] = radiance;
 
-    float* distRange = params.fieldSegments.FieldDistanceArray(fieldWriteIndex);
+    float* distRange = params.rg.fieldSegments.FieldDistanceArray(fieldWriteIndex);
     distRange[binThreadIndex] = tMaxOut;
 }
 

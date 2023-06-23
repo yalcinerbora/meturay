@@ -447,64 +447,66 @@ void GPUBoundaryWorkBatch<GlobalData, LocalData, RayData,
     // Special Case Skip Null Light
     if constexpr(std::is_same_v<EGroup, CPULightGroupNull>)
         return;
-
-    // Do Pre-work (initialize local data etc.)
-    this->GetReady();
-
-    using PrimitiveGroup    = typename EGroup::PrimitiveGroup;
-    using PrimitiveData     = typename EGroup::PrimitiveData;
-    using HitData           = typename EGroup::HitData;
-    using Surface           = typename EGroup::Surface;
-    using GPUEndpointType   = typename EGroup::GPUType;
-
-    // Get Data
-    PrimitiveData primData;
-    if constexpr(std::is_same_v<EGroup, CPULightGroupNull>)
-        primData = {};
     else
-        primData = PrimDataAccessor::Data(endpointGroup.PrimGroup());
+    {
+        // Do Pre-work (initialize local data etc.)
+        this->GetReady();
 
-    const GPUEndpointType* dEndpoints = endpointGroup.GPULightsDerived();
+        using PrimitiveGroup    = typename EGroup::PrimitiveGroup;
+        using PrimitiveData     = typename EGroup::PrimitiveData;
+        using HitData           = typename EGroup::HitData;
+        using Surface           = typename EGroup::Surface;
+        using GPUEndpointType   = typename EGroup::GPUType;
 
-    const uint32_t outRayCount = this->OutRayCount();
-    const CudaGPU& gpu = endpointGroup.GPU();
+        // Get Data
+        PrimitiveData primData;
+        if constexpr(std::is_same_v<EGroup, CPULightGroupNull>)
+            primData = {};
+        else
+            primData = PrimDataAccessor::Data(endpointGroup.PrimGroup());
 
-   // TODO: Async grid stride make kernels
-   // to use the same RNG
-   //gpu.AsyncGridStrideKC_X
-    gpu.GridStrideKC_X
-    (
-        0, (cudaStream_t)0,
-        rayCount,
-        // TODO: Change This
-        KCBoundaryWork<GlobalData, LocalData, RayData,
-                       EGroup, RNGIndependentGPU,
-                       WorkF, SurfF>,
-        // Args
-        // Output
-        dBoundMatOut,
-        dRayOut,
-        this->dAuxOutLocal,
-        outRayCount,
-        // Input
-        dRayIn,
-        this->dAuxInGlobal,
-        dPrimitiveIds,
-        dTransformIds,
-        dHitStructs,
-        //
-        dMatIds,
-        dRayIds,
-        // I-O
-        localData,
-        this->globalData,
-        rngCPU.GetGPUGenerators(gpu),
-        // Constants
-        rayCount,
-        dEndpoints,
-        primData,
-        dTransforms
-    );
+        const GPUEndpointType* dEndpoints = endpointGroup.GPULightsDerived();
+
+        const uint32_t outRayCount = this->OutRayCount();
+        const CudaGPU& gpu = endpointGroup.GPU();
+
+        // TODO: Async grid stride make kernels
+        // to use the same RNG
+        //gpu.AsyncGridStrideKC_X
+        gpu.GridStrideKC_X
+        (
+            0, (cudaStream_t)0,
+            rayCount,
+            // TODO: Change This
+            KCBoundaryWork<GlobalData, LocalData, RayData,
+                           EGroup, RNGIndependentGPU,
+                           WorkF, SurfF>,
+            // Args
+            // Output
+            dBoundMatOut,
+            dRayOut,
+            this->dAuxOutLocal,
+            outRayCount,
+            // Input
+            dRayIn,
+            this->dAuxInGlobal,
+            dPrimitiveIds,
+            dTransformIds,
+            dHitStructs,
+            //
+            dMatIds,
+            dRayIds,
+            // I-O
+            localData,
+            this->globalData,
+            rngCPU.GetGPUGenerators(gpu),
+            // Constants
+            rayCount,
+            dEndpoints,
+            primData,
+            dTransforms
+        );
+    };
 }
 
 template<class GlobalData, class LocalData,

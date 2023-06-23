@@ -220,7 +220,7 @@ mray_build_ext_dependency_git(
             # OIIO caches xxx_ROOT variables
             # and libarries does not change between configs
             --fresh
-            -DCMAKE_CXX_STANDARD=20
+            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
             -DBoost_USE_STATIC_LIBS=ON
             -DBoost_NO_WARN_NEW_VERSIONS=ON
             -DEMBEDPLUGINS=ON
@@ -254,7 +254,7 @@ mray_build_ext_dependency_git(
             -DPNG_ROOT:PATH=${LIBPNG_INSTALL_LOC}
             -DVERBOSE=ON
 
-            # Do not install these
+            # Do not install msvc runtime libraries
             -DCMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP=OFF
 
         DEPENDENCIES
@@ -295,5 +295,5 @@ ExternalProject_Add_Step(oiio_ext patch_extra
 )
 
 # Get the name of the deps outside
-set(MRAY_ALL_EXT_DEP_TARGETS
+set(MRAY_OIIO_EXT_DEP_TARGETS
     ${MRAY_ALL_EXT_DEP_TARGETS} PARENT_SCOPE)

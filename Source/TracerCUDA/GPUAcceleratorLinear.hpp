@@ -514,29 +514,29 @@ void GPUAccLinearGroup<PGroup>::SampleAreaWeightedPoints(// Outs
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::EachPrimVoxelCount(// Output
-                                                   uint64_t* dVoxCounts,
+                                                   uint64_t*,
                                                    // Inputs
-                                                   uint32_t resolutionXYZ,
-                                                   const AABB3f& sceneAABB,
-                                                   const CudaSystem& system) const
+                                                   uint32_t,
+                                                   const AABB3f&,
+                                                   const CudaSystem&) const
 {
     METU_ERROR_LOG("Acc Linear did not implemented voxelize surfaces yet");
 }
 
 template <class PGroup>
 void GPUAccLinearGroup<PGroup>::VoxelizeSurfaces(// Outputs
-                                                 uint64_t* dVoxels,
-                                                 Vector2us* dVoxelNormals,
-                                                 HitKey* gVoxelLightKeys,
+                                                 uint64_t*,
+                                                 Vector2us*,
+                                                 HitKey*,
                                                  // Inputs
-                                                 const uint64_t* dVoxelOffsets, // For each primitive
+                                                 const uint64_t*, // For each primitive
                                                  // Light Lookup Table (Binary Search)
-                                                 const HitKey* dLightKeys,      // Sorted
-                                                 uint32_t totalLightCount,
+                                                 const HitKey*,      // Sorted
+                                                 uint32_t,
                                                  // Constants
-                                                 uint32_t resolutionXYZ,
-                                                 const AABB3f& sceneAABB,
-                                                 const CudaSystem& system) const
+                                                 uint32_t,
+                                                 const AABB3f&,
+                                                 const CudaSystem&) const
 {
     METU_ERROR_LOG("Acc Linear did not implemented voxelize surfaces yet");
 }

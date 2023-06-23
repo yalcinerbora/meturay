@@ -16,7 +16,6 @@ source_group("" FILES ${SRC_COMMON})
 
 # DLL
 add_library(GFGSurfaceLoader SHARED ${SRC_ALL})
-add_dependencies(GFGSurfaceLoader gfg_ext)
 
 # Preprocessor Defs
 target_compile_definitions(GFGSurfaceLoader PRIVATE
@@ -24,5 +23,5 @@ target_compile_definitions(GFGSurfaceLoader PRIVATE
 
 target_link_libraries(GFGSurfaceLoader PRIVATE
                       RayLib
-                      GFGFileIO
+                      GFGFileIO::GFGFileIO
                       mray::meta_compile_opts)

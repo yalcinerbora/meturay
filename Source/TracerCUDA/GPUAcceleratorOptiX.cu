@@ -134,7 +134,7 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<Opt
                                                const std::vector<bool>& hDoCullOnAccel,
                                                const TransformId* dAllTransformIds,
                                                const GPUTransformI** dGlobalTransformArray,
-                                               AABB3f sceneAABB)
+                                               AABB3f sceneAABBIn)
 {
     Utility::CPUTimer t;
     t.Start();
@@ -143,7 +143,7 @@ TracerError GPUBaseAcceleratorOptiX::Construct(const std::vector<std::vector<Opt
     assert(idLookup.size() == gpuTraversables.front().size());
 
     // Set Scene AABB
-    this->sceneAABB = sceneAABB;
+    this->sceneAABB = sceneAABBIn;
 
     DeviceMemory transformTempMemory;
     PrimTransformType* dTransformTypes;
@@ -340,7 +340,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
     DeviceMemory aabbMemory(sizeof(AABB3f) * maxSubsurfacePrimCount);
     AABB3f* dAABBs = static_cast<AABB3f*>(aabbMemory);
 
-    const CudaGPU& gpu = system.BestGPU();
+    const CudaGPU& bestGPU = system.BestGPU();
     std::array<AABB3f, SceneConstants::MaxPrimitivePerSurface> localAABBs;
     for(int i = 0; i < SceneConstants::MaxPrimitivePerSurface; i++)
     {
@@ -348,7 +348,7 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         if(range[0] == std::numeric_limits<uint64_t>::max())
             break;
         size_t primCount = range[1] - range[0];
-        gpu.GridStrideKC_X
+        bestGPU.GridStrideKC_X
         (
             0, (cudaStream_t)0, primCount,
             //
@@ -375,10 +375,10 @@ TracerError GPUAccOptiXGroup<GPUPrimitiveTriangle>::ConstructAccelerator(uint32_
         {
             // Transform this AABB to world space
             // since base Accelerator works on world space
-            TransformLocalAABBToWorld(localAABBs[i], *worldTransform, gpu);
+            TransformLocalAABBToWorld(localAABBs[i], *worldTransform, bestGPU);
         }
     }
-    gpu.WaitMainStream();
+    bestGPU.WaitMainStream();
     aabbMemory = DeviceMemory();
 
     AABB3f surfaceAABB = NegativeAABB3f;

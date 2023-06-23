@@ -110,8 +110,8 @@ uint32_t SurfaceLBVH::FindNearestPoint(float& distance, const Vector3f& worldPos
 
         if(currentNode->isLeaf)
         {
-            float distance = DistanceFunction(currentNode->leaf.position, worldSurface);
-            if(distance < closestDistance)
+            float dist = DistanceFunction(currentNode->leaf.position, worldSurface);
+            if(dist < closestDistance)
             {
                 closestDistance = distance;
                 closestLeafIndex = currentNode->leaf.leafId;

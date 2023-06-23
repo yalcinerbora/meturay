@@ -16,14 +16,13 @@ source_group("" FILES ${SRC_ALL})
 
 # DLL
 add_library(AssimpSurfaceLoaders SHARED ${SRC_ALL})
-add_dependencies(AssimpSurfaceLoaders assimp_ext)
 # Preprocessor Defs extra
 target_compile_definitions(AssimpSurfaceLoaders PRIVATE
                            METU_SHARED_ASSIMP_LOADER)
 
 target_link_libraries(AssimpSurfaceLoaders PRIVATE
                       RayLib
-                      assimp
+                      assimp::assimp
                       mray::meta_compile_opts
 )
 
