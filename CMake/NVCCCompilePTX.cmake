@@ -138,7 +138,8 @@ FUNCTION(NVCC_COMPILE_PTX)
   add_custom_target(${PTX_TARGET}
                     DEPENDS ${PTX_FILES}
                     # Add Source files for convenience
-                    SOURCES ${NVCC_COMPILE_PTX_SOURCES})
+                    SOURCES ${NVCC_COMPILE_PTX_SOURCES}
+                    )
 
   set(${NVCC_COMPILE_PTX_GENERATED_TARGET} ${PTX_TARGET} PARENT_SCOPE)
 ENDFUNCTION()

@@ -12,7 +12,8 @@ mray_build_ext_dependency_git(
 
 )
 
-set(MRAY_IMGUI_SRC_LOCATION ${MRAY_PLATFORM_EXT_DIRECTORY}/imgui_ext/src/imgui_ext)
+ExternalProject_Get_property(imgui_ext SOURCE_DIR)
+set(MRAY_IMGUI_SRC_LOCATION ${SOURCE_DIR})
 
 # Inject an custom cmakelists.txt and make cmake to use it
 ExternalProject_Add_Step(imgui_ext inject_cmake

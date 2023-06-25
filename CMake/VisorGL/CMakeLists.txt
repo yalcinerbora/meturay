@@ -89,7 +89,6 @@ source_group("GuideDebug/Debug Renderers" FILES ${GUIDE_DEBUG_RENDERERS})
 source_group("Shaders" FILES ${SRC_SHADERS})
 source_group("" FILES ${SRC_COMMON})
 
-
 # Platform Specific Libraries
 # TBB for std::execution (clang & GCC)
 if(MSVC)
@@ -151,10 +150,7 @@ add_dependencies(VisorGL_Shaders VisorGL)
 if(MSVC)
     add_custom_command(TARGET VisorGL POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/glfw3.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/glew32.dll"
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/glfw3.pdb">
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/glew32.pdb">
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/Imgui.pdb">
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/glfw3$<$<CONFIG:Debug>:d>.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/glbinding$<$<CONFIG:Debug>:d>.dll"
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()

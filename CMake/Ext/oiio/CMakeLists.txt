@@ -67,7 +67,7 @@ set(OIIO_BOOST_SUBMODULE_LIST
 # Libjpeg turbo could not be found so using that method for it.
 
 # ZLIB
-set(ZLIB_INSTALL_LOC ${OIIO_TMP_DIR}/zlib-$<CONFIG>)
+set(ZLIB_INSTALL_LOC ${OIIO_TMP_DIR}/zlib)
 mray_build_ext_dependency_git(
         NAME oiio_zlib_ext
         URL "https://github.com/madler/zlib.git"
@@ -85,11 +85,11 @@ mray_build_ext_dependency_git(
             -DINSTALL_LIB_DIR=${ZLIB_INSTALL_LOC}
             -DINSTALL_MAN_DIR=${ZLIB_INSTALL_LOC}
             -DINSTALL_PKGCONFIG_DIR=${ZLIB_INSTALL_LOC}
+            -DCMAKE_DEBUG_POSTFIX:STRING=d
 
 )
 append_cmake_prefix_path(${ZLIB_INSTALL_LOC})
 
-#These are SOA
 # Boost FS and thread
 set(BOOST_INSTALL_LOC ${OIIO_TMP_DIR}/boost)
 mray_build_ext_dependency_git(
@@ -107,26 +107,34 @@ mray_build_ext_dependency_git(
             -DBOOST_INCLUDE_LIBRARIES:STRING=filesystem|thread
             -DBOOST_INSTALL_LAYOUT=tagged
 )
+append_cmake_prefix_path(${BOOST_INSTALL_LOC})
 
 # OpenEXR & IMath
+set(IMATH_INSTALL_LOC ${OIIO_TMP_DIR}/imath)
 mray_build_ext_dependency_git(
         NAME imath_ext
         URL "https://github.com/AcademySoftwareFoundation/Imath.git"
         TAG "d690a3fcff4e877ead5ae56c7e964595ade8a35e" # v3.1.9
 
         LICENSE_NAME "LICENSE.md"
-        OVERRIDE_INSTALL_PREFIX ${OIIO_LIB_DIR}
+        DONT_OVERRIDE_INSTALL_SUFFIXES
+        OVERRIDE_INSTALL_PREFIX ${IMATH_INSTALL_LOC}
         BUILD_ARGS
             -DBUILD_SHARED_LIBS=OFF
             -DBUILD_TESTING=OFF
+            -DCMAKE_DEBUG_POSTFIX:STRING=d
 )
+append_cmake_prefix_path(${IMATH_INSTALL_LOC})
+
+set(OPENEXR_INSTALL_LOC ${OIIO_TMP_DIR}/openexr)
 mray_build_ext_dependency_git(
         NAME openexr_ext
         URL "https://github.com/AcademySoftwareFoundation/openexr.git"
         TAG "68d9e1e17620cef00e59b43fa42c97fbcf90e72b" # v3.1.8
 
         LICENSE_NAME "LICENSE.md"
-        OVERRIDE_INSTALL_PREFIX ${OIIO_LIB_DIR}
+        DONT_OVERRIDE_INSTALL_SUFFIXES
+        OVERRIDE_INSTALL_PREFIX ${OPENEXR_INSTALL_LOC}
         BUILD_ARGS
             -DBUILD_SHARED_LIBS=OFF
             -DOPENEXR_BUILD_TOOLS=OFF
@@ -137,14 +145,17 @@ mray_build_ext_dependency_git(
             -DOPENEXR_INSTALL_TOOLS=OFF
             -DBUILD_TESTING=OFF
             -DZLIB_ROOT=${ZLIB_INSTALL_LOC}
-            -DImath_DIR:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/Imath
+            -DCMAKE_DEBUG_POSTFIX:STRING=d
+            #-DImath_DIR:PATH=${IMATH_INSTALL_LOC}/cmake/Imath
+
         DEPENDENCIES
             imath_ext
             oiio_zlib_ext
 )
+append_cmake_prefix_path(${OPENEXR_INSTALL_LOC})
 
 # Lib TIFF
-set(LIBTIFF_INSTALL_LOC ${OIIO_TMP_DIR}/libtiff-$<CONFIG>)
+set(LIBTIFF_INSTALL_LOC ${OIIO_TMP_DIR}/libtiff)
 mray_build_ext_dependency_git(
         NAME libtiff_ext
         URL "https://gitlab.com/libtiff/libtiff.git"
@@ -161,6 +172,7 @@ mray_build_ext_dependency_git(
             -Dzlib=ON
             -DZLIB_ROOT:PATH=${ZLIB_INSTALL_LOC}
             -DJPEG_ROOT:PATH=${JPEGTURBO_INSTALL_LOC}
+            -DCMAKE_DEBUG_POSTFIX:STRING=d
             # Finds stuff from miniconda since it is on path
             # It may be on path like in my system
             -DCMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH=OFF
@@ -170,9 +182,10 @@ mray_build_ext_dependency_git(
             libjpeg_turbo_ext
             libpng_ext
 )
+append_cmake_prefix_path(${LIBTIFF_INSTALL_LOC})
 
 # Lib JPEG-turbo
-set(JPEGTURBO_INSTALL_LOC ${OIIO_TMP_DIR}/jpegTurbo-$<CONFIG>)
+set(JPEGTURBO_INSTALL_LOC ${OIIO_TMP_DIR}/jpegTurbo)
 mray_build_ext_dependency_git(
         NAME libjpeg_turbo_ext
         URL "https://github.com/libjpeg-turbo/libjpeg-turbo.git"
@@ -183,10 +196,12 @@ mray_build_ext_dependency_git(
         OVERRIDE_INSTALL_PREFIX ${JPEGTURBO_INSTALL_LOC}
         BUILD_ARGS
             -DENABLE_SHARED=OFF
+            -DCMAKE_DEBUG_POSTFIX:STRING=d
 )
+append_cmake_prefix_path(${JPEGTURBO_INSTALL_LOC})
 
 # Lib PNG
-set(LIBPNG_INSTALL_LOC ${OIIO_TMP_DIR}/libPNG-$<CONFIG>)
+set(LIBPNG_INSTALL_LOC ${OIIO_TMP_DIR}/libPNG)
 mray_build_ext_dependency_git(
         NAME libpng_ext
         URL "https://github.com/glennrp/libpng.git"
@@ -203,9 +218,11 @@ mray_build_ext_dependency_git(
             -DPNG_SHARED=OFF
             -DPNG_STATIC=ON
             -DPNG_TESTS=OFF
+            -DCMAKE_DEBUG_POSTFIX:STRING=d
         DEPENDENCIES
             oiio_zlib_ext
 )
+append_cmake_prefix_path(${LIBPNG_INSTALL_LOC})
 
 # TODO: Add Jpeg2000, HEIF, HDR
 
@@ -219,7 +236,6 @@ mray_build_ext_dependency_git(
         BUILD_ARGS
             # OIIO caches xxx_ROOT variables
             # and libarries does not change between configs
-            --fresh
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
             -DBoost_USE_STATIC_LIBS=ON
             -DBoost_NO_WARN_NEW_VERSIONS=ON
@@ -242,10 +258,10 @@ mray_build_ext_dependency_git(
             -DCMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH=OFF
             -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
             # Dep Root Files
-            # SoA
-            -DImath_DIR:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/Imath
-            #-DOpenEXR_ROOT:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/OpenEXR
             # AoS
+            #-DImath_DIR:PATH=${OIIO_LIB_CONFIG_DIR}/cmake/Imath
+            -DImath_ROOT:PATH=${IMATH_INSTALL_LOC}
+            -DOpenEXR_ROOT:PATH=${OPENEXR_INSTALL_LOC}
             -DBoost_ROOT:PATH=${BOOST_INSTALL_LOC}
             -DZLIB_ROOT:PATH=${ZLIB_INSTALL_LOC}
             -DJPEGTurbo_ROOT:PATH=${JPEGTURBO_INSTALL_LOC}
@@ -270,7 +286,7 @@ mray_build_ext_dependency_git(
 # It is not merged but we can patch it!
 # I will add this as an extra step since we cant modify
 # patch step after.
-set(MRAY_OIIO_SRC_LOCATION ${MRAY_PLATFORM_EXT_DIRECTORY}/oiio_ext/src/oiio_ext)
+set(MRAY_OIIO_SRC_LOCATION ${MRAY_EXT_DIRECTORY}/oiio_ext/)
 
 # DL'in file here instead
 file(DOWNLOAD https://github.com/OpenImageIO/oiio/pull/3862.patch

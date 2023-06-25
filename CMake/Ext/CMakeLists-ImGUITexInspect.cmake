@@ -5,7 +5,6 @@ include(GNUInstallDirs)
 project(ImguiTexInspectInject LANGUAGES CXX)
 
 find_package(imgui REQUIRED)
-#find_package(glbinding REQUIRED)
 
 add_library(imgui_tex_inspect STATIC)
 
@@ -41,8 +40,8 @@ target_link_libraries(imgui_tex_inspect imgui)
 target_compile_definitions(imgui_tex_inspect PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLBINDING3)
 
 target_include_directories(imgui_tex_inspect PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Lib/Include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Lib/Include/glbinding/3rdparty)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../Lib/Include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../Lib/Include/glbinding/3rdparty)
 
 install(TARGETS imgui_tex_inspect
         EXPORT imgui_tex_inspectTargets

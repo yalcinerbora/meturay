@@ -19,20 +19,15 @@ target_compile_definitions(ImageIO PRIVATE
 
 target_link_libraries(ImageIO PRIVATE
                       RayLib
-                      OpenEXR
-                      #oiio
+                      oiio::oiio
+                      oiio::oiio_util
                       mray::meta_compile_opts)
 
 # Copy DLLS
 if(MSVC)
     add_custom_command(TARGET ImageIO POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/FreeImage.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/OpenEXR.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/Imath.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/IlmThread.dll"
-                       "${MRAY_CONFIG_LIB_DIRECTORY}/Iex.dll"
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/FreeImage.pdb">
-                       $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/OpenEXR.pdb">
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/OpenImageIO$<$<CONFIG:Debug>:d>.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/OpenImageIO_Util$<$<CONFIG:Debug>:d>.dll"
                        ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()

@@ -222,8 +222,8 @@ TEST(PPG_DTree, Empty)
     EXPECT_EQ(0.0f, nodes.front().irradianceEstimates[3]);
     testTree.GetWriteTreeToCPU(tree, nodes, 0);
     EXPECT_EQ(0.0f, tree.irradiance);
-    EXPECT_EQ(0, tree.totalSamples);
-    EXPECT_EQ(1, tree.nodeCount);
+    EXPECT_EQ(0u, tree.totalSamples);
+    EXPECT_EQ(1u, tree.nodeCount);
     EXPECT_EQ(1, nodes.size());
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[0]);
     EXPECT_EQ(std::numeric_limits<uint32_t>::max(), nodes.front().childIndices[1]);

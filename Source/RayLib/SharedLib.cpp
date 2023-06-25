@@ -66,6 +66,7 @@ SharedLib::SharedLib(const std::string& libName)
         {
             DWORD errorMessageID = GetLastError();
 
+            // TODO: Properly unicode support here
             LPSTR messageBuffer = nullptr;
             size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                                          FORMAT_MESSAGE_FROM_SYSTEM |
@@ -76,6 +77,7 @@ SharedLib::SharedLib(const std::string& libName)
 
             // Get the buffer
             std::string message(messageBuffer, size);
+            message +=  " \"" + libName + "\"";
             METU_ERROR_LOG(message);
             LocalFree(messageBuffer);
         }

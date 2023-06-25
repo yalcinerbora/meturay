@@ -19,6 +19,9 @@ set(CMAKE_BUILD_TYPE Release CACHE STRING "Configuration type for single-config 
 # ExternalProject_Add warpper
 include(ExtDownloadDeps)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 # Create a project..
 project(METURayDeps DESCRIPTION "MRay dependency downloader/compiler")
 
@@ -230,12 +233,15 @@ if(MRAY_BUILD_TESTS)
         BUILD_ARGS
             -DBUILD_GMOCK=ON
             -DBUILD_SHARED_LIBS=ON
+            # There is a bug on google test
+            # it adds debug_prefix_NOT_FOUND when debug prefix is set
+            # forgot to paste the link and i could not find it anymore
             -DCMAKE_DEBUG_POSTFIX=
     )
 endif()
 
 # Image Libraries compiled into oiio
-#add_subdirectory(oiio)
+add_subdirectory(oiio)
 
 set(MRAY_ALL_EXT_DEP_TARGETS ${MRAY_ALL_EXT_DEP_TARGETS}
     ${MRAY_OIIO_EXT_DEP_TARGETS})

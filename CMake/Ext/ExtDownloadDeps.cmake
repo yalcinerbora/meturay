@@ -25,9 +25,14 @@ function(mray_build_ext_dependency_git)
     cmake_parse_arguments(BUILD_SUBPROJECT "${options}" "${oneValueArgs}"
                           "${multiValueArgs}" ${ARGN})
 
-    set(SUBPROJECT_EXT_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/${BUILD_SUBPROJECT_NAME})
-    set(SUBPROJECT_BUILD_PATH ${SUBPROJECT_EXT_DIR}/build)
-    set(SUBPROJECT_SRC_PATH ${SUBPROJECT_EXT_DIR}/src/${BUILD_SUBPROJECT_NAME})
+    set(SUBPROJECT_PREFIX_DIR ${MRAY_PLATFORM_EXT_DIRECTORY})
+    set(SUBPROJECT_BUILD_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/build/${BUILD_SUBPROJECT_NAME})
+    set(SUBPROJECT_STMP_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/build/${BUILD_SUBPROJECT_NAME}-stamp)
+    set(SUBPROJECT_TMP_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/build/${BUILD_SUBPROJECT_NAME}-tmp)
+    set(SUBPROJECT_INSTALL_DIR ${MRAY_PLATFORM_EXT_DIRECTORY}/build/${BUILD_SUBPROJECT_NAME}-install)
+    set(SUBPROJECT_LOG_DIR ${SUBPROJECT_STMP_DIR})
+    set(SUBPROJECT_SRC_DIR ${MRAY_EXT_DIRECTORY}/${BUILD_SUBPROJECT_NAME})
+    set(SUBPROJECT_DL_DIR ${SUBPROJECT_SRC_DIR})
 
     if(BUILD_SUBPROJECT_SKIP_INSTALL)
         set(SUBPROJECT_INSTALL_COMMAND_ARG "INSTALL_COMMAND")
@@ -68,8 +73,15 @@ function(mray_build_ext_dependency_git)
 
     # Actual Call
     ExternalProject_Add(${BUILD_SUBPROJECT_NAME}
-                PREFIX ${SUBPROJECT_EXT_DIR}
-                BINARY_DIR ${SUBPROJECT_BUILD_PATH}
+                PREFIX ${SUBPROJECT_PREFIX_DIR}
+                BINARY_DIR ${SUBPROJECT_BUILD_DIR}
+                TMP_DIR ${SUBPROJECT_TMP_DIR}
+                SOURCE_DIR ${SUBPROJECT_SRC_DIR}
+                LOG_DIR ${SUBPROJECT_LOG_DIR}
+                INSTALL_DIR ${SUBPROJECT_INSTALL_DIR}
+                STAMP_DIR ${SUBPROJECT_STMP_DIR}
+                DOWNLOAD_DIR ${SUBPROJECT_DL_DIR}
+
                 BUILD_IN_SOURCE OFF
 
                 # DL Repo
@@ -111,6 +123,12 @@ function(mray_build_ext_dependency_git)
                     # Mandate a debug postfix
                     -DCMAKE_DEBUG_POSTFIX=d
 
+                    # TODO: Do not do fresh install
+                    # find out a way to change package locations
+                    # since the very first config's dependencies
+                    # stays in the cache
+                    --fresh
+
                     # Install Stuff
                     -DCMAKE_INSTALL_PREFIX:PATH=${SUBPROJECT_INSTALL_PREFIX}
                     ${SUBPROJECT_INSTALL_SUFFIXES}
@@ -128,7 +146,7 @@ function(mray_build_ext_dependency_git)
     if(NOT ${BUILD_SUBPROJECT_LICENSE_NAME} STREQUAL "")
         ExternalProject_Add_Step(${BUILD_SUBPROJECT_NAME} copy_license
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${SUBPROJECT_SRC_PATH}/${BUILD_SUBPROJECT_LICENSE_NAME}
+                ${SUBPROJECT_SRC_DIR}/${BUILD_SUBPROJECT_LICENSE_NAME}
                 ${MRAY_LIB_DIRECTORY}/${BUILD_SUBPROJECT_NAME_NO_EXT}_LICENSE
                 DEPENDEES download update patch)
     endif()

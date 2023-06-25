@@ -21,7 +21,9 @@ if(MRAY_USE_OPTIX)
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cu
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.hpp
         ${CURRENT_SOURCE_DIR}/GPUAcceleratorOptiX.cuh
-        ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu
+        # This does not show on visual studio?
+        # when a custom target is set
+        #${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu
         ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cuh)
     set(SRC_OPTIX_SYSTEM
         ${CURRENT_SOURCE_DIR}/OptixSystem.cpp
@@ -32,7 +34,9 @@ if(MRAY_USE_OPTIX)
         ${CURRENT_SOURCE_DIR}/RayCasterOptiX.h)
 
     set(SRC_WFPG_OPTIX
-        ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cu
+        # This does not show on visual studio?
+        # when a custom target is set
+        #${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cu
         ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cuh
         ${CURRENT_SOURCE_DIR}/OctreeOptiX.cu
         ${CURRENT_SOURCE_DIR}/OctreeOptiX.h
@@ -43,9 +47,9 @@ if(MRAY_USE_OPTIX)
     set(OPTIX_PTX_SOURCES
         ${CURRENT_SOURCE_DIR}/GPUOptiXPTX.cu
         ${CURRENT_SOURCE_DIR}/OctreeOptiXPTX.cu)
-    # Make OptiX Sources not participate in build
-    set_source_files_properties(${OPTIX_PTX_SOURCES}
-                                PROPERTIES HEADER_FILE_ONLY TRUE)
+    # # Make OptiX Sources not participate in build
+    # set_source_files_properties(${OPTIX_PTX_SOURCES}
+    #                             PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
 
 set(SRC_RC
@@ -428,7 +432,8 @@ set(SRC_ALL
     ${SRC_RL_TRACER_AUX_CLASSES}
     ${SRC_WFPG_TRACER}
     ${SRC_WFPG_TRACER_AUX_CLASSES}
-    ${SRC_WFPG_OPTIX})
+    ${SRC_WFPG_OPTIX}
+    )
 
 # IDE Filters
 source_group("Accelerators" FILES ${SRC_ACCELS_COMMON})
@@ -491,20 +496,7 @@ source_group("Work" FILES ${SRC_WORK})
 
 source_group("" FILES ${SRC_COMMON})
 
-if(MRAY_USE_OPTIX)
-    # Optix Compiles
-    nvcc_compile_ptx(MAIN_TARGET TracerCUDA
-                     SOURCES ${OPTIX_PTX_SOURCES}
-                     GENERATED_TARGET PTX_TARGET
-                     EXTRA_OPTIONS "-I${CURRENT_SOURCE_DIR}"
-    )
-    source_group("Accelerators/OptiX/PTX" FILES ${OPTIX_PTX_OUTPUTS})
-endif()
 
-# Preprocessor Defs
-set(PREPROCESSOR_GENERIC
-    ${MRAY_PREPROCESSOR_DEFS_CUDA_GENERIC}
-    )
 
 # TBB for std::execution (clang & GCC)
 if(MSVC)
@@ -516,9 +508,17 @@ endif()
 # DLL File
 add_library(TracerCUDA SHARED)
 
-target_sources(TracerCUDA PRIVATE ${SRC_ALL})
+target_sources(TracerCUDA PUBLIC ${SRC_ALL})
 
 if(MRAY_USE_OPTIX)
+    source_group("" FILES ${OPTIX_PTX_SOURCES})
+    # Optix Compiles
+    nvcc_compile_ptx(MAIN_TARGET TracerCUDA
+                     SOURCES ${OPTIX_PTX_SOURCES}
+                     GENERATED_TARGET PTX_TARGET
+                     EXTRA_OPTIONS "-I${CURRENT_SOURCE_DIR}"
+    )
+
     add_dependencies(TracerCUDA ${PTX_TARGET})
     target_include_directories(TracerCUDA SYSTEM PRIVATE
                                ${OPTIX_INCLUDE_DIR})

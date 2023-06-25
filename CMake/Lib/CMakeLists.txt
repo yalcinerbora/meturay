@@ -154,21 +154,25 @@ endfunction()
 
 gen_imported_target(NAME ZLIB::ZLIB SHARED DEBUG_TARGET ZLIBd RELEASE_TARGET ZLIBd)
 gen_imported_target(NAME fmt::fmt STATIC DEBUG_TARGET fmt RELEASE_TARGET fmt)
-gen_imported_target(NAME assimp::assimp SHARED DEBUG_TARGET assimp RELEASE_TARGET assimp)
-gen_imported_target(NAME GFGFileIO::GFGFileIO STATIC DEBUG_TARGET GFGFileIO RELEASE_TARGET GFGFileIO)
+gen_imported_target(NAME assimp::assimp SHARED DEBUG_TARGET assimpd RELEASE_TARGET assimp)
+gen_imported_target(NAME GFGFileIO::GFGFileIO STATIC DEBUG_TARGET GFGFileIOd RELEASE_TARGET GFGFileIO)
 gen_imported_target(NAME spdlog::spdlog SHARED DEBUG_TARGET spdlogd RELEASE_TARGET spdlog)
 gen_imported_target(NAME glbinding::glbinding SHARED DEBUG_TARGET glbindingd RELEASE_TARGET glbinding
                     EXTRA_INCLUDES ${MRAY_LIB_INCLUDE_DIRECTORY}/glbinding/3rdparty)
-gen_imported_target(NAME glfw3::glfw3 SHARED DEBUG_TARGET glfw3dll RELEASE_TARGET glfw3dll)
-gen_imported_target(NAME imgui::imgui STATIC DEBUG_TARGET imgui RELEASE_TARGET imgui)
-gen_imported_target(NAME imgui::imgui_ti STATIC DEBUG_TARGET imgui_tex_inspect RELEASE_TARGET imgui_tex_inspect)
-
-#gen_imported_target(NAME oiio::oiio SHARED DEBUG_TARGET imgui_tex_inspect RELEASE_TARGET imgui_tex_inspect)
+gen_imported_target(NAME glfw3::glfw3 SHARED DEBUG_TARGET glfw3ddll RELEASE_TARGET glfw3dll)
+gen_imported_target(NAME imgui::imgui STATIC DEBUG_TARGET imguid RELEASE_TARGET imgui)
+gen_imported_target(NAME imgui::imgui_ti STATIC DEBUG_TARGET imgui_tex_inspectd RELEASE_TARGET imgui_tex_inspect)
+gen_imported_target(NAME oiio::oiio SHARED DEBUG_TARGET OpenImageIOd RELEASE_TARGET OpenImageIO)
+gen_imported_target(NAME oiio::oiio_util SHARED DEBUG_TARGET OpenImageIO_Utild RELEASE_TARGET OpenImageIO_Util)
 
 if(MRAY_BUILD_TESTS)
     gen_imported_target(NAME gtest::gtest SHARED DEBUG_TARGET gtest RELEASE_TARGET gtest)
     gen_imported_target(NAME gtest::gmock SHARED DEBUG_TARGET gmock RELEASE_TARGET gmock)
 endif()
+
+
+# Generate copy dll target
+# usefull for developing
 
 # Now we can find packages
 # find_package(ZLIB REQUIRED CONFIG NO_SYSTEM_ENVIRONMENT_PATH)

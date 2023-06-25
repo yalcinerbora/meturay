@@ -13,7 +13,8 @@ mray_build_ext_dependency_git(
 
 )
 
-set(MRAY_IMGUITI_SRC_LOCATION ${MRAY_PLATFORM_EXT_DIRECTORY}/imgui_tex_inspect_ext/src/imgui_tex_inspect_ext)
+ExternalProject_Get_property(imgui_tex_inspect_ext SOURCE_DIR)
+set(MRAY_IMGUITI_SRC_LOCATION ${SOURCE_DIR})
 
 # Inject an custom cmakelists.txt and make cmake to use it
 ExternalProject_Add_Step(imgui_tex_inspect_ext inject_cmake

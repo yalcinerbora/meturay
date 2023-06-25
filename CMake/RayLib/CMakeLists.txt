@@ -201,11 +201,9 @@ set_target_properties(RayLib PROPERTIES
 
 # Copy DLLS
 if(MSVC)
-    # Only PDF file is available on debug config
-    if($<CONFIG:Debug>)
-        add_custom_command(TARGET RayLib POST_BUILD
-                           COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                           $<$<CONFIG:Debug>:"${MRAY_CONFIG_LIB_DIRECTORY}/fmt.pdb">
-                           ${MRAY_CONFIG_BIN_DIRECTORY})
-    endif()
+    add_custom_command(TARGET RayLib POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/spdlog$<$<CONFIG:Debug>:d>.dll"
+                       "${MRAY_CONFIG_LIB_DIRECTORY}/ZLIB$<$<CONFIG:Debug>:d>1.dll"
+                       ${MRAY_CONFIG_BIN_DIRECTORY})
 endif()
