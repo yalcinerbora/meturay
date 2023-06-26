@@ -11,59 +11,6 @@
 
 #include "RayLib/FileSystemUtility.h"
 
-//template <class T>
-//void ChannelSignConvert(T& t)
-//{
-//    static_assert(std::is_signed_v<T>, "Type should be a signed type");
-//
-//    constexpr T mid = static_cast<T>(0x1 << ((sizeof(T) * BYTE_BITS) - 1));
-//    t -= mid;
-//}
-
-//static
-//void SignConvert(std::array<Byte, 16>& pixel, PixelFormat fmt)
-//{
-//    int8_t channelCount = ImageIOI::FormatToChannelCount(fmt);
-//
-//    switch(fmt)
-//    {
-//        case PixelFormat::R8_UNORM:
-//        case PixelFormat::RG8_UNORM:
-//        case PixelFormat::RGB8_UNORM:
-//        case PixelFormat::RGBA8_UNORM:
-//        case PixelFormat::R8_SNORM:
-//        case PixelFormat::RG8_SNORM:
-//        case PixelFormat::RGB8_SNORM:
-//        case PixelFormat::RGBA8_SNORM:
-//        {
-//            for(int8_t channel = 0; channel < channelCount; channel++)
-//            {
-//                int8_t* data = reinterpret_cast<int8_t*>(pixel.data() + (channel * sizeof(Byte)));
-//                ChannelSignConvert<int8_t>(*data);
-//            }
-//            break;
-//        }
-//        case PixelFormat::R16_UNORM:
-//        case PixelFormat::RG16_UNORM:
-//        case PixelFormat::RGB16_UNORM:
-//        case PixelFormat::RGBA16_UNORM:
-//        case PixelFormat::R16_SNORM:
-//        case PixelFormat::RG16_SNORM:
-//        case PixelFormat::RGB16_SNORM:
-//        case PixelFormat::RGBA16_SNORM:
-//        {
-//            for(int8_t channel = 0; channel < channelCount; channel++)
-//            {
-//                int16_t* data = reinterpret_cast<int16_t*>(pixel.data() + (channel * sizeof(int16_t)));
-//                ChannelSignConvert<int16_t>(*data);
-//            }
-//            break;
-//        }
-//        // Others cannot be sign converted
-//        default: break;
-//    }
-//}
-
 void ImageIO::PackChannelBits(Byte* bits,
                               const Byte* fromData, PixelFormat fromFormat,
                               size_t fromPitch, ImageChannelType type,
@@ -100,7 +47,6 @@ void ImageIO::PackChannelBits(Byte* bits,
         }
     }
 }
-
 
 ImageIOError ImageIO::OIIOImageSpecToPixelFormat(PixelFormat& pf, const OIIO::ImageSpec& spec)
 {
@@ -339,78 +285,65 @@ ImageIOError ImageIO::ReadImage(std::vector<Byte>& pixels,
     if(!Utility::CheckFileExistance(filePath))
         return ImageIOError(ImageIOError::IMAGE_NOT_FOUND, filePath);
 
-    OIIO::ImageBuf imgBuffer(filePath);
-    const OIIO::ImageSpec& spec = imgBuffer.spec();
+    auto inFile = OIIO::ImageInput::open(filePath);
 
+    // Check the spec
+    const OIIO::ImageSpec& spec = inFile->spec();
     if((e = OIIOImageSpecToPixelFormat(pf, spec)) != ImageIOError::OK)
         return e;
-
     // We can safely set the dimension now
     dimension = Vector2ui(spec.width, spec.height);
 
     // TODO: Do a conversion to an highest precision channel for these
     if(!spec.channelformats.empty())
-    {
-        return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, "Channel-specific formats are not supported.");
-    }
+        return ImageIOError(ImageIOError::READ_INTERNAL_ERROR,
+                            "Channel-specific formats are not supported.");
+
+    // Is this for deep images??
+    if(spec.format.is_array())
+        return ImageIOError(ImageIOError::READ_INTERNAL_ERROR,
+                            "Arrayed per-pixel formats are not supported.");
+
+    // Calculate the final spec according to the flags
+    // channel expand and sign convert..
+    OIIO::ImageSpec finalSpec = spec;
 
     // Check if sign convertible
+    OIIO::TypeDesc readFormat = spec.format;
     if(flags[ImageIOI::LOAD_AS_SIGNED] && !IsSignConvertible(pf))
-    {
         return ImageIOError(ImageIOError::TYPE_IS_NOT_SIGN_CONVERTIBLE, filePath);
-    }
     else if(flags[ImageIOI::LOAD_AS_SIGNED])
     {
-        OIIO::TypeDesc signedFMT;
         if(spec.format == OIIO::TypeDesc::UINT32)
-            signedFMT = OIIO::TypeDesc::INT32;
+            readFormat = OIIO::TypeDesc::INT32;
         else if(spec.format == OIIO::TypeDesc::UINT16)
-            signedFMT = OIIO::TypeDesc::INT16;
+            readFormat = OIIO::TypeDesc::INT16;
         else if(spec.format == OIIO::TypeDesc::UINT8)
-            signedFMT = OIIO::TypeDesc::INT16;
+            readFormat = OIIO::TypeDesc::INT16;
         else
             return ImageIOError::READ_INTERNAL_ERROR;
 
-        if(!imgBuffer.read(0, 0, false, signedFMT))
-            return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, imgBuffer.geterror());
+        finalSpec.format = readFormat;
     }
 
-    // TODO: Do gamma correction if spec
-    //OIIO::ImageBufAlgo::colorconvert(...)
+    // Find the x stride to do a channel expand
+    bool doChannelExpand = (Is4CExpandable(pf) && flags[ImageIOI::TRY_3C_4C_CONVERSION]);
+    int nChannels = (doChannelExpand) ? (spec.nchannels + 1) : (spec.nchannels);
+    OIIO::stride_t xStride = (doChannelExpand) ? (nChannels * readFormat.size()) : (OIIO::AutoStride);
+    // Change the final spec as well for color convert
+    if(doChannelExpand) finalSpec.nchannels = nChannels;
 
-    // CUDA does not have 3 channel texture system
-    // we need to pad an extra channel.
-    if(Is4CExpandable(pf) && flags[ImageIOI::TRY_3C_4C_CONVERSION])
-    {
-        imgBuffer = OIIO::ImageBufAlgo::channels(imgBuffer, 4,
-                                                 {0, 1, 2, -1},
-                                                 {0.0, 0.0, 0.0, 1.0},
-                                                 {"", "", "", "A"});
+    // Allocate the expanded (or non-expanded) buffer and directly load into it
+    pixels.resize(spec.width * spec.height * nChannels * readFormat.size());
+    OIIO::stride_t scanLineSize = spec.width * nChannels * readFormat.size();
+    Byte* dataLastElement = pixels.data() + (dimension[1] - 1) * scanLineSize;
+    // Now we can read the file directly flipped and with proper format etc. etc.
+    if(!inFile->read_image(readFormat, dataLastElement, xStride,  -scanLineSize))
+        return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, inFile->geterror());
 
-        if(imgBuffer.has_error())
-            return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, imgBuffer.geterror());
-    }
-
-
-    // And finally flip since MRay uses classic cartesian coordinate system
-    imgBuffer = OIIO::ImageBufAlgo::flip(imgBuffer);
-    if(imgBuffer.has_error())
-        return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, imgBuffer.geterror());
-
-    // Get the final spec of the image
-    const OIIO::ImageSpec& finalSpec = imgBuffer.spec();
-
-    // Re-set the format
+    // Re-adjust the pixelFormat (we may have done channel expand and sign convert
     if((e = OIIOImageSpecToPixelFormat(pf, finalSpec)) != ImageIOError::OK)
         return e;
-
-    // Finally allocate buffer and read
-    pixels.resize(finalSpec.width * finalSpec.height *
-                  finalSpec.nchannels * finalSpec.format.size());
-    if(!imgBuffer.get_pixels(OIIO::ROI(0, finalSpec.width,
-                                       0, finalSpec.height),
-                             finalSpec.format, pixels.data()))
-        return ImageIOError(ImageIOError::READ_INTERNAL_ERROR, imgBuffer.geterror());
 
     return ImageIOError::OK;
 }
@@ -421,8 +354,10 @@ ImageIOError ImageIO::ReadImageChannelAsBitMap(std::vector<Byte>& bitMap,
                                                const std::string& filePath,
                                                ImageIOFlags) const
 {
+    // TODO: We cna do this more efficiently maybe?
+    // by directly reading from the file instead of doing intermediate
+    // ImageBufAlgo to packing the channel
     ImageIOError e = ImageIOError::OK;
-
     // First check if the file exists
     if(!Utility::CheckFileExistance(filePath))
         return ImageIOError(ImageIOError::IMAGE_NOT_FOUND, filePath);
@@ -491,8 +426,7 @@ ImageIOError ImageIO::WriteImage(const Byte* data,
     // TODO: properly write an error check/out code for these.
     if(!out->open(filePath, spec))
         return ImageIOError(ImageIOError::WRITE_INTERNAL_ERROR, out->geterror());
-    if(!out->write_image(spec.format, dataLastElement, OIIO::AutoStride,
-                         -spec.scanline_bytes()))
+    if(!out->write_image(spec.format, dataLastElement, OIIO::AutoStride, -scanLineSize))
         return ImageIOError(ImageIOError::WRITE_INTERNAL_ERROR, out->geterror());
     if(!out->close())
         return ImageIOError(ImageIOError::WRITE_INTERNAL_ERROR, out->geterror());

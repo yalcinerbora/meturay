@@ -25,19 +25,6 @@ class ImageIO : public ImageIOI
                                             const Vector2ui& dimension);
 
     protected:
-        //void                PackChannelBits(Byte* bits,
-        //                                    const Byte* fromData, PixelFormat fromFormat,
-        //                                    size_t pitch, ImageChannelType,
-        //                                    const Vector2ui& dimension) const;
-        //void                ConvertPixelsInternal(Byte* toData, PixelFormat toFormat,
-        //                                          const Byte* fromData, PixelFormat fromFormat, size_t fromPitch,
-        //                                          const Vector2ui& dimension) const;
-
-        //template <class T>
-        //static void         ConvertForEXR(Imath::half* toData,
-        //                                  const T* fromData, PixelFormat fromFormat,
-        //                                  const Vector2ui& dimension);
-
     public:
         // Constructors & Destructor
                             ImageIO() = default;
@@ -68,30 +55,3 @@ class ImageIO : public ImageIOI
                                           const Byte* fromData, PixelFormat fromFormat,
                                           const Vector2ui& dimension) const override;
 };
-
-//template <class T>
-//void ImageIO::ConvertForEXR(Imath::half* toData,
-//                            const T* fromData, PixelFormat fromFormat,
-//                            const Vector2ui& dimension)
-//{
-//    const int channelCount = FormatToChannelCount(fromFormat);
-//
-//    for(uint32_t j = 0; j < dimension[1]; j++)
-//    for(uint32_t i = 0; i < dimension[0]; i++)
-//    {
-//        // Don't forget to convert pixels
-//        uint32_t inIndex = j * dimension[0] + i;
-//        uint32_t invertexY = dimension[1] - j - 1;
-//        uint32_t outIndex = invertexY * dimension[0] + i;
-//
-//        const T* inPixel = fromData + inIndex * channelCount;
-//        Imath::half* outPixel = toData + outIndex * channelCount;
-//
-//        // Use = operator to convert from half to float
-//        for(int i = 0; i < channelCount; i++)
-//        {
-//            outPixel[i] = inPixel[i];
-//        }
-//    }
-//
-//}
