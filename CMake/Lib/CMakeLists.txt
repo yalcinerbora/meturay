@@ -12,7 +12,7 @@ set(MRAY_DEBUG_LIB_DIRECTORY ${MRAY_PLATFORM_LIB_DIRECTORY}/Debug)
 set(MRAY_RELEASE_LIB_DIRECTORY ${MRAY_PLATFORM_LIB_DIRECTORY}/Release)
 
 set(MRAY_EXT_DIR ${MRAY_DIRECTORY}Ext/${MRAY_PLATFORM_NAME})
-set(MRAY_CMAKE_EXT_DIR ${MRAY_DIRECTORY}/Cmake/Ext)
+set(MRAY_CMAKE_EXT_DIR ${MRAY_DIRECTORY}/CMake/Ext)
 
 # This style is not good but it is fastest style
 # since if we add these as a target etc.
@@ -25,7 +25,7 @@ if(NOT EXISTS ${MRAY_DEBUG_LIB_DIRECTORY}/lib.stamp OR
 
    message(NOTICE "Compiling external libraries. This may take a while...")
 
-    set(MRAY_BUILD_DIR ${MRAY_EXT_DIR}/Build)
+    set(MRAY_BUILD_DIR ${MRAY_EXT_DIR}/build-CMake)
     set(MRAY_EXT_CONFIG_META_ARGS
         -S ${MRAY_CMAKE_EXT_DIR}
         -B ${MRAY_BUILD_DIR}

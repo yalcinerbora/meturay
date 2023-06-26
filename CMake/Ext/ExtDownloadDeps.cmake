@@ -117,6 +117,7 @@ function(mray_build_ext_dependency_git)
                     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
                     -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+                    -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
                     -DCMAKE_PREFIX_PATH:PATH=${CMAKE_PREFIX_PATH}
                     # Do not use system libraries
                     -DCMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH=OFF

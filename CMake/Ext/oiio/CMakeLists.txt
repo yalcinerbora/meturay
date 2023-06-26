@@ -271,7 +271,7 @@ mray_build_ext_dependency_git(
             -DVERBOSE=ON
 
             # Do not install msvc runtime libraries
-            -DCMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP=OFF
+            -DCMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP=ON
 
         DEPENDENCIES
             boost_fs_thrd_ext

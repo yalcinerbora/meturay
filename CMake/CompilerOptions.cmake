@@ -249,10 +249,11 @@ elseif(UNIX AND NOT APPLE)
     # on clang/gcc (at least on linux)
     # this requires tbb to be linked with the system
     # we add this as a meta target on linux
-    find_package(tbb::tbb REQUIRED)
+    find_package(TBB REQUIRED)
+    mark_as_advanced(TBB_DIR)
     set(MRAY_PLATFORM_SPEC_LIBRARIES
         ${MRAY_PLATFORM_SPEC_LIBRARIES}
-        tbb:tbb)
+        TBB::tbb)
 endif()
 
 target_link_libraries(meta_compile_opts INTERFACE

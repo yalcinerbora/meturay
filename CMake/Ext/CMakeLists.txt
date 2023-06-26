@@ -43,26 +43,6 @@ append_cmake_prefix_path(${META_MRAY_CMAKE_PREFIX_PATH})
 append_cmake_prefix_path(${META_MRAY_PKGCONFIG_PREFIX_PATH})
 append_cmake_prefix_path(${MRAY_LIB_DIRECTORY})
 
-message(STATUS "${CMAKE_PREFIX_PATH}")
-message(STATUS ${MRAY_SOURCE_DIRECTORY})
-message(STATUS ${MRAY_LIB_DIRECTORY})
-message(STATUS ${MRAY_LIB_INCLUDE_DIRECTORY})
-message(STATUS ${MRAY_CONFIG_LIB_DOC_DIRECTORY})
-message(STATUS ${MRAY_BIN_DIRECTORY})
-message(STATUS ${MRAY_EXT_DIRECTORY})
-message(STATUS ${MRAY_RESOURCE_DIRECTORY})
-message(STATUS ${MRAY_WORKING_DIRECTORY})
-message(STATUS ${MRAY_PLATFORM_LIB_DIRECTORY})
-message(STATUS ${MRAY_PLATFORM_BIN_DIRECTORY})
-message(STATUS ${MRAY_PLATFORM_EXT_DIRECTORY})
-# Platform & Configurations Related Lib Bin folders
-message(STATUS ${MRAY_CONFIG_LIB_DIRECTORY})
-message(STATUS ${MRAY_CONFIG_BIN_DIRECTORY})
-# Set cmake vars for output
-message(STATUS ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
-message(STATUS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-
 # Get ZLib
 mray_build_ext_dependency_git(
         NAME zlib_ext
