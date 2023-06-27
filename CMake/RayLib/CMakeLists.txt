@@ -183,13 +183,7 @@ source_group("" FILES ${SRC_COMMON})
 # DLL File
 add_library(RayLib STATIC ${SRC_ALL})
 
-# add_dependencies(RayLib
-#                  fmt_ext
-#                  json_ext
-#                  spdlog_ext)
-
 target_link_libraries(RayLib
-                      cuda
                       fmt::fmt
                       mray::meta_compile_opts
                       mray::cuda_extra_compile_opts)

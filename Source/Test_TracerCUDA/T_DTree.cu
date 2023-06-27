@@ -393,10 +393,10 @@ TEST(PPG_DTree, AddThenSwap)
         {
             // This is root
             // Root should be the very first element
-            EXPECT_EQ(0, i);
-            EXPECT_EQ(treeGPU.totalSamples, 0);
-            EXPECT_FLOAT_EQ(treeGPU.irradiance, 0);
-            EXPECT_EQ(treeGPU.nodeCount, 5);
+            EXPECT_EQ(0u, i);
+            EXPECT_EQ(treeGPU.totalSamples, 0u);
+            EXPECT_FLOAT_EQ(treeGPU.irradiance, 0.0f);
+            EXPECT_EQ(treeGPU.nodeCount, 5u);
         }
         EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[0]);
         EXPECT_FLOAT_EQ(0.0f, node.irradianceEstimates[1]);
@@ -499,7 +499,7 @@ TEST(PPG_DTree, SwapStress)
                 EXPECT_EQ(0, i);
                 // Last node does not has next so total samples are
                 // pathNodeCount - pathCount
-                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION - RAY_COUNT);
+                EXPECT_EQ(treeGPU.totalSamples, static_cast<uint32_t>(PATH_PER_ITERATION - RAY_COUNT));
                 continue;
             }
 
@@ -532,7 +532,7 @@ TEST(PPG_DTree, SwapStress)
                 // This is root
                 // Root should be the very first element
                 EXPECT_EQ(0, i);
-                EXPECT_EQ(treeGPU.totalSamples, 0);
+                EXPECT_EQ(treeGPU.totalSamples, 0u);
                 EXPECT_EQ(0.0f, treeGPU.irradiance);
                 continue;
             }
@@ -562,7 +562,7 @@ TEST(PPG_DTree, SwapStress)
                 EXPECT_EQ(0, i);
                 // Last node does not has next so total samples are
                 // pathNodeCount - pathCount
-                EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION - RAY_COUNT);
+                EXPECT_EQ(treeGPU.totalSamples, static_cast<uint32_t>(PATH_PER_ITERATION - RAY_COUNT));
                 EXPECT_NEAR(treeGPU.irradiance, total,
                             MathConstants::VeryLargeEpsilon);
                 continue;
@@ -696,8 +696,8 @@ TEST(PPG_DTree, LargeToSmall)
         {
             // This is root
             // Root should be the very first element
-            EXPECT_EQ(0, i);
-            EXPECT_EQ(treeGPU.totalSamples, 0);
+            EXPECT_EQ(0u, i);
+            EXPECT_EQ(treeGPU.totalSamples, 0u);
             EXPECT_EQ(0.0f, treeGPU.irradiance);
             continue;
         }
@@ -727,7 +727,7 @@ TEST(PPG_DTree, LargeToSmall)
             EXPECT_EQ(0, i);
             // Last node does not has next so total samples are
             // pathNodeCount - pathCount
-            EXPECT_EQ(treeGPU.totalSamples, PATH_PER_ITERATION - RAY_COUNT);
+            EXPECT_EQ(treeGPU.totalSamples, static_cast<uint32_t>(PATH_PER_ITERATION - RAY_COUNT));
             EXPECT_NEAR(treeGPU.irradiance, total,
                         MathConstants::VeryLargeEpsilon);
             continue;

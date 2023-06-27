@@ -33,7 +33,7 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CUDA_RUNTIME_LIBRARY Shared)
+set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
 
 # Find Optix If Available
 if(MRAY_USE_OPTIX)
@@ -61,6 +61,12 @@ cmake_path(NORMAL_PATH MRAY_DIRECTORY)
 # Populate the meta directories for this project hierarchy
 generate_platform_name()
 populate_mray_directory_variables(${MRAY_DIRECTORY})
+
+# After project is set and nvcc is found invoke find CUDA toolkit
+# we will use curand for sampling
+find_package(CUDAToolkit REQUIRED)
+# Bug on cmake maybe this variable is not advanced
+mark_as_advanced(CUDAToolkit_CUPTI_INCLUDE_DIR)
 
 # Determine Platform and Config
 # Cosmetic stuff

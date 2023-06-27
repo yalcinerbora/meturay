@@ -1,5 +1,4 @@
 #include "ImageIO.h"
-#include "FreeImgRAII.h"
 
 #include <execution>
 #include <algorithm>
@@ -420,7 +419,7 @@ ImageIOError ImageIO::WriteImage(const Byte* data,
     if((e = PixelFormatToOIIOImageSpec(spec, pf, dimension)) != ImageIOError::OK)
         return e;
 
-    auto scanLineSize = spec.scanline_bytes();
+    OIIO::stride_t scanLineSize = static_cast<OIIO::stride_t>(spec.scanline_bytes());
     const Byte* dataLastElement = data + (dimension[1] - 1) * scanLineSize;
 
     // TODO: properly write an error check/out code for these.

@@ -46,10 +46,10 @@ set(MRAY_MSVC_OPTIONS
     /wd4324         # Disable type alignment padding warnings
     /wd4505         # Diable "unreferenced function with internal linkage has been removed"
 
-    /external:W0    # Minimize warnings on external stuff
-                    # i.e. it is included with the <...> syntax.
+    /external:anglebrackets # Minimize warnings on external stuff
+    /external:W0            # i.e. it is included with the <...> syntax.
 
-    # TODO: Reason about the Debug and Release Builds
+    # TODO: Reason about the Debug and Release Builds (no pdb stuff etc.)
     #/Z7             # Internally put the PDB files (for debugging)
 )
 
@@ -205,6 +205,14 @@ target_link_options(meta_compile_opts INTERFACE
                     #add_link_options($<DEVICE_LINK:--nvlink-options=--verbose>)
                     #add_link_options($<DEVICE_LINK:--resource-usage>
 )
+
+if(MSVC)
+    target_link_options(meta_compile_opts INTERFACE
+                        # After adding W4 and other compiler warning flags
+                        # 'prelinked_fatbinc' unref parameter did show up
+                        # This is nvcc's problem  so ignore it
+                        $<DEVICE_LINK:-Xcompiler=/wd4100>)
+endif()
 
 target_compile_definitions(meta_compile_opts
                            INTERFACE

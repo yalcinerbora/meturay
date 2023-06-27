@@ -124,7 +124,7 @@ bool SVOctree::HasChild(uint64_t packedData, uint32_t childId)
 }
 
 float SVOctree::ConeTraceRay(bool& isLeaf, uint32_t& leafId, const RayF& ray,
-                             float tMin, float tMax, float coneAperture,
+                             float tMin, float, float coneAperture,
                              uint32_t maxQueryLevelOffset) const
 {
     static constexpr float EPSILON = MathConstants::Epsilon;

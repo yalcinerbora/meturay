@@ -527,9 +527,10 @@ endif()
 target_link_libraries(TracerCUDA
                       RayLib
                       ImageIO
-                      curand
+                      CUDA::curand
                       mray::meta_compile_opts
-                      mray::cuda_extra_compile_opts)
+                      mray::cuda_extra_compile_opts
+                      )
 
 target_compile_definitions(TracerCUDA PRIVATE METU_SHARED_TRACER_CUDA)
 

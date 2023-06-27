@@ -24,8 +24,6 @@ add_executable(Test_TracerCUDA ${SRC_COMMON})
 
 target_link_libraries(Test_TracerCUDA PRIVATE
                       RayLib
-                      VisorGL
-                      ImageIO
                       TracerCUDA_Static
                       gtest::gtest
                       gtest::gmock

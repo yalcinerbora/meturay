@@ -5,7 +5,6 @@ set(SRC_ALL
     ${CURRENT_SOURCE_DIR}/ImageIO.h
     ${CURRENT_SOURCE_DIR}/ImageIO.cpp
     ${CURRENT_SOURCE_DIR}/ImageIOI.h
-    ${CURRENT_SOURCE_DIR}/FreeImgRAII.h
     ${CURRENT_SOURCE_DIR}/EntryPoint.h
     ${CURRENT_SOURCE_DIR}/EntryPoint.cpp)
 
