@@ -316,6 +316,7 @@ void KCRadGenSVO()
                // Flags
                OPTIX_RAY_FLAG_DISABLE_ANYHIT |
                OPTIX_RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
+               //OPTIX_RAY_FLAG_DISABLE_ANYHIT,
                // SBT
                sbtOffset, 1, 0,
                // Payload

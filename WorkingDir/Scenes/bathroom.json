@@ -67,6 +67,11 @@
                 "../Textures/Bathroom/rug_gamma.png",
                 "../Textures/Bathroom/rug_mask.png"
             ]
+        },
+        {
+            // Smoke Pic
+            "id": 10,
+			"file": "../Textures/Bathroom/smoke_gamma.png"
         }
     ],
 
@@ -334,12 +339,18 @@
             "metallic": 0.0
         },
         {
+            // Smoke Pic
+            "id": 29,
+            "type": "Lambert",
+            "albedo": {"texture": 10, "channels": "rgb"}
+        },
+        {
+            // Glass
             "id": 28,
             "type": "Refract",
             "albedo" : [1.0, 1.0, 1.0],
 		    "medium" : 1
         }
-
     ],
 
 	"Primitives":
@@ -510,7 +521,8 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    "BaseBoundaryLight": 0,
+    //"BaseBoundaryLight": 0,
+    "BaseBoundaryLight": 999,
     "BaseBoundaryTransform": 1,
     "BaseMedium" : 0,
 
@@ -546,8 +558,8 @@
         {"transform": 0, "accelerator": 0, "material": 6, "primitive": 22},
         // Mirror
         {"transform": 0, "accelerator": 0, "material": 6, "primitive": 23},
-        {"transform": 0, "accelerator": 0, "material": 7, "primitive": 24},
         //{"transform": 0, "accelerator": 0, "material": 0, "primitive": 24},
+        {"transform": 0, "accelerator": 0, "material": 7, "primitive": 24},
         // Marble Sinks
         {"transform": 0, "accelerator": 0, "material": 8, "primitive": 25},
         {"transform": 0, "accelerator": 0, "material": 8, "primitive": 26},
@@ -576,9 +588,8 @@
         // Gold Vase
         {"transform": 0, "accelerator": 0, "material": 10, "primitive": 45},
         {"transform": 0, "accelerator": 0, "material": 10, "primitive": 46},
-        // Shelf Mirror
-        {"transform": 0, "accelerator": 0, "material": 7, "primitive": 47},
-        //{"transform": 0, "accelerator": 0, "material": 0, "primitive": 47},
+        // Shelf Picture
+        {"transform": 0, "accelerator": 0, "material": 29, "primitive": 47},
         {"transform": 0, "accelerator": 0, "material": 15, "primitive": 48},
         // Black Paintings
         {"transform": 0, "accelerator": 0, "material": 16, "primitive": 49},

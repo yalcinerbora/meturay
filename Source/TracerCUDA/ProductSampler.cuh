@@ -292,6 +292,7 @@ void ProductSampler<TPB, X, Y, PX, PY>::MultiplyWithBXDF(float(&productField)[RE
             // Fortunately it is used for path guiding and any error will convey towards the
             // variance instead of the result.
             Vector3f bxdfColored = warpSurf.Evaluate(wo, wi, medium);
+            //Vector3f bxdfColored(wo.Dot(warpSurf.WorldNormal()));
             //if(rayIndex == 0)
             //{
             //    printf("WN:(%f, %f, %f), Wo(%f, %f, %f), Wi(%f, %f, %f), bxdf %f\n",
@@ -310,7 +311,12 @@ void ProductSampler<TPB, X, Y, PX, PY>::MultiplyWithBXDF(float(&productField)[RE
         float radiance = (linearId < (PX * PY)) ?
                             shMem.sRadianceFieldSmall[loc2D[1]][loc2D[0]]
                             : 0.0f;
-        productField[j] = max(MathConstants::LargeEpsilon, bxdfGray * radiance);
+        //productField[j] = max(MathConstants::VeryLargeEpsilon, bxdfGray * radiance);
+        productField[j] = max(0.01f, bxdfGray * radiance);
+
+        //ADD TEST
+        //productField[j] = max(0.01f, radiance);
+
     }
 }
 
@@ -418,7 +424,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::Sample(bool& innerIsUniform, float& 
     // Values that are found out by the rejection sampling
     Vector2f uv; float texVal;
     int32_t luckyWarp;
-    static constexpr int REJECTION_SAMPLE_ITERATIONS = 16;
+    static constexpr int REJECTION_SAMPLE_ITERATIONS = 24;
     for(int i = 0; i < REJECTION_SAMPLE_ITERATIONS; i++)
     {
         // Find a region
@@ -487,11 +493,12 @@ float   ProductSampler<TPB, X, Y, PX, PY>::Pdf(const Vector2f& uv,
                                                const float pdfY,
                                                bool innerWasUniform) const
 {
+    static constexpr Vector2f DPP_FLOAT(DATA_PER_PRODUCT[0], DATA_PER_PRODUCT[1]);
     static constexpr Vector2i DPP = DATA_PER_PRODUCT;
     // Calculate indices
     Vector2f outerExpanded = uv * Vector2f(PX_FLOAT, PY_FLOAT);
     Vector2f outerIndex = outerExpanded.Floor();
-    Vector2f innerIndex = outerExpanded - outerIndex;
+    Vector2f innerIndex = (outerExpanded - outerIndex) * DPP_FLOAT;
     Vector2i outerRegion2D = Vector2i(outerIndex);
     Vector2i innerRegion2D = Vector2i(innerIndex.Floor());
     Vector2i global2D = outerRegion2D * DPP + innerRegion2D;
@@ -510,7 +517,7 @@ float   ProductSampler<TPB, X, Y, PX, PY>::Pdf(const Vector2f& uv,
     // Which index of the pdfX[] array are we need?
     int32_t innerLaneIndex = outerRegion2D[1] / PROCESSED_ROW_PER_ITER;
     // Which lane of that pdfX[] should we use
-    int32_t outerIndexLinear = (outerRegion2D[1] * PX + outerRegion2D[1]);
+    int32_t outerIndexLinear = (outerRegion2D[1] * PX + outerRegion2D[0]);
     int32_t laneId = outerIndexLinear % WARP_SIZE;
     float pdfConditional = __shfl_sync(0xFFFFFFFF, pdfX[innerLaneIndex], laneId, WARP_SIZE);
     // Finally actual pdf
@@ -556,8 +563,6 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(bool& isBxDFSelected,
                                                       float sampleRatio,
                                                       float projectionPdfMultiplier) const
 {
-    const GPUMetaSurface& warpSurf = shMem.sSurfaces[warpId];
-
     // Generate Fields (Functions)
     float pdfX[REFL_PER_THREAD];
     float cdfX[REFL_PER_THREAD];
@@ -565,6 +570,13 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(bool& isBxDFSelected,
     float cdfY;
     GeneratePDFAndCDF(pdfX, cdfX, pdfY, cdfY, rayIndex, Project);
 
+    // ADD
+    //if(isWarpLeader)
+    //{
+    //    shMem.sSurfaces[warpId] = metaSurfGenerator.AcquireWork(gRayIds[rayIndex]);
+    //}
+
+    const GPUMetaSurface& warpSurf = shMem.sSurfaces[warpId];
 
     // Generate a sample and broadcast
     float xi = (isWarpLeader) ? rng.Uniform() : 0.0f;
@@ -614,9 +626,11 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(bool& isBxDFSelected,
         // PDF Guide (warp)
         pdfOther = Pdf(sampledUV, pdfX, pdfY, false);
         pdfOther *= projectionPdfMultiplier;
-        pdfOther *= 2;
-        sampleRatio = 1.0f - sampleRatio;
 
+        //ADD
+        //pdfOther = projectionPdfMultiplier;
+
+        sampleRatio = 1.0f - sampleRatio;
         isBxDFSelected = true;
 
         //printf("[BxDF] pdfBxDF %f, pdfGuide %f\n", pdfSampled, pdfOther);
@@ -627,11 +641,16 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(bool& isBxDFSelected,
         bool innerIsUniformSampled;
         sampledUV = Sample(innerIsUniformSampled, pdfSampled,
                              rng, pdfX, cdfX, pdfY, cdfY);
+
         // Pdf BxDF (solo)
         if(isWarpLeader)
         {
+            ////ADD
+            //pdfSampled = projectionPdfMultiplier;
+            //sampledUV = Vector2f(rng.Uniform(), rng.Uniform());
+
             pdfSampled *= projectionPdfMultiplier;
-            pdfSampled *= 2;
+            
 
             Vector3f wi = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
             Vector3f wo = NormProject(sampledUV);
@@ -647,6 +666,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(bool& isBxDFSelected,
         using namespace TracerFunctions;
         pdf = pdfSampled * sampleRatio / BalanceHeuristic(sampleRatio, pdfSampled,
                                                           1.0f - sampleRatio, pdfOther);
+
         pdf = (pdfSampled == 0.0f) ? 0.0f : pdf;
 
         //printf("pdf %f uv (%f, %f)\n", pdf, sampledUV[0], sampledUV[1]);

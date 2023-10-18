@@ -352,7 +352,7 @@ void PPGTracer::Finalize()
                                MaximumPathNodePerPath(), cudaSystem);
     // We iterated once
     currentTreeIteration += 1;
-    if(currentTreeIteration == nextTreeSwap)
+    if(currentTreeIteration == nextTreeSwap && currentTreeIteration <= 128)
     {
         // Double the amount of iterations required for this
         nextTreeSwap <<= 1;

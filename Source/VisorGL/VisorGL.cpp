@@ -147,6 +147,8 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // Set the received sample count
             receivedSampleCount += c.spp;
 
+            METU_LOG("Read receievdSampleCount: {}", receivedSampleCount);
+
             // Swap input and output
             currentIndex = nextIndex;
             break;
@@ -195,6 +197,7 @@ void VisorGL::RenderImage()
 void VisorGL::SaveImageInternal(bool isHDR,
                                 const std::string& name) const
 {
+    glFlush();
     if(isHDR)
     {
         std::vector<Vector3f> pixels(imageSize[0] * imageSize[1]);
@@ -367,7 +370,8 @@ void VisorGL::Render()
     // just process the last and other commands afterwards
     bool imageModified = false;
     VisorGLCommand command;
-    while(commandList.TryDequeue(command))
+    //while(commandList.TryDequeue(command))
+    if(commandList.TryDequeue(command))
     {
         // Image is considered modified if at least one command is
         // processed on this frame
@@ -412,8 +416,9 @@ void VisorGL::Render()
         // by the per sample output
         // on top of that it is only single tracer at the moment
 
-        if(vOpts.outputMetric == OutputMetric::TIME ||
-           vOpts.outputMetric == OutputMetric::BOTH)
+        if((vOpts.outputMetric == OutputMetric::TIME ||
+           vOpts.outputMetric == OutputMetric::BOTH) &&
+           receivedSampleCount > 0)
         {
             outputTimer.Split();
             double elapsedS = outputTimer.Elapsed<CPUTimeSeconds>();
@@ -425,6 +430,8 @@ void VisorGL::Render()
                 std::string fileName = fmt::format("{:s}_time_{:4.2f}s",
                                                    vOpts.outputName,
                                                    seconds);
+                METU_LOG("Writing Image: Time {:4.2f}s SPP({:.0f})",
+                         seconds, metaSPP);
                 Utility::ForceMakeDirectoriesInPath(fileName);
                 SaveImageInternal(vOpts.outputAsHDR, fileName);
 
@@ -443,8 +450,15 @@ void VisorGL::Render()
                 std::string fileName = fmt::format("{}_sample_{:04d}spp",
                                                    vOpts.outputName,
                                                    samples);
+
+                outputTimer.Lap();
+                double elapsedS = outputTimer.Elapsed<CPUTimeSeconds>();
+                METU_LOG("Writing Image: Time {:4.2f}s SPP({:.0f})",
+                         elapsedS, metaSPP);
                 Utility::ForceMakeDirectoriesInPath(fileName);
                 SaveImageInternal(vOpts.outputAsHDR, fileName);
+
+                METU_LOG("Write receievdSampleCount: {}", receivedSampleCount);
 
                 // Reset the sample count
                 receivedSampleCount = 0;
@@ -566,6 +580,7 @@ void VisorGL::Update(const SceneAnalyticData& a)
 
 void VisorGL::Update(const TracerAnalyticData& a)
 {
+    metaSPP = a.workPerPixel;
     visorInput->SetTracerAnalyticData(a);
 }
 

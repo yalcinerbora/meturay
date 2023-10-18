@@ -130,10 +130,6 @@ void VisorGUI::RenderGUI()
                          imageSize);
     }
 
-
-    //bool showDemo = true;
-    //ImGui::ShowDemoWindow(&showDemo);
-
     tmWindow.Render();
 
     ImGui::Render();

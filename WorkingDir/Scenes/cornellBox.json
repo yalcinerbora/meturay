@@ -4,9 +4,9 @@
 		"id": 0,
 		"type" : "Pinhole",
 		// 16:9 FoV
-		"fov": [34.666, 19.5],
+		//"fov": [34.666, 19.5],
 		// 1:1 FoV
-		//"fov": [19.5,  19.5],
+		"fov": [19.5,  19.5],
 		"planes": [0.005, 90.0],
 
         // // TEST
@@ -78,13 +78,23 @@
 			"type" : "Primitive",
 			"primitive": 0,
 			"accelerator": 0,
-            //"radiance": [68, 48, 16]
-            "radiance": [136, 96, 32]
+            "radiance": [68, 48, 16]
+            //"radiance": [136, 96, 32]
             //"radiance": [1.7, 1.2, 0.4]
 		}
 	],
 
-    "Mediums": [{"id" : 0, "type" : "Vacuum"}],
+    "Mediums": [
+        {"id" : 0, "type" : "Vacuum"},
+        {
+            "id" : 1,
+            "type" : "Homogeneous",
+            "absorption": [0, 0, 0],
+            "scattering": [0, 0, 0],
+            "ior": 1.8,
+            "phase": 0
+        }
+    ],
 
     "Transforms": [
         {"id": 0, "type": "Identity"},
@@ -157,7 +167,7 @@
             "id": 6,
             "type": "Single",
             "layout": "trs",
-            "translate": [-0.005, 1.98, -0.03],
+            "translate": [-0.005, 1.999, -0.03],
             "rotate": [90, 0, 0],
             "scale": [0.47, 1, 0.38]
             //"scale": [0.235, 1, 0.19]
@@ -168,9 +178,18 @@
             "id": 11,
             "type": "Single",
             "layout": "trs",
-            "translate": [-0.005, 1.5, -0.03],
+            "translate": [-0.005, 1.85, -0.03],
             "rotate": [0, 0, 0],
             "scale": [0.80, 0.025, 0.80]
+        },
+        {
+            // Occluder Glass
+            "id": 12,
+            "type": "Single",
+            "layout": "trs",
+            "translate": [-0.005, 1.99, -0.03],
+            "rotate": [0, 0, 0],
+            "scale": [0.48, 1, 0.39]
         }
     ],
 
@@ -184,7 +203,28 @@
             [0.14, 0.45, 0.091],
             [0.725, 0.71, 0.68]
         ]
-    }],
+    },
+
+    {
+
+        // Specular Cubes Test
+		"id": [4, 5],
+		"type": "Unreal",
+		"albedo": [[0.725, 0.71, 0.68],
+                   [0.725, 0.71, 0.68]],
+		"roughness": [0.35, 0.15],
+		"specular": [0.9, 0.9],
+		"metallic": [0.5, 0.5]
+    },
+
+
+    {
+        "id": 3,
+		"type": "Refract",
+        "albedo" : [1, 1, 1],
+        "medium" : 1
+    }
+    ],
 
     "Primitives": [
     {
@@ -214,6 +254,15 @@
         "name": "../Surfaces/unit_cube.obj",
         "tag": "assimp_",
         "innerIndex": 0
+    },
+    {
+        // Glass Enclosure
+        "id": 2,
+        "type": "Triangle",
+        "name": "../Surfaces/cornell_glass_enclosure.obj",
+        "tag": "assimp_",
+        "cullFace" : false,
+        "innerIndex": 0
     }],
 
     "Accelerators": [{"id" : 0, "type" : "BasicBVH", "useStack": true}],
@@ -239,13 +288,18 @@
         { "transform": 4, "accelerator": 0, "material": 1, "primitive": 0},
         // Front Wall
         { "transform": 7, "accelerator": 0, "material": 2, "primitive": 0},
-        // // Tall Box
-        // { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
-        // // Short Box
-        // { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
+        // Tall Box
+        { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
+        //{ "transform": 9, "accelerator": 0, "material": 4, "primitive": 1},
+        // Short Box
+        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
+        //{ "transform": 10, "accelerator": 0, "material": 5, "primitive": 1}
+        //,
 
+        // Glass
+        { "transform": 12, "accelerator": 0, "material": 3, "primitive": 2}
          // Occuluder Prism
-        { "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
+        //{ "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
 	],
 
 	"LightSurfaces": [{"light": 1, "transform": 6}],

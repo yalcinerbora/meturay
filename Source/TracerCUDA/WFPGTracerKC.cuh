@@ -450,7 +450,9 @@ void WFPGTracerPathWork(// Output
 
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));
-    bool terminateRay = ((aux.depth > renderState.rrStart) &&
+    bool terminateRay = false;
+    if(!isSpecularMat)
+        terminateRay = ((aux.depth > renderState.rrStart) &&
                          TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
 
     // Do not terminate rays ever for specular mats
@@ -1124,15 +1126,20 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
 
     // Offset using the normal
     // TODO: This routine should not be on ray
+    //float nudgeAmount = MathConstants::VeryLargeEpsilon;
+    float nudgeAmount = svo.LeafVoxelSize() * 0.1f;
     position = RayF(Vector3f(0.0f), position).Nudge(normal, 0.0f).getPosition();
+    position += normal * nudgeAmount;
     //float tMin = 0.0f;
 
 
     // TODO: Better offset maybe?
     //float tMin = (binVoxelSize * MathConstants::Sqrt3 +
     //              MathConstants::LargeEpsilon);
+    //float tMin = (svo.LeafVoxelSize() * MathConstants::Sqrt3 +
+    //              MathConstants::LargeEpsilon);
     float tMin = svo.LeafVoxelSize() * 0.1f;
-    //float tMin = MathConstants::Epsilon;
+    tMin += MathConstants::Epsilon;
 
     // Out
     posTMin = Vector4f(position, tMin);
@@ -2071,6 +2078,7 @@ static void KCSampleDistributionProductOptiX(// Output
         dirYUp = q.ApplyRotation(dirYUp);
         return dirYUp;
     };
+
     auto InvProjectionFunc = [](const Vector3f& direction)
     {
         Vector3 dirZUp = Vector3(direction[2], direction[0], direction[1]);
@@ -2134,6 +2142,9 @@ static void KCSampleDistributionProductOptiX(// Output
         for(uint32_t rayIndex = warpId; rayIndex < sharedMem->sRayCount;
             rayIndex += WARP_PER_BLOCK)
         {
+            const bool isValidIteration = (rayIndex < sharedMem->sRayCount);
+            if(!isValidIteration) continue;
+
             float pdf;
             Vector2f uv;
             bool bxdfSelected;

@@ -5,7 +5,8 @@
 		"id": 0,
 		"type": "Pinhole",
 		// 16:9 FoV
-		"fov": [34.62, 19.47375],
+		//"fov": [34.62, 19.47375],
+        "fov": [19.47375, 19.47375],
         //"fov": [60, 33.75],
 		// 1:1 FoV
 		//"fov": [34.62, 34.62],
@@ -50,7 +51,11 @@
             "scale": [1, 1, 1]
         }],
 
-    "Textures": [{"id": 0, "file": "../Textures/Torus/derelict_highway_noon_2k.hdr"}],
+    "Textures": [
+    {
+        "id": 0,
+        //"file": "../Textures/Torus/derelict_highway_noon_2k.hdr",
+        "file": "../Textures/ModernPool/kloppenheim_05_4k.exr"}],
 
     "Materials":[
     {

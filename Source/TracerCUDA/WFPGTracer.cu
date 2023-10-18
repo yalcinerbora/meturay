@@ -219,6 +219,27 @@ static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL
 
 //static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 //{
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+//    std::make_tuple(256, 16, 16),
+//    std::make_tuple(128, 8, 8),
+//    std::make_tuple(128, 8, 8)
+//};
+
+//static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
+//{
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128)
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
+//};
+
+//static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
+//{
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
@@ -1287,6 +1308,11 @@ TracerError WFPGTracer::Initialize()
     if((err = metaSurfHandler.Initialize(scene, workMap)) != TracerError::OK)
         return err;
 
+    // Disable PG on first iteration to warm-up the SVO
+    if(options.doWeightedCombine)
+        options.skipPG = true;
+
+
     return TracerError::OK;
 }
 
@@ -1694,18 +1720,26 @@ void WFPGTracer::Finalize()
 
     if(options.doWeightedCombine)
     {
+        float scalarSampleMultiplier = 1.0f;
+        if(iterationCount == 1)
+        {
+            options.skipPG = false;
+        }
+
+
         if(crashed) return;
         const auto sampleGMem = std::as_const(sampleMemory).GMem<Vector4f>();
 
-        //
-        float scalarSampleMultiplier = (iterationCount == 1) ? 1.0f : 2.0f;
+
+        //scalarSampleMultiplier = (iterationCount == 1) ? 1.0f : 2.0f;
+        //scalarSampleMultiplier = (iterationCount == 1) ? 0.0f : 1.0f;
 
 
-        //    uint32_t multiplier = std::min(4u, iterationCount - 1);
-        ////uint32_t scalarWeightInt = (1 << multiplier);
-        //uint32_t scalarWeightInt = multiplier + 1;
+        //uint32_t multiplier = std::min(4u, iterationCount - 1);
+        //uint32_t scalarWeightInt = (1 << multiplier);
+        ////uint32_t scalarWeightInt = multiplier + 1;
+        //scalarSampleMultiplier = static_cast<float>(scalarWeightInt);
 
-        //float scalarSampleMultiplier = static_cast<float>(scalarWeightInt);
         METU_LOG("Scalar Weight: {}", scalarSampleMultiplier);
 
         if(reconFilter != nullptr)

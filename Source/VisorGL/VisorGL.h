@@ -131,6 +131,9 @@ class VisorGL : public VisorI
         uint32_t                        outputWRTTimeCount;
         uint32_t                        outputWRTSampleCount;
 
+        //
+        double                          metaSPP;
+
         // OGL Debug Context Callback
         static void             OGLCallbackRender(GLenum source,
                                                   GLenum type,

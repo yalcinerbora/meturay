@@ -91,6 +91,8 @@ class CPUCameraGroupPinhole final : public CPUCameraGroupP<GPUCameraPinhole>
         static constexpr const char* UP_NAME        = "up";
         static constexpr const char* PLANES_NAME    = "planes";
         static constexpr const char* FOV_NAME       = "fov";
+        static constexpr const char* FOV_TYPE_NAME  = "fovT";
+        static constexpr const char* ASPECT_NAME    = "aspectRatio";
 
         struct Data
         {
