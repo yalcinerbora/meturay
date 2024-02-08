@@ -300,8 +300,10 @@ static void KCPathTracerMegaKernel(// Output
 
             // Check Russian Roulette
             float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));
-            bool terminateRay = ((aux.depth > renderState.rrStart) &&
-                                 TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
+            bool terminateRay = false;
+            if(!isSpecularMat)
+                terminateRay = ((aux.depth > renderState.rrStart) &&
+                                TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
 
             // Do not terminate rays ever for specular mats
             if((!terminateRay || isSpecularMat) &&
@@ -616,8 +618,10 @@ void PathTracerPathWork(// Output
 
     // Check Russian Roulette
     float avgThroughput = pathRadianceFactor.Dot(Vector3f(0.333f));
-    bool terminateRay = ((aux.depth > renderState.rrStart) &&
-                         TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
+    bool terminateRay = false;
+    if(!isSpecularMat)
+        terminateRay = ((aux.depth > renderState.rrStart) &&
+                        TracerFunctions::RussianRoulette(pathRadianceFactor, avgThroughput, rng));
 
     // Do not terminate rays ever for specular mats
     if((!terminateRay || isSpecularMat) &&

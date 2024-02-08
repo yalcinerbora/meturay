@@ -157,6 +157,7 @@ using PathGuideKernelFunction = void (*)(// Output
                                          const AnisoSVOctreeGPU,
                                          uint32_t,
                                          bool,
+                                         float,
                                          float);
 
 using PathGuideFilterKernelFunction = void (*)(// I-O
@@ -176,13 +177,16 @@ using PathGuideOptiXKernelFunction = void (*)(// Output
                                               // Per bin
                                               const uint32_t*,
                                               const uint32_t*,
+                                              const float*,
                                               // Buffer
                                               SVOOptixRadianceBuffer::SegmentedField<const float*>,
                                               // Constants
                                               const AnisoSVOctreeGPU,
                                               uint32_t,
                                               bool,
-                                              float);
+                                              float,
+                                              float,
+                                              int);
 
 using ParallaxAdjustKernelFunction = void(*)(// I-O
                                              RayAuxWFPG*,
@@ -205,25 +209,34 @@ using ParallaxAdjustKernelFunction = void(*)(// I-O
 // 1st param is "Thread per block", 2nd and third params are X,Y resolution of the generated texture
 using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 
+//static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
+//{
+//    // Kernel is passed the register limit of the device,
+//    // compiling using 100s of registers :(.
+//    // Reduce the block size for at least on debug mode
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128), // First bounce good approximation
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // Second bounce as well
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Third bounce not so much
+//    std::make_tuple(256, 16, 16),                           // Fourth bounce not good
+//    std::make_tuple(128, 8, 8)                              // Fifth is bad
+//};
+
 static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
-    // Kernel is passed the register limit of the device,
-    // compiling using 100s of registers :(.
-    // Reduce the block size for at least on debug mode
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128), // First bounce good approximation
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),   // Second bounce as well
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),   // Third bounce not so much
-    std::make_tuple(256, 16, 16),                           // Fourth bounce not good
-    std::make_tuple(128, 8, 8)                              // Fifth is bad
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 16, 16),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 256, 8, 8)
 };
 
 //static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 //{
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
-//    std::make_tuple(256, 16, 16),
-//    std::make_tuple(128, 8, 8),
-//    std::make_tuple(128, 8, 8)
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128)
 //};
 
 //static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
@@ -233,42 +246,30 @@ static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
 //    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128)
-//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
-//    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
-//};
-
-//static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
-//{
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
-//    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128)
-//
+////
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64)
-//
+////
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
 //    //std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32)
-//
-//    //std::make_tuple(256, 16, 16),
-//    //std::make_tuple(256, 16, 16),
-//    //std::make_tuple(256, 16, 16),
-//    //std::make_tuple(256, 16, 16),
-//    //std::make_tuple(256, 16, 16)
-//
-//    //std::make_tuple(256, 8, 8),
-//    //std::make_tuple(256, 8, 8),
-//    //std::make_tuple(256, 8, 8),
-//    //std::make_tuple(256, 8, 8),
-//    //std::make_tuple(256, 8, 8)
+////
+////    //std::make_tuple(256, 16, 16),
+////    //std::make_tuple(256, 16, 16),
+////    //std::make_tuple(256, 16, 16),
+////    //std::make_tuple(256, 16, 16),
+////    //std::make_tuple(256, 16, 16)
+////
+////    //std::make_tuple(256, 8, 8),
+////    //std::make_tuple(256, 8, 8),
+////    //std::make_tuple(256, 8, 8),
+////    //std::make_tuple(256, 8, 8),
+////    //std::make_tuple(256, 8, 8)
 //};
 
 static constexpr uint32_t KERNEL_TBP_MAX = std::get<0>(*std::max_element(PG_KERNEL_PARAMS.cbegin(),
@@ -434,8 +435,8 @@ struct NodeIdFetchFunctor
 void WFPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
-    //METU_LOG("Allocating WFPGTracer global path buffer: Size {:d} MiB",
-    //         totalPathNodeCount * sizeof(WFPGPathNode) / 1024 / 1024);
+    METU_LOG("Allocating WFPGTracer global path buffer: Size {:d} MiB",
+             totalPathNodeCount * sizeof(WFPGPathNode) / 1024 / 1024);
 
     GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(WFPGPathNode));
     dPathNodes = static_cast<WFPGPathNode*>(pathMemory);
@@ -625,6 +626,25 @@ void WFPGTracer::GenerateGuidedDirections()
                        dRayAux,
                        svo.TreeGPU(),
                        rayCount);
+
+    if(options.renderMode == WFPGRenderMode::BINNING)
+    {
+        METU_LOG("Doing Rendering of Bins!");
+
+        // Visualize bins
+        gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
+                           //
+                           KCVisualizeBins,
+                           // Output
+                           sampleMemory.GMem<Vector4f>(),
+                           // Input
+                           dRayAux,
+                           // Constants
+                           rayCount);
+
+        return;
+    }
+
     // Partition the generated rays wrt. to the SVO nodeId
     uint32_t hPartitionCount;
     uint32_t* dPartitionOffsets;
@@ -703,7 +723,8 @@ void WFPGTracer::GenerateGuidedDirections()
                       svo.TreeGPU(),
                       hPartitionCount,
                       options.purePG,
-                      options.misRatio);
+                      options.misRatio,
+                      options.guidingThreshold);
     }
     else
     {
@@ -726,10 +747,12 @@ void WFPGTracer::GenerateGuidedDirections()
         // Allocate the OpitX required parameters
         Vector4f* dRadianceFieldRayOrigins;
         Vector2f* dProjectionJitters;
+        float* dGuidingThresholds;
         GPUMemFuncs::AllocateMultiData(std::tie(dRadianceFieldRayOrigins,
-                                                dProjectionJitters),
+                                                dProjectionJitters,
+                                                dGuidingThresholds),
                                        *binInfoBufferOptiX,
-                                       {hPartitionCount, hPartitionCount});
+                                       {hPartitionCount, hPartitionCount, hPartitionCount});
         // Also pre-generate the bin information
         // "Ray origin, tMin, and jitter" since we cant share
         // these using shared memory as well
@@ -742,6 +765,7 @@ void WFPGTracer::GenerateGuidedDirections()
                       // Output
                       dRadianceFieldRayOrigins,
                       dProjectionJitters,
+                      dGuidingThresholds,
                       // I-O
                       gpuGenerators,
                       // Input
@@ -773,9 +797,11 @@ void WFPGTracer::GenerateGuidedDirections()
         // then only memcopy single word as offset on each operation
         coneCasterOptiX->CopyRadianceMapGenParams(dRadianceFieldRayOrigins,
                                                   dProjectionJitters,
+                                                  dGuidingThresholds,
                                                   fieldBuffer,
                                                   options.optiXUseSceneAcc,
-                                                  coneAperture);
+                                                  coneAperture,
+                                                  options.guidingThreshold);
         // Now do the iteration
         uint32_t processedBins = 0;
         for(uint32_t i = 0; i < iterCount; i++)
@@ -792,6 +818,7 @@ void WFPGTracer::GenerateGuidedDirections()
             uint32_t* dLocalPartitionBinIds = dPartitionBinIds + processedBins;
             uint32_t* dLocalPartitionOffsets = dPartitionOffsets + processedBins;
             Vector4f* dLocalFieldOrigins = dRadianceFieldRayOrigins + processedBins;
+            float* dLocalGuidingThresholds = dGuidingThresholds + processedBins;
 
             uint32_t kernelShmemSize = PG_KERNEL_SHMEM_SIZE[kernelIndex];
             uint32_t kernelTPB = std::get<0>(PG_KERNEL_PARAMS[kernelIndex]);
@@ -840,28 +867,38 @@ void WFPGTracer::GenerateGuidedDirections()
             CUDA_CHECK(cudaFuncSetAttribute(KCSampleKernel,
                                             cudaFuncAttributeMaxDynamicSharedMemorySize,
                                             kernelShmemSize));
-            gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
-                          kernelTPB, pgKernelBlockCount,
-                          //
-                          KCSampleKernel,
-                          // Output
-                          dRayAux,
-                          // I-O
-                          gpuGenerators,
-                          // Input
-                          // Per-ray
-                          rayCaster->SortedRayIds(),
-                          metaSurfGenerator,
-                          // Per bin
-                          dLocalPartitionOffsets,
-                          dLocalPartitionBinIds,
-                          // Buffer
-                          fieldBufferConst,
-                          // Constants
-                          svo.TreeGPU(),
-                          processedBinThisIter,
-                          options.purePG,
-                          options.misRatio);
+
+            // This version did not change the performance much.
+            int32_t innerIterCount = 1;
+            //int32_t innerIterCount = options.productPG ? BLOCK_PER_BIN : 1;
+            for(int bId = 0; bId < innerIterCount; bId++)
+            {
+                gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
+                              kernelTPB, pgKernelBlockCount,
+                              //
+                              KCSampleKernel,
+                              // Output
+                              dRayAux,
+                              // I-O
+                              gpuGenerators,
+                              // Input
+                              // Per-ray
+                              rayCaster->SortedRayIds(),
+                              metaSurfGenerator,
+                              // Per bin
+                              dLocalPartitionOffsets,
+                              dLocalPartitionBinIds,
+                              dLocalGuidingThresholds,
+                              // Buffer
+                              fieldBufferConst,
+                              // Constants
+                              svo.TreeGPU(),
+                              processedBinThisIter,
+                              options.purePG,
+                              options.misRatio,
+                              options.guidingThreshold,
+                              bId);
+            }
 
             if(options.adjustParallax)
             {
@@ -963,7 +1000,8 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
                                     sharedMemSize));
 
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
-                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+                     options.renderMode == WFPGRenderMode::GUIDING_FACTOR);
 
     // Generate rays appropriate to the camera type
     switch(currentCamera.type)
@@ -1389,6 +1427,9 @@ TracerError WFPGTracer::SetOptions(const OptionsI& opts)
     if((err = opts.GetString(options.pgDumpDebugName, PG_DUMP_PATH_NAME)) != TracerError::OK)
         return err;
 
+    if ((err = opts.GetFloat(options.guidingThreshold, SELECTIVE_THRESHOLD)) != TracerError::OK)
+        return err;
+
     return TracerError::OK;
 }
 
@@ -1430,6 +1471,8 @@ void WFPGTracer::AskOptions()
     list.emplace(PG_DUMP_INTERVAL_NAME, OptionVariable(static_cast<int64_t>(options.pgDumpInterval)));
     list.emplace(PG_DUMP_PATH_NAME, OptionVariable(options.pgDumpDebugName));
 
+    list.emplace(SELECTIVE_THRESHOLD, OptionVariable(options.guidingThreshold));
+
     if(callbacks) callbacks->SendCurrentOptions(::Options(std::move(list)));
 }
 
@@ -1439,7 +1482,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
         callbacks->SendCurrentTransform(SceneCamTransform(cameraIndex));
 
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
-                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+                     options.renderMode == WFPGRenderMode::GUIDING_FACTOR);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
     (
         cameraIndex,
@@ -1454,7 +1498,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
     // SVO RADIANCE mode and FALSE COLOR Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
        options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
-       options.renderMode == WFPGRenderMode::SVO_NORMAL)
+       options.renderMode == WFPGRenderMode::SVO_NORMAL ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
     {
         // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::SCENE_CAMERA;
@@ -1463,7 +1508,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 
     // On voxel trace mode we don't need paths
     if(options.renderMode == WFPGRenderMode::RENDER ||
-       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
         ResizeAndInitPathMemory();
 
     currentDepth = 0;
@@ -1472,7 +1518,8 @@ void WFPGTracer::GenerateWork(uint32_t cameraIndex)
 void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 {
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
-                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+                     options.renderMode == WFPGRenderMode::GUIDING_FACTOR);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
     (
         t, cameraIndex, options.sampleCount,
@@ -1487,7 +1534,8 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
     // SVO RADIANCE mode and FALSE COLOR Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
        options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
-       options.renderMode == WFPGRenderMode::SVO_NORMAL)
+       options.renderMode == WFPGRenderMode::SVO_NORMAL ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
     {
         // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::TRANSFORMED_SCENE_CAMERA;
@@ -1497,7 +1545,8 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 
     // On voxel trace mode we don't need paths
     if(options.renderMode == WFPGRenderMode::RENDER ||
-       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
         ResizeAndInitPathMemory();
     currentDepth = 0;
 }
@@ -1505,7 +1554,8 @@ void WFPGTracer::GenerateWork(const VisorTransform& t, uint32_t cameraIndex)
 void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
 {
     bool enableAA = (options.renderMode == WFPGRenderMode::RENDER ||
-                     options.renderMode == WFPGRenderMode::SVO_RADIANCE);
+                     options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+                     options.renderMode == WFPGRenderMode::GUIDING_FACTOR);
     GenerateRays<RayAuxWFPG, RayAuxInitWFPG, RNGIndependentGPU, Vector4f>
     (
         dCam, options.sampleCount,
@@ -1520,7 +1570,8 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
     // SVO RADIANCE mode and FALSE COLOR Mode
     if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
        options.renderMode == WFPGRenderMode::SVO_FALSE_COLOR ||
-       options.renderMode == WFPGRenderMode::SVO_NORMAL)
+       options.renderMode == WFPGRenderMode::SVO_NORMAL ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
     {
         // Save the camera for all SVO_XXXX modes
         currentCamera.type = CameraType::CUSTOM_CAMERA;
@@ -1529,7 +1580,8 @@ void WFPGTracer::GenerateWork(const GPUCameraI& dCam)
 
     // On voxel trace mode we don't need paths
     if(options.renderMode == WFPGRenderMode::RENDER ||
-       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
         ResizeAndInitPathMemory();
     currentDepth = 0;
 }
@@ -1543,7 +1595,8 @@ bool WFPGTracer::Render()
         return false;
 
     // Don't do path tracing if debug render iteration is set
-    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE &&
+    if((options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+        options.renderMode == WFPGRenderMode::GUIDING_FACTOR) &&
        iterationCount >= options.svoRadRenderIter)
         return false;
 
@@ -1585,6 +1638,11 @@ bool WFPGTracer::Render()
        !options.skipPG && !(currentDepth >= options.guideBounceCount))
     {
         GenerateGuidedDirections();
+    }
+
+    if(options.renderMode == WFPGRenderMode::BINNING)
+    {
+        return false;
     }
 
     // Generate output partitions wrt. materials
@@ -1649,7 +1707,8 @@ void WFPGTracer::Finalize()
 
     // Deposit the radiances on the path chains
     if(options.renderMode == WFPGRenderMode::RENDER ||
-       options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+       options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
     {
 
         cudaEvent_t start, stop;
@@ -1688,7 +1747,8 @@ void WFPGTracer::Finalize()
     // On SVO_Radiance mode clear the image memory
     // And trace the SVO from the camera and send the results
     // On voxel trace mode we just trace the rays without any material
-    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE)
+    if(options.renderMode == WFPGRenderMode::SVO_RADIANCE ||
+       options.renderMode == WFPGRenderMode::GUIDING_FACTOR)
     {
         // Clear the image buffer
         imgMemory.Reset(cudaSystem);
@@ -1761,8 +1821,8 @@ void WFPGTracer::Finalize()
         RayTracer::Finalize();
     }
 
-    using namespace std::chrono_literals;
-    //std::this_thread::sleep_for(10s);
+    //using namespace std::chrono_literals;
+    //std::this_thread::sleep_for(1s);
 }
 
 size_t WFPGTracer::TotalGPUMemoryUsed() const

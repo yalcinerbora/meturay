@@ -53,14 +53,6 @@ class BlockPWCDistribution2D
         // PDF of CDF (implicit 1.0f) is omitted
         float sPCDFX[Y][X];
         float sPCDFY[Y];
-
-
-//        float sCDFX[Y][X + 1];
-//        float sPDFX[Y][X];
-        // Y axis distribution data (PDF of CDF depending on the situation)
-//        float sCDFY[Y + 1];
-//        float sPDFY[Y];
-
     };
 
     private:

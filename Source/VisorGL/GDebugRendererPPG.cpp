@@ -37,6 +37,7 @@ GDebugRendererPPG::GDebugRendererPPG(const nlohmann::json& config,
     , perimeterColor(1.0f, 1.0f, 1.0f)
     , currentTexture(GuideDebugGUIFuncs::PG_TEXTURE_SIZE, PixelFormat::RGB8_UNORM)
     , currentValues(GuideDebugGUIFuncs::PG_TEXTURE_SIZE[0] * GuideDebugGUIFuncs::PG_TEXTURE_SIZE[1], 0.0f)
+    , radianceArray(GuideDebugGUIFuncs::PG_TEXTURE_SIZE[0] * GuideDebugGUIFuncs::PG_TEXTURE_SIZE[1], 0.0f)
     , maxValueDisplay(0.0f)
     , renderPerimeter(false)
     , renderSamples(false)
@@ -399,6 +400,7 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
 
     // Gen Temp Texture for Value rendering
     TextureGL valueTex(currentTexture.Size(), PixelFormat::R_FLOAT);
+    TextureGL radianceTex(currentTexture.Size(), PixelFormat::R_FLOAT);
 
     // Generate/Resize Buffer
     if(treeBufferSize < newTreeSize)
@@ -430,12 +432,16 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_COLOR_ATTACHMENT0 + OUT_VALUE,
                            GL_TEXTURE_2D, valueTex.TexId(), 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0 + OUT_RADIANCE,
+                           GL_TEXTURE_2D, radianceTex.TexId(), 0);
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
     // Enable 2 Color Channels
-    const GLenum Attachments[2] = {GL_COLOR_ATTACHMENT0 + OUT_COLOR,
-                                   GL_COLOR_ATTACHMENT0 + OUT_VALUE};
-    glDrawBuffers(2, Attachments);
+    const GLenum Attachments[3] = {GL_COLOR_ATTACHMENT0 + OUT_COLOR,
+                                   GL_COLOR_ATTACHMENT0 + OUT_VALUE,
+                                   GL_COLOR_ATTACHMENT0 + OUT_RADIANCE};
+    glDrawBuffers(3, Attachments);
 
     // Change View-port
     glViewport(0, 0, currentTexture.Width(), currentTexture.Height());
@@ -487,6 +493,12 @@ void GDebugRendererPPG::UpdateDirectional(const Vector3f& worldPos,
     glBindTexture(GL_TEXTURE_2D, valueTex.TexId());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT,
                   currentValues.data());
+    
+    // Get Radiance Buffuer to CPU
+    radianceArray.resize(currentTexture.Size()[0] * currentTexture.Size()[1]);
+    glBindTexture(GL_TEXTURE_2D, radianceTex.TexId());
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT,
+                  radianceArray.data());
 
     // All Done!
 }
@@ -507,7 +519,7 @@ bool GDebugRendererPPG::RenderGUI(bool& overlayCheckboxChanged,
     remainingSize.x = remainingSize.y;
     ImGui::NewLine();
     ImGui::SameLine(0.0f, (windowSize.x - remainingSize.x) * 0.5f - ImGui::GetStyle().WindowPadding.x);
-    RenderImageWithZoomTooltip(currentTexture, currentValues, remainingSize);
+    RenderImageWithZoomTooltip(currentTexture, radianceArray, remainingSize);
 
     if(ImGui::BeginPopupContextItem(("texPopup" + name).c_str()))
     {
@@ -523,7 +535,7 @@ bool GDebugRendererPPG::RenderGUI(bool& overlayCheckboxChanged,
                                                  currentWorldPos[0],
                                                  currentWorldPos[1],
                                                  currentWorldPos[2]);
-            std::string fileName = wpAsString + "_ppg_radiance.exr";
+            std::string fileName = wpAsString + "_ppg_values.exr";
 
             ImageIOInstance()->WriteImage(currentValues,
                                           currentTexture.Size(),
@@ -533,7 +545,22 @@ bool GDebugRendererPPG::RenderGUI(bool& overlayCheckboxChanged,
 
             METU_LOG("Saved Image {}", fileName);
         }
+        if(ImGui::Button("Save Radiance"))
+        {
+            std::string wpAsString = fmt::format("[{}_{}_{}]",
+                                                 currentWorldPos[0],
+                                                 currentWorldPos[1],
+                                                 currentWorldPos[2]);
+            std::string fileName = wpAsString + "_ppg_radiance.exr";
 
+            ImageIOInstance()->WriteImage(radianceArray,
+                                          currentTexture.Size(),
+                                          PixelFormat::R_FLOAT,
+                                          ImageType::EXR,
+                                          fileName);
+
+            METU_LOG("Saved Image {}", fileName);
+        }
 
         ImGui::EndPopup();
 

@@ -1,11 +1,11 @@
 template<class T>
-bool MPMCQueue<T>::Empty()
+bool MPMCQueue<T>::IsEmpty()
 {
-    return (dequeueLoc + 1) % data.size()  == enqueueLoc;
+    return ((dequeueLoc + 1) % data.size())  == enqueueLoc;
 }
 
 template<class T>
-bool MPMCQueue<T>::Full()
+bool MPMCQueue<T>::IsFull()
 {
     return enqueueLoc == dequeueLoc;
 }
@@ -13,29 +13,28 @@ bool MPMCQueue<T>::Full()
 template<class T>
 void MPMCQueue<T>::Increment(size_t& i)
 {
-    i += 1;
-    i %= data.size();
+    i = (i + 1) % data.size();
 }
 
 template<class T>
 MPMCQueue<T>::MPMCQueue(size_t bufferSize)
-    : data(bufferSize)
+    : data(bufferSize + 1)
     , enqueueLoc(1)
     , dequeueLoc(0)
     , terminate(false)
-{
-    assert(bufferSize > 1);
-}
+{}
 
 template<class T>
 void MPMCQueue<T>::Dequeue(T& item)
 {
+    if (terminate) return;
     {
         std::unique_lock<std::mutex> lock(mutex);
         dequeueWake.wait(lock, [&]()
         {
-            return !Empty();
+            return (!IsEmpty() || terminate);
         });
+        if (terminate) return;
 
         Increment(dequeueLoc);
         item = std::move(data[dequeueLoc]);
@@ -46,9 +45,10 @@ void MPMCQueue<T>::Dequeue(T& item)
 template<class T>
 bool MPMCQueue<T>::TryDequeue(T& item)
 {
+    if (terminate) return false;
     {
         std::unique_lock<std::mutex> lock(mutex);
-        if(Empty() || terminate) return false;
+        if(IsEmpty() || terminate) return false;
 
         Increment(dequeueLoc);
         item = std::move(data[dequeueLoc]);
@@ -64,8 +64,9 @@ void MPMCQueue<T>::Enqueue(T&& item)
         std::unique_lock<std::mutex> lock(mutex);
         enqueWake.wait(lock, [&]()
         {
-            return !Full() || terminate;
+            return (!IsFull() || terminate);
         });
+        if (terminate) return;
 
         data[enqueueLoc] = std::move(item);
         Increment(enqueueLoc);
@@ -76,9 +77,10 @@ void MPMCQueue<T>::Enqueue(T&& item)
 template<class T>
 bool MPMCQueue<T>::TryEnqueue(T&& item)
 {
+    if (terminate) return;
     {
         std::unique_lock<std::mutex> lock(mutex);
-        if(Full() || terminate) return false;
+        if(IsFull() || terminate) return false;
 
         data[enqueueLoc] = std::move(item);
         Increment(enqueueLoc);

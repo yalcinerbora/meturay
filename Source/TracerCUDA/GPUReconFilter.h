@@ -29,7 +29,7 @@ class GPUReconFilter : public GPUReconFilterI
                                                     uint32_t sampleCount,
                                                     float scalarMultiplier,
                                                     const GPUFilterFunctor& f,
-                                                    const CudaSystem&) override;
+                                                    const CudaSystem&);
         uint32_t                ConservativePixelPerSample() const;
 
     public:

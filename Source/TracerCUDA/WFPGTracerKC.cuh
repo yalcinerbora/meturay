@@ -8,6 +8,7 @@
 #include "PathNode.cuh"
 #include "RayStructs.h"
 #include "ImageStructs.h"
+#include "ImageFunctions.cuh"
 #include "WorkOutputWriter.cuh"
 #include "WFPGCommon.h"
 #include "GPUCameraI.h"
@@ -187,6 +188,11 @@ void WFPGTracerBoundaryWork(// Output
             //                   v
             //                  we should accum-down from here
             gLocalPathNodes[prevPathIndex].AccumRadianceDownChain(total, gLocalPathNodes);
+
+            // NEE hit, deposit to svo
+            Vector3f prevPosition = gLocalPathNodes[prevPathIndex].worldPosition;
+            renderState.svo.DepositNEEHitMiss(prevPosition, 1.0f, true);
+
         }
     }
 }
@@ -244,7 +250,14 @@ void WFPGTracerPathWork(// Output
 
     // If NEE ray hits to this material
     // just skip since this is not a light material
-    if(aux.type == RayType::NEE_RAY) return;
+    if(aux.type == RayType::NEE_RAY)
+    {
+        // NEE missed, deposit to svo
+        uint8_t prevPathIndex = DeterminePathIndexWFPG(aux.depth - 1);
+        Vector3f prevPosition = gLocalPathNodes[prevPathIndex].worldPosition;
+        renderState.svo.DepositNEEHitMiss(prevPosition, 1.0f, false);
+        return;
+    }
 
     // Calculate Transmittance factor of the medium
     // And reduce the radiance wrt the medium transmittance
@@ -373,7 +386,7 @@ void WFPGTracerPathWork(// Output
     {
         // Other kernel already combined with MIS
         // just evaluate
-        if(renderState.skipPG)
+        if(renderState.skipPG || isnan(static_cast<float>(aux.guidePDF)))
         {
             // Sample using BxDF
             reflectance = MGroup::Sample(// Outputs
@@ -722,6 +735,37 @@ Vector4f CalcColorSVO(WFPGRenderMode mode,
                                           nodeId, isLeaf);
         result = Vector3f(radiance);
     }
+    else if(mode == WFPGRenderMode::GUIDING_FACTOR)
+    {
+        float factor = svo.ReadGuidingFactor(nodeId, isLeaf);
+        //factor = logf(1.0f + factor) / logf(2.0f);
+        //factor = (factor - 0.5f) * 2;
+
+        result = Vector3f(factor);
+
+
+        // Gradient Data
+        //static constexpr Vector3f gradient[] =
+        //{
+        //    Vector3f(0, 0, 0.56),
+        //    Vector3f(0, 0.24, 1),
+        //    Vector3f(0, 0.93, 1),
+        //    Vector3f(0.62, 1, 0.36),
+        //    Vector3f(1, 0.67, 0.4),
+        //    Vector3f(1, 0.6, 0),
+        //    Vector3f(1, 0.07, 0),
+        //    Vector3f(0.45, 0.07, 0.004),
+        //    // Edge case resolve
+        //    Vector3f(0.45, 0.07, 0.004)
+        //};
+        //static constexpr float gradCount = 8.0f;
+        //float factorIndexed = gradCount * factor;
+        //float t = factorIndexed - floorf(factorIndexed);
+        //uint32_t prev = static_cast<uint32_t>(floorf(factorIndexed));
+        //uint32_t next = prev + 1;
+        //result = Vector3f::Lerp(gradient[prev], gradient[next], t);
+    }
+
     else if(nodeId == UINT32_MAX)
         return Vector4f(result, 1.0f);
     else if(mode == WFPGRenderMode::SVO_NORMAL)
@@ -1059,6 +1103,7 @@ struct KCGenSampleShMem
     uint32_t sOffsetStart;
     uint32_t sNodeId;
     float sBinVoxelSize;
+    float guidingThreshold;
 };
 
 template <int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
@@ -1076,15 +1121,17 @@ struct KCGenSampleShMemOptiX
         typename ProductSampler8x8::SharedStorage   sProductSamplerMem;
     };
     // Bin parameters
-    uint32_t sRayCount;
-    uint32_t sOffsetStart;
-    uint32_t sNodeId;
+    uint32_t    sRayCount;
+    uint32_t    sOffsetStart;
+    uint32_t    sNodeId;
+    bool        sSkipGuiding;
 };
 
 template <class RNG>
 __device__
 inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
                                            Vector2f& jitter,
+                                           float& guidingThreshold,
                                            RNG& rng,
                                            const uint32_t* gRayIds,
                                            const AnisoSVOctreeGPU& svo,
@@ -1097,9 +1144,12 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     bool isLeaf = ReadSVONodeId(nodeId, nodeIdPacked);
     float binVoxelSize = svo.NodeVoxelSize(nodeId, isLeaf);
 
+    // Guiding Threshold
+    guidingThreshold = svo.ReadGuidingFactor(nodeId, isLeaf);
+
+
     // Utilize voxel center
     //Vector3f position = svo.NodePosition(nodeId, isLeaf);
-    //position[1] = 0.0f;
 
     //printf("NodePosition[%u] (%f, %f, %f)\n",
     //       nodeId,
@@ -1109,6 +1159,7 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     uint32_t rayCount = rayRange[1] - rayRange[0];
     uint32_t randomRayIndex = static_cast<uint32_t>(rng.Uniform() * rayCount);
     uint32_t rayId = gRayIds[rayRange[0] + randomRayIndex];
+    //uint32_t rayId = gRayIds[rayRange[0] + 0];
 
     // Utilize SVO data
     //RayReg rayReg = metaSurfGenerator.Ray(rayId);
@@ -1127,7 +1178,7 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     // Offset using the normal
     // TODO: This routine should not be on ray
     //float nudgeAmount = MathConstants::VeryLargeEpsilon;
-    float nudgeAmount = svo.LeafVoxelSize() * 0.1f;
+    float nudgeAmount = svo.LeafVoxelSize() * 0.01f;
     position = RayF(Vector3f(0.0f), position).Nudge(normal, 0.0f).getPosition();
     position += normal * nudgeAmount;
     //float tMin = 0.0f;
@@ -1138,7 +1189,7 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     //              MathConstants::LargeEpsilon);
     //float tMin = (svo.LeafVoxelSize() * MathConstants::Sqrt3 +
     //              MathConstants::LargeEpsilon);
-    float tMin = svo.LeafVoxelSize() * 0.1f;
+    float tMin = svo.LeafVoxelSize() * 0.15f;
     tMin += MathConstants::Epsilon;
 
     // Out
@@ -1184,7 +1235,9 @@ inline void LoadBinInfo(//Output
             // Calculate the voxel size of the bin
             Vector2f jitter;
             Vector4f posTMin;
+            float guidingThreshold;
             CalculateJitterAndBinRayOrigin(posTMin, jitter,
+                                           guidingThreshold,
                                            rng,
                                            gRayIds,
                                            svo,
@@ -1194,6 +1247,7 @@ inline void LoadBinInfo(//Output
             // Write
             sharedMem->sRadianceFieldOriginTMin = posTMin;
             sharedMem->sFieldJitter = jitter;
+            sharedMem->guidingThreshold = guidingThreshold;
         }
     }
     __syncthreads();
@@ -1321,7 +1375,8 @@ static void KCGenAndSampleDistribution(// Output
                                        const AnisoSVOctreeGPU svo,
                                        uint32_t binCount,
                                        bool purePG,
-                                       float misRatio)
+                                       float misRatio,
+                                       float guidingThreshold)
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     const int32_t THREAD_ID = threadIdx.x;
@@ -1525,7 +1580,8 @@ static void KCGenAndSampleDistributionProduct(// Output
                                               const AnisoSVOctreeGPU svo,
                                               uint32_t binCount,
                                               bool purePG,
-                                              float misRatio)
+                                              float misRatio,
+                                              float guidingThreshold)
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     const int32_t THREAD_ID = threadIdx.x;
@@ -1813,13 +1869,16 @@ static void KCSampleDistributionOptiX(// Output
                                       // Per bin
                                       const uint32_t* gBinOffsets,
                                       const uint32_t* gNodeIds,
+                                      const float* gGuidingThresholds,
                                       // Buffer
                                       SVOOptixRadianceBuffer::SegmentedField<const float*> radBuffer,
                                       // Constants
                                       const AnisoSVOctreeGPU svo,
                                       uint32_t binCount,
                                       bool purePG,
-                                      float misRatio)
+                                      float misRatio,
+                                      float guidingEnableThreshold,
+                                      int respBinId)
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     const int32_t THREAD_ID = threadIdx.x;
@@ -1867,12 +1926,33 @@ static void KCSampleDistributionOptiX(// Output
             sharedMem->sRayCount = rayRange[1] - rayRange[0];
             sharedMem->sOffsetStart = rayRange[0];
             sharedMem->sNodeId = gNodeIds[binIndex];
+            sharedMem->sSkipGuiding = (gGuidingThresholds[binIndex] <= guidingEnableThreshold);
         }
         __syncthreads();
 
         // Kill the entire block if Node Id is invalid
         if(sharedMem->sNodeId == INVALID_BIN_ID)
         {
+            __syncthreads();
+            continue;
+        }
+
+        // Skip if threshold is matched
+        if (sharedMem->sSkipGuiding)
+        {
+            for (uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
+                 rayIndex += THREAD_PER_BLOCK)
+            {
+                // Let the ray acquire the surface
+                uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
+                GPUMetaSurface surf = metaSurfGenerator.AcquireWork(rayId);
+                bool isLight = surf.IsLight();
+
+                if (!isLight)
+                {
+                    gRayAux[rayId].guidePDF = NAN;
+                }
+            }
             __syncthreads();
             continue;
         }
@@ -2012,6 +2092,10 @@ static void KCSampleDistributionOptiX(// Output
     }
 }
 
+
+// Edit Allocate multi blocks per bin
+static constexpr int32_t BLOCK_PER_BIN = 1;
+
 template <class RNG, int32_t THREAD_PER_BLOCK, int32_t X, int32_t Y>
 __global__ __launch_bounds__(THREAD_PER_BLOCK)
 static void KCSampleDistributionProductOptiX(// Output
@@ -2025,13 +2109,16 @@ static void KCSampleDistributionProductOptiX(// Output
                                              // Per bin
                                              const uint32_t* gBinOffsets,
                                              const uint32_t* gNodeIds,
+                                             const float* gGuidingThresholds,
                                              // Buffer
                                              SVOOptixRadianceBuffer::SegmentedField<const float*> radBuffer,
                                              // Constants
                                              const AnisoSVOctreeGPU svo,
                                              uint32_t binCount,
                                              bool purePG,
-                                             float misRatio)
+                                             float misRatio,
+                                             float guidingEnableThreshold,
+                                             int respBlockId)
 {
     auto& rng = RNGAccessor::Acquire<RNG>(gRNGs, LINEAR_GLOBAL_ID);
     const int32_t THREAD_ID = threadIdx.x;
@@ -2105,6 +2192,7 @@ static void KCSampleDistributionProductOptiX(// Output
             sharedMem->sRayCount = rayRange[1] - rayRange[0];
             sharedMem->sOffsetStart = rayRange[0];
             sharedMem->sNodeId = gNodeIds[binIndex];
+            sharedMem->sSkipGuiding = (gGuidingThresholds[binIndex] <= guidingEnableThreshold);
         }
         __syncthreads();
 
@@ -2114,6 +2202,27 @@ static void KCSampleDistributionProductOptiX(// Output
             __syncthreads();
             continue;
         }
+
+        // Skip if threshold is matched
+        if(sharedMem->sSkipGuiding)
+        {
+            for (uint32_t rayIndex = THREAD_ID; rayIndex < sharedMem->sRayCount;
+                 rayIndex += THREAD_PER_BLOCK)
+            {
+                // Let the ray acquire the surface
+                uint32_t rayId = gRayIds[sharedMem->sOffsetStart + rayIndex];
+                GPUMetaSurface surf = metaSurfGenerator.AcquireWork(rayId);
+                bool isLight = surf.IsLight();
+
+                if (!isLight)
+                {
+                    gRayAux[rayId].guidePDF = NAN;
+                }
+            }
+            __syncthreads();
+            continue;
+        }
+
 
         // Load Radiance Field
         float filteredRadiances[RT_ITER_COUNT];
@@ -2138,9 +2247,11 @@ static void KCSampleDistributionProductOptiX(// Output
         // Block warp-stride loop
         const uint32_t warpId = THREAD_ID / WARP_SIZE;
         const bool isWarpLeader = (THREAD_ID % WARP_SIZE) == 0;
+
         // For each ray
-        for(uint32_t rayIndex = warpId; rayIndex < sharedMem->sRayCount;
-            rayIndex += WARP_PER_BLOCK)
+        int startRay = respBlockId * WARP_PER_BLOCK + warpId;
+        for(uint32_t rayIndex = startRay; rayIndex < sharedMem->sRayCount;
+            rayIndex += WARP_PER_BLOCK * BLOCK_PER_BIN)
         {
             const bool isValidIteration = (rayIndex < sharedMem->sRayCount);
             if(!isValidIteration) continue;
@@ -2207,6 +2318,7 @@ __global__
 static void KCGenerateBinInfoOptiX(// Output
                                    Vector4f* dRadianceFieldRayOrigins,
                                    Vector2f* dProjectionJitters,
+                                   float* dGuidingThresholds,
                                    // I-O
                                    RNGeneratorGPUI** gRNGs,
                                    // Input
@@ -2232,7 +2344,9 @@ static void KCGenerateBinInfoOptiX(// Output
         {
             Vector2f jitter;
             Vector4f posTMin;
+            float guidingThreshold;
             CalculateJitterAndBinRayOrigin(posTMin, jitter,
+                                           guidingThreshold,
                                            rng,
                                            gRayIds,
                                            svo,
@@ -2242,11 +2356,13 @@ static void KCGenerateBinInfoOptiX(// Output
 
             dRadianceFieldRayOrigins[threadId] = posTMin;
             dProjectionJitters[threadId] = jitter;
+            dGuidingThresholds[threadId] = guidingThreshold;
         }
         else
         {
             dRadianceFieldRayOrigins[threadId] = Vector4f(NAN);
             dProjectionJitters[threadId] = Vector2f(NAN);
+            dGuidingThresholds[threadId] = NAN;
         }
     }
 }
@@ -2460,5 +2576,43 @@ static void KCAdjustParallax(// I-O
                 gRayAux[rayId].guidePDF = pdfOmegaAdj;
             }
         }
+    }
+}
+
+
+// What to do?
+__global__ __launch_bounds__(StaticThreadPerBlock1D)
+static void KCVisualizeBins(// Output
+                            CamSampleGMem<Vector4f> gSamples,
+                            // Input
+                            const RayAuxWFPG* gRayAux,
+                            // Constants
+
+                            uint32_t rayCount)
+{
+    for(uint32_t threadId = threadIdx.x + blockDim.x * blockIdx.x;
+        threadId < rayCount;
+        threadId += (blockDim.x * gridDim.x))
+    {
+        uint32_t sampleIndex = gRayAux[threadId].sampleIndex;
+
+        Vector3f falseColor = Vector3f(0.0f);
+        // Skip if this ray is not used
+        if(gRayAux[threadId].binId != INVALID_BIN_ID)
+        {
+            uint32_t nodeId;
+            ReadSVONodeId(nodeId, gRayAux[threadId].binId);
+
+            falseColor = Utility::RandomColorRGB(nodeId);
+
+            //printf("%f, %f, %f, %u\n",
+            //       falseColor[0], falseColor[1], falseColor[2],
+            //       gRayAux[threadId].binId);
+        }
+
+        //
+        AccumulateRaySample(gSamples,
+                            sampleIndex,
+                            Vector4f(falseColor, 1.0f));
     }
 }

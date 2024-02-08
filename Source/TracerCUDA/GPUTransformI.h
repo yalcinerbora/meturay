@@ -24,10 +24,10 @@ class GPUTransformI
 		// extra params are for non-rigid skeletal based transformations
 		// or maybe morph targets
 		__device__
-		virtual RayF	 WorldToLocal(const RayF&,
-								  const uint32_t* indices = nullptr,
-								  const float* weights = nullptr,
-								  uint32_t count = 0) const = 0;
+		virtual RayF	WorldToLocal(const RayF&,
+									 const uint32_t* indices = nullptr,
+									 const float* weights = nullptr,
+									 uint32_t count = 0) const = 0;
 		__device__
 		virtual Vector3	WorldToLocal(const Vector3&, bool isDirection = false,
 									 const uint32_t* indices = nullptr,

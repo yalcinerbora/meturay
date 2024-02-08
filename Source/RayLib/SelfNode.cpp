@@ -184,6 +184,7 @@ void SelfNode::Work()
         // to be called on main thread
         visor.ProcessInputs();
     }
+    //visor.Terminate();
     // Visor is closed terminate tracer thread
     tracerThread.Stop();
 }

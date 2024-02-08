@@ -70,7 +70,11 @@ struct VoxelPayload
                                         // Last field holds the specularity of the location; again it is
                                         // normalized 8-bit integer, 0 means fully diffuse and 1 means
                                         // perfectly specular.
-    uint8_t*    dGuidingFactorLeaf;     // Guiding metric which is used to determine if this location
+                                        //
+    // TODO: Get away with single word maybe?
+    uint32_t*   dShadowRayHitLeaf;      // How many shadow rays hit
+    uint32_t*   dShadowRayMissLeaf;     // How many shadow rays missed
+                                        //
                                         // of the scene should be guided by the algorithm or not.
                                         // this value is used stochastically. It is UNORM-8.
     uint64_t*   dMicroQuadTreeLeaf;     // Micro partition tree of the irradiance
@@ -78,7 +82,7 @@ struct VoxelPayload
     // Node Data
     Vector2h*   dAvgIrradianceNode;     // Same as above but for nodes
     uint32_t*   dNormalAndSpecNode;
-    uint8_t*    dGuidingFactorNode;
+    half*       dGuidingFactorNode;     // Ratio of hit/miss of the voxel
     uint64_t*   dMicroQuadTreeNode;
 
     // Read Routines
@@ -96,6 +100,10 @@ struct VoxelPayload
     bool                WriteLeafRadiance(const Vector3f& wi, const Vector3f& wo,
                                           const Vector3f& surfaceNormal,
                                           uint32_t leafIndex, float radiance);
+
+    __device__
+    void                WriteLeafNEEHitMiss(uint32_t leafIndex, float value, bool isHit);
+
     __device__
     void                WriteNormalAndSpecular(const Vector3f& normal, float specularity,
                                                uint32_t nodeIndex, bool isLeaf);
@@ -232,6 +240,12 @@ class AnisoSVOctreeGPU
                                         const Vector3f& wo,
                                         float radiance);
 
+    // Deposit NEE hit mis information to the SVO
+    __device__
+    bool                DepositNEEHitMiss(const Vector3f& worldPos,
+                                          float value,
+                                          bool isHit);
+
     // Read the radiance value from the specified node,
     // converts irradiance to radiance
     // Result will be the bi-linear spherical interpolation of
@@ -239,6 +253,10 @@ class AnisoSVOctreeGPU
     __device__
     float               ReadRadiance(const Vector3f& coneDirection, float coneAperture,
                                      uint32_t nodeId, bool isLeaf) const;
+
+    __device__
+    float               ReadGuidingFactor(uint32_t nodeId, bool isLeaf) const;
+
     __device__
     Vector3f            DebugReadNormal(float& stdDev, uint32_t nodeId, bool isLeaf) const;
 
@@ -458,14 +476,21 @@ float VoxelPayload::ReadRadiance(const Vector3f& coneDirection,
 __device__ inline
 float VoxelPayload::ReadGuidingFactor(uint32_t nodeIndex, bool isLeaf) const
 {
-    const uint8_t* gGuidingFactorArray = (isLeaf) ? dGuidingFactorLeaf : dGuidingFactorNode;
-    return gGuidingFactorArray[nodeIndex];
+    if(isLeaf)
+    {
+        float hitShadowCount = static_cast<float>(dShadowRayHitLeaf[nodeIndex]);
+        float missShadowCount = static_cast<float>(dShadowRayMissLeaf[nodeIndex]);
+
+        return missShadowCount / (hitShadowCount + missShadowCount);
+    }
+    else
+        return dGuidingFactorNode[nodeIndex];
 }
 
 __device__ inline
-bool VoxelPayload::WriteLeafRadiance(const Vector3f& surfaceNormal,
-                                     const Vector3f& wi,
+bool VoxelPayload::WriteLeafRadiance(const Vector3f& wi,
                                      const Vector3f& wo,
+                                     const Vector3f& surfaceNormal,
                                      uint32_t leafIndex,
                                      float radiance)
 {
@@ -480,13 +505,13 @@ bool VoxelPayload::WriteLeafRadiance(const Vector3f& surfaceNormal,
     float NdL = normal.Dot(wo);
     float NdV = normal.Dot(wi);
 
-    bool towardsFront = ((NdN >= 0.0f)
-                         && (NdL >= 0.0f)
+    bool towardsFront = ((NdL >= 0.0f)
+                         //&& (NdN >= 0.0f)
                          //&& (NdV >= 0.0f)
                          );
 
-    bool towardsBack = ((NdN < 0.0f)
-                        && (NdL < 0.0f)
+    bool towardsBack = ((NdL < 0.0f)
+                        //&& (NdN < 0.0f)
                         //&& (NdV < 0.0f)
                         );
 
@@ -509,6 +534,13 @@ bool VoxelPayload::WriteLeafRadiance(const Vector3f& surfaceNormal,
     // Atomic operation here since many rays may update on learn operation
     atomicAdd(&(dTotalIrradianceLeaf[leafIndex][index]), radiance);
     atomicAdd(&(dSampleCountLeaf[leafIndex][index]), 1);
+}
+
+__device__ inline
+void VoxelPayload::WriteLeafNEEHitMiss(uint32_t leafIndex, float value, bool isHit)
+{
+    uint32_t* dHitOrMissArray = (isHit) ? dShadowRayHitLeaf : dShadowRayMissLeaf;
+    atomicAdd(&(dHitOrMissArray[leafIndex]), value);
 }
 
 __device__ inline
@@ -1021,6 +1053,22 @@ float AnisoSVOctreeGPU::ReadRadiance(const Vector3f& coneDirection, float coneAp
 }
 
 __device__ inline
+float AnisoSVOctreeGPU::ReadGuidingFactor(uint32_t nodeId, bool isLeaf) const
+{
+    float result;
+    if(nodeId == UINT32_MAX)
+    {
+        return 1.0f;
+    }
+    else
+    {
+        result = payload.ReadGuidingFactor(nodeId, isLeaf);
+        result = (isnan(result)) ? 0.0f : result;
+    }
+    return result;
+}
+
+__device__ inline
 Vector3f AnisoSVOctreeGPU::DebugReadNormal(float& stdDev, uint32_t nodeIndex, bool isLeaf) const
 {
     float specularity;
@@ -1045,6 +1093,22 @@ bool AnisoSVOctreeGPU::DepositRadiance(const Vector3f& worldPos,
         // Atomically set the sample
         payload.WriteLeafRadiance(wi, wo, surfaceNormal,
                                   lIndex, radiance);
+    }
+    return leafFound;
+}
+
+__device__ inline
+bool AnisoSVOctreeGPU::DepositNEEHitMiss(const Vector3f& worldPos, float value, bool isHit)
+{
+    // Find the leaf here
+    uint32_t lIndex;
+    bool leafFound = NearestNodeIndex(lIndex, worldPos, leafDepth, true);
+
+    // We should always find a leaf with the true flag
+    if(leafFound)
+    {
+        // Atomically set the sample
+        payload.WriteLeafNEEHitMiss(lIndex, value, isHit);
     }
     return leafFound;
 }

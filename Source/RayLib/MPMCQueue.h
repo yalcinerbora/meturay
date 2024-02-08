@@ -27,10 +27,10 @@ class MPMCQueue
         std::condition_variable dequeueWake;
 
         std::mutex              mutex;
-        bool                    terminate;
+        volatile bool           terminate;
 
-        bool                    Empty();
-        bool                    Full();
+        bool                    IsEmpty();
+        bool                    IsFull();
         void                    Increment(size_t&);
 
     protected:

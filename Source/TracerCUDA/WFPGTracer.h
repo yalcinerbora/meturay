@@ -52,6 +52,8 @@ class WFPGTracer final : public RayTracer
     static constexpr const char*    PG_DUMP_DEBUG_NAME          = "PGDumpDataStruct";
     static constexpr const char*    PG_DUMP_INTERVAL_NAME       = "PGDataStructDumpIntervalExp";
     static constexpr const char*    PG_DUMP_PATH_NAME           = "PGDataStructDumpName";
+    // TEST
+    static constexpr const char*    SELECTIVE_THRESHOLD         = "GuidingDisableRatio";
 
     struct Options
     {
@@ -89,6 +91,8 @@ class WFPGTracer final : public RayTracer
         bool                pgDumpDebugData     = false;
         uint32_t            pgDumpInterval      = 2;
         std::string         pgDumpDebugName     = "wfpg_svo";
+
+        float               guidingThreshold    = 0.0f;
     };
 
     private:

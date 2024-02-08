@@ -430,7 +430,7 @@
         {
             "id": [47, 48],
             "type": "Triangle",
-            "name": "../Surfaces/Bathroom/shelf_mirror.obj",
+            "name": "../Surfaces/Bathroom/shelf_mirror_small.obj",
             "tag": "assimp_",
             "innerIndex": [0, 1],
             "cullFace": [false, false]
@@ -521,8 +521,8 @@
     //        Actual Scene Related Declarations       //
     //================================================//
     "BaseAccelerator": {"type": "Linear"},
-    //"BaseBoundaryLight": 0,
-    "BaseBoundaryLight": 999,
+    "BaseBoundaryLight": 0,
+    //"BaseBoundaryLight": 999,
     "BaseBoundaryTransform": 1,
     "BaseMedium" : 0,
 
@@ -589,8 +589,9 @@
         {"transform": 0, "accelerator": 0, "material": 10, "primitive": 45},
         {"transform": 0, "accelerator": 0, "material": 10, "primitive": 46},
         // Shelf Picture
-        {"transform": 0, "accelerator": 0, "material": 29, "primitive": 47},
-        {"transform": 0, "accelerator": 0, "material": 15, "primitive": 48},
+        {"transform": 0, "accelerator": 0, "material": 15, "primitive": 47},
+        {"transform": 0, "accelerator": 0, "material": 7, "primitive": 48},
+        //{"transform": 0, "accelerator": 0, "material": 29, "primitive": 48},
         // Black Paintings
         {"transform": 0, "accelerator": 0, "material": 16, "primitive": 49},
         {"transform": 0, "accelerator": 0, "material": 17, "primitive": 50},

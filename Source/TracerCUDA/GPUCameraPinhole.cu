@@ -67,7 +67,8 @@ SceneError CPUCameraGroupPinhole::InitializeGroup(const EndpointGroupDataList& c
         //data.fov = fov * MathConstants::DegToRadCoef;
         //float aspect = fov[0] / fov[1];
         //data.fov[0] = 2.0f * std::atan(std::tan(data.fov[1] * 0.5f) * aspect);
-
+        //METU_LOG("{}", data.fov[0]);
+        // 
         // Correct FoV using FovX
         data.fov = fov * MathConstants::DegToRadCoef;
         float aspect = fov[1] / fov[0];

@@ -653,9 +653,11 @@ void SVOOptixConeCaster::ConeTraceFromCamera(// Output
 
 void SVOOptixConeCaster::CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
                                                   const Vector2f* dProjJitters,
+                                                  const float* dGuidingThresholds,
                                                   SVOOptixRadianceBuffer::SegmentedField<float*> fieldSegments,
                                                   bool useSceneAccelerator,
-                                                  float coneAperture)
+                                                  float coneAperture,
+                                                  float guidingEnableThreshold)
 {
     // Copy Params to GPU
     OctreeAccelParams& params = hOptixLaunchParams;
@@ -669,6 +671,8 @@ void SVOOptixConeCaster::CopyRadianceMapGenParams(const Vector4f* dRadianceField
     params.fieldSegments = fieldSegments;
     params.dRadianceFieldRayOrigins = dRadianceFieldRayOrigins;
     params.dProjJitters = dProjJitters;
+    params.dGuidingThresholds = dGuidingThresholds;
+    params.guidingEnableThreshold = guidingEnableThreshold;
     params.binOffset = 0;
 
     CUDA_CHECK(cudaMemcpyAsync(dOptixLaunchParams,

@@ -159,6 +159,32 @@ class DeviceMemory : public DeviceMemoryI
         size_t                      Size() const override;
 };
 
+
+// Virtual Memory Backed device memory
+// this memory is technically contiguous
+// but in practice it is small chunks of physical memory
+// unified using VM system.
+// Please check the link below for extra information
+// https://developer.nvidia.com/blog/introducing-low-level-gpu-virtual-memory-management/
+//
+// Peer strategy type is repsonsible for partitioning the
+// chunks between devices on a multi-device system
+
+//class DeviceAllocStrategyI;
+//class SDeviceAllocStrategy;
+//class MDeviceGenericAllocStrategy; // Equal
+//class MDeviceCapacityAllocStrategy; // Capacity based
+
+//template<int ChunkSize = 128> // MiB
+//class DeviceVirtualMemory
+//{
+//    DeviceVirtualMemory(DeviceAllocaStrategyI&, size_t size);
+//
+//    // This memory has an efficient implementation of enlarge
+//    // So it is provided
+//    void EnlargeBuffer(size_t newSize);
+//};
+
 namespace GPUMemFuncs
 {
     template <class GPUMem>

@@ -34,9 +34,10 @@ struct PathNode
     // Local Position of the path
     Vector3f                worldPosition;
     // By design all path chains are assumed to have
-    // Camera -> Light ordering.
-    // Meaning that if you keep accessing next
-    // you will end up on the light
+    // Camera -> Light or vice versa.
+    
+    // This is technically not needed since everything is static,
+    // However it is easier to debug using these.
     Vector<2, IndexType>    prevNext;
 
     template <class Node>
@@ -136,9 +137,12 @@ struct PPGPathNode : public PathGuidingNode
 
 struct WFPGPathNode : public PathGuidingNode
 {
-    Vector2us               packedNormal;
+    // Unused 
+    // bool                    neeIsHit;
+
     // For testing
     float                   pdf;
+    Vector2us               packedNormal;
 
     __device__ Vector3f     Normal() const;
     __device__ void         SetNormal(const Vector3f& normal);

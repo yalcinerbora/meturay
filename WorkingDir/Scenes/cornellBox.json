@@ -80,6 +80,7 @@
 			"accelerator": 0,
             "radiance": [68, 48, 16]
             //"radiance": [136, 96, 32]
+            //"radiance": [2720, 1920, 640]
             //"radiance": [1.7, 1.2, 0.4]
 		}
 	],
@@ -178,7 +179,7 @@
             "id": 11,
             "type": "Single",
             "layout": "trs",
-            "translate": [-0.005, 1.85, -0.03],
+            "translate": [-0.005, 1.65, -0.03],
             "rotate": [0, 0, 0],
             "scale": [0.80, 0.025, 0.80]
         },
@@ -292,12 +293,12 @@
         { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
         //{ "transform": 9, "accelerator": 0, "material": 4, "primitive": 1},
         // Short Box
-        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
+        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1}
         //{ "transform": 10, "accelerator": 0, "material": 5, "primitive": 1}
         //,
 
         // Glass
-        { "transform": 12, "accelerator": 0, "material": 3, "primitive": 2}
+        //{ "transform": 12, "accelerator": 0, "material": 3, "primitive": 2}
          // Occuluder Prism
         //{ "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
 	],

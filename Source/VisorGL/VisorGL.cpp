@@ -348,6 +348,10 @@ VisorGL::~VisorGL()
 
     if(window != nullptr) glfwDestroyWindow(window);
     GLFWCallbackDelegator::Instance().DetachWindow(window);
+
+
+    // Call Terminate
+    commandList.Terminate();
 }
 
 bool VisorGL::IsOpen()

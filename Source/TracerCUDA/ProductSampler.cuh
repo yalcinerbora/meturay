@@ -311,10 +311,9 @@ void ProductSampler<TPB, X, Y, PX, PY>::MultiplyWithBXDF(float(&productField)[RE
         float radiance = (linearId < (PX * PY)) ?
                             shMem.sRadianceFieldSmall[loc2D[1]][loc2D[0]]
                             : 0.0f;
-        //productField[j] = max(MathConstants::VeryLargeEpsilon, bxdfGray * radiance);
-        productField[j] = max(0.01f, bxdfGray * radiance);
+        productField[j] = max(MathConstants::VeryLargeEpsilon, bxdfGray * radiance);
 
-        //ADD TEST
+        //TEST
         //productField[j] = max(0.01f, radiance);
 
     }

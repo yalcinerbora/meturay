@@ -158,7 +158,7 @@ GuideDebugGUIFuncs::RenderImageWithZoomTooltip(TextureGL& tex,
     flags |= ImGuiTexInspect::InspectorFlags_NoAutoReadTexture;
     flags |= ImGuiTexInspect::InspectorFlags_NoBorder;
     flags |= ImGuiTexInspect::InspectorFlags_NoTooltip;
-    //flags |= ImGuiTexInspect::InspectorFlags_NoGrid;
+    flags |= ImGuiTexInspect::InspectorFlags_NoGrid;
 
     if(ImGuiTexInspect::BeginInspectorPanel("##RefImage", texId,
                                             ImVec2(static_cast<float>(tex.Size()[0]),

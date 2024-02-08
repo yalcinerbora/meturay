@@ -49,7 +49,10 @@ struct OctreeAccelParams
             // All of these are determined per bin
             const Vector4f*         dRadianceFieldRayOrigins;
             const Vector2f*         dProjJitters;
+            const float*            dGuidingThresholds;
+            float                   guidingEnableThreshold;
             int32_t                 binOffset;
+
         };
     };
     //....

@@ -549,9 +549,14 @@ void KCBottomUpFilterIrradiance(//I-O
                                                         nodeIndex, false);
 
         // Average
+        // Irradiance
         const half HALF_MAX_LOCAL = static_cast<half>(MRAY_HALF_MAX);
         Vector2h avgIrrad = Vector2h(0.0f);
         Vector2uc validChildrenCount = Vector2uc(0);
+        // Guiding Factor
+        uint8_t validGuidingCount = 0;
+        float avgFactor = 0.0f;
+
         for(uint32_t i = 0; i < childrenCount; i++)
         {
             // Get the irradiance
@@ -563,17 +568,27 @@ void KCBottomUpFilterIrradiance(//I-O
             // During average normals are swapped
             bool swapIrrad = (childNormal.Dot(normal) < 0);
             #pragma unroll
-            for(int i = 0; i < 2; i++)
+            for(int j = 0; j < 2; j++)
             {
                 // Read index may be different if normals are different
-                int readIndex = (swapIrrad) ? ((i + 1) % 2) : i;
+                int readIndex = (swapIrrad) ? ((j + 1) % 2) : j;
 
                 if(irradiance[readIndex] != HALF_MAX_LOCAL)
                 {
-                    validChildrenCount[i]++;
-                    avgIrrad[i] += irradiance[readIndex];
+                    validChildrenCount[j]++;
+                    avgIrrad[j] += irradiance[readIndex];
                 }
             }
+
+
+            //
+            float factor = payload.ReadGuidingFactor(childrenIndex + i, childrenAreLeaf);
+            if(!isnan(factor))
+            {
+                validGuidingCount++;
+                avgFactor += factor;
+            }
+
         }
 
         const half ONE = static_cast<half>(1.0f);
@@ -587,8 +602,13 @@ void KCBottomUpFilterIrradiance(//I-O
         // Normalize & Clamp the half range for now
         Vector2h irradClampled = Vector2h((avgIrrad[0] <= HALF_MAX_LOCAL) ? avgIrrad[0] : half(MRAY_HALF_MAX),
                                           (avgIrrad[1] <= HALF_MAX_LOCAL) ? avgIrrad[1] : half(MRAY_HALF_MAX));
+
+        // Guiding Factor
+        half avgFactorHalf = avgFactor / static_cast<float>(validGuidingCount);
+
         // Now set
         payload.dAvgIrradianceNode[nodeIndex] = irradClampled;
+        payload.dGuidingFactorNode[nodeIndex] = avgFactorHalf;
     }
 }
 
@@ -964,7 +984,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                             treeGPU.payload.dSampleCountLeaf,
                                             treeGPU.payload.dAvgIrradianceLeaf,
                                             treeGPU.payload.dNormalAndSpecLeaf,
-                                            treeGPU.payload.dGuidingFactorLeaf,
+                                            treeGPU.payload.dShadowRayHitLeaf,
+                                            treeGPU.payload.dShadowRayMissLeaf,
                                             //treeGPU.payload.dMicroQuadTreeLeaf,
                                             // Node Offsets
                                             treeGPU.dLevelNodeOffsets),
@@ -979,7 +1000,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
                                         totalNodeCount,
                                         //totalNodeCount,
                                         // Payload Leaf
-                                        hUniqueVoxelCount, hUniqueVoxelCount, hUniqueVoxelCount,
+                                        hUniqueVoxelCount, hUniqueVoxelCount,
+                                        hUniqueVoxelCount, hUniqueVoxelCount,
                                         hUniqueVoxelCount, hUniqueVoxelCount,
                                         //hUniqueVoxelCount,
                                         // Offsets
@@ -1001,6 +1023,10 @@ TracerError AnisoSVOctreeCPU::Constrcut(const AABB3f& sceneAABB, uint32_t resolu
     // Set accumulators to zero
     CUDA_CHECK(cudaMemset(treeGPU.payload.dTotalIrradianceLeaf, 0x00, hUniqueVoxelCount * sizeof(Vector2f)));
     CUDA_CHECK(cudaMemset(treeGPU.payload.dSampleCountLeaf, 0x00, hUniqueVoxelCount * sizeof(Vector2ui)));
+
+    CUDA_CHECK(cudaMemset(treeGPU.payload.dShadowRayHitLeaf, 0x00, hUniqueVoxelCount * sizeof(uint32_t)));
+    CUDA_CHECK(cudaMemset(treeGPU.payload.dShadowRayMissLeaf, 0x00, hUniqueVoxelCount * sizeof(uint32_t)));
+
     // Copy the generated offsets
     CUDA_CHECK(cudaMemcpy(treeGPU.dLevelNodeOffsets, levelNodeOffsets.data(),
                           levelNodeOffsets.size() * sizeof(uint32_t),
@@ -1259,7 +1285,8 @@ TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
                                             treeGPU.payload.dSampleCountLeaf,
                                             treeGPU.payload.dAvgIrradianceLeaf,
                                             treeGPU.payload.dNormalAndSpecLeaf,
-                                            treeGPU.payload.dGuidingFactorLeaf,
+                                            treeGPU.payload.dShadowRayHitLeaf,
+                                            treeGPU.payload.dShadowRayMissLeaf,
                                             //treeGPU.payload.dMicroQuadTreeLeaf,
                                             // Node Offsets
                                             treeGPU.dLevelNodeOffsets),
@@ -1274,11 +1301,12 @@ TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
                                         treeGPU.nodeCount,
                                         //treeGPU.nodeCount,
                                         // Payload Leaf
-                                        treeGPU.leafCount, treeGPU.leafCount, treeGPU.leafCount,
+                                        treeGPU.leafCount, treeGPU.leafCount,
+                                        treeGPU.leafCount, treeGPU.leafCount,
                                         treeGPU.leafCount, treeGPU.leafCount,
                                         //treeGPU.leafCount,
                                         // Offsets
-                                        treeGPU.levelOffsetCount
+                                        levelNodeOffsets.size()
                                    });
 
     // Now copy stuff
@@ -1341,9 +1369,9 @@ TracerError AnisoSVOctreeCPU::Constrcut(const std::vector<Byte>& data,
                           payloadSizes[7], cudaMemcpyHostToDevice));
     offset += payloadSizes[7];
     // "dGuidingFactorLeaf"
-    CUDA_CHECK(cudaMemcpy(treeGPU.payload.dGuidingFactorLeaf, data.data() + offset,
-                          payloadSizes[8], cudaMemcpyHostToDevice));
-    offset += payloadSizes[8];
+    //CUDA_CHECK(cudaMemcpy(treeGPU.payload.dGuidingFactorLeaf, data.data() + offset,
+    //                      payloadSizes[8], cudaMemcpyHostToDevice));
+    //offset += payloadSizes[8];
     //// "dMicroQuadTreeLeaf"
     //CUDA_CHECK(dSampleCountLeaf(treeGPU.payload.dMicroQuadTreeLeaf, data.data() + offset,
     //                            payloadSizes[9], cudaMemcpyHostToDevice));
@@ -1655,9 +1683,9 @@ void AnisoSVOctreeCPU::DumpSVOAsBinary(std::vector<Byte>& data,
                           payloadSizes[7], cudaMemcpyDeviceToHost));
     offset += payloadSizes[7];
     // "dGuidingFactorLeaf"
-    CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dGuidingFactorLeaf,
-                          payloadSizes[8], cudaMemcpyDeviceToHost));
-    offset += payloadSizes[8];
+    //CUDA_CHECK(cudaMemcpy(data.data() + offset, treeGPU.payload.dGuidingFactorLeaf,
+    //                      payloadSizes[8], cudaMemcpyDeviceToHost));
+    //offset += payloadSizes[8];
     //// "dMicroQuadTreeLeaf"
     //CUDA_CHECK(dSampleCountLeaf(data.data() + offset, treeGPU.payload.dMicroQuadTreeLeaf,
     //                            payloadSizes[9], cudaMemcpyDeviceToHost));

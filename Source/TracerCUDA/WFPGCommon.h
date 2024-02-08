@@ -18,13 +18,16 @@ enum class WFPGRenderMode
     // then queries the hit positions over the SVO
     // and outputs false color for each leaf.
     SVO_INITIAL_HIT_QUERY,
-
     // Tracer does path tracing (with path guiding)
     // normally.
     // However; after all bounces are calculated and SVO
     // radiance is updated, it does one last SVO trace to query
     // radiances and outputs that values to the framebuffer instead
     SVO_RADIANCE,
+    // Display the binning scheme of the first bounce    
+    BINNING,
+    // Display guiding factor
+    GUIDING_FACTOR,
     //
     END
 };
@@ -44,7 +47,9 @@ static constexpr std::array<std::string_view, static_cast<size_t>(WFPGRenderMode
     "SVOFalseColor",
     "SVONormal",
     "SVOInitialHit",
-    "SVORadiance"
+    "SVORadiance",
+    "Binning",
+    "GuidingFactor"
 };
 
 static constexpr std::array<std::string_view, static_cast<size_t>(WFPGFilterMode::END)> WFPGFilterModeNames =

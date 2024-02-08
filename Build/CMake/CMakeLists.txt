@@ -119,6 +119,8 @@ if(MSVC)
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zi>
                         $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/external:W0>
+                        #
+                        $<$<COMPILE_LANGUAGE:CXX>:-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING>
                         # Test
                         # DROPPED W4 On MSVC it shows many unnecessary info
                         # These Flags for W4 however /external does not work properly i think

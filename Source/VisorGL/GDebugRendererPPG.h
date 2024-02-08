@@ -132,6 +132,7 @@ class GDebugRendererPPG : public GDebugRendererI
         // FBO Outputs
         static constexpr GLenum     OUT_COLOR = 0;
         static constexpr GLenum     OUT_VALUE = 1;
+        static constexpr GLenum     OUT_RADIANCE = 2;
 
     private:
         static constexpr const char* SD_TREE_NAME = "sdTrees";
@@ -148,6 +149,7 @@ class GDebugRendererPPG : public GDebugRendererI
         //
         TextureGL               currentTexture;
         std::vector<float>      currentValues;
+        std::vector<float>      radianceArray;
         float                   maxValueDisplay;
         // Options
         bool                    renderPerimeter;

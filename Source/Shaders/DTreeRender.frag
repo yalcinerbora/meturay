@@ -11,9 +11,11 @@
 // Definitions
 #define IN_UV layout(location = 0)
 #define IN_VALUE layout(location = 1)
+#define IN_RADIANCE layout(location = 2)
 
 #define OUT_COLOR layout(location = 0)
 #define OUT_VALUE layout(location = 1)
+#define OUT_RADIANCE layout(location = 2)
 
 #define T_IN_GRADIENT layout(binding = 0)
 
@@ -23,10 +25,12 @@
 // Input
 in IN_UV vec2 fUV;
 in IN_VALUE float fValue;
+in IN_RADIANCE float fRadiance;
 
 // Output
 out OUT_COLOR vec4 fboColor;
 out OUT_VALUE float fboValue;
+out OUT_RADIANCE float fboRadiance;
 // Uniforms
 U_PERIMIETER_ON uniform bool perimeterOn;
 U_PERIMIETER_COLOR uniform vec3 perimeterColor;
@@ -49,5 +53,6 @@ void main(void)
 						: vec4(gradValue, 1.0f);
 
 		fboValue = fValue;
+		fboRadiance = fRadiance;
 	}
 }

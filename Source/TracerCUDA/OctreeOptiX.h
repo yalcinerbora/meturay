@@ -102,9 +102,11 @@ class SVOOptixConeCaster
     // on the scene
     void                    CopyRadianceMapGenParams(const Vector4f* dRadianceFieldRayOrigins,
                                                      const Vector2f* dProjJitters,
+                                                     const float* dGuidingThresholds,
                                                      SVOOptixRadianceBuffer::SegmentedField<float*>,
                                                      bool useSceneAccelerator,
-                                                     float coneAperture);
+                                                     float coneAperture,
+                                                     float guidingEnableThreshold);
     void                    RadianceMapGen(uint32_t segmentOffset,
                                            uint32_t totalRayCount);
 };

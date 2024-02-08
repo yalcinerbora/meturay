@@ -311,6 +311,7 @@ Vector4 SceneNodeJson::CommonVector4(const std::string& name, double time) const
 {
     return SceneIO::LoadVector<4, float>(node[name], time);
 }
+
 Matrix4x4 SceneNodeJson::CommonMatrix4x4(const std::string& name, double time) const
 {
     return SceneIO::LoadMatrix<4, float>(node[name], time);
@@ -350,6 +351,7 @@ std::vector<Vector3> SceneNodeJson::CommonVector3List(const std::string& name, d
 {
     return CommonList<Vector3, SceneIO::LoadVector<3, float>>(name, time);
 }
+
 std::vector<Vector4> SceneNodeJson::CommonVector4List(const std::string& name, double time) const
 {
     return CommonList<Vector4, SceneIO::LoadVector<4, float>>(name, time);
@@ -502,7 +504,6 @@ OptionalNodeList<bool> SceneNodeJson::AccessOptionalBool(const std::string& name
     return AccessOptional<bool, SceneIO::LoadBool>(name, time);
 }
 
-
 OptionalNodeList<float> SceneNodeJson::AccessOptionalFloat(const std::string& name, double time) const
 {
     return AccessOptional<float, SceneIO::LoadNumber<float>>(name, time);
@@ -542,7 +543,6 @@ OptionalNodeList<BoolList> SceneNodeJson::AccessOptionalBoolList(const std::stri
 {
     return AccessOptionalList<bool, SceneIO::LoadBool>(name, time);
 }
-
 
 OptionalNodeList<FloatList> SceneNodeJson::AccessOptionalFloatList(const std::string& name, double time) const
 {

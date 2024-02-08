@@ -16,6 +16,7 @@
 
 #define OUT_UV layout(location = 0)
 #define OUT_VALUE layout(location = 1)
+#define OUT_RADIANCE layout(location = 2)
 
 #define U_MAX_RADIANCE layout(location = 0)
 #define U_MAX_DEPTH layout(location = 3)
@@ -33,6 +34,7 @@ in IN_RADIANCE float vRadiance;
 out gl_PerVertex {vec4 gl_Position;};	// Mandatory
 out OUT_UV vec2 fUV;
 out OUT_VALUE float fValue;
+out OUT_RADIANCE float fRadiance;
 
 // Uniforms
 U_MAX_RADIANCE uniform float maxRadiance;
@@ -60,6 +62,7 @@ void main(void)
 
 	// Pass Value to Fragment Shader
 	fValue = vRadiance;
+	fRadiance = radiance;
 
 	// [0,1] normalized position
 	vec2 position = vPos * scale + vOffset;

@@ -247,6 +247,11 @@ void KCRadGenSVO()
     Vector3f rayOrigin = Vector3f(originAndTmin);
     Vector2f tMinMax = Vector2f(originAndTmin[3], FLT_MAX);
 
+    // Check bins guiding ratio
+    float guidingMetric = params.dGuidingThresholds[binIndex];
+    // Skip guiding entirely if metric is not satisfied
+    if(guidingMetric <= params.guidingEnableThreshold) return;
+
     // Determine block validity using tMin (which should be NAN)
     // TODO: Ask on the OptiX forums
     // isnan() does not work
