@@ -224,7 +224,7 @@ ProductSampler<TPB, X, Y, PX, PY>::ProductSampler(// Temp
             shMem.sRadianceFieldSmall[cellId2D[1]][cellId2D[0]] = totalReduce / dataPerProduct;
             shMem.sNormalizationConstants[cellId2D[1]][cellId2D[0]] = maxValue;
 
-            if(totalReduce / dataPerProduct == 0.0f) printf("ProductRegion is zero!\n");
+            if(totalReduce == 0.0f) printf("Product Region is zero!\n");
         }
     }
     __syncthreads();
@@ -649,7 +649,7 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::SampleMIS(bool& isBxDFSelected,
             //sampledUV = Vector2f(rng.Uniform(), rng.Uniform());
 
             pdfSampled *= projectionPdfMultiplier;
-            
+
 
             Vector3f wi = -(metaSurfGenerator.Ray(gRayIds[rayIndex]).ray.getDirection());
             Vector3f wo = NormProject(sampledUV);

@@ -3,7 +3,7 @@
 #include <bitset>
 
 template<class Enum, int S> class Flags;
-template <class Enum, int S> Flags<Enum, S> operator|(Enum e1, Enum e2);
+template<class Enum, int S> Flags<Enum, S> operator|(Enum e1, Enum e2);
 
 template<class Enum, int S = static_cast<int>(Enum::END)>
 class Flags

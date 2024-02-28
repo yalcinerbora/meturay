@@ -873,6 +873,7 @@ void WFPGTracer::GenerateGuidedDirections()
             //int32_t innerIterCount = options.productPG ? BLOCK_PER_BIN : 1;
             for(int bId = 0; bId < innerIterCount; bId++)
             {
+                //METU_LOG("CallingKernel Product");
                 gpu.ExactKC_X(kernelShmemSize, (cudaStream_t)0,
                               kernelTPB, pgKernelBlockCount,
                               //

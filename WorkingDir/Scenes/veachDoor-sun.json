@@ -19,8 +19,8 @@
         // "up"       : [0, 1, 0],
 
         // Product Demo
-        "gaze"     : [175.584, 79.6209, 270.196],
-        "position" : [176.191, 79.7182, 270.985],
+        "gaze"     : [52.4099, 69.2561, 210.617],
+        "position" : [52.8923, 69.3484, 211.488],
         "up"       : [0, 1, 0],
 
 
@@ -187,7 +187,7 @@
     {
         "id": 6,
         //"file": "../Textures/ModernPool/kloppenheim_05_4k.exr",
-        "file": "../Textures/uniform-hdr.exr",
+        "file": "../Textures/uniform-hdr2-low.exr",
         "generateMipmaps" : true
     }],
 

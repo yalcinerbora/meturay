@@ -1,0 +1,990 @@
+{
+	"Cameras": [
+    {
+        // Overall Camera
+		"id": 0,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [90, 50.625],
+        "planes": [0.01, 200.0],
+
+        "gaze": [0.022981081157922745, 1.123810887336731, 1.5617315769195557],
+        "position": [2.2500898838043213, 1.3117071390151978, 6.178715705871582],
+		"up": [0.0, 1.0, 0.0]
+	},
+
+    {
+        // Overall Camera
+		"id": 1,
+		"type": "Pinhole",
+		// 16:9 FoV
+		"fov": [90, 50.625],
+        "planes": [0.01, 200.0],
+
+        "gaze"     : [1.17527, 0.720387, 3.55446],
+        "position" : [1.93728, 1.03651, 4.11965],
+        "up"       : [0, 1, 0]
+	}
+],
+
+    "Mediums": [
+        {
+            "id" : 0,
+            "type" : "Vacuum"
+        },
+        {
+            // Glass Medium
+            "id": 1,
+            "type" : "Homogeneous",
+
+            "absorption": [0, 0 ,0],
+            "scattering": [0, 0, 0],
+            "ior": 1.5,
+            "phase": 0
+        }
+    ],
+
+    "Lights": [
+        // Black Background
+        {"id": 0, "type": "Null"},
+        // Window Lights
+        {
+            "id": 1, "type": "Primitive", "primitive": 0, "accelerator": 1,
+            "radiance" : [13.748, 13.748, 13.748]
+        },
+        {
+            "id": 2, "type": "Primitive", "primitive": 0, "accelerator": 1,
+            "radiance" : [17.777, 17.777, 17.777]
+        },
+        {
+            "id": 3, "type": "Primitive", "primitive": 0, "accelerator": 1,
+            "radiance" : [1.08059, 1.08059, 1.08059]
+        }
+    ],
+
+    "Transforms": [
+        {"id": 0, "type": "Identity"},
+        // Light Transforms
+        {
+            "id":[1, 2, 3, 4],
+            "type": "Single",
+            "layout": "matrix4x4",
+            "major": "row",
+            "matrix":
+            [
+                [
+                    1.0566175, 0, 0, 0.213572,
+                    0,	2.0542975, 0, 1.96307,
+                    0,	0,	1.25,	0.383951,
+                    0,	0,	0,	1
+                ],
+                [
+                    0.7000525,	0,	0.6009675,	-1.03113,
+                    0,	2.1025925,	0,	1.96592,
+                    -0.38384,	0,	1.096055,	0.659918,
+                    0,	0,	0, 1
+                ],
+                [
+                    0.7024925,	0,	-0.59395,	1.45584,
+                    0,	2.1025925,	0,	1.96592,
+                    0.3793575,	0,	1.099875,	0.658936,
+                    0,	0,	0,	1
+                ],
+                [
+                    -3.81685,	0,	0,	-0.149774,
+                    0,	2.4117525,	0,	2.03104,
+                    0,	0,	-1.25,	8.14201,
+                    0,	0,	0,	1
+                ]
+            ]
+        },
+        // Wall Transform
+        {
+            "id": 5,
+            "type": "Single",
+            "layout": "matrix4x4",
+            "major": "row",
+            "matrix":
+            [
+                1.82938, 0, 0, -0.142806,
+                0, 1.69577, -6.85958e-008, 1.52932,
+                0, -6.85958e-008, 3.26505, 8.18283,
+                0, 0, 0, 1
+            ]
+        },
+        // Light Transforms (TRS)
+        {
+            "id":[6, 7, 8, 9],
+            "type": "Single",
+            "layout": "trs",
+            "translate":
+            [
+                [0.21357160806655884, 1.9630746841430664, 0.38395148515701294],
+                [-1.0311269760131836, 1.9659218788146973, 0.6599181294441223],
+                [ 1.4558370113372803, 1.9659219980239868, 0.658936083316803],
+                [-0.14977437257766724, 2.031040668487549, 8.142012596130371]
+
+            ],
+            "rotate":
+            [
+                [ 90.0, 0.0, 0.0],
+                [ 90.0, 0.0, -28.735916137695312],
+                [ 90.0, 0.0, 28.369735717773438],
+                [ 90.0, 0.0, -179.99998474121094]
+            ],
+            "scale":
+            [
+                [ 0.8452945351600647, 1.0, 1.6434378623962402],
+                [ 0.638702392578125, 1.0, 1.6820743083953857],
+                [ 0.6387024521827698, 1.0, 1.6820743083953857],
+                [ 3.0534889698028564, 1.0, 1.9294016361236572]
+            ]
+        }
+    ],
+
+    "Textures":
+    [
+        // Apple
+        {"id": 0, "file": "../Textures/LivingRoom/apple.jpg"},
+        // Book Spines
+        {"id": 1, "file": "../Textures/LivingRoom/book-spines.jpg"},
+        // Carpet
+        {"id": 2, "file": "../Textures/LivingRoom/carpet-text3b.jpg"},
+        // Cushion 1
+        {"id": 3, "file": "../Textures/LivingRoom/cushion-green-circles.jpg"},
+        // Cushion 2
+        {"id": 4, "file": "../Textures/LivingRoom/cushion-purple-yellow-stripe.jpg"},
+        // Cushion 3
+        {"id": 5, "file": "../Textures/LivingRoom/cushion-stripe-purple.jpg"},
+        // Frame
+        {"id": 6, "file": "../Textures/LivingRoom/frame.jpg"},
+        // Picture1
+        {"id": 7, "file": "../Textures/LivingRoom/picture11-vert.jpg"},
+        // Picture2
+        {"id": 8, "file": "../Textures/LivingRoom/picture4-grey.jpg"},
+        // Radio Dial
+        {"id": 9, "file": "../Textures/LivingRoom/radio-dial-idea.jpg"},
+        // Shade Paper
+        {"id": 10, "file": "../Textures/LivingRoom/Shade-paper.jpg"},
+        // Shade Stripes
+        {"id": 11, "file": "../Textures/LivingRoom/shade-stripes.jpg"},
+        // Wood
+        {"id": 12, "file": "../Textures/LivingRoom/wood4.jpg"}
+    ],
+
+    "Materials":
+    [
+        // Radio
+        { "id": 0, "type": "Lambert", "albedo": {"texture": 9, "channels": "rgb"} },    // Dial
+        { "id": 1, "type": "Lambert", "albedo": [0.389509, 0.372589, 0.293747] },       // Handle
+        { "id": 2, "type": "Lambert", "albedo": [0.015078, 0.015078, 0.015078] },       // Inside
+        { "id": 3, "type": "Lambert", "albedo": [0.358375, 0.300936, 0.128617] },       // Knob
+        { "id": 4, "type": "Lambert", "albedo": [0.066822, 0.028495, 0.013827] },       // Surround
+        // Floor
+        {
+            "id": 5, "type": "Unreal",
+            "albedo": {"texture": 12, "channels": "rgb"},
+            "metallic": 0.0,
+            "specular": 1.0,
+            "roughness": 0.15
+        },
+        // Sofa Leather
+        {
+            "id": 6, "type": "Unreal",
+            "albedo": [0.79311, 0.79311, 0.79311],
+            "metallic": 0.0,
+            "specular": 1.0,
+            "roughness": 0.24
+        },
+        // Cushions
+        {
+            "id": [7, 8, 9], "type": "Lambert",
+            "albedo":
+            [
+                {"texture": 4, "channels": "rgb"},
+                {"texture": 3, "channels": "rgb"},
+                {"texture": 5, "channels": "rgb"}
+            ]
+        },
+        // Lamp
+        { "id": 10,  "type": "Lambert", "albedo": {"texture": 11, "channels": "rgb"}},
+        {
+            "id": 11, "type": "Unreal",
+            "albedo": [0.578596, 0.578596, 0.578596],
+            "metallic": 0.0,
+            "specular": 1.0,
+            "roughness": 0.1
+        },
+        // Dishes
+        {
+            "id": 12, "type": "Unreal",
+            "albedo": [0.578596, 0.578596, 0.578596],
+            "metallic": 0.0,
+            "specular": 1.0,
+            "roughness": 0.1
+        },
+        // Ceramic
+        {
+            "id": 13, "type": "Unreal",
+            "albedo": [1, 1, 1],
+            "metallic": 0.0,
+            "specular": 1.0,
+            "roughness": 0.1
+        },
+        // Magazine
+        { "id": 14,  "type": "Lambert", "albedo": [0.217638, 0.217638, 0.217638]},
+        // Apple
+        { "id": 15,  "type": "Lambert", "albedo": {"texture": 0, "channels": "rgb"}},
+        // Book
+        { "id": 16,  "type": "Lambert", "albedo": {"texture": 1, "channels": "rgb"}},
+        // Love Letters
+        { "id": 17,  "type": "Lambert", "albedo": [0.0784314, 0.0392157, 0.0392157]},
+        { "id": 18,  "type": "Lambert", "albedo": [0.578596, 0.578596, 0.578596]},
+        // White Paint
+        {
+            "id": 19, "type": "Unreal",
+            "albedo": [1, 1, 1],
+            "metallic": 0.0,
+            "specular": 1.0,
+            "roughness": 0.15
+        },
+        // Walls
+        { "id": 20,  "type": "Lambert", "albedo": [0.6, 0.6, 0.6]},
+        // TV Screen and Bevel
+        { "id": 21,  "type": "Refract", "albedo": [1, 1, 1], "medium": 1},
+        // Black Raught Iron
+        {
+            "id": 22, "type": "Unreal",
+            "albedo": [0.13, 0.1, 0.09],
+            "metallic": 1.0,
+            "specular": 0.5,
+            "roughness": 0.4
+        },
+        // Small Picure Frame
+        { "id": 23,  "type": "Lambert", "albedo": [0.01, 0.01, 0.01]},
+        // Ceiling Lamp Shade
+        { "id": 24,  "type": "Lambert", "albedo": {"texture": 10, "channels": "rgb"}},
+        // Light Fitting and Ceiling Shade Wire
+        { "id": 25,  "type": "Lambert", "albedo": [0.578596, 0.578596, 0.578596]},
+        // Carpet
+        { "id": 26,  "type": "Lambert", "albedo": {"texture": 2, "channels": "rgb"}},
+        // Radio Plastic
+        {
+            "id": 27, "type": "Unreal",
+            "albedo": [0.64, 0.600153, 0.43449],
+            "metallic": 0.0,
+            "specular": 1.0,
+            "roughness": 0.1
+        },
+        // Picture Frame and Pictures
+        {
+            "id": [28, 29, 30, 31], "type": "Lambert",
+            "albedo":
+            [
+                [0.578596, 0.578596, 0.578596],
+                {"texture": 7, "channels": "rgb"},
+                {"texture": 6, "channels": "rgb"},
+                {"texture": 8, "channels": "rgb"}
+            ]
+        },
+        // Socket
+        { "id": 32,  "type": "Lambert", "albedo": [0.578596, 0.578596, 0.578596]},
+        // Radiator
+        {
+            "id": [33, 34], "type": "Unreal",
+            "albedo": [[0.79311, 0.79311, 0.79311], [0.2, 0.2, 0.2]],
+            "metallic": [0.0, 1.0],
+            "specular": [1.0, 0.5],
+            "roughness": [0.15, 0.1]
+        },
+        // Blinds
+        {
+            "id": [35, 36], "type": "Lambert",
+            "albedo":
+            [
+                [0.578596, 0.578596, 0.578596],
+                [1, 1, 1]
+            ]
+        },
+        // Bush Logo
+        {
+            "id": 37, "type": "Unreal",
+            "albedo": [0.5, 0.5, 0.5],
+            "metallic": 1.0,
+            "specular": 0.5,
+            "roughness": 0.1
+        },
+        // Lamp Inner
+        { "id": 38,  "type": "Lambert", "albedo": [0.684615, 0.684615, 0.684615]},
+        // Radio Dial Back
+        { "id": 39,  "type": "Lambert", "albedo": {"texture": 9, "channels": "rgb"}},
+        // TV
+        {
+            "id": [40, 41], "type": "Unreal",
+            "albedo": [[0.0278596, 0.0278596, 0.0278596], [0.178596, 0.178596, 0.178596]],
+            "metallic": [0.0, 0.5],
+            "specular": [0.2, 0.3],
+            "roughness": [0.15, 0.25]
+        },
+        // Copper
+        {
+            "id": 42, "type": "Unreal",
+            "albedo": [0.98, 0.82, 0.75],
+            "metallic": 0.8,
+            "specular": 0.3,
+            "roughness": 0.35
+        }
+    ],
+
+    "Primitives": [
+        // Unit Plane
+        {
+            "id": 0,
+            "type": "Triangle",
+            "name": ".nodeTriangleIndexed",
+            "cullFace" : false,
+            "position": [[-0.5, -0.5, 0],
+                         [ 0.5, -0.5, 0],
+                         [ 0.5,  0.5, 0],
+                         [-0.5,  0.5, 0]],
+            "normal": [[0, 0, 1],
+                       [0, 0, 1],
+                       [0, 0, 1],
+                       [0, 0, 1]],
+            "uv": [[0, 0],
+                   [1, 0],
+                   [1, 1],
+                   [0, 1]],
+            "index": [0, 1, 2, 0, 2, 3]
+        },
+        // Walls
+        {
+            "id": 1, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh020.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 2, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh015.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Floor
+        {
+            "id": 3, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh019.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Lamp Stand
+        {
+            "id": 4, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh138.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Candle Holders
+        {
+            "id": 5, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh113.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 6, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh087.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 7, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh110.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Magazine
+        {
+            "id": 8, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh128.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Lamp Inner
+        {
+            "id": 9, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh095.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Apple
+        {
+            "id": 10, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh076.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 11, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh108.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 12, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh080.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 13, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh166.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Ceramic
+        {
+            "id": 14, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh088.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Love Letters
+        {
+            "id": 15, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh059.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 16, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh073.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 17, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh099.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 18, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh103.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 19, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh155.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 20, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh065.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 21, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh069.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 22, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh090.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 23, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh063.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 24, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh062.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Small Picture Frame
+        {
+            "id": 25, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh068.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 26, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh131.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 27, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh098.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 28, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh056.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 29, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh077.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 30, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh055.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 31, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh129.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        {
+            "id": 32, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh127.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        // Cushion
+        { "id": 33, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh118.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 34, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh104.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 35, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh160.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 36, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh114.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Sofa
+        { "id": 37, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh010.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 38, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh082.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 39, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh086.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 40, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh134.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 41, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh057.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 42, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh081.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 43, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh167.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 44, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh091.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 45, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh145.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Carpet
+        { "id": 46, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh008.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Books
+        { "id": 47, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh132.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 48, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh140.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 49, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh156.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 50, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh135.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 51, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh175.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 52, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh136.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 53, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh078.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 54, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh141.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 55, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh147.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 56, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh071.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 57, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh148.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 58, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh149.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 59, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh150.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 60, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh153.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 61, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh109.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 62, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh083.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 63, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh157.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 64, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh159.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Table
+        {
+            "id": 65, "type": "Triangle",
+            "name": "../Surfaces/LivingRoom/Mesh177.obj", "tag": "assimp_",
+            "innerIndex": 0, "cullFace": false
+        },
+        { "id": 66, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh054.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 67, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh158.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 68, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh007.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 69, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh079.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // White Paint
+        { "id": 70, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh161.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 71, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh143.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 72, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh176.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 73, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh139.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 74, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh162.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 75, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh092.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 76, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh067.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 77, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh172.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 78, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh022.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 79, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh137.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 80, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh021.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 81, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh115.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 82, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh120.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 83, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh017.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 84, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh016.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 85, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh119.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 86, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh014.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 87, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh151.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 88, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh013.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 89, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh111.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 90, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh101.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Socket
+        { "id": 91, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh165.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 92, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh100.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 93, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh085.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 94, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh116.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 95, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh011.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 96, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh053.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Blind Ends
+        { "id": 97, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh144.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 98, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh072.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 99, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh124.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 100, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh070.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 101, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh042.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 102, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh041.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 103, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh034.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 104, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh033.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 105, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh031.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Blind Wood Strip
+        { "id": 106, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh050.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 107, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh043.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 108, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh094.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Blind Material
+        { "id": 109, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh117.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 110, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh047.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 111, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh046.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 112, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh045.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 113, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh102.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 114, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh058.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Blind String
+        { "id": 115, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh036.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 116, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh039.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 117, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh125.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Blind String Knob
+        { "id": 118, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh179.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 119, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh038.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 120, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh037.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Black Raught Iron
+        { "id": 121, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh028.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 122, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh027.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 123, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh097.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 124, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh035.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 125, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh024.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 126, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh023.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 127, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh089.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Black Marble
+        { "id": 128, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh121.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Drawer Handles
+        { "id": 129, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh107.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 130, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh173.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 131, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh174.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Light Fitting
+        { "id": 132, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh064.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 133, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh052.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 134, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh112.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Ceiling Shade Wire
+        { "id": 135, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh066.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Ceiling Lamp Shade
+        { "id": 136, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh122.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // TV Bevel
+        { "id": 137, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh126.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 138, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh152.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Lamp Shade Outer
+        { "id": 139, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh171.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Picture Frame
+        { "id": 140, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh096.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 141, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh170.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 142, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh169.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 143, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh105.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Steel
+        { "id": 144, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh030.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 145, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh026.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radiator Base
+        { "id": 146, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh006.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 147, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh005.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radiator Enamel
+        { "id": 148, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh168.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 149, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh146.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 150, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh049.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 151, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh040.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 152, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh130.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 153, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh075.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 154, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh164.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 155, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh044.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radiator Knobs
+        { "id": 156, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh032.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 157, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh025.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Dishes
+        { "id": 158, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh004.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 159, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh003.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Ceramic
+        { "id": 160, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh002.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 161, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh051.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Dull Steel
+        { "id": 162, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh061.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radio
+        // Bush Logo
+        { "id": 163, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh084.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 164, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh012.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radio Plastic
+        { "id": 165, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh178.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 166, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh029.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 167, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh163.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 168, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh060.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radio Glass
+        { "id": 169, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh106.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radio Inside
+        { "id": 170, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh048.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radio Handle
+        { "id": 171, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh123.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radio Dial
+        { "id": 172, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh001.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 173, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh018.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 174, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh000.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Radio Metal
+        { "id": 175, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh075.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Chrome Handle
+        { "id": 176, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh154.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Edges
+        { "id": 177, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh133.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        { "id": 178, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh142.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Knob
+        { "id": 179, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh009.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Surround
+        { "id": 180, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh093.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false }
+
+    ],
+
+    "Accelerators":
+    [
+        {"id" : 0, "type" : "BasicBVH", "useStack": true},
+        {"id" : 1, "type" : "Linear"}
+    ],
+
+    //================================================//
+    //        Actual Scene Related Declarations       //
+    //================================================//
+    "BaseAccelerator": {"type": "BasicBVH"},
+    "BaseBoundaryLight": 0,
+    "BaseBoundaryTransform": 0,
+	"BaseMedium" : 0,
+
+    "Surfaces":
+    [
+        // Walls
+        {"transform": 5, "accelerator": 0, "material": 20, "primitive": 0},
+        {"transform": 0, "accelerator": 0, "material": 20, "primitive": 1},
+        {"transform": 0, "accelerator": 0, "material": 20, "primitive": 2},
+        // Floor
+        {"transform": 0, "accelerator": 0, "material": 5, "primitive": 3},
+        // Lamp Stand
+        {"transform": 0, "accelerator": 0, "material": 11, "primitive": 4},
+        // Candle Holders
+        {"transform": 0, "accelerator": 0, "material": 21, "primitive": 5},
+        {"transform": 0, "accelerator": 0, "material": 21, "primitive": 6},
+        {"transform": 0, "accelerator": 0, "material": 21, "primitive": 7},
+        // Magazine
+        {"transform": 0, "accelerator": 0, "material": 14, "primitive": 8},
+        // Lamp Shade Inner
+        {"transform": 0, "accelerator": 0, "material": 38, "primitive": 9},
+        // Apples
+        {"transform": 0, "accelerator": 0, "material": 15, "primitive": 10},
+        {"transform": 0, "accelerator": 0, "material": 15, "primitive": 11},
+        {"transform": 0, "accelerator": 0, "material": 15, "primitive": 12},
+        {"transform": 0, "accelerator": 0, "material": 15, "primitive": 13},
+        // Ceramic
+        {"transform": 0, "accelerator": 0, "material": 13, "primitive": 14},
+        {"transform": 0, "accelerator": 0, "material": 13, "primitive": 160},
+        {"transform": 0, "accelerator": 0, "material": 13, "primitive": 161},
+        // Love Letters
+        {"transform": 0, "accelerator": 0, "material": 17, "primitive": 15},
+        {"transform": 0, "accelerator": 0, "material": 17, "primitive": 16},
+        {"transform": 0, "accelerator": 0, "material": 17, "primitive": 17},
+        {"transform": 0, "accelerator": 0, "material": 17, "primitive": 18},
+        {"transform": 0, "accelerator": 0, "material": 17, "primitive": 19},
+        {"transform": 0, "accelerator": 0, "material": 17, "primitive": 20},
+        //
+        {"transform": 0, "accelerator": 0, "material": 18, "primitive": 21},
+        {"transform": 0, "accelerator": 0, "material": 18, "primitive": 22},
+        {"transform": 0, "accelerator": 0, "material": 18, "primitive": 23},
+        {"transform": 0, "accelerator": 0, "material": 18, "primitive": 24},
+        // Small Pictures
+        {"transform": 0, "accelerator": 0, "material": 30, "primitive": 25},
+        {"transform": 0, "accelerator": 0, "material": 23, "primitive": 26},
+        {"transform": 0, "accelerator": 0, "material": 23, "primitive": 27},
+        {"transform": 0, "accelerator": 0, "material": 30, "primitive": 28},
+        {"transform": 0, "accelerator": 0, "material": 30, "primitive": 29},
+        {"transform": 0, "accelerator": 0, "material": 23, "primitive": 30},
+        {"transform": 0, "accelerator": 0, "material": 30, "primitive": 31},
+        {"transform": 0, "accelerator": 0, "material": 23, "primitive": 32},
+        // Cushion
+        {"transform": 0, "accelerator": 0, "material": 9, "primitive": 33},
+        {"transform": 0, "accelerator": 0, "material": 9, "primitive": 36},
+        {"transform": 0, "accelerator": 0, "material": 7, "primitive": 34},
+        {"transform": 0, "accelerator": 0, "material": 8, "primitive": 35},
+        // Sofa
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 37},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 38},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 39},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 40},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 41},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 42},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 43},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 44},
+        {"transform": 0, "accelerator": 0, "material": 6, "primitive": 45},
+        // Carpet
+        {"transform": 0, "accelerator": 0, "material": 26, "primitive": 46},
+        // Books
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 47},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 48},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 49},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 50},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 51},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 52},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 53},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 54},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 55},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 56},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 57},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 58},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 59},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 60},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 61},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 62},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 63},
+        {"transform": 0, "accelerator": 0, "material": 16, "primitive": 64},
+        // Table
+        {"transform": 0, "accelerator": 0, "material": 13, "primitive": 65},
+        {"transform": 0, "accelerator": 0, "material": 13, "primitive": 66},
+        {"transform": 0, "accelerator": 0, "material": 13, "primitive": 67},
+        {"transform": 0, "accelerator": 0, "material": 13, "primitive": 68},
+        {"transform": 0, "accelerator": 0, "material": 25, "primitive": 69},
+        // White Paint
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 70},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 71},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 72},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 73},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 74},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 75},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 76},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 77},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 78},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 79},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 80},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 81},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 82},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 83},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 84},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 85},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 86},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 87},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 88},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 89},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 90},
+        // Socket
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 91},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 92},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 93},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 94},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 95},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 96},
+        // Blind Ends
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 97},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 98},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 99},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 100},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 101},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 102},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 103},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 104},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 105},
+        // Blind Wood Strip
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 106},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 107},
+        {"transform": 0, "accelerator": 0, "material": 32, "primitive": 108},
+        // Blind Material
+        {"transform": 0, "accelerator": 0, "material": 36, "primitive": 109},
+        {"transform": 0, "accelerator": 0, "material": 36, "primitive": 110},
+        {"transform": 0, "accelerator": 0, "material": 36, "primitive": 111},
+        {"transform": 0, "accelerator": 0, "material": 36, "primitive": 112},
+        {"transform": 0, "accelerator": 0, "material": 36, "primitive": 113},
+        {"transform": 0, "accelerator": 0, "material": 36, "primitive": 114},
+        // Blind String
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 115},
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 116},
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 117},
+        // Blind String Knob
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 118},
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 119},
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 120},
+        // Black Raught Iron
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 121},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 122},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 123},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 124},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 125},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 126},
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 127},
+        // Black Marble
+        {"transform": 0, "accelerator": 0, "material": 21, "primitive": 128},
+        // Drawer Handles
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 129},
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 130},
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 131},
+        // Light Fitting
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 132},
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 133},
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 134},
+        // Ceiling Shade Wire
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 135},
+        // Ceiling Lamp Shade
+        {"transform": 0, "accelerator": 0, "material": 24, "primitive": 136},
+        // TV
+        {"transform": 0, "accelerator": 0, "material": 40, "primitive": 137},
+        {"transform": 0, "accelerator": 0, "material": 41, "primitive": 138},
+        // Lamp Shade Outer
+        {"transform": 0, "accelerator": 0, "material": 10, "primitive": 139},
+        // Picture Frame
+        {"transform": 0, "accelerator": 0, "material": 28, "primitive": 140},
+        {"transform": 0, "accelerator": 0, "material": 28, "primitive": 141},
+        {"transform": 0, "accelerator": 0, "material": 31, "primitive": 142},
+        {"transform": 0, "accelerator": 0, "material": 29, "primitive": 143},
+        // Steel
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 144},
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 145},
+        // Raditor Base
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 146},
+        {"transform": 0, "accelerator": 0, "material": 19, "primitive": 147},
+        // Radiator Enamel
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 148},
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 149},
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 150},
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 151},
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 152},
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 153},
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 154},
+        {"transform": 0, "accelerator": 0, "material": 33, "primitive": 155},
+        // Raditor Knobs
+        {"transform": 0, "accelerator": 0, "material": 42, "primitive": 156},
+        {"transform": 0, "accelerator": 0, "material": 35, "primitive": 157},
+        // Dishes
+        {"transform": 0, "accelerator": 0, "material": 11, "primitive": 158},
+        {"transform": 0, "accelerator": 0, "material": 11, "primitive": 159},
+        // Dull Steel
+        {"transform": 0, "accelerator": 0, "material": 22, "primitive": 162},
+        // Radio
+        // Bush Logo
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 163},
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 164},
+        // Radio Plastic
+        {"transform": 0, "accelerator": 0, "material": 27, "primitive": 165},
+        {"transform": 0, "accelerator": 0, "material": 27, "primitive": 166},
+        {"transform": 0, "accelerator": 0, "material": 27, "primitive": 167},
+        {"transform": 0, "accelerator": 0, "material": 27, "primitive": 168},
+        // Glass
+        {"transform": 0, "accelerator": 0, "material": 21, "primitive": 169},
+        // Inside
+        {"transform": 0, "accelerator": 0, "material": 2, "primitive": 170},
+        // Handle
+        {"transform": 0, "accelerator": 0, "material": 1, "primitive": 171},
+        // Dial
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 172},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 173},
+        {"transform": 0, "accelerator": 0, "material": 0, "primitive": 174},
+        // Radio Metal
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 175},
+        // Chrome Handle
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 176},
+        // Edges
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 177},
+        {"transform": 0, "accelerator": 0, "material": 37, "primitive": 178},
+        // Knob
+        {"transform": 0, "accelerator": 0, "material": 3, "primitive": 179},
+        // Surround
+        {"transform": 0, "accelerator": 0, "material": 4, "primitive": 180}
+    ],
+
+     // Lights
+     "LightSurfaces": [
+        // Shelf Lights
+        { "light": 1, "transform": 1},
+        { "light": 2, "transform": 2},
+        { "light": 2, "transform": 3},
+        { "light": 3, "transform": 4}
+
+        // // Shelf Lights
+        // { "light": 1, "transform": 6},
+        // { "light": 2, "transform": 7},
+        // { "light": 2, "transform": 8},
+        // { "light": 3, "transform": 9}
+    ],
+    // Cameras
+    "CameraSurfaces": [{"camera": 0}, {"camera": 1}]
+}

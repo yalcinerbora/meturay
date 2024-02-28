@@ -1168,12 +1168,10 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
     //float stdDev;
     //Vector3f normal = svo.DebugReadNormal(stdDev, nodeId, isLeaf);
 
-
     // Utilize Exact Data
     GPUMetaSurface surface = metaSurfGenerator.AcquireWork(rayId);
     Vector3f normal = surface.WorldGeoNormal();
     Vector3f position = surface.WorldPosition();
-
 
     // Offset using the normal
     // TODO: This routine should not be on ray
@@ -1185,10 +1183,8 @@ inline void CalculateJitterAndBinRayOrigin(Vector4f& posTMin,
 
 
     // TODO: Better offset maybe?
-    //float tMin = (binVoxelSize * MathConstants::Sqrt3 +
-    //              MathConstants::LargeEpsilon);
-    //float tMin = (svo.LeafVoxelSize() * MathConstants::Sqrt3 +
-    //              MathConstants::LargeEpsilon);
+    //float tMin = (binVoxelSize * MathConstants::Sqrt3) * 10.0f;
+    //float tMin = (svo.LeafVoxelSize() * MathConstants::Sqrt3);
     float tMin = svo.LeafVoxelSize() * 0.15f;
     tMin += MathConstants::Epsilon;
 
@@ -1679,6 +1675,7 @@ static void KCGenAndSampleDistributionProduct(// Output
             continue;
         }
 
+
         // Generate Radiance Field
         float filteredRadiances[RT_ITER_COUNT];
         GenerateRadianceField<RNG, decltype(WrapFunc), decltype(RFieldProjFunc),
@@ -1743,6 +1740,7 @@ static void KCGenAndSampleDistributionProduct(// Output
                                               NormProjectionFunc,
                                               misRatio,
                                               0.25f * MathConstants::InvPi);
+
             }
 
             // Only warp leader has valid values
@@ -1926,7 +1924,7 @@ static void KCSampleDistributionOptiX(// Output
             sharedMem->sRayCount = rayRange[1] - rayRange[0];
             sharedMem->sOffsetStart = rayRange[0];
             sharedMem->sNodeId = gNodeIds[binIndex];
-            sharedMem->sSkipGuiding = (gGuidingThresholds[binIndex] <= guidingEnableThreshold);
+            sharedMem->sSkipGuiding = false;// (gGuidingThresholds[binIndex] <= guidingEnableThreshold);
         }
         __syncthreads();
 
@@ -2180,6 +2178,8 @@ static void KCSampleDistributionProductOptiX(// Output
     extern __shared__ Byte sharedMemRAW[];
     SharedMemType* sharedMem = reinterpret_cast<SharedMemType*>(sharedMemRAW);
 
+    //if(threadIdx.x == 0) printf("InBlock %d\n", blockIdx.x);
+
     // For each block (we allocate enough blocks for the GPU)
     // Each block will process multiple bins
     for(uint32_t binIndex = blockIdx.x; binIndex < binCount;
@@ -2192,17 +2192,18 @@ static void KCSampleDistributionProductOptiX(// Output
             sharedMem->sRayCount = rayRange[1] - rayRange[0];
             sharedMem->sOffsetStart = rayRange[0];
             sharedMem->sNodeId = gNodeIds[binIndex];
-            sharedMem->sSkipGuiding = (gGuidingThresholds[binIndex] <= guidingEnableThreshold);
+            sharedMem->sSkipGuiding = false;//(gGuidingThresholds[binIndex] <= guidingEnableThreshold);
         }
         __syncthreads();
 
         // Kill the entire block if Node Id is invalid
         if(sharedMem->sNodeId == INVALID_BIN_ID)
         {
+            //if(threadIdx.x == 0) printf("InvalidBin!\n");
             __syncthreads();
             continue;
         }
-
+        //if(threadIdx.x == 0) printf("RayCount %u\n", sharedMem->sRayCount);
         // Skip if threshold is matched
         if(sharedMem->sSkipGuiding)
         {
@@ -2219,6 +2220,8 @@ static void KCSampleDistributionProductOptiX(// Output
                     gRayAux[rayId].guidePDF = NAN;
                 }
             }
+            //if(threadIdx.x == 0) printf("Never should be here!\n");
+
             __syncthreads();
             continue;
         }
