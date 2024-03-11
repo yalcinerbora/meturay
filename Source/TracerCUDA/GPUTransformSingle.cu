@@ -83,11 +83,19 @@ SceneError CPUTransformSingle::InitializeGroup(const NodeListing& transformNodes
                 r *= MathConstants::DegToRadCoef;
 
                 // Convert to Matrix
-                Matrix4x4 m = TransformGen::Rotate(r[0], XAxis);
-                m = TransformGen::Rotate(r[1], YAxis) * m;
-                m = TransformGen::Rotate(r[2], ZAxis) * m;
-                m = TransformGen::Scale(s[0], s[1], s[2]) * m;
-                m = TransformGen::Translate(t) * m;
+                // TODO????????????????
+                //Matrix4x4 m = TransformGen::Rotate(r[0], XAxis);
+                //m = TransformGen::Rotate(r[1], YAxis) * m;
+                //m = TransformGen::Rotate(r[2], ZAxis) * m;
+                //m = TransformGen::Scale(s[0], s[1], s[2]) * m;
+                //m = TransformGen::Translate(t) * m;
+                //nodeTransforms.push_back(std::move(m));
+
+                Matrix4x4 m = TransformGen::Scale(s[0], s[1], s[2]);
+                m = TransformGen::Rotate(r[0], XAxis)   * m;
+                m = TransformGen::Rotate(r[1], YAxis)   * m;
+                m = TransformGen::Rotate(r[2], ZAxis)   * m;
+                m = TransformGen::Translate(t)          * m;
                 nodeTransforms.push_back(std::move(m));
             }
         }

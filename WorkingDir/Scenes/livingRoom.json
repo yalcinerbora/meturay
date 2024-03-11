@@ -112,32 +112,39 @@
                 0, 0, 0, 1
             ]
         },
-        // Light Transforms (TRS)
+        // Glass Transforms
         {
-            "id":[6, 7, 8, 9],
+            "id":[6, 7, 8, 9, 10, 11],
             "type": "Single",
             "layout": "trs",
             "translate":
             [
-                [0.21357160806655884, 1.9630746841430664, 0.38395148515701294],
-                [-1.0311269760131836, 1.9659218788146973, 0.6599181294441223],
-                [ 1.4558370113372803, 1.9659219980239868, 0.658936083316803],
-                [-0.14977437257766724, 2.031040668487549, 8.142012596130371]
+                [1.3973, 1.5498, 0.75995],
+                [1.4365, 2.3685, 0.70151],
+                [0.21396, 1.5459, 0.48818],
+                [0.22283, 2.3852, 0.42297],
+                [-1.0108, 2.3684, 0.70218],
+                [-0.97639, 1.530, 0.763827]
+
 
             ],
             "rotate":
             [
-                [ 90.0, 0.0, 0.0],
-                [ 90.0, 0.0, -28.735916137695312],
-                [ 90.0, 0.0, 28.369735717773438],
-                [ 90.0, 0.0, -179.99998474121094]
+                [ 0.0, -28.0, 0.0],
+                [ 0.0, -28.0, 0.0],
+                [ 0.0, 0.0, 0.0],
+                [ 0.0, 0.0, 0.0],
+                [ 0.0, 28.0, 0.0],
+                [ 0.0, 28.0, 0.0]
             ],
             "scale":
             [
-                [ 0.8452945351600647, 1.0, 1.6434378623962402],
-                [ 0.638702392578125, 1.0, 1.6820743083953857],
-                [ 0.6387024521827698, 1.0, 1.6820743083953857],
-                [ 3.0534889698028564, 1.0, 1.9294016361236572]
+                [ 0.307, 0.410, 0.012],
+                [ 0.307, 0.410, 0.012],
+                [ 0.416, 0.420, 0.012],
+                [ 0.416, 0.420, 0.012],
+                [ 0.307, 0.410, 0.012],
+                [ 0.307, 0.410, 0.012]
             ]
         }
     ],
@@ -718,7 +725,9 @@
         // Knob
         { "id": 179, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh009.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
         // Surround
-        { "id": 180, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh093.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false }
+        { "id": 180, "type": "Triangle", "name": "../Surfaces/LivingRoom/Mesh093.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false },
+        // Unit Box (for occluder glasses)
+        { "id": 181, "type": "Triangle", "name": "../Surfaces/LivingRoom/glass_box.obj", "tag": "assimp_", "innerIndex": 0, "cullFace": false }
 
     ],
 
@@ -969,6 +978,16 @@
         {"transform": 0, "accelerator": 0, "material": 3, "primitive": 179},
         // Surround
         {"transform": 0, "accelerator": 0, "material": 4, "primitive": 180}
+
+        ,
+
+        // OCCLUDER GLASSES
+        {"transform": 6, "accelerator": 0, "material": 21, "primitive": 181},
+        {"transform": 7, "accelerator": 0, "material": 21, "primitive": 181},
+        {"transform": 8, "accelerator": 0, "material": 21, "primitive": 181},
+        {"transform": 9, "accelerator": 0, "material": 21, "primitive": 181},
+        {"transform": 10, "accelerator": 0, "material": 21, "primitive": 181},
+        {"transform": 11, "accelerator": 0, "material": 21, "primitive": 181}
     ],
 
      // Lights
@@ -976,8 +995,10 @@
         // Shelf Lights
         { "light": 1, "transform": 1},
         { "light": 2, "transform": 2},
-        { "light": 2, "transform": 3},
-        { "light": 3, "transform": 4}
+        { "light": 2, "transform": 3}
+
+        //,
+        //{ "light": 3, "transform": 4}
 
         // // Shelf Lights
         // { "light": 1, "transform": 6},
