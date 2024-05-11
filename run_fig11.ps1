@@ -1,4 +1,6 @@
 
+pip install numpy matplotlib opencv-python openexr
+
 cmake -G "Visual Studio 17 2022" -A x64 -S .\Build\CMake\ -B Bin\CMake -DUSE_OPTIX=ON
 cmake --build Bin\CMake --config Release --parallel
 cd WorkingDir
