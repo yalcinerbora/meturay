@@ -170,8 +170,8 @@
             "layout": "trs",
             "translate": [-0.005, 1.999, -0.03],
             "rotate": [90, 0, 0],
-            "scale": [0.47, 1, 0.38]
-            //"scale": [0.235, 1, 0.19]
+            //"scale": [0.47, 1, 0.38]
+            "scale": [0.47, 0.38, 1]
             //"scale": [2.47, 1, 2.38]
         },
         {
@@ -293,12 +293,12 @@
         { "transform": 9, "accelerator": 0, "material": 2, "primitive": 1},
         //{ "transform": 9, "accelerator": 0, "material": 4, "primitive": 1},
         // Short Box
-        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1}
+        { "transform": 10, "accelerator": 0, "material": 2, "primitive": 1},
         //{ "transform": 10, "accelerator": 0, "material": 5, "primitive": 1}
         //,
 
         // Glass
-        //{ "transform": 12, "accelerator": 0, "material": 3, "primitive": 2}
+        { "transform": 12, "accelerator": 0, "material": 3, "primitive": 2}
          // Occuluder Prism
         //{ "transform": 11, "accelerator": 0, "material": 2, "primitive": 1}
 	],

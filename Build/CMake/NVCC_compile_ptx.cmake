@@ -121,9 +121,11 @@ FUNCTION(NVCC_COMPILE_PTX)
                 OUTPUT  "${OUTPUT}"
                 COMMENT "Builidng PTX File (CC_${COMPUTE_CAPABILITY}) ${INPUT}"
                 DEPENDS "${INPUT}"
-                DEPFILE "${DEP_PATH}"
+                #DEPFILE "${DEP_PATH}"
+                # CPP mode implicit depends work?
+                IMPLICIT_DEPENDS CXX "${INPUT}"
                 COMMAND ${CMAKE_CUDA_COMPILER} ${NVCC_COMPILE_OPTIONS}
-                         -MD
+                         #-MD
                          "--gpu-architecture=${CC_FLAG}"
                          -o ${OUTPUT}
                          ${INPUT}
