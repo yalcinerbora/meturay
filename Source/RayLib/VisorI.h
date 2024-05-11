@@ -63,6 +63,7 @@ struct VisorOptions
     uint32_t            sampleInterval;
     bool                outputAsHDR;
     std::string         outputName;
+    bool                killProcessOnOutput;
 };
 
 class ImageSaverI

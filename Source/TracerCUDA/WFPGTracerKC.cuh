@@ -2015,14 +2015,14 @@ static void KCSampleDistributionOptiX(// Output
                                wo.getDirection()[0], wo.getDirection()[1], wo.getDirection()[2]);
                     }
 
-                    if(!isLight &&
-                       (sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
-                        sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f))
-                    {
-                        printf("[BxDF]err on sample (%f, %f) T: %u\n",
-                               sampledUV[0], sampledUV[1],
-                               static_cast<uint32_t>(gRayAux[rayId].type));
-                    }
+                    //if(!isLight &&
+                    //   (sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
+                    //    sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f))
+                    //{
+                    //    printf("[BxDF]err on sample (%f, %f) T: %u\n",
+                    //           sampledUV[0], sampledUV[1],
+                    //           static_cast<uint32_t>(gRayAux[rayId].type));
+                    //}
                 }
                 else
                 {
@@ -2032,14 +2032,14 @@ static void KCSampleDistributionOptiX(// Output
                     Vector2f index;
                     sampledUV = dist2D.Sample(index, rng);
 
-                    if(!isLight &&
-                       (sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
-                        sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f))
-                    {
-                        printf("[PG]err on sample (%f, %f) T: %u\n",
-                               sampledUV[0], sampledUV[1],
-                               static_cast<uint32_t>(gRayAux[rayId].type));
-                    }
+                    //if(!isLight &&
+                    //   (sampledUV[0] < 0.0f || sampledUV[0] >= 1.0f ||
+                    //    sampledUV[1] < 0.0f || sampledUV[1] >= 1.0f))
+                    //{
+                    //    printf("[PG]err on sample (%f, %f) T: %u\n",
+                    //           sampledUV[0], sampledUV[1],
+                    //           static_cast<uint32_t>(gRayAux[rayId].type));
+                    //}
 
                     Vector3f wo = NormProjectionFunc(sampledUV);
                     pdfBxDF = surf.Pdf(wo, wi, GPUMediumVacuum(0));

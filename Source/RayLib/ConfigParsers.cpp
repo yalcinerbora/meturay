@@ -58,7 +58,7 @@ namespace ConfigParser
         static constexpr const char* OUT_SAMPLE_INTERVAL_NAME = "outputSampleInterval";
         static constexpr const char* OUT_AS_HDR_NAME = "outputHDR";
         static constexpr const char* OUT_NAME_NAME = "outputName";
-
+        static constexpr const char* KILL_PROCESS_NAME = "killProcessOnOutput";
 
         // Load VisorOptions
         opts.eventBufferSize = SceneIO::LoadNumber<uint32_t>(optsJson[EVENT_BUFFER_SIZE_NAME]);
@@ -75,6 +75,11 @@ namespace ConfigParser
         opts.sampleInterval = SceneIO::LoadNumber<uint32_t>(optsJson[OUT_SAMPLE_INTERVAL_NAME]);
         opts.outputAsHDR = SceneIO::LoadBool(optsJson[OUT_AS_HDR_NAME]);
         opts.outputName = SceneIO::LoadString(optsJson[OUT_NAME_NAME]);
+
+        auto it = optsJson.find(KILL_PROCESS_NAME);
+        if(it == optsJson.end())
+            opts.killProcessOnOutput = false;
+        else opts.killProcessOnOutput = *it;
     }
 }
 

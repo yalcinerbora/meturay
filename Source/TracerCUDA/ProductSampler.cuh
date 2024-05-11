@@ -461,11 +461,11 @@ Vector2f ProductSampler<TPB, X, Y, PX, PY>::Sample(bool& innerIsUniform, float& 
                  shMem.sWarpTempMemory[warpId][1] * pdfInner;
 
         innerIsUniform = (luckyWarp < 0);
-        if(luckyWarp < 0)
-            printf("Unable to reject! Uniform Sampling "
-                   "pdf(%f) = %f * %f * %f\n",
-                   pdfOut, shMem.sWarpTempMemory[warpId][0],
-                   shMem.sWarpTempMemory[warpId][1], pdfInner);
+        //if(luckyWarp < 0)
+        //    printf("Unable to reject! Uniform Sampling "
+        //           "pdf(%f) = %f * %f * %f\n",
+        //           pdfOut, shMem.sWarpTempMemory[warpId][0],
+        //           shMem.sWarpTempMemory[warpId][1], pdfInner);
         if(isnan(pdfOut))
             printf("NaN pdf(%f) = %f * %f * %f\n",
                    pdfOut, shMem.sWarpTempMemory[warpId][0],

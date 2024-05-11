@@ -435,8 +435,8 @@ struct NodeIdFetchFunctor
 void WFPGTracer::ResizeAndInitPathMemory()
 {
     size_t totalPathNodeCount = TotalPathNodeCount();
-    METU_LOG("Allocating WFPGTracer global path buffer: Size {:d} MiB",
-             totalPathNodeCount * sizeof(WFPGPathNode) / 1024 / 1024);
+    //METU_LOG("Allocating WFPGTracer global path buffer: Size {:d} MiB",
+    //         totalPathNodeCount * sizeof(WFPGPathNode) / 1024 / 1024);
 
     GPUMemFuncs::EnlargeBuffer(pathMemory, totalPathNodeCount * sizeof(WFPGPathNode));
     dPathNodes = static_cast<WFPGPathNode*>(pathMemory);
@@ -629,7 +629,7 @@ void WFPGTracer::GenerateGuidedDirections()
 
     if(options.renderMode == WFPGRenderMode::BINNING)
     {
-        METU_LOG("Doing Rendering of Bins!");
+        //METU_LOG("Doing Rendering of Bins!");
 
         // Visualize bins
         gpu.GridStrideKC_X(0, (cudaStream_t)0, rayCount,
@@ -954,10 +954,10 @@ void WFPGTracer::GenerateGuidedDirections()
     CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
     //METU_LOG("Depth {:d} -> PartitionCount {:d}, AvgRayPerBin {:f}, KernelTime {:f}ms",
     //         currentDepth, hPartitionCount, avgRayPerBin, milliseconds);
-    METU_LOG("{:d}; {:d}; {:f}; {:f}; i:{}",
-             currentDepth, hPartitionCount,
-             avgRayPerBin, milliseconds,
-             iterCount);
+    //METU_LOG("{:d}; {:d}; {:f}; {:f}; i:{}",
+    //         currentDepth, hPartitionCount,
+    //         avgRayPerBin, milliseconds,
+    //         iterCount);
     CUDA_CHECK(cudaEventDestroy(start));
     CUDA_CHECK(cudaEventDestroy(stop));
 }
@@ -1185,7 +1185,7 @@ void WFPGTracer::LaunchDebugConeTraceKernel()
     CUDA_CHECK(cudaEventDestroy(start));
     CUDA_CHECK(cudaEventDestroy(stop));
 
-    METU_LOG("{}", milliseconds);
+    //METU_LOG("{}", milliseconds);
 }
 
 WFPGTracer::WFPGTracer(const CudaSystem& s,
@@ -1726,7 +1726,7 @@ void WFPGTracer::Finalize()
         CUDA_CHECK(cudaEventRecord(stop));
         CUDA_CHECK(cudaEventSynchronize(stop));
         CUDA_CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
-        METU_LOG("Cache; -; {:f}", milliseconds);
+        //METU_LOG("Cache; -; {:f}", milliseconds);
         CUDA_CHECK(cudaEventDestroy(start));
         CUDA_CHECK(cudaEventDestroy(stop));
 
@@ -1765,12 +1765,12 @@ void WFPGTracer::Finalize()
         }
     }
 
-    METU_LOG("----------------");
+    //METU_LOG("----------------");
     cudaSystem.SyncAllGPUs();
     frameTimer.Split();
 
     double ms = frameTimer.Elapsed<CPUTimeMillis>();
-    METU_LOG("TOTAL:{}", ms);
+    //METU_LOG("TOTAL:{}", ms);
 
 
     //if(iterationCount == 2)
@@ -1801,7 +1801,7 @@ void WFPGTracer::Finalize()
         ////uint32_t scalarWeightInt = multiplier + 1;
         //scalarSampleMultiplier = static_cast<float>(scalarWeightInt);
 
-        METU_LOG("Scalar Weight: {}", scalarSampleMultiplier);
+        //METU_LOG("Scalar Weight: {}", scalarSampleMultiplier);
 
         if(reconFilter != nullptr)
             reconFilter->FilterToImg(imgMemory,

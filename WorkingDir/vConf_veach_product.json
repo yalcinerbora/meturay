@@ -1,0 +1,39 @@
+{
+    "VisorOptions":
+    {
+        // Technical
+        "eventBufferSize" : 2,
+
+        // Window Related
+        "stereoRendering"   : false,
+        "vSync"             : true,
+        "windowPixelFormat" : "RGB8_UNORM",
+        "windowSize"        : [1600, 900],
+        "fpsLimit"          : 0,
+        // Misc
+        "enableGUI"         : true,
+        "enableTMO"         : true,
+
+        // Auto Output Related
+        "enableOutput"          : true,     // Enable/Disable output
+        "outputMetric"          : "Time",   // How do we do output can be "Time", "Sample" or "Both"
+        "outputTimeInterval"    : 60,          // Output Every N seconds
+        "outputSampleInterval"  : 4,         // Output Every N iterations
+        "outputHDR"             : true,                 // Output as HDR
+        "outputName"            : "veachDoor-wfpg-product/out",
+        "killProcessOnOutput"   : true    // Kill the process when output is done
+    },
+
+    "VisorDLL" :
+    {
+        "name"  : "VisorGL",
+        "entry" : "CreateVisorGL",
+        "exit"  : "DeleteVisorGL"
+    }
+    // Keybinds are Optional
+
+    // Mousebinds are Optional
+
+    // MovementSchemes are Optional
+
+}

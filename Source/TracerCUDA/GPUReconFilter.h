@@ -206,7 +206,7 @@ inline void GPUReconFilter::FilterToImgInternal(ImageMemory& img,
 
     static constexpr uint32_t REDUCE_LOGIC_CHANGE_THRESHOLD = 256;
 
-    METU_LOG("Multiplier {}", scalarMultiplier);
+    //METU_LOG("Multiplier {}", scalarMultiplier);
 
     if(spp > REDUCE_LOGIC_CHANGE_THRESHOLD)
     {

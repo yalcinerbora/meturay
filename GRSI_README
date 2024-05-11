@@ -1,0 +1,37 @@
+
+Dear GRSI Reviewer,
+
+The entire codebase is quite large and has many dependencies. Most of the dependencies
+are statically compiled and available in the repository.
+
+Since GRSI[1] requires the code to be worked on a fresh install some dependencies needs to be downloaded manually.
+
+The instructions below are for a Windows 11 Operating System.
+
+HW requirements:
+ - An NVIDIA GPU (GTX1XXX series or newer)
+ - OpenGL capable hardware (can be the NVIDIA GPU or on-board integrated GPU)
+
+These include (Please download via these links):
+*CUDA*:
+https://developer.download.nvidia.com/compute/cuda/12.3.0/network_installers/cuda_12.3.0_windows_network.exe
+
+*NVIDIA OptiX*:
+https://developer.nvidia.com/optix/downloads/7.6.0/win64
+
+*Microsoft Visual Studio 2022 Community*: (Latest version should compile the codebase)
+https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022&source=VSLandingPage&cid=2030&passive=false
+- Visual studio should be installed with MSVC C++ compiler.
+
+*Python*:
+https://www.python.org/ftp/python/3.12.3/python-3.12.3-amd64.exe
+- Pyhton scripts are available in the repository
+
+Since the operating system is Windows, all these installations require human interaction; thus we are unable to include these on the script.
+Just install the
+
+
+Sincerely,
+Bora
+
+[1] https://www.replicabilitystamp.org/requirements.html

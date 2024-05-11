@@ -237,8 +237,8 @@ Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(Vector2f& index,
     // if it happens just return the last light on the list
     if(indexYInt >= Y)
     {
-        printf("CUDA Error: Illegal Index on PwC Sample [Y = %.10f] [xi = %.10f], F: %s\n",
-                         index[1], xi[1], foundY ? "True" : "False");
+        //printf("CUDA Error: Illegal Index on PwC Sample [Y = %.10f] [xi = %.10f], F: %s\n",
+        //                 index[1], xi[1], foundY ? "True" : "False");
         indexYInt--;
     }
 
@@ -258,8 +258,8 @@ Vector2f BlockPWCDistribution2D<TPB, X, Y>::Sample<RNG>(Vector2f& index,
     int32_t indexXInt = static_cast<int32_t>(index[0]);
     if(indexXInt >= X)
     {
-        printf("CUDA Error: Illegal Index on PwC Sample [X = %.10f] [xi = %.10f], F: %s\n",
-               index[0], xi[0], foundX ? "True" : "False");
+        //printf("CUDA Error: Illegal Index on PwC Sample [X = %.10f] [xi = %.10f], F: %s\n",
+        //       index[0], xi[0], foundX ? "True" : "False");
         indexXInt--;
     }
     // Return the index as a normalized coordinate as well
@@ -278,20 +278,20 @@ float BlockPWCDistribution2D<TPB, X, Y>::Pdf(const Vector2f& index) const
     float pdfX = sMem.sPCDFX[indexInt[1]][indexInt[0]];
     float pdfY = sMem.sPCDFY[indexInt[1]];
 
-    if(pdfY == 0.0f || pdfX == 0)
-    {
-        printf("[Z] pdf(% .10f, % .10f), index(% .10f, % .10f) (% d, % d)\n",
-               pdfX, pdfY, index[0], index[1], indexInt[0], indexInt[1]);
-    }
-    if(isnan(pdfX) || isnan(pdfY))
-    {
-        printf("[NaN] pdf(%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
-               pdfX, pdfY, index[0], index[1], indexInt[0], indexInt[1]);
-    }
-    if(index.HasNaN())
-    {
-        printf("[NaN] index(%f, %f)\n", index[0], index[1]);
-    }
+    //if(pdfY == 0.0f || pdfX == 0)
+    //{
+    //    printf("[Z] pdf(% .10f, % .10f), index(% .10f, % .10f) (% d, % d)\n",
+    //           pdfX, pdfY, index[0], index[1], indexInt[0], indexInt[1]);
+    //}
+    //if(isnan(pdfX) || isnan(pdfY))
+    //{
+    //    printf("[NaN] pdf(%.10f, %.10f), index (%.10f, %.10f) (%d, %d)\n",
+    //           pdfX, pdfY, index[0], index[1], indexInt[0], indexInt[1]);
+    //}
+    //if(index.HasNaN())
+    //{
+    //    printf("[NaN] index(%f, %f)\n", index[0], index[1]);
+    //}
 
     return pdfX * pdfY;
 }

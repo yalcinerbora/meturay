@@ -147,7 +147,7 @@ void VisorGL::ProcessCommand(const VisorGLCommand& c)
             // Set the received sample count
             receivedSampleCount += c.spp;
 
-            METU_LOG("Read receievdSampleCount: {}", receivedSampleCount);
+            //METU_LOG("Read receieved SampleCount: {}", receivedSampleCount);
 
             // Swap input and output
             currentIndex = nextIndex;
@@ -430,7 +430,7 @@ void VisorGL::Render()
             {
                 outputWRTTimeCount++;
                 // Generate the name
-                float seconds = vOpts.timeInterval * static_cast<float>(outputWRTTimeCount);
+                float seconds = vOpts.timeInterval * static_cast<float>(outputWRTTimeCount - 1);
                 std::string fileName = fmt::format("{:s}_time_{:4.2f}s",
                                                    vOpts.outputName,
                                                    seconds);
@@ -439,6 +439,8 @@ void VisorGL::Render()
                 Utility::ForceMakeDirectoriesInPath(fileName);
                 SaveImageInternal(vOpts.outputAsHDR, fileName);
 
+                // TODO: Abrupt terminate, change later this is for GRSI
+                if(vOpts.killProcessOnOutput && outputWRTTimeCount == 2) std::terminate();
                 // Restart the timer
                 outputTimer.Start();
             }
