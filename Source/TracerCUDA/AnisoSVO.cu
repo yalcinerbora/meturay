@@ -264,7 +264,7 @@ void KCAccumulateRadianceToLeaf(AnisoSVOctreeGPU svo,
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCCollapseRayCounts(// I-O
-                         uint16_t* gBinInfo,
+                         uint32_t* gBinInfo,
                          // Input
                          const uint64_t* gNodes,
                          // Constants
@@ -295,7 +295,8 @@ void KCCollapseRayCounts(// I-O
         if(rayCount < minRayCount)
         {
             uint32_t parent = AnisoSVOctreeGPU::ParentIndex(gNodes[nodeId]);
-            AnisoSVOctreeGPU::AtomicAddUInt16(gBinInfo + parent, rayCount);
+            //AnisoSVOctreeGPU::AtomicAddUInt16(gBinInfo + parent, rayCount);
+            atomicAdd(gBinInfo + parent, rayCount);
         }
         // We have enough rays in this node use it as is
         else
@@ -307,8 +308,8 @@ void KCCollapseRayCounts(// I-O
 
 __global__ CUDA_LAUNCH_BOUNDS_1D
 void KCCollapseRayCountsLeaf(// I-O
-                             uint16_t* gLeafBinInfo,
-                             uint16_t* gBinInfo,
+                             uint32_t* gLeafBinInfo,
+                             uint32_t* gBinInfo,
                              // Input
                              const uint32_t* gLeafParents,
                              // Constants
@@ -337,7 +338,8 @@ void KCCollapseRayCountsLeaf(// I-O
         if(rayCount < minRayCount)
         {
             uint32_t parent = gLeafParents[threadId];
-            AnisoSVOctreeGPU::AtomicAddUInt16(gBinInfo + parent, rayCount);
+            //AnisoSVOctreeGPU::AtomicAddUInt16(gBinInfo + parent, rayCount);
+            atomicAdd(gBinInfo + parent, rayCount);
         }
         // We have enough rays in this node use it as is
         else

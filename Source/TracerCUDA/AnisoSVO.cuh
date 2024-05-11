@@ -169,8 +169,8 @@ class AnisoSVOctreeGPU
 
     // Bin info related packing operations
     __device__ static bool      IsBinMarked(uint16_t binInfo);
-    __device__ static void      SetBinAsMarked(uint16_t& gNodeBinInfo);
-    __device__ static uint16_t  GetRayCount(uint16_t binInfo);
+    __device__ static void      SetBinAsMarked(uint32_t& gNodeBinInfo);
+    __device__ static uint32_t  GetRayCount(uint32_t binInfo);
 
     private:
     // Generic Data
@@ -184,7 +184,7 @@ class AnisoSVOctreeGPU
     uint64_t*           dNodes;             // Node structure, unlike other SVO structures
                                             // nodes hold parent pointer as well for stackless traversal
                                             // children ptr (28) parent ptr (27), child mask (8), leafBit (1)
-    uint16_t*           dBinInfo;           // Number of rays that "collide" with this voxel
+    uint32_t*           dBinInfo;           // Number of rays that "collide" with this voxel
                                             // similar positioned rays will collaborate to generate
                                             // an incoming radiance field to path guide
                                             // MSB is "isCollapsed" bit which means that
@@ -194,7 +194,7 @@ class AnisoSVOctreeGPU
     // if leaf bit is set on parent children ptr points to these)
     uint32_t*           dLeafParents;       // Parent pointers of the leaf it is 32-bit for padding reasons
                                             // (nodes have 27-bit parent pointers so latter 5-bits are wasted)
-    uint16_t*           dLeafBinInfo;       // Same as above but for leafs
+    uint32_t*           dLeafBinInfo;       // Same as above but for leafs
 
     // Voxel Payload (refer to the payload structure for info)
     // TODO: Make this a template for generic SVO structure in future
@@ -614,7 +614,7 @@ uint16_t AnisoSVOctreeGPU::AtomicAddUInt16(uint16_t* location, uint16_t value)
         assumed = old;
         // Actual Operation
         uint16_t result = assumed + value;
-        old = atomicCAS(location, assumed, result);
+        //old = atomicCAS(location, assumed, result);
     }
     while(assumed != old);
     return old;
@@ -741,14 +741,14 @@ bool AnisoSVOctreeGPU::IsBinMarked(uint16_t rayCounts)
 }
 
 __device__ inline
-void AnisoSVOctreeGPU::SetBinAsMarked(uint16_t& gNodeRayCount)
+void AnisoSVOctreeGPU::SetBinAsMarked(uint32_t& gNodeRayCount)
 {
-    uint16_t expandedBoolean = (1u << LAST_BIT_UINT16);
+    uint32_t expandedBoolean = (1u << LAST_BIT_UINT16);
     gNodeRayCount |= expandedBoolean;
 }
 
 __device__ inline
-uint16_t AnisoSVOctreeGPU::GetRayCount(uint16_t binInfo)
+uint32_t AnisoSVOctreeGPU::GetRayCount(uint32_t binInfo)
 {
     return binInfo & ((1u << LAST_BIT_UINT16) - 1);
 }
