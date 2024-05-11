@@ -6,29 +6,33 @@ MRay is a ray tracing based renderer framework for researching computer graphics
 
 ## Features
 
-- It is completely GPU-based for rapid rendering and proposal development
--
+- It is completely GPU-based for rapid rendering technique development
 
 ## Limitations
 
-- Implemented using CUDA; thus, only CUDA-capable GPUs are supported. This means only NVIDIA cards.
-- A
+- Implemented using CUDA; thus, only CUDA-capable GPUs are supported. This means NVIDIA graphics cards only.
+- Developed over Windows, it should work via MSVC. Time to time, the codebase compiled via the Linux compilers (clang, gcc) it do compile and run but it is not thoroughly tested.
 
-## Installation
+## Building
 
-## Dependencies
+- In its current form, most of the dependencies are statically compiled. This include:
+    - assimp
+    - FreeImage
+    - glew
+    - glfw
+    - googletest
+    - OpenEXR
+    - fmtlib
+    - spdlog
+    - dearimgui
 
-Most of the dependencies are auto-handled by the system
+- This means only Visual Studio 2022 (up to latest supported version of MSVC) is supported. For Linux, the pre-compiled libraries should link.
 
+- Other dependencies include:
+    - CUDA: v11.X
+    - NVIDIA Optix: v7.X
 
-## M
-
-The
-
-- Add a robust Universal Scene Description (USD) reader. [a][1]
-- A
-
-[1]: <https://en.wikipedia.org/wiki/Hobbit#Lifestyle> "Hobbit lifestyles"
+- These compilers/libraries should be installed by the user.
 
 ## License
 
