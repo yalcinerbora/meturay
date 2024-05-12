@@ -223,7 +223,7 @@ using WFPGKernelParamType = std::tuple<uint32_t, uint32_t, uint32_t>;
 
 static constexpr std::array<WFPGKernelParamType, PG_KERNEL_TYPE_COUNT> PG_KERNEL_PARAMS =
 {
-    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 128, 128),
+    std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
     std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 64, 64),
     std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 32, 32),
     std::make_tuple(METU_DEBUG_BOOL ? 256 : 512, 16, 16),
