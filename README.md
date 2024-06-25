@@ -34,6 +34,14 @@ MRay is a ray tracing based renderer framework for researching computer graphics
 
 - These compilers/libraries should be installed by the user.
 
+## If you are coming to this repo due to GRSI badge or from Paper[^1]
+
+Please follow the instructions on [TO_RUN_FIG11](TO_RUN_FIG11). Powershell script "run_fig11.ps1" should generate the Figure 11 results.
+Unfortunately, the codebase is not documented yet. For implementation details, you can check the "TracerCUDA/WFPGTracer*" source files.
+
+[^1]:Bora Yalçıner, Ahmet Oğuz Akyüz; Path guiding for wavefront path tracing: A memory efficient approach for GPU path tracers; Computers & Graphics,
+Volume 121, 2024, 103945, ISSN 0097-8493.
+
 ## License
 
 This Project is licensed under the MIT license. Please check [LICENSE](LICENSE) for details.
